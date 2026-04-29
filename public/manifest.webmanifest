@@ -1,0 +1,19 @@
+{
+  "name": "LifeLog · 生活记录本",
+  "short_name": "LifeLog",
+  "description": "记录重要的人、地点、纪念日和回忆。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8F9FA",
+  "theme_color": "#6C5CE7",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
