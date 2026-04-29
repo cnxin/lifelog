@@ -51,6 +51,10 @@
   - SVG 应用图标
   - Service Worker
   - 生产环境注册逻辑
+- 增加 Capacitor 移动端打包准备：
+  - `capacitor.config.ts`
+  - Android/iOS 平台脚本
+  - `MOBILE.md` 移动端构建说明
 
 ### Changed
 
@@ -72,7 +76,7 @@
 
 ## Planned
 
-- 接入 Capacitor，准备 Android/iOS 打包。
+- 生成 Android 原生工程并完成真机验证。
 - 增加照片和相册能力。
 - 增加地图选点、当前位置获取和外部导航跳转。
 - 增加云同步和账号登录。

@@ -140,12 +140,14 @@ Service Worker 只会在生产环境注册。
 
 ## 移动端方向
 
-后续建议使用 Capacitor：
+项目已加入 Capacitor 基础配置：
 
-- Web 端继续使用当前 React/Vite 代码
-- Android 通过 Android Studio + Capacitor 打包
-- iOS 需要 macOS + Xcode + Apple Developer 账号
-- 业务代码保持一套，平台能力再按需接入 Capacitor 插件
+- `capacitor.config.ts`
+- `@capacitor/core`
+- `@capacitor/cli`
+- Android/iOS 平台脚本
+
+详细说明见 `MOBILE.md`。
 
 ## 后续开发建议
 
