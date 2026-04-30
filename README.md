@@ -9,6 +9,7 @@ LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要�
 - 已支持人员、地点、回忆、日历、设置等核心模块
 - 数据已从 `localStorage` 迁移到 IndexedDB
 - 已加入手写 PWA 支持
+- 已生成 Capacitor Android 原生工程
 - GitHub 私有仓库：`https://github.com/cnxin/lifelog`
 
 ## 技术栈
@@ -145,13 +146,16 @@ Service Worker 只会在生产环境注册。
 - `capacitor.config.ts`
 - `@capacitor/core`
 - `@capacitor/cli`
+- `@capacitor/android`
 - Android/iOS 平台脚本
+- `android/` 原生工程
 
 详细说明见 `MOBILE.md`。
 
 ## 后续开发建议
 
-- 接入 Capacitor 并生成 Android/iOS 工程
+- 安装 Android Studio / SDK 后完成 Android 真机验证
+- 后续在 macOS 上生成 iOS 工程
 - 补充照片上传和本地图片管理
 - 增加地点地图选择和定位权限
 - 增加人员、地点、回忆的编辑历史或软删除

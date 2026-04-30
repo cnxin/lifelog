@@ -55,6 +55,11 @@
   - `capacitor.config.ts`
   - Android/iOS 平台脚本
   - `MOBILE.md` 移动端构建说明
+- 生成 Android 原生工程：
+  - `android/`
+  - `@capacitor/android`
+  - Gradle Wrapper
+  - AndroidManifest 和基础应用配置
 
 ### Changed
 
@@ -63,6 +68,7 @@
 - 将 `Card`、`SearchBar`、`BottomNav`、`EntrySheet` 等界面单元抽离为独立组件。
 - 将人员、地点、回忆数据统一纳入 `LifeLogContext` 管理。
 - 将生日和纪念日输入规则统一为公历录入、农历自动计算展示。
+- 修正生成的 Gradle Wrapper 启动脚本，避免 Windows 下空 `-classpath` 参数导致 wrapper 无法启动。
 
 ### Fixed
 
@@ -76,7 +82,7 @@
 
 ## Planned
 
-- 生成 Android 原生工程并完成真机验证。
+- 安装/配置 Android SDK 和 JDK 17 后完成 Android 真机验证。
 - 增加照片和相册能力。
 - 增加地图选点、当前位置获取和外部导航跳转。
 - 增加云同步和账号登录。

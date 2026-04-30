@@ -8,10 +8,12 @@ This repository currently includes:
 
 - `@capacitor/core`
 - `@capacitor/cli`
+- `@capacitor/android`
 - `capacitor.config.ts`
+- `android/`
 - npm scripts for adding, syncing, and opening native platforms
 
-The native `android/` and `ios/` folders are intentionally not generated yet. Generate them only on machines with the required platform toolchain installed.
+The Android native project has been generated. The iOS project is intentionally not generated yet because it requires macOS and Xcode.
 
 ## App Identity
 
@@ -26,24 +28,35 @@ Prerequisites:
 
 - Android Studio
 - Android SDK
-- JDK compatible with the installed Android Gradle plugin
+- JDK 17 or newer
+- `ANDROID_HOME` or `ANDROID_SDK_ROOT` pointing to the Android SDK
 
-Commands:
+Current generated Android versions:
+
+- Android Gradle Plugin: `8.13.0`
+- Gradle Wrapper: `8.14.3`
+- minSdk: `24`
+- compileSdk: `36`
+- targetSdk: `36`
+
+The Android project is already present, so the normal update flow is:
 
 ```bash
 npm.cmd run build
-npm.cmd run cap:add:android
 npm.cmd run cap:sync
 npm.cmd run cap:open:android
 ```
 
-After the native Android project exists, the normal update flow is:
+To build from the command line after Android Studio, SDK, and JDK 17 are installed:
 
 ```bash
 npm.cmd run build
 npm.cmd run cap:sync
-npm.cmd run cap:open:android
+cd android
+gradlew.bat assembleDebug
 ```
+
+On the current Windows machine, `gradlew.bat --version` works, but a full Android task/build was not completed because the command-line environment does not yet expose a complete Android SDK/JDK 17 setup. The detected Java runtime is JDK 15, and only `ANDROID_SDK_HOME=C:\Android` is set.
 
 ## iOS Flow
 
@@ -84,7 +97,10 @@ The optional `@capacitor/assets` package is not kept in the project because its 
 
 ## Recommended Next Mobile Tasks
 
-- Generate Android project locally after Android Studio is installed.
+- Install or configure Android Studio, Android SDK, and JDK 17.
+- Set `JAVA_HOME` and `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
+- Run `android\gradlew.bat assembleDebug`.
+- Open the project with Android Studio and run on an emulator or real device.
 - Add real PNG app icon and splash source files.
 - Verify IndexedDB persistence in Android WebView.
 - Decide whether location/map features use external links first or native plugins.
