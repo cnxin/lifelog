@@ -3,6 +3,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
 import { useLifeLog } from "../context/LifeLogContext";
+import type { PlaceDraft } from "../utils/placeShareParser";
+import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 
 interface EntrySheetProps {
@@ -39,13 +41,18 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
     }
 
     let savedPersonId = "";
+    let savedPlaceId = "";
     if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
-    if (entryType === "place") await savePlace(formData, itemId);
+    if (entryType === "place") savedPlaceId = await savePlace(formData, itemId);
     if (entryType === "memory") await saveMemory(formData, itemId);
 
     onClose();
     if (entryType === "person" && !itemId && savedPersonId) {
       navigate(`/people/${savedPersonId}`);
+      return;
+    }
+    if (entryType === "place" && !itemId && savedPlaceId) {
+      navigate(`/places/${savedPlaceId}`);
       return;
     }
     navigate(current.redirect);
@@ -71,7 +78,7 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
           {entryType === "person" && (
             <PersonFields person={editingItem as Person | undefined} isEditing={Boolean(itemId)} />
           )}
-          {entryType === "place" && <PlaceFields place={editingItem as Place | undefined} />}
+          {entryType === "place" && <PlaceFields place={editingItem as Place | undefined} isEditing={Boolean(itemId)} />}
           {entryType === "memory" && (
             <MemoryFields
               memory={editingItem as MemoryEvent | undefined}
@@ -85,7 +92,7 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
               取消
             </button>
             <button type="submit" className="primary-btn">
-              {entryType === "person" && !itemId ? "创建" : "保存"}
+              {!itemId && (entryType === "person" || entryType === "place") ? "创建" : "保存"}
             </button>
           </div>
         </form>
@@ -359,7 +366,9 @@ function PreferenceGroupEditor({
   );
 }
 
-function PlaceFields({ place }: { place?: Place }) {
+function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }) {
+  if (!isEditing) return <QuickPlaceFields />;
+
   return (
     <>
       <div className="form-row">
@@ -436,6 +445,106 @@ function PlaceFields({ place }: { place?: Place }) {
         标签，逗号分隔
         <input name="tags" defaultValue={place?.tags.join("，") || "安静，推荐"} />
       </label>
+    </>
+  );
+}
+
+function QuickPlaceFields() {
+  const [shareText, setShareText] = useState("");
+  const [draft, setDraft] = useState<PlaceDraft>(() => emptyPlaceDraft());
+  const [message, setMessage] = useState("");
+
+  function applyShareText() {
+    const parsed = parsePlaceShare(shareText);
+    setDraft((current) => ({ ...current, ...parsed }));
+    setMessage(
+      parsed.confidence
+        ? `已识别 ${parsed.confidence}%：${parsed.sourceType === "generic" ? "普通文本" : parsed.sourceType}`
+        : "没有识别到明确地点，可以先手动填写。"
+    );
+  }
+
+  function updateDraft(patch: Partial<PlaceDraft>) {
+    setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  return (
+    <>
+      <div className="share-import">
+        <label>
+          粘贴地图 / 点评分享
+          <textarea
+            value={shareText}
+            onChange={(event) => setShareText(event.target.value)}
+            placeholder="粘贴高德、美团、大众点评分享文本或链接"
+          />
+        </label>
+        <button type="button" className="mini-action add" onClick={applyShareText}>
+          识别分享
+        </button>
+        {message && <p className="form-hint">{message}</p>}
+      </div>
+
+      <label>
+        地点名称
+        <input
+          name="name"
+          value={draft.name}
+          onChange={(event) => updateDraft({ name: event.target.value })}
+          placeholder="例如：海底捞"
+          required
+        />
+      </label>
+      <div className="form-row">
+        <label>
+          城市
+          <input
+            name="city"
+            value={draft.city}
+            onChange={(event) => updateDraft({ city: event.target.value })}
+            placeholder="例如：杭州"
+          />
+        </label>
+        <label>
+          类型
+          <input
+            name="category"
+            value={draft.category}
+            onChange={(event) => updateDraft({ category: event.target.value })}
+            placeholder="餐厅、酒店、景点..."
+          />
+        </label>
+      </div>
+      <label>
+        地址
+        <input
+          name="address"
+          value={draft.address}
+          onChange={(event) => updateDraft({ address: event.target.value })}
+          placeholder="可以先空着，后续再补"
+        />
+      </label>
+      <label>
+        备注
+        <textarea
+          name="desc"
+          value={draft.desc}
+          onChange={(event) => updateDraft({ desc: event.target.value })}
+          placeholder="例如：朋友推荐，想下次去试试。"
+        />
+      </label>
+
+      <input type="hidden" name="country" value={draft.country || "中国"} />
+      <input type="hidden" name="area" value={draft.area} />
+      <input type="hidden" name="storeName" value={draft.storeName} />
+      <input type="hidden" name="rating" value="4" />
+      <input type="hidden" name="favorite" value="false" />
+      <input type="hidden" name="latitude" value={draft.latitude} />
+      <input type="hidden" name="longitude" value={draft.longitude} />
+      <input type="hidden" name="mapUrl" value={draft.mapUrl} />
+      <input type="hidden" name="sourceUrl" value={draft.sourceUrl} />
+      <input type="hidden" name="tags" value={draft.tags} />
+      <p className="form-hint">先保存核心信息即可，区域、分店、定位和链接可以在详情页继续编辑。</p>
     </>
   );
 }

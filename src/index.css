@@ -1036,6 +1036,15 @@ h3 {
   line-height: 1.5;
 }
 
+.share-import {
+  display: grid;
+  gap: 10px;
+}
+
+.share-import .mini-action {
+  width: 100%;
+}
+
 .pref-editor {
   display: grid;
   gap: 10px;

@@ -19,7 +19,7 @@ interface LifeLogContextValue {
   state: LifeLogState;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
-  savePlace: (formData: FormData, id?: string) => Promise<void>;
+  savePlace: (formData: FormData, id?: string) => Promise<string>;
   saveMemory: (formData: FormData, id?: string) => Promise<void>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   importData: (file: File) => Promise<void>;
@@ -127,6 +127,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           ? current.places.map((item) => (item.id === existing.id ? place : item))
           : [...current.places, place]
       }));
+
+      return place.id;
     }
 
     async function saveMemory(formData: FormData, id?: string) {
