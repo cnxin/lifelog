@@ -13,6 +13,7 @@ export default function PersonDetail() {
   const navigate = useNavigate();
   const { state, getPlaceName } = useLifeLog();
   const [editing, setEditing] = useState(false);
+  const [addingMemory, setAddingMemory] = useState(false);
   const person = state.people.find((item) => item.id === personId);
 
   if (!person) {
@@ -113,6 +114,9 @@ export default function PersonDetail() {
       <section className="section">
         <div className="section-header">
           <h2>相关回忆</h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            新增
+          </button>
         </div>
         <div className="list">
           {relatedMemories.map((memory) => (
@@ -135,6 +139,11 @@ export default function PersonDetail() {
       </section>
 
       <EntrySheet type={editing ? "person" : null} itemId={person.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={addingMemory ? "memory" : null}
+        initialPersonId={person.id}
+        onClose={() => setAddingMemory(false)}
+      />
     </>
   );
 }

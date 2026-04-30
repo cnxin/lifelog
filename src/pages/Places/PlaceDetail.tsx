@@ -13,6 +13,7 @@ export default function PlaceDetail() {
   const navigate = useNavigate();
   const { state, getPersonName } = useLifeLog();
   const [editing, setEditing] = useState(false);
+  const [addingMemory, setAddingMemory] = useState(false);
   const place = state.places.find((item) => item.id === placeId);
 
   if (!place) {
@@ -156,6 +157,9 @@ export default function PlaceDetail() {
       <section className="section">
         <div className="section-header">
           <h2>相关回忆</h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            新增
+          </button>
         </div>
         <div className="list">
           {relatedMemories.map((memory) => (
@@ -178,6 +182,11 @@ export default function PlaceDetail() {
       </section>
 
       <EntrySheet type={editing ? "place" : null} itemId={place.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={addingMemory ? "memory" : null}
+        initialPlaceId={place.id}
+        onClose={() => setAddingMemory(false)}
+      />
     </>
   );
 }

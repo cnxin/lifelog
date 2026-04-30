@@ -10,6 +10,8 @@ import { groupsToText, splitPreferenceItems } from "../utils/text";
 interface EntrySheetProps {
   type: EntryType | null;
   itemId?: string;
+  initialPersonId?: string;
+  initialPlaceId?: string;
   onClose: () => void;
 }
 
@@ -19,7 +21,7 @@ const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: str
   memory: { addTitle: "新增回忆", editTitle: "编辑回忆", kicker: "把人物和地点连接起来", redirect: "/memories" }
 };
 
-export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
+export default function EntrySheet({ type, itemId, initialPersonId, initialPlaceId, onClose }: EntrySheetProps) {
   const navigate = useNavigate();
   const { state, savePerson, savePlace, saveMemory } = useLifeLog();
   const [error, setError] = useState("");
@@ -42,9 +44,10 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
 
     let savedPersonId = "";
     let savedPlaceId = "";
+    let savedMemoryId = "";
     if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
     if (entryType === "place") savedPlaceId = await savePlace(formData, itemId);
-    if (entryType === "memory") await saveMemory(formData, itemId);
+    if (entryType === "memory") savedMemoryId = await saveMemory(formData, itemId);
 
     onClose();
     if (entryType === "person" && !itemId && savedPersonId) {
@@ -53,6 +56,10 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
     }
     if (entryType === "place" && !itemId && savedPlaceId) {
       navigate(`/places/${savedPlaceId}`);
+      return;
+    }
+    if (entryType === "memory" && !itemId && savedMemoryId) {
+      navigate(`/memories/${savedMemoryId}`);
       return;
     }
     navigate(current.redirect);
@@ -84,6 +91,8 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
               memory={editingItem as MemoryEvent | undefined}
               people={state.people}
               places={state.places}
+              initialPersonId={initialPersonId}
+              initialPlaceId={initialPlaceId}
             />
           )}
 
@@ -552,12 +561,18 @@ function QuickPlaceFields() {
 function MemoryFields({
   memory,
   people,
-  places
+  places,
+  initialPersonId,
+  initialPlaceId
 }: {
   memory?: MemoryEvent;
   people: Array<{ id: string; name: string }>;
   places: Array<{ id: string; name: string }>;
+  initialPersonId?: string;
+  initialPlaceId?: string;
 }) {
+  const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
+
   return (
     <>
       <label>
@@ -574,19 +589,26 @@ function MemoryFields({
           <input name="mood" defaultValue={memory?.mood || "开心"} />
         </label>
       </div>
-      <label>
-        关联人物
-        <select name="personId" defaultValue={memory?.personIds[0] || people[0]?.id || ""}>
+      <div>
+        <span className="field-title">关联人物</span>
+        <div className="choice-grid">
           {people.map((person) => (
-            <option key={person.id} value={person.id}>
-              {person.name}
-            </option>
+            <label className="choice-item" key={person.id}>
+              <input
+                name="personIds"
+                type="checkbox"
+                value={person.id}
+                defaultChecked={selectedPersonIds.includes(person.id)}
+              />
+              <span>{person.name}</span>
+            </label>
           ))}
-        </select>
-      </label>
+        </div>
+        {!people.length && <p className="form-hint">还没有人物，可以先保存回忆，后续再关联。</p>}
+      </div>
       <label>
         关联地点
-        <select name="placeId" defaultValue={memory?.placeId || places[0]?.id || ""}>
+        <select name="placeId" defaultValue={memory?.placeId || initialPlaceId || places[0]?.id || ""}>
           {places.map((place) => (
             <option key={place.id} value={place.id}>
               {place.name}

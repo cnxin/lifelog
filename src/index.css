@@ -1009,6 +1009,35 @@ h3 {
   resize: vertical;
 }
 
+.field-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.choice-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: var(--text-main);
+  background: rgba(99, 110, 114, 0.08);
+}
+
+.choice-item input {
+  width: auto;
+  flex: 0 0 auto;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

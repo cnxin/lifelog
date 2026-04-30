@@ -20,7 +20,7 @@ interface LifeLogContextValue {
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   savePlace: (formData: FormData, id?: string) => Promise<string>;
-  saveMemory: (formData: FormData, id?: string) => Promise<void>;
+  saveMemory: (formData: FormData, id?: string) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   importData: (file: File) => Promise<void>;
   getPersonName: (id: string) => string;
@@ -133,11 +133,16 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function saveMemory(formData: FormData, id?: string) {
       const existing = state.memories.find((memory) => memory.id === id);
+      const selectedPersonIds = formData
+        .getAll("personIds")
+        .map((item) => String(item))
+        .filter(Boolean);
+      const legacyPersonId = String(formData.get("personId") || "");
       const memory: MemoryEvent = {
         id: existing?.id || uid("m"),
         title: String(formData.get("title") || "新的回忆"),
         date: String(formData.get("date") || new Date().toISOString().slice(0, 10)),
-        personIds: [String(formData.get("personId") || "")].filter(Boolean),
+        personIds: selectedPersonIds.length ? selectedPersonIds : [legacyPersonId].filter(Boolean),
         placeId: String(formData.get("placeId") || ""),
         mood: String(formData.get("mood") || "平静"),
         content: String(formData.get("content") || ""),
@@ -151,6 +156,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           ? current.memories.map((item) => (item.id === existing.id ? memory : item))
           : [...current.memories, memory]
       }));
+
+      return memory.id;
     }
 
     async function deleteEntry(type: EntryType, id: string) {
