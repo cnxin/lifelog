@@ -60,6 +60,10 @@
   - `@capacitor/android`
   - Gradle Wrapper
   - AndroidManifest 和基础应用配置
+- 增加 Windows Android debug APK 构建脚本：
+  - `scripts/build-android-debug.ps1`
+  - `npm.cmd run android:debug`
+- 完成 Android debug APK 构建验证，产物为 `android/app/build/outputs/apk/debug/app-debug.apk`。
 
 ### Changed
 
@@ -82,7 +86,7 @@
 
 ## Planned
 
-- 安装/配置 Android SDK 和 JDK 17 后完成 Android 真机验证。
+- 安装 APK 到 Android 真机或模拟器完成运行验证。
 - 增加照片和相册能力。
 - 增加地图选点、当前位置获取和外部导航跳转。
 - 增加云同步和账号登录。

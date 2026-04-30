@@ -28,7 +28,7 @@ Prerequisites:
 
 - Android Studio
 - Android SDK
-- JDK 17 or newer
+- JDK 21 or newer
 - `ANDROID_HOME` or `ANDROID_SDK_ROOT` pointing to the Android SDK
 
 Current generated Android versions:
@@ -47,16 +47,19 @@ npm.cmd run cap:sync
 npm.cmd run cap:open:android
 ```
 
-To build from the command line after Android Studio, SDK, and JDK 17 are installed:
+To build a debug APK from the command line:
 
 ```bash
-npm.cmd run build
-npm.cmd run cap:sync
-cd android
-gradlew.bat assembleDebug
+npm.cmd run android:debug
 ```
 
-On the current Windows machine, `gradlew.bat --version` works, but a full Android task/build was not completed because the command-line environment does not yet expose a complete Android SDK/JDK 17 setup. The detected Java runtime is JDK 15, and only `ANDROID_SDK_HOME=C:\Android` is set.
+The verified debug APK output is:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+On the current Windows machine, a portable JDK 21 is installed at `C:\Users\42008\.local\jdks\jdk-21.0.11+10`, and Android SDK command-line tools are installed at `C:\Users\42008\Android\Sdk`. The debug APK build was verified successfully on 2026-04-30.
 
 ## iOS Flow
 
@@ -97,9 +100,7 @@ The optional `@capacitor/assets` package is not kept in the project because its 
 
 ## Recommended Next Mobile Tasks
 
-- Install or configure Android Studio, Android SDK, and JDK 17.
-- Set `JAVA_HOME` and `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
-- Run `android\gradlew.bat assembleDebug`.
+- Install the debug APK on an emulator or real Android device.
 - Open the project with Android Studio and run on an emulator or real device.
 - Add real PNG app icon and splash source files.
 - Verify IndexedDB persistence in Android WebView.

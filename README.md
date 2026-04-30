@@ -149,12 +149,13 @@ Service Worker 只会在生产环境注册。
 - `@capacitor/android`
 - Android/iOS 平台脚本
 - `android/` 原生工程
+- Android debug APK 构建已验证
 
 详细说明见 `MOBILE.md`。
 
 ## 后续开发建议
 
-- 安装 Android Studio / SDK 后完成 Android 真机验证
+- 安装 APK 到 Android 真机或模拟器完成运行验证
 - 后续在 macOS 上生成 iOS 工程
 - 补充照片上传和本地图片管理
 - 增加地点地图选择和定位权限
