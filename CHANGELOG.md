@@ -71,6 +71,10 @@
 - 增加 Android release APK 安装脚本：
   - `scripts/install-android-release.ps1`
   - `npm.cmd run android:install:release`
+- 增加移动端触摸反馈：
+  - 可点击卡片、按钮、底部导航、筛选标签、日历项按压反馈
+  - 移除移动浏览器默认蓝色点击高亮
+  - 适配 `prefers-reduced-motion`
 
 ### Changed
 

@@ -13,6 +13,7 @@
   --soft-purple: rgba(108, 92, 231, 0.1);
   --soft-orange: rgba(253, 160, 133, 0.16);
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  --press-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -58,6 +59,23 @@ select {
 
 button {
   cursor: pointer;
+}
+
+button,
+a,
+[role="button"],
+.glass-card,
+.person-info,
+.place-info,
+.memory-info,
+.favorite-button,
+.calendar-day,
+.calendar-item,
+.tap-chip,
+.category-pill,
+.link-action {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 h1,
@@ -212,6 +230,7 @@ h3 {
 
 .glass-card:active {
   transform: scale(0.985);
+  box-shadow: var(--press-shadow);
 }
 
 .search-bar {
@@ -383,11 +402,13 @@ h3 {
 .person-open {
   border: 0;
   background: transparent;
+  transition: transform 0.16s ease, filter 0.16s ease;
 }
 
 .place-tap {
   border: 0;
   background: transparent;
+  transition: transform 0.16s ease, filter 0.16s ease;
 }
 
 .place-info,
@@ -504,6 +525,7 @@ h3 {
   place-items: center;
   color: var(--primary);
   background: var(--soft-purple);
+  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
 }
 
 .icon-action.danger {
@@ -657,6 +679,7 @@ h3 {
   border: 1px solid var(--line);
   color: var(--text-main);
   text-align: left;
+  transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .detail-row span {
@@ -684,6 +707,7 @@ h3 {
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
 .link-action.disabled {
@@ -715,6 +739,7 @@ h3 {
   background: var(--soft-purple);
   font-size: 13px;
   font-weight: 700;
+  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
 }
 
 .category-pill {
@@ -726,6 +751,7 @@ h3 {
   background: var(--card-bg);
   font-size: 13px;
   font-weight: 600;
+  transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease, filter 0.16s ease;
 }
 
 .category-pill.active {
@@ -822,6 +848,7 @@ h3 {
   background: rgba(255, 255, 255, 0.52);
   font-size: 13px;
   font-weight: 700;
+  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
 }
 
 .calendar-day.muted-day {
@@ -861,6 +888,7 @@ h3 {
   padding: 14px;
   color: var(--text-main);
   text-align: left;
+  transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .calendar-item span {
@@ -886,6 +914,7 @@ h3 {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
 .fab svg {
@@ -947,6 +976,7 @@ h3 {
   background: rgba(99, 110, 114, 0.1);
   font-size: 24px;
   line-height: 1;
+  transition: transform 0.16s ease, background-color 0.16s ease;
 }
 
 .form {
@@ -1030,6 +1060,7 @@ h3 {
   padding: 0 10px;
   font-size: 12px;
   font-weight: 700;
+  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
 }
 
 .mini-action.add {
@@ -1055,6 +1086,7 @@ h3 {
   border-radius: 18px;
   flex: 1;
   font-weight: 700;
+  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
 }
 
 .primary-btn {
@@ -1125,6 +1157,108 @@ h3 {
 
 .danger-btn {
   background: linear-gradient(135deg, #e17055, var(--secondary));
+}
+
+.see-all:active,
+.person-open:active,
+.place-tap:active,
+.favorite-button:active,
+.icon-action:active,
+.detail-button:active,
+.link-action:not(.disabled):active,
+.tap-chip:active,
+.category-pill:active,
+.calendar-day:active,
+.calendar-item:active,
+.fab:active,
+.sheet-close:active,
+.mini-action:active,
+.primary-btn:active,
+.ghost-btn:active,
+.back-button:active {
+  transform: scale(0.96);
+}
+
+.nav-item:active {
+  transform: translateY(-1px) scale(0.94);
+}
+
+.nav-item.active:active {
+  transform: translateY(-2px) scale(0.94);
+}
+
+.person-info:active,
+.place-info:active,
+.memory-info:active {
+  opacity: 0.72;
+}
+
+.link-action:not(.disabled):active,
+.fab:active,
+.primary-btn:active,
+.danger-btn:active {
+  filter: saturate(1.08) brightness(0.96);
+  box-shadow: var(--press-shadow);
+}
+
+.icon-action:active,
+.tap-chip:active,
+.category-pill:active,
+.mini-action:active,
+.ghost-btn:active,
+.sheet-close:active {
+  filter: brightness(0.94);
+}
+
+button:disabled,
+.link-action.disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .glass-card:hover {
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.07);
+  }
+
+  .icon-action:hover,
+  .tap-chip:hover,
+  .category-pill:hover,
+  .mini-action:hover,
+  .sheet-close:hover,
+  .ghost-btn:hover {
+    filter: brightness(0.97);
+  }
+
+  .link-action:not(.disabled):hover,
+  .fab:hover,
+  .primary-btn:hover {
+    filter: saturate(1.05) brightness(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .see-all,
+  .person-open,
+  .place-tap,
+  .favorite-button,
+  .icon-action,
+  .detail-button,
+  .link-action,
+  .tap-chip,
+  .category-pill,
+  .calendar-day,
+  .calendar-item,
+  .fab,
+  .sheet-close,
+  .mini-action,
+  .primary-btn,
+  .ghost-btn,
+  .back-button,
+  .nav-item {
+    transition: none;
+  }
 }
 
 @media (max-width: 430px) {
