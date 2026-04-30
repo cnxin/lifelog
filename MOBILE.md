@@ -61,6 +61,43 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 On the current Windows machine, a portable JDK 21 is installed at `C:\Users\42008\.local\jdks\jdk-21.0.11+10`, and Android SDK command-line tools are installed at `C:\Users\42008\Android\Sdk`. The debug APK build was verified successfully on 2026-04-30.
 
+## Release APK
+
+For local distribution or repeated installation on the same Android devices, use a signed release APK.
+
+Create the local signing key once:
+
+```bash
+powershell -ExecutionPolicy Bypass -File scripts/create-android-keystore.ps1
+```
+
+Build the signed release APK:
+
+```bash
+npm.cmd run android:release
+```
+
+The release APK output is:
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+Signing files are intentionally not committed:
+
+- `C:\Users\42008\.local\lifelog\lifelog-release.p12`
+- `android/keystore.properties`
+
+Keep the release keystore backed up. Android treats packages signed with a different key as different upgrade lines, so losing the key means future builds cannot upgrade over the old installed app.
+
+Install the release APK on a connected Android device:
+
+```bash
+npm.cmd run android:install:release
+```
+
+The device must have Developer options and USB debugging enabled. If the phone asks whether to allow USB debugging, approve it and run the install command again.
+
 ## iOS Flow
 
 Prerequisites:
@@ -101,6 +138,7 @@ The optional `@capacitor/assets` package is not kept in the project because its 
 ## Recommended Next Mobile Tasks
 
 - Install the debug APK on an emulator or real Android device.
+- Share the signed release APK for small-scope manual testing.
 - Open the project with Android Studio and run on an emulator or real device.
 - Add real PNG app icon and splash source files.
 - Verify IndexedDB persistence in Android WebView.

@@ -64,6 +64,13 @@
   - `scripts/build-android-debug.ps1`
   - `npm.cmd run android:debug`
 - 完成 Android debug APK 构建验证，产物为 `android/app/build/outputs/apk/debug/app-debug.apk`。
+- 增加 Android release APK 本地签名和构建流程：
+  - `scripts/create-android-keystore.ps1`
+  - `scripts/build-android-release.ps1`
+  - `npm.cmd run android:release`
+- 增加 Android release APK 安装脚本：
+  - `scripts/install-android-release.ps1`
+  - `npm.cmd run android:install:release`
 
 ### Changed
 
