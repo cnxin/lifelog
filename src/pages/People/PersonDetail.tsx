@@ -93,7 +93,11 @@ export default function PersonDetail() {
               </span>
             </GlassCard>
           ))}
-          {!person.anniversaries.length && <GlassCard className="empty">还没有纪念日</GlassCard>}
+          {!person.anniversaries.length && (
+            <GlassCard className="empty">
+              还没有纪念日，点击上方“编辑资料”补充。
+            </GlassCard>
+          )}
         </div>
       </section>
 
@@ -144,7 +148,7 @@ function PreferenceBlocks({
   emptyText: string;
   danger?: boolean;
 }) {
-  if (!groups.length) return <GlassCard className="empty">{emptyText}</GlassCard>;
+  if (!groups.length) return <GlassCard className="empty">{emptyText}，可以点击“编辑资料”补充。</GlassCard>;
 
   return (
     <div className="pref-grid">

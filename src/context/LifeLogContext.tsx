@@ -18,7 +18,7 @@ import { parseGroups, splitList } from "../utils/text";
 interface LifeLogContextValue {
   state: LifeLogState;
   isLoading: boolean;
-  savePerson: (formData: FormData, id?: string) => Promise<void>;
+  savePerson: (formData: FormData, id?: string) => Promise<string>;
   savePlace: (formData: FormData, id?: string) => Promise<void>;
   saveMemory: (formData: FormData, id?: string) => Promise<void>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
@@ -95,6 +95,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           ? current.people.map((item) => (item.id === existing.id ? person : item))
           : [...current.people, person]
       }));
+
+      return person.id;
     }
 
     async function savePlace(formData: FormData, id?: string) {

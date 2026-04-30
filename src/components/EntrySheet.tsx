@@ -38,11 +38,16 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
       return;
     }
 
-    if (entryType === "person") await savePerson(formData, itemId);
+    let savedPersonId = "";
+    if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
     if (entryType === "place") await savePlace(formData, itemId);
     if (entryType === "memory") await saveMemory(formData, itemId);
 
     onClose();
+    if (entryType === "person" && !itemId && savedPersonId) {
+      navigate(`/people/${savedPersonId}`);
+      return;
+    }
     navigate(current.redirect);
   }
 
@@ -63,7 +68,9 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
 
         <form className="form" onSubmit={handleSubmit}>
           {error && <div className="form-error">{error}</div>}
-          {entryType === "person" && <PersonFields person={editingItem as Person | undefined} />}
+          {entryType === "person" && (
+            <PersonFields person={editingItem as Person | undefined} isEditing={Boolean(itemId)} />
+          )}
           {entryType === "place" && <PlaceFields place={editingItem as Place | undefined} />}
           {entryType === "memory" && (
             <MemoryFields
@@ -78,7 +85,7 @@ export default function EntrySheet({ type, itemId, onClose }: EntrySheetProps) {
               取消
             </button>
             <button type="submit" className="primary-btn">
-              保存
+              {entryType === "person" && !itemId ? "创建" : "保存"}
             </button>
           </div>
         </form>
@@ -111,7 +118,9 @@ function findEditingItem(type: EntryType, itemId: string | undefined, state: Lif
   return state.memories.find((memory) => memory.id === itemId);
 }
 
-function PersonFields({ person }: { person?: Person }) {
+function PersonFields({ person, isEditing }: { person?: Person; isEditing: boolean }) {
+  if (!isEditing) return <QuickPersonFields />;
+
   const [birthdayYear = "", birthdayMonth = "", birthdayDay = ""] = (person?.birthday || "").split("-");
   const customAnniversaries = (person?.anniversaries || []).filter((item) => item.title !== "生日");
 
@@ -182,6 +191,30 @@ function PersonFields({ person }: { person?: Person }) {
       <label>
         备注
         <textarea name="notes" defaultValue={person?.notes || "这里记录一些重要细节。"} />
+      </label>
+    </>
+  );
+}
+
+function QuickPersonFields() {
+  return (
+    <>
+      <label>
+        姓名
+        <input name="name" placeholder="例如：王晓明" required autoFocus />
+      </label>
+      <label>
+        关系
+        <input name="relationship" defaultValue="朋友" placeholder="朋友、家人、同事..." />
+      </label>
+      <input type="hidden" name="favorite" value="false" />
+      <input type="hidden" name="preferences" value="" />
+      <input type="hidden" name="dislikes" value="" />
+      <input type="hidden" name="anniversaries" value="[]" />
+      <p className="form-hint">先记下这个人就可以，生日、喜好、禁忌和纪念日可以在详情页慢慢补。</p>
+      <label>
+        一句话备注
+        <textarea name="notes" placeholder="例如：喜欢喝美式，不吃香菜。" />
       </label>
     </>
   );
