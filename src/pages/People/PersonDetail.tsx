@@ -4,7 +4,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { daysUntil, formatSolarLunar } from "../../utils/date";
+import { anniversaryRelativeLabel, anniversaryYearLabel, formatSolarLunar } from "../../utils/date";
 import { initials } from "../../utils/text";
 import { useState } from "react";
 
@@ -89,7 +89,7 @@ export default function PersonDetail() {
             <GlassCard className="detail-row" key={`${item.title}-${item.date}`}>
               <strong>{item.title}</strong>
               <span>
-                {formatSolarLunar(item.date)} · 还有 {daysUntil(item.date)} 天
+                {formatSolarLunar(item.date)} · {anniversaryRelativeLabel(item.date)} · {anniversaryYearLabel(item.date)}
               </span>
             </GlassCard>
           ))}

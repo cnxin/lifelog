@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { daysUntil, formatLunarDate, formatMonthDay, getUpcomingAnniversaries } from "../../utils/date";
+import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries } from "../../utils/date";
 import { initials } from "../../utils/text";
 
 export default function Home() {
@@ -34,6 +34,8 @@ export default function Home() {
                 {item.days}
                 <span>天</span>
               </div>
+              <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
+              <div className="a-date">{item.yearLabel}</div>
               <div className="a-date">{formatMonthDay(item.date)}</div>
               <div className="a-date">{formatLunarDate(item.date)}</div>
             </GlassCard>

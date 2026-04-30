@@ -50,7 +50,7 @@ export default function PlaceDetail() {
               {place.favorite && <Star />}
             </div>
             <p>
-              {place.country} · {place.city} · {place.area || "未分组"}
+              {place.country} · {place.city} · {place.area || "未设置区域"}
             </p>
             <button className="category-pill active" onClick={() => setEditing(true)}>
               编辑地点
@@ -73,11 +73,11 @@ export default function PlaceDetail() {
             </span>
           </GlassCard>
           <GlassCard className="detail-row">
-            <strong>商场 / 商圈</strong>
-            <span>{place.area || "未分组"}</span>
+            <strong>所在区域</strong>
+            <span>{place.area || "未设置"}</span>
           </GlassCard>
           <GlassCard className="detail-row">
-            <strong>店家 / 分店</strong>
+            <strong>具体店铺 / 场所</strong>
             <span>{place.storeName || "未设置"}</span>
           </GlassCard>
           <GlassCard className="detail-row">

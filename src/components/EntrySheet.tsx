@@ -189,18 +189,16 @@ function PersonFields({ person }: { person?: Person }) {
 
 interface AnniversaryRow {
   title: string;
-  year: string;
-  month: string;
-  day: string;
+  date: string;
 }
 
 function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] }) {
   const [rows, setRows] = useState<AnniversaryRow[]>(
     anniversaries?.length
-      ? anniversaries.map((item) => {
-          const [year = "", month = "", day = ""] = item.date.split("-");
-          return { title: item.title, year, month, day };
-        })
+      ? anniversaries.map((item) => ({
+          title: item.title,
+          date: item.date
+        }))
       : []
   );
 
@@ -209,7 +207,7 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
   }
 
   function addRow() {
-    setRows((current) => [...current, { title: "", year: "", month: "", day: "" }]);
+    setRows((current) => [...current, { title: "", date: "" }]);
   }
 
   function removeRow(index: number) {
@@ -219,7 +217,7 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
   const payload = rows
     .map((row) => ({
       title: row.title.trim(),
-      date: buildDateValue(row.year, row.month, row.day)
+      date: row.date
     }))
     .filter((row) => row.title && row.date);
 
@@ -235,31 +233,10 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
             onChange={(event) => updateRow(index, { title: event.target.value })}
           />
           <input
-            aria-label="年"
-            type="number"
-            min="1"
-            max="9999"
-            placeholder="2024"
-            value={row.year}
-            onChange={(event) => updateRow(index, { year: event.target.value })}
-          />
-          <input
-            aria-label="月"
-            type="number"
-            min="1"
-            max="12"
-            placeholder="09"
-            value={row.month}
-            onChange={(event) => updateRow(index, { month: event.target.value })}
-          />
-          <input
-            aria-label="日"
-            type="number"
-            min="1"
-            max="31"
-            placeholder="01"
-            value={row.day}
-            onChange={(event) => updateRow(index, { day: event.target.value })}
+            aria-label="纪念日日期"
+            type="date"
+            value={row.date}
+            onChange={(event) => updateRow(index, { date: event.target.value })}
           />
           <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
             删除
@@ -272,14 +249,6 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
       <p className="form-hint">纪念日同样只输入公历日期，详情页会自动显示农历日期。</p>
     </div>
   );
-}
-
-function buildDateValue(yearValue: string, monthValue: string, dayValue: string) {
-  const year = yearValue.trim();
-  const month = monthValue.trim();
-  const day = dayValue.trim();
-  if (!year || !month || !day) return "";
-  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 function PreferenceGroupEditor({
@@ -372,14 +341,15 @@ function PlaceFields({ place }: { place?: Place }) {
       </div>
       <div className="form-row">
         <label>
-          商场 / 商圈
-          <input name="area" defaultValue={place?.area || "万达广场"} />
+          所在区域
+          <input name="area" defaultValue={place?.area || "湖滨商圈"} placeholder="商圈、街区、景区、商场或园区" />
         </label>
         <label>
-          店家 / 分店
-          <input name="storeName" defaultValue={place?.storeName || "湖滨店"} />
+          具体店铺 / 场所
+          <input name="storeName" defaultValue={place?.storeName || "湖滨店"} placeholder="分店、楼层、影厅、景点入口等" />
         </label>
       </div>
+      <p className="form-hint">层级按国家 / 城市 / 所在区域 / 具体位置记录；地点名称填写主名称。</p>
       <div className="form-row">
         <label>
           地点名称

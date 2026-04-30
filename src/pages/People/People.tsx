@@ -8,7 +8,7 @@ import SearchBar from "../../components/SearchBar";
 import Tags from "../../components/Tags";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { daysUntil, formatLunarDate } from "../../utils/date";
+import { anniversaryRelativeLabel, anniversaryYearLabel, formatLunarDate } from "../../utils/date";
 import { groupSummary, initials } from "../../utils/text";
 
 export default function People() {
@@ -65,7 +65,7 @@ export default function People() {
                   <p className="person-desc">
                     {person.relationship} ·{" "}
                     {anniversary
-                      ? `${anniversary.title}还有 ${daysUntil(anniversary.date)} 天 · ${formatLunarDate(anniversary.date)}`
+                      ? `${anniversary.title}${anniversaryRelativeLabel(anniversary.date)} · ${anniversaryYearLabel(anniversary.date)} · ${formatLunarDate(anniversary.date)}`
                       : "暂无纪念日"}
                   </p>
                   <Tags items={[...groupSummary(person.preferences, 3), ...groupSummary(person.dislikes, 1)]} />

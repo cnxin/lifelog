@@ -74,7 +74,7 @@ export default function Places() {
 
   return (
     <>
-      <SearchBar value={query} placeholder="搜索店家、商场、城市、标签" onChange={setQuery} />
+      <SearchBar value={query} placeholder="搜索地点、区域、城市、标签" onChange={setQuery} />
       <div className="location-switcher">
         <label>
           国家
@@ -128,7 +128,7 @@ export default function Places() {
                   </span>
                 </div>
                 <p className="place-desc">
-                  {place.country} · {place.city} · {place.area || "未分组"}
+                  {place.country} · {place.city} · {place.area || "未设置区域"}
                 </p>
                 <p className="place-desc">
                   {place.category} · {place.address || place.desc}
