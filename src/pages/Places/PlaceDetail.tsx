@@ -6,6 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
+import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
@@ -102,19 +103,19 @@ export default function PlaceDetail() {
 
       <section className="section">
         <div className="action-grid">
-          {place.mapUrl ? (
-            <a className="link-action" href={place.mapUrl} target="_blank" rel="noreferrer">
+          {place.mapUrl || (place.latitude && place.longitude) ? (
+            <button className="link-action" type="button" onClick={() => void openPlaceMap(place)}>
               <Navigation /> 打开地图
-            </a>
+            </button>
           ) : (
             <span className="link-action disabled">
               <Navigation /> 未设置地图
             </span>
           )}
           {place.sourceUrl ? (
-            <a className="link-action" href={place.sourceUrl} target="_blank" rel="noreferrer">
+            <button className="link-action" type="button" onClick={() => void openExternalUrl(place.sourceUrl)}>
               <ExternalLink /> 参考链接
-            </a>
+            </button>
           ) : (
             <span className="link-action disabled">
               <ExternalLink /> 未设置链接

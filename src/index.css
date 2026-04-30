@@ -1053,6 +1053,23 @@ h3 {
   min-width: 0;
 }
 
+.anniversary-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: -6px;
+}
+
+.anniversary-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 0.75fr 0.65fr 0.65fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.anniversary-editor-row input {
+  min-width: 0;
+}
+
 .mini-action {
   border: 0;
   border-radius: 14px;
@@ -1284,6 +1301,10 @@ button:disabled,
 @media (max-width: 380px) {
   .pref-editor-row {
     grid-template-columns: 1fr;
+  }
+
+  .anniversary-editor-row {
+    grid-template-columns: 1fr 1fr;
   }
 
   .birthday-editor {

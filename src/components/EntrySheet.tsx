@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { EntryType, LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
+import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
 import { useLifeLog } from "../context/LifeLogContext";
-import { groupsToText } from "../utils/text";
+import { groupsToText, splitPreferenceItems } from "../utils/text";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -113,6 +113,7 @@ function findEditingItem(type: EntryType, itemId: string | undefined, state: Lif
 
 function PersonFields({ person }: { person?: Person }) {
   const [birthdayYear = "", birthdayMonth = "", birthdayDay = ""] = (person?.birthday || "").split("-");
+  const customAnniversaries = (person?.anniversaries || []).filter((item) => item.title !== "生日");
 
   return (
     <>
@@ -154,6 +155,8 @@ function PersonFields({ person }: { person?: Person }) {
         </label>
       </div>
       <p className="form-hint">只记录公历生日，农历日期会自动计算并显示。</p>
+      <label>纪念日</label>
+      <AnniversaryEditor anniversaries={customAnniversaries} />
       <label>
         喜好档案
       </label>
@@ -184,6 +187,101 @@ function PersonFields({ person }: { person?: Person }) {
   );
 }
 
+interface AnniversaryRow {
+  title: string;
+  year: string;
+  month: string;
+  day: string;
+}
+
+function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] }) {
+  const [rows, setRows] = useState<AnniversaryRow[]>(
+    anniversaries?.length
+      ? anniversaries.map((item) => {
+          const [year = "", month = "", day = ""] = item.date.split("-");
+          return { title: item.title, year, month, day };
+        })
+      : []
+  );
+
+  function updateRow(index: number, patch: Partial<AnniversaryRow>) {
+    setRows((current) => current.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
+  }
+
+  function addRow() {
+    setRows((current) => [...current, { title: "", year: "", month: "", day: "" }]);
+  }
+
+  function removeRow(index: number) {
+    setRows((current) => current.filter((_, rowIndex) => rowIndex !== index));
+  }
+
+  const payload = rows
+    .map((row) => ({
+      title: row.title.trim(),
+      date: buildDateValue(row.year, row.month, row.day)
+    }))
+    .filter((row) => row.title && row.date);
+
+  return (
+    <div className="anniversary-editor">
+      <input type="hidden" name="anniversaries" value={JSON.stringify(payload)} />
+      {rows.map((row, index) => (
+        <div className="anniversary-editor-row" key={`anniversary-${index}`}>
+          <input
+            aria-label="纪念日名称"
+            placeholder="纪念日名称"
+            value={row.title}
+            onChange={(event) => updateRow(index, { title: event.target.value })}
+          />
+          <input
+            aria-label="年"
+            type="number"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            value={row.year}
+            onChange={(event) => updateRow(index, { year: event.target.value })}
+          />
+          <input
+            aria-label="月"
+            type="number"
+            min="1"
+            max="12"
+            placeholder="09"
+            value={row.month}
+            onChange={(event) => updateRow(index, { month: event.target.value })}
+          />
+          <input
+            aria-label="日"
+            type="number"
+            min="1"
+            max="31"
+            placeholder="01"
+            value={row.day}
+            onChange={(event) => updateRow(index, { day: event.target.value })}
+          />
+          <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
+            删除
+          </button>
+        </div>
+      ))}
+      <button type="button" className="mini-action add" onClick={addRow}>
+        添加纪念日
+      </button>
+      <p className="form-hint">纪念日同样只输入公历日期，详情页会自动显示农历日期。</p>
+    </div>
+  );
+}
+
+function buildDateValue(yearValue: string, monthValue: string, dayValue: string) {
+  const year = yearValue.trim();
+  const month = monthValue.trim();
+  const day = dayValue.trim();
+  if (!year || !month || !day) return "";
+  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
 function PreferenceGroupEditor({
   name,
   groups,
@@ -195,9 +293,14 @@ function PreferenceGroupEditor({
   defaults: PreferenceGroup[];
   danger?: boolean;
 }) {
-  const [rows, setRows] = useState<PreferenceGroup[]>(groups?.length ? groups : defaults);
+  const [rows, setRows] = useState(() =>
+    (groups?.length ? groups : defaults).map((group) => ({
+      category: group.category,
+      itemsText: group.items.join("、")
+    }))
+  );
 
-  function updateRow(index: number, patch: Partial<PreferenceGroup>) {
+  function updateRow(index: number, patch: Partial<{ category: string; itemsText: string }>) {
     setRows((current) =>
       current.map((row, rowIndex) =>
         rowIndex === index
@@ -211,16 +314,23 @@ function PreferenceGroupEditor({
   }
 
   function addRow() {
-    setRows((current) => [...current, { category: "", items: [] }]);
+    setRows((current) => [...current, { category: "", itemsText: "" }]);
   }
 
   function removeRow(index: number) {
     setRows((current) => current.filter((_, rowIndex) => rowIndex !== index));
   }
 
+  const groupsValue: PreferenceGroup[] = rows
+    .map((row) => ({
+      category: row.category.trim(),
+      items: splitPreferenceItems(row.itemsText)
+    }))
+    .filter((row) => row.category && row.items.length);
+
   return (
     <div className={`pref-editor ${danger ? "danger" : ""}`}>
-      <input type="hidden" name={name} value={groupsToText(rows)} />
+      <input type="hidden" name={name} value={groupsToText(groupsValue)} />
       {rows.map((row, index) => (
         <div className="pref-editor-row" key={`${name}-${index}`}>
           <input
@@ -231,16 +341,9 @@ function PreferenceGroupEditor({
           />
           <input
             aria-label="项目"
-            placeholder="用逗号分隔多个项目"
-            value={row.items.join("，")}
-            onChange={(event) =>
-              updateRow(index, {
-                items: event.target.value
-                  .split(/[，,]/)
-                  .map((item) => item.trim())
-                  .filter(Boolean)
-              })
-            }
+            placeholder="用顿号或分号分隔"
+            value={row.itemsText}
+            onChange={(event) => updateRow(index, { itemsText: event.target.value })}
           />
           <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
             删除

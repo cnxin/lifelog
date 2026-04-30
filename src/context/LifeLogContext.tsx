@@ -12,7 +12,7 @@ import {
   savePersonRecord,
   savePlaceRecord
 } from "../db/database";
-import type { EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
+import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
 import { parseGroups, splitList } from "../utils/text";
 
 interface LifeLogContextValue {
@@ -69,6 +69,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         formData.get("birthdayMonth"),
         formData.get("birthdayDay")
       );
+      const anniversaries = mergeBirthdayAnniversary(
+        birthday,
+        parseAnniversaries(formData.get("anniversaries"))
+      );
+
       const person: Person = {
         id: existing?.id || uid("p"),
         name: String(formData.get("name") || "未命名"),
@@ -79,7 +84,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         favorite: formData.get("favorite") === "true",
         preferences: parseGroups(formData.get("preferences")),
         dislikes: parseGroups(formData.get("dislikes")),
-        anniversaries: birthday ? [{ title: "生日", date: birthday }] : [],
+        anniversaries,
         notes: String(formData.get("notes") || "")
       };
 
@@ -248,6 +253,35 @@ function buildDate(
   const month = rawMonth.padStart(2, "0");
   const day = rawDay.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function parseAnniversaries(value: FormDataEntryValue | null): Anniversary[] {
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as Array<Partial<Anniversary>>;
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item) => ({
+        title: String(item.title || "").trim(),
+        date: String(item.date || "").trim()
+      }))
+      .filter((item) => item.title && isDateValue(item.date));
+  } catch {
+    return [];
+  }
+}
+
+function mergeBirthdayAnniversary(birthday: string, anniversaries: Anniversary[]) {
+  const custom = anniversaries.filter((item) => item.title !== "生日");
+  if (!birthday) return custom;
+  return [{ title: "生日", date: birthday }, ...custom];
+}
+
+function isDateValue(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
 export function useLifeLog() {

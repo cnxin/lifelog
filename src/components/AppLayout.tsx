@@ -7,6 +7,7 @@ import EntrySheet from "./EntrySheet";
 import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
 import { useState } from "react";
+import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -35,6 +36,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const meta = getPageMeta(location.pathname);
+  useAndroidBackButton(() => {
+    if (!sheetType) return false;
+    setSheetType(null);
+    return true;
+  });
 
   return (
     <div className="app-container">
