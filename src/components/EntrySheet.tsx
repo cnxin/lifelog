@@ -433,16 +433,6 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       </label>
       <div className="form-row">
         <label>
-          纬度
-          <input name="latitude" type="number" step="0.000001" defaultValue={place?.latitude || ""} />
-        </label>
-        <label>
-          经度
-          <input name="longitude" type="number" step="0.000001" defaultValue={place?.longitude || ""} />
-        </label>
-      </div>
-      <div className="form-row">
-        <label>
           评分
           <input name="rating" type="number" step="0.1" defaultValue={place?.rating || 4.5} />
         </label>
@@ -455,22 +445,21 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         </label>
       </div>
       <label>
-        地图 / 定位链接
-        <input name="mapUrl" defaultValue={place?.mapUrl || ""} placeholder="高德、百度、Google Maps 等链接" />
+        高德分享链接
+        <input name="mapUrl" defaultValue={place?.mapUrl || ""} placeholder="粘贴高德分享链接，详情页可直接打开高德" />
       </label>
       <label>
         参考链接 / 攻略链接
         <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
       </label>
       <label>
-        平台链接
-        <textarea
+        美团店铺链接
+        <input
           name="platformLinks"
-          defaultValue={platformLinksToText(place?.platformLinks)}
-          placeholder="每行一个，格式：美团 | https://..."
+          defaultValue={extractMeituanLinkText(place?.platformLinks)}
+          placeholder="粘贴美团店铺链接，详情页可直接打开美团 App"
         />
       </label>
-      <p className="form-hint">可保存美团、点评、抖音、高德等真实分享链接；没有填写时详情页会自动生成搜索入口。</p>
       <label>
         照片链接
         <textarea
@@ -484,6 +473,8 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         描述
         <textarea name="desc" defaultValue={place?.desc || "适合约会或聚餐。"} />
       </label>
+      <input type="hidden" name="latitude" value={place?.latitude || ""} />
+      <input type="hidden" name="longitude" value={place?.longitude || ""} />
       <label>
         标签，逗号分隔
         <input name="tags" defaultValue={place?.tags.join("，") || "安静，推荐"} />
@@ -593,10 +584,10 @@ function QuickPlaceFields() {
       <input type="hidden" name="longitude" value={draft.longitude} />
       <input type="hidden" name="mapUrl" value={draft.mapUrl} />
       <input type="hidden" name="sourceUrl" value={draft.sourceUrl} />
-      <input type="hidden" name="platformLinks" value={draft.platformLinks} />
+      <input type="hidden" name="platformLinks" value={extractMeituanLinkTextFromDraft(draft)} />
       <input type="hidden" name="photos" value={draft.photos} />
       <input type="hidden" name="tags" value={draft.tags} />
-      <p className="form-hint">先保存核心信息即可，区域、分店、定位和链接可以在详情页继续编辑。</p>
+      <p className="form-hint">先保存核心信息即可，区域、分店、高德链接、美团链接和照片可以在详情页继续编辑。</p>
     </>
   );
 }
@@ -762,4 +753,12 @@ function formatPreviewDate(date: string) {
     month: "long",
     day: "numeric"
   });
+}
+
+function extractMeituanLinkText(links?: Place["platformLinks"]) {
+  return links?.find((link) => link.platform === "meituan")?.url || "";
+}
+
+function extractMeituanLinkTextFromDraft(draft: PlaceDraft) {
+  return draft.sourceType === "meituan" && draft.sourceUrl ? `美团 | ${draft.sourceUrl}` : "";
 }

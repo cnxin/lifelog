@@ -33,19 +33,11 @@ export default function Home() {
       path: "/people"
     },
     {
-      id: "place-location",
+      id: "place-map",
       icon: <MapPin />,
-      count: state.places.filter((place) => !place.latitude || !place.longitude).length,
-      title: "补充定位",
-      desc: "定位后可以直接打开高德地图",
-      path: "/places"
-    },
-    {
-      id: "place-links",
-      icon: <Sparkles />,
-      count: state.places.filter((place) => !place.platformLinks.length && !place.sourceUrl).length,
-      title: "补充来源",
-      desc: "保存美团、点评、抖音或攻略链接",
+      count: state.places.filter((place) => !place.mapUrl && !(place.latitude && place.longitude)).length,
+      title: "补充高德入口",
+      desc: "有高德链接后可以直接从地点详情打开高德",
       path: "/places"
     }
   ].filter((task) => task.count > 0);

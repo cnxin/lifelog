@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Search, Sparkles, Star, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Sparkles, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -6,8 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
-import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
-import { buildPlacePlatformLinks } from "../../utils/placeLinks";
+import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
@@ -32,22 +31,15 @@ export default function PlaceDetail() {
   const relatedPeople = Array.from(
     new Set(relatedMemories.flatMap((memory) => memory.personIds).filter(Boolean))
   );
-  const platformLinks = buildPlacePlatformLinks(place);
   const photos = (place.photos || []).slice(0, 3);
+  const meituanLink = place.platformLinks.find((link) => link.platform === "meituan");
   const completionTips = [
     {
-      id: "location",
+      id: "mapLink",
       icon: <MapPin />,
-      title: "补充定位",
-      desc: "填写经纬度后可以直接打开高德定位。",
-      visible: !place.latitude || !place.longitude
-    },
-    {
-      id: "platformLinks",
-      icon: <Search />,
-      title: "补充平台链接",
-      desc: "保存美团、点评、抖音或高德真实分享链接。",
-      visible: !place.platformLinks.length && !place.sourceUrl
+      title: "补充高德入口",
+      desc: "保存高德分享链接后可以直接打开高德。",
+      visible: !place.mapUrl && !(place.latitude && place.longitude)
     },
     {
       id: "photos",
@@ -150,12 +142,6 @@ export default function PlaceDetail() {
             <strong>评分</strong>
             <span>{place.rating}</span>
           </GlassCard>
-          <GlassCard className="detail-row">
-            <strong>定位</strong>
-            <span>
-              {place.latitude && place.longitude ? `${place.latitude}, ${place.longitude}` : "未设置"}
-            </span>
-          </GlassCard>
         </div>
       </section>
 
@@ -170,6 +156,11 @@ export default function PlaceDetail() {
               <Navigation /> 未设置地图
             </span>
           )}
+          {meituanLink ? (
+            <button className="link-action secondary" type="button" onClick={() => void openNativeStoreUrl(meituanLink.url)}>
+              <Store /> 打开美团
+            </button>
+          ) : null}
           {place.sourceUrl ? (
             <button className="link-action" type="button" onClick={() => void openExternalUrl(place.sourceUrl)}>
               <ExternalLink /> 参考链接
@@ -179,16 +170,6 @@ export default function PlaceDetail() {
               <ExternalLink /> 未设置链接
             </span>
           )}
-          {platformLinks.map((link) => (
-            <button
-              className="link-action secondary"
-              type="button"
-              key={`${link.platform}-${link.url}`}
-              onClick={() => void (link.platform === "amap" ? openPlaceMap(place) : openExternalUrl(link.url))}
-            >
-              <Search /> {link.label}
-            </button>
-          ))}
         </div>
       </section>
 

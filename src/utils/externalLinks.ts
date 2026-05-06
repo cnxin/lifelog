@@ -20,6 +20,18 @@ export async function openExternalUrl(rawUrl: string) {
   window.location.href = url;
 }
 
+export async function openNativeStoreUrl(rawUrl: string) {
+  const url = rawUrl.trim();
+  if (!url) return;
+
+  if (Capacitor.isNativePlatform()) {
+    window.location.href = url;
+    return;
+  }
+
+  await openExternalUrl(url);
+}
+
 export async function openPlaceMap(place: Place) {
   const amapUrl = buildAmapUrl(place);
 

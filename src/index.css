@@ -866,22 +866,36 @@ h3 {
   overflow-wrap: anywhere;
 }
 
-.anniversary-detail-row {
-  display: grid;
-  grid-template-columns: minmax(72px, 0.42fr) minmax(0, 1fr);
-  align-items: start;
+.anniversary-detail-card {
+  padding: 14px;
 }
 
-.anniversary-detail-row strong {
+.anniversary-detail-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.anniversary-detail-head strong {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 15px;
 }
 
-.anniversary-detail-row span {
-  overflow-wrap: normal;
-  word-break: keep-all;
+.anniversary-detail-date {
+  flex: 0 0 auto;
+  color: var(--text-sub);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.anniversary-detail-meta {
+  margin-top: 8px;
+  color: var(--text-sub);
+  font-size: 13px;
   line-height: 1.45;
 }
 

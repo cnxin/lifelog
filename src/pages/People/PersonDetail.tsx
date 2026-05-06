@@ -141,11 +141,14 @@ export default function PersonDetail() {
         </div>
         <div className="list">
           {person.anniversaries.map((item) => (
-            <GlassCard className="detail-row anniversary-detail-row" key={`${item.title}-${item.date}`}>
-              <strong>{item.title}</strong>
-              <span>
-                {formatSolarLunar(item.date)} · {anniversaryRelativeLabel(item.date)} · {anniversaryYearLabel(item.date)}
-              </span>
+            <GlassCard className="anniversary-detail-card" key={`${item.title}-${item.date}`}>
+              <div className="anniversary-detail-head">
+                <strong>{item.title}</strong>
+                <span className="anniversary-detail-date">{item.date}</span>
+              </div>
+              <div className="anniversary-detail-meta">
+                {anniversaryRelativeLabel(item.date)} · {anniversaryYearLabel(item.date)}
+              </div>
             </GlassCard>
           ))}
           {!person.anniversaries.length && (
