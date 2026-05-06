@@ -74,6 +74,7 @@ a,
 .tap-chip,
 .category-pill,
 .task-card,
+.completion-card,
 .link-action {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -381,6 +382,44 @@ h3 {
 }
 
 .task-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.completion-list {
+  display: grid;
+  gap: 10px;
+}
+
+.completion-card {
+  width: 100%;
+  min-height: 74px;
+  border: 0;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.completion-card strong,
+.completion-card span {
+  display: block;
+}
+
+.completion-card strong {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.completion-card span {
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.45;
@@ -1327,6 +1366,7 @@ h3 {
 .calendar-day:active,
 .calendar-item:active,
 .task-card:active,
+.completion-card:active,
 .fab:active,
 .sheet-close:active,
 .mini-action:active,
@@ -1405,6 +1445,7 @@ button:disabled,
   .link-action,
   .tap-chip,
   .task-card,
+  .completion-card,
   .category-pill,
   .calendar-day,
   .calendar-item,

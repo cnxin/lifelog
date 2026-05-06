@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Search, Star, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Search, Sparkles, Star, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -35,6 +35,36 @@ export default function PlaceDetail() {
   const amapWebUrl = buildAmapWebMarkerUrl(place);
   const platformLinks = buildPlacePlatformLinks(place);
   const photos = (place.photos || []).slice(0, 3);
+  const completionTips = [
+    {
+      id: "location",
+      icon: <MapPin />,
+      title: "补充定位",
+      desc: "填写经纬度后可以直接打开高德定位。",
+      visible: !place.latitude || !place.longitude
+    },
+    {
+      id: "platformLinks",
+      icon: <Search />,
+      title: "补充平台链接",
+      desc: "保存美团、点评、抖音或高德真实分享链接。",
+      visible: !place.platformLinks.length && !place.sourceUrl
+    },
+    {
+      id: "photos",
+      icon: <Camera />,
+      title: "补充照片",
+      desc: "添加图片链接后详情页会展示前三张照片。",
+      visible: !place.photos.length
+    },
+    {
+      id: "address",
+      icon: <Navigation />,
+      title: "补充地址",
+      desc: "地址和所在区域能让地点列表更好搜索。",
+      visible: !place.address || !place.area
+    }
+  ].filter((tip) => tip.visible);
 
   return (
     <>
@@ -63,6 +93,30 @@ export default function PlaceDetail() {
           </div>
         </GlassCard>
       </section>
+
+      {completionTips.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 建议补充
+            </h2>
+            <button className="see-all" onClick={() => setEditing(true)}>
+              去编辑
+            </button>
+          </div>
+          <div className="completion-list">
+            {completionTips.map((tip) => (
+              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
+                <div className="task-icon">{tip.icon}</div>
+                <div>
+                  <strong>{tip.title}</strong>
+                  <span>{tip.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">

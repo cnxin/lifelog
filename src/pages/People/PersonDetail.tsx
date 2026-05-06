@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Heart, MapPin, Star } from "lucide-react";
+import { ArrowLeft, Calendar, Gift, Heart, MapPin, Sparkles, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -31,6 +31,36 @@ export default function PersonDetail() {
   const relatedPlaces = Array.from(
     new Set(relatedMemories.map((memory) => memory.placeId).filter(Boolean))
   );
+  const completionTips = [
+    {
+      id: "birthday",
+      icon: <Calendar />,
+      title: "补充生日",
+      desc: "生日会自动出现在纪念日、日历和首页提醒。",
+      visible: !person.birthday
+    },
+    {
+      id: "preferences",
+      icon: <Heart />,
+      title: "补充喜好",
+      desc: "记录颜色、食物、饮品、活动等偏好。",
+      visible: !person.preferences.length
+    },
+    {
+      id: "dislikes",
+      icon: <Sparkles />,
+      title: "补充禁忌",
+      desc: "把过敏、口味、雷区提前记下来。",
+      visible: !person.dislikes.length
+    },
+    {
+      id: "anniversaries",
+      icon: <Gift />,
+      title: "补充纪念日",
+      desc: "相识日、重要节点会自动计算农历和周年。",
+      visible: person.anniversaries.length <= (person.birthday ? 1 : 0)
+    }
+  ].filter((tip) => tip.visible);
 
   return (
     <>
@@ -62,6 +92,30 @@ export default function PersonDetail() {
           </div>
         </GlassCard>
       </section>
+
+      {completionTips.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 建议补充
+            </h2>
+            <button className="see-all" onClick={() => setEditing(true)}>
+              去编辑
+            </button>
+          </div>
+          <div className="completion-list">
+            {completionTips.map((tip) => (
+              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
+                <div className="task-icon">{tip.icon}</div>
+                <div>
+                  <strong>{tip.title}</strong>
+                  <span>{tip.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">
