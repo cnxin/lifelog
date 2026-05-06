@@ -643,7 +643,7 @@ function MemoryFields({
             </select>
           </label>
         </div>
-        <input type="hidden" name="title" value="快速记录" />
+        <input type="hidden" name="title" value="" />
         <input type="hidden" name="date" value={new Date().toISOString().slice(0, 10)} />
         <input type="hidden" name="mood" value="日常" />
         <input type="hidden" name="tags" value="快速记录" />

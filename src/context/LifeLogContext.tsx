@@ -141,14 +141,16 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         .map((item) => String(item))
         .filter(Boolean);
       const legacyPersonId = String(formData.get("personId") || "");
+      const content = String(formData.get("content") || "");
+      const title = buildMemoryTitle(String(formData.get("title") || ""), content);
       const memory: MemoryEvent = {
         id: existing?.id || uid("m"),
-        title: String(formData.get("title") || "新的回忆"),
+        title,
         date: String(formData.get("date") || new Date().toISOString().slice(0, 10)),
         personIds: selectedPersonIds.length ? selectedPersonIds : [legacyPersonId].filter(Boolean),
         placeId: String(formData.get("placeId") || ""),
         mood: String(formData.get("mood") || "平静"),
-        content: String(formData.get("content") || ""),
+        content,
         tags: splitList(formData.get("tags"))
       };
 
@@ -296,6 +298,16 @@ function mergeBirthdayAnniversary(birthday: string, anniversaries: Anniversary[]
 
 function isDateValue(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function buildMemoryTitle(rawTitle: string, content: string) {
+  const title = rawTitle.trim();
+  if (title && title !== "快速记录") return title;
+
+  const normalizedContent = content.trim().replace(/\s+/g, " ");
+  if (!normalizedContent) return title || "新的回忆";
+
+  return normalizedContent.length > 16 ? `${normalizedContent.slice(0, 16)}...` : normalizedContent;
 }
 
 export function useLifeLog() {

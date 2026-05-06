@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Heart, MapPin, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Heart, MapPin, Sparkles, Tag, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -23,6 +23,37 @@ export default function MemoryDetail() {
     );
   }
 
+  const completionTips = [
+    {
+      id: "content",
+      icon: <Heart />,
+      title: "补充内容",
+      desc: "写下发生了什么、下次要注意什么。",
+      visible: !memory.content.trim()
+    },
+    {
+      id: "people",
+      icon: <Users />,
+      title: "关联人物",
+      desc: "关联后人物详情会自动出现这条回忆。",
+      visible: !memory.personIds.length
+    },
+    {
+      id: "place",
+      icon: <MapPin />,
+      title: "关联地点",
+      desc: "关联后地点详情会自动串起去过的人和回忆。",
+      visible: !memory.placeId
+    },
+    {
+      id: "tags",
+      icon: <Tag />,
+      title: "补充心情和标签",
+      desc: "让以后搜索和回看更容易。",
+      visible: memory.mood === "日常" || !memory.tags.length
+    }
+  ].filter((tip) => tip.visible);
+
   return (
     <>
       <section className="section">
@@ -46,6 +77,30 @@ export default function MemoryDetail() {
           </div>
         </GlassCard>
       </section>
+
+      {completionTips.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 建议补充
+            </h2>
+            <button className="see-all" onClick={() => setEditing(true)}>
+              去编辑
+            </button>
+          </div>
+          <div className="completion-list">
+            {completionTips.map((tip) => (
+              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
+                <div className="task-icon">{tip.icon}</div>
+                <div>
+                  <strong>{tip.title}</strong>
+                  <span>{tip.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">
