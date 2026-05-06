@@ -1,4 +1,4 @@
-import { Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Heart, MapPin, Sparkles, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
@@ -12,6 +12,40 @@ export default function Home() {
   const upcoming = getUpcomingAnniversaries(state.people).slice(0, 4);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 2);
+  const tasks = [
+    {
+      id: "people-birthday",
+      icon: <Users />,
+      count: state.people.filter((person) => !person.birthday).length,
+      title: "补充生日",
+      desc: "生日和纪念日会出现在首页与日历",
+      path: "/people"
+    },
+    {
+      id: "people-preferences",
+      icon: <Heart />,
+      count: state.people.filter((person) => !person.preferences.length && !person.dislikes.length).length,
+      title: "补充喜好",
+      desc: "记录颜色、食物、禁忌和送礼线索",
+      path: "/people"
+    },
+    {
+      id: "place-location",
+      icon: <MapPin />,
+      count: state.places.filter((place) => !place.latitude || !place.longitude).length,
+      title: "补充定位",
+      desc: "定位后可以直接打开高德地图",
+      path: "/places"
+    },
+    {
+      id: "place-links",
+      icon: <Sparkles />,
+      count: state.places.filter((place) => !place.platformLinks.length && !place.sourceUrl).length,
+      title: "补充来源",
+      desc: "保存美团、点评、抖音或攻略链接",
+      path: "/places"
+    }
+  ].filter((task) => task.count > 0);
 
   return (
     <>
@@ -59,6 +93,29 @@ export default function Home() {
           </div>
         </GlassCard>
       </section>
+
+      {tasks.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 待补全
+            </h2>
+          </div>
+          <div className="task-grid">
+            {tasks.slice(0, 4).map((task) => (
+              <button className="task-card" key={task.id} onClick={() => navigate(task.path)}>
+                <div className="task-icon">{task.icon}</div>
+                <div>
+                  <strong>
+                    {task.count} 项 · {task.title}
+                  </strong>
+                  <span>{task.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">

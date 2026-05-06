@@ -73,6 +73,7 @@ a,
 .calendar-item,
 .tap-chip,
 .category-pill,
+.task-card,
 .link-action {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -330,6 +331,59 @@ h3 {
 .metric span {
   color: var(--text-sub);
   font-size: 12px;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.task-card {
+  min-height: 94px;
+  border: 0;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.task-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.task-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.task-card strong,
+.task-card span {
+  display: block;
+}
+
+.task-card strong {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.task-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .favorites-grid {
@@ -1272,6 +1326,7 @@ h3 {
 .category-pill:active,
 .calendar-day:active,
 .calendar-item:active,
+.task-card:active,
 .fab:active,
 .sheet-close:active,
 .mini-action:active,
@@ -1349,6 +1404,7 @@ button:disabled,
   .detail-button,
   .link-action,
   .tap-chip,
+  .task-card,
   .category-pill,
   .calendar-day,
   .calendar-item,
