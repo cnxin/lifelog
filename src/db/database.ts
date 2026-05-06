@@ -154,7 +154,8 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
       latitude: place.latitude,
       longitude: place.longitude,
       mapUrl: place.mapUrl || "",
-      sourceUrl: place.sourceUrl || ""
+      sourceUrl: place.sourceUrl || "",
+      photos: Array.isArray(place.photos) ? place.photos.filter(Boolean).map(String) : []
     })) as Place[],
     memories: (input.memories || seedData.memories) as MemoryEvent[]
   };

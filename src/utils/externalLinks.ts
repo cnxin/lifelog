@@ -1,6 +1,7 @@
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import type { Place } from "../types";
+import { buildAmapWebMarkerUrl } from "./placeLinks";
 
 export async function openExternalUrl(rawUrl: string) {
   const url = rawUrl.trim();
@@ -34,6 +35,12 @@ export async function openPlaceMap(place: Place) {
 
   if (place.mapUrl) {
     await openExternalUrl(place.mapUrl);
+    return;
+  }
+
+  const amapWebUrl = buildAmapWebMarkerUrl(place);
+  if (amapWebUrl) {
+    await openExternalUrl(amapWebUrl);
     return;
   }
 

@@ -72,6 +72,7 @@ export const seedData: LifeLogState = {
       longitude: 120.1482,
       mapUrl: "https://ditu.amap.com/search?query=%E6%9D%AD%E5%B7%9E%E4%B8%87%E8%BE%BE%E5%B9%BF%E5%9C%BA",
       sourceUrl: "https://www.pitravel.cn/",
+      photos: [],
       desc: "服务稳定，适合多人聚餐。",
       tags: ["火锅", "聚餐"],
       favorite: true
@@ -90,6 +91,7 @@ export const seedData: LifeLogState = {
       longitude: 120.163,
       mapUrl: "https://ditu.amap.com/search?query=%E6%9D%AD%E5%B7%9E%E6%B9%96%E6%BB%A8%E9%93%B6%E6%B3%B0",
       sourceUrl: "https://www.pitravel.cn/",
+      photos: [],
       desc: "环境安静，适合聊天。",
       tags: ["咖啡", "安静"],
       favorite: false
@@ -108,6 +110,7 @@ export const seedData: LifeLogState = {
       longitude: 120.1482,
       mapUrl: "https://ditu.amap.com/search?query=%E4%B8%87%E8%BE%BE%E5%BD%B1%E5%9F%8E%20IMAX%20%E6%9D%AD%E5%B7%9E",
       sourceUrl: "https://www.pitravel.cn/",
+      photos: [],
       desc: "音效不错，周末排队久。",
       tags: ["电影", "商场"],
       favorite: false

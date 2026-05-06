@@ -447,6 +447,15 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
       </label>
       <label>
+        照片链接
+        <textarea
+          name="photos"
+          defaultValue={(place?.photos || []).join("\n")}
+          placeholder="每行一个图片链接，可以先粘贴高德或其他来源的图片 URL"
+        />
+      </label>
+      <p className="form-hint">详情页会展示前 3 张照片；链接失效时会自动隐藏。</p>
+      <label>
         描述
         <textarea name="desc" defaultValue={place?.desc || "适合约会或聚餐。"} />
       </label>
@@ -552,6 +561,7 @@ function QuickPlaceFields() {
       <input type="hidden" name="longitude" value={draft.longitude} />
       <input type="hidden" name="mapUrl" value={draft.mapUrl} />
       <input type="hidden" name="sourceUrl" value={draft.sourceUrl} />
+      <input type="hidden" name="photos" value={draft.photos} />
       <input type="hidden" name="tags" value={draft.tags} />
       <p className="form-hint">先保存核心信息即可，区域、分店、定位和链接可以在详情页继续编辑。</p>
     </>

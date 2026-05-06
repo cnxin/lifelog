@@ -715,9 +715,30 @@ h3 {
   background: var(--card-bg);
 }
 
+.link-action.secondary {
+  color: var(--primary);
+  background: var(--soft-purple);
+  box-shadow: none;
+}
+
 .link-action svg {
   width: 18px;
   height: 18px;
+}
+
+.place-photo-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.place-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  object-fit: cover;
+  background: rgba(99, 110, 114, 0.1);
+  box-shadow: var(--shadow);
 }
 
 .detail-link-button {

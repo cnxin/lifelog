@@ -27,6 +27,13 @@ export function splitList(value: FormDataEntryValue | null) {
     .filter(Boolean);
 }
 
+export function splitLines(value: FormDataEntryValue | null) {
+  return String(value || "")
+    .split(/\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export function splitPreferenceItems(value: string) {
   return value
     .split(/[、;；\n]/)

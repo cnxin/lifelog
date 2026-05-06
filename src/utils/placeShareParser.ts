@@ -12,6 +12,7 @@ export interface PlaceDraft {
   longitude: string;
   mapUrl: string;
   sourceUrl: string;
+  photos: string;
   desc: string;
   tags: string;
   sourceType: PlaceSourceType;
@@ -31,6 +32,7 @@ export function emptyPlaceDraft(): PlaceDraft {
     longitude: "",
     mapUrl: "",
     sourceUrl: "",
+    photos: "",
     desc: "",
     tags: "",
     sourceType: "generic",
@@ -48,6 +50,7 @@ export function parsePlaceShare(input: string): PlaceDraft {
   const textWithoutUrl = url ? text.replace(url, " ") : text;
   const urlDraft = parseUrl(url, sourceType);
   const textDraft = parseShareText(textWithoutUrl);
+  const photos = extractPhotoUrls(text).join("\n");
   const address = textDraft.address || urlDraft.address || "";
   const name = textDraft.name || urlDraft.name || fallbackName(textWithoutUrl) || "";
 
@@ -62,6 +65,7 @@ export function parsePlaceShare(input: string): PlaceDraft {
     category: textDraft.category || inferCategory(`${name} ${textWithoutUrl}`),
     mapUrl: sourceType === "amap" ? url || urlDraft.mapUrl || "" : urlDraft.mapUrl || "",
     sourceUrl: url || "",
+    photos,
     desc: text.length > 160 ? text.slice(0, 160) : text,
     tags: sourceType === "generic" ? "" : sourceLabel(sourceType),
     sourceType,
@@ -126,6 +130,16 @@ function parseShareText(text: string): Partial<PlaceDraft> {
 
 function extractFirstUrl(text: string) {
   return (text.match(/(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/)[^\s，,。；;]+/i)?.[0] || "").trim();
+}
+
+function extractPhotoUrls(text: string) {
+  return Array.from(
+    new Set(
+      Array.from(text.matchAll(/https?:\/\/[^\s，,。；;]+?\.(?:jpg|jpeg|png|webp)(?:\?[^\s，,。；;]+)?/gi))
+        .map((match) => match[0].trim())
+        .filter(Boolean)
+    )
+  );
 }
 
 function detectSourceType(text: string, url: string): PlaceSourceType {

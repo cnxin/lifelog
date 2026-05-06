@@ -13,7 +13,7 @@ import {
   savePlaceRecord
 } from "../db/database";
 import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
-import { parseGroups, splitList } from "../utils/text";
+import { parseGroups, splitLines, splitList } from "../utils/text";
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -115,6 +115,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         longitude: Number(formData.get("longitude")) || undefined,
         mapUrl: String(formData.get("mapUrl") || ""),
         sourceUrl: String(formData.get("sourceUrl") || ""),
+        photos: splitLines(formData.get("photos")),
         desc: String(formData.get("desc") || ""),
         tags: splitList(formData.get("tags")),
         favorite: formData.get("favorite") === "true"

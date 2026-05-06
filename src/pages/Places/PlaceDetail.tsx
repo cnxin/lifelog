@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, MapPin, Navigation, Star, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Search, Star, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -7,6 +7,7 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
 import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
+import { buildAmapWebMarkerUrl, buildPlacePlatformLinks } from "../../utils/placeLinks";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
@@ -31,6 +32,9 @@ export default function PlaceDetail() {
   const relatedPeople = Array.from(
     new Set(relatedMemories.flatMap((memory) => memory.personIds).filter(Boolean))
   );
+  const amapWebUrl = buildAmapWebMarkerUrl(place);
+  const platformLinks = buildPlacePlatformLinks(place);
+  const photos = (place.photos || []).slice(0, 3);
 
   return (
     <>
@@ -122,7 +126,48 @@ export default function PlaceDetail() {
               <ExternalLink /> 未设置链接
             </span>
           )}
+          {amapWebUrl ? (
+            <button className="link-action secondary" type="button" onClick={() => void openExternalUrl(amapWebUrl)}>
+              <MapPin /> 高德网页
+            </button>
+          ) : (
+            <span className="link-action disabled">
+              <MapPin /> 无定位
+            </span>
+          )}
+          {platformLinks.map((link) => (
+            <button className="link-action secondary" type="button" key={link.label} onClick={() => void openExternalUrl(link.url)}>
+              <Search /> {link.label}
+            </button>
+          ))}
         </div>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <Camera /> 照片
+          </h2>
+        </div>
+        {photos.length ? (
+          <div className="place-photo-strip">
+            {photos.map((photo) => (
+              <img
+                alt={place.name}
+                className="place-photo"
+                key={photo}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                src={photo}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty">还没有照片，可以编辑地点添加图片链接</GlassCard>
+        )}
       </section>
 
       <section className="section">

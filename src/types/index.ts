@@ -38,6 +38,7 @@ export interface Place {
   longitude?: number;
   mapUrl: string;
   sourceUrl: string;
+  photos: string[];
   desc: string;
   tags: string[];
   favorite: boolean;
