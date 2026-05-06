@@ -645,6 +645,7 @@ function MemoryFields({
         </div>
         <input type="hidden" name="title" value="" />
         <input type="hidden" name="date" value={new Date().toISOString().slice(0, 10)} />
+        <input type="hidden" name="memoryMode" value="quick" />
         <input type="hidden" name="mood" value="日常" />
         <input type="hidden" name="tags" value="快速记录" />
         <p className="form-hint">可以手动选择，也可以留空；保存时会尝试从内容中自动识别已有的人物和地点。</p>
