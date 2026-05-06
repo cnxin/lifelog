@@ -13,6 +13,7 @@ import {
   savePlaceRecord
 } from "../db/database";
 import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
+import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
 import { parseGroups, splitLines, splitList } from "../utils/text";
 
@@ -144,19 +145,29 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const content = String(formData.get("content") || "");
       const title = buildMemoryTitle(String(formData.get("title") || ""), content);
       const memoryMode = String(formData.get("memoryMode") || "");
+      const selectedPlaceId = String(formData.get("placeId") || "");
+      const inputDate = String(formData.get("date") || new Date().toISOString().slice(0, 10));
+      const quickInference = inferQuickMemory({
+        rawTitle: String(formData.get("title") || ""),
+        content,
+        people: state.people,
+        places: state.places,
+        fallbackDate: inputDate,
+        selectedPersonIds,
+        selectedPlaceId,
+        fallbackPersonId: legacyPersonId
+      });
       const matchedPersonIds = selectedPersonIds.length
         ? selectedPersonIds
         : existing
           ? [legacyPersonId].filter(Boolean)
-          : inferPersonIds(content, state.people, legacyPersonId);
-      const selectedPlaceId = String(formData.get("placeId") || "");
-      const inputDate = String(formData.get("date") || new Date().toISOString().slice(0, 10));
+          : quickInference.personIds;
       const memory: MemoryEvent = {
         id: existing?.id || uid("m"),
         title,
-        date: memoryMode === "quick" && !existing ? inferMemoryDate(content, inputDate) : inputDate,
+        date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
         personIds: matchedPersonIds,
-        placeId: selectedPlaceId || (!existing ? inferPlaceId(content, state.places) : ""),
+        placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
         mood: String(formData.get("mood") || "平静"),
         content,
         tags: splitList(formData.get("tags"))
@@ -306,80 +317,6 @@ function mergeBirthdayAnniversary(birthday: string, anniversaries: Anniversary[]
 
 function isDateValue(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function buildMemoryTitle(rawTitle: string, content: string) {
-  const title = rawTitle.trim();
-  if (title && title !== "快速记录") return title;
-
-  const normalizedContent = content.trim().replace(/\s+/g, " ");
-  if (!normalizedContent) return title || "新的回忆";
-
-  return normalizedContent.length > 16 ? `${normalizedContent.slice(0, 16)}...` : normalizedContent;
-}
-
-function inferPersonIds(content: string, people: Person[], fallbackId = "") {
-  const normalized = content.trim();
-  const matched = people
-    .filter((person) => {
-      const names = [person.name, person.nickname].filter(Boolean);
-      return names.some((name) => normalized.includes(String(name)));
-    })
-    .map((person) => person.id);
-
-  return matched.length ? matched : [fallbackId].filter(Boolean);
-}
-
-function inferPlaceId(content: string, places: Place[]) {
-  const normalized = content.trim();
-  return (
-    places.find((place) => {
-      const names = [place.name, place.storeName, place.area, place.address].filter(Boolean);
-      return names.some((name) => String(name).length >= 2 && normalized.includes(String(name)));
-    })?.id || ""
-  );
-}
-
-function inferMemoryDate(content: string, fallbackDate: string) {
-  const normalized = content.trim();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (normalized.includes("前天")) return formatDateValue(addDays(today, -2));
-  if (normalized.includes("昨天") || normalized.includes("昨晚")) return formatDateValue(addDays(today, -1));
-  if (normalized.includes("明天")) return formatDateValue(addDays(today, 1));
-
-  const fullDateMatch = normalized.match(/(\d{4})[年/-](\d{1,2})[月/-](\d{1,2})日?/);
-  if (fullDateMatch) return normalizeDateParts(fullDateMatch[1], fullDateMatch[2], fullDateMatch[3], fallbackDate);
-
-  const monthDayMatch = normalized.match(/(\d{1,2})月(\d{1,2})日?/);
-  if (monthDayMatch) return normalizeDateParts(String(today.getFullYear()), monthDayMatch[1], monthDayMatch[2], fallbackDate);
-
-  return fallbackDate;
-}
-
-function normalizeDateParts(yearValue: string, monthValue: string, dayValue: string, fallbackDate: string) {
-  const year = Number(yearValue);
-  const month = Number(monthValue);
-  const day = Number(dayValue);
-  if (!year || month < 1 || month > 12 || day < 1 || day > 31) return fallbackDate;
-
-  const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return fallbackDate;
-  return formatDateValue(date);
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
-function formatDateValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 export function useLifeLog() {

@@ -7,6 +7,7 @@ import type { PlaceDraft } from "../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
 import { platformLinksToText } from "../utils/placeLinks";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
+import { inferQuickMemory } from "../utils/memoryInference";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -130,6 +131,11 @@ function validateForm(type: EntryType, formData: FormData) {
   }
 
   if (type === "memory") {
+    const memoryMode = String(formData.get("memoryMode") || "");
+    if (memoryMode === "quick") {
+      if (!String(formData.get("content") || "").trim()) return "请先写下今天发生了什么。";
+      return "";
+    }
     if (!String(formData.get("title") || "").trim()) return "请填写回忆标题。";
     if (!String(formData.get("date") || "").trim()) return "请选择回忆日期。";
   }
@@ -611,18 +617,40 @@ function MemoryFields({
   mode: "quick" | "full";
 }) {
   const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
+  const todayValue = new Date().toISOString().slice(0, 10);
+  const [quickContent, setQuickContent] = useState("");
+  const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
+  const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
+  const quickPreview = inferQuickMemory({
+    content: quickContent,
+    people,
+    places,
+    fallbackDate: todayValue,
+    selectedPersonIds: quickPersonId ? [quickPersonId] : [],
+    selectedPlaceId: quickPlaceId
+  });
+  const previewPeople = quickPreview.personIds
+    .map((personId) => people.find((person) => person.id === personId)?.name)
+    .filter(Boolean);
+  const previewPlace = places.find((place) => place.id === quickPreview.placeId)?.name || "";
 
   if (!memory && mode === "quick") {
     return (
       <>
         <label>
           今天发生了什么
-          <textarea name="content" autoFocus placeholder="例如：今天和小明在湖滨吃火锅，番茄锅不错，下次提前排号。" />
+          <textarea
+            name="content"
+            value={quickContent}
+            onChange={(event) => setQuickContent(event.target.value)}
+            autoFocus
+            placeholder="例如：今天和小明在湖滨吃火锅，番茄锅不错，下次提前排号。"
+          />
         </label>
         <div className="form-row">
           <label>
             人物
-            <select name="personIds" defaultValue={initialPersonId || ""}>
+            <select name="personIds" value={quickPersonId} onChange={(event) => setQuickPersonId(event.target.value)}>
               <option value="">自动识别或暂不关联</option>
               {people.map((person) => (
                 <option key={person.id} value={person.id}>
@@ -633,7 +661,7 @@ function MemoryFields({
           </label>
           <label>
             地点
-            <select name="placeId" defaultValue={initialPlaceId || ""}>
+            <select name="placeId" value={quickPlaceId} onChange={(event) => setQuickPlaceId(event.target.value)}>
               <option value="">自动识别或暂不关联</option>
               {places.map((place) => (
                 <option key={place.id} value={place.id}>
@@ -643,12 +671,31 @@ function MemoryFields({
             </select>
           </label>
         </div>
+        <div className="memory-preview" aria-live="polite">
+          <span className="memory-preview-eyebrow">保存预览</span>
+          <div className="memory-preview-row">
+            <strong>标题</strong>
+            <span>{quickPreview.title}</span>
+          </div>
+          <div className="memory-preview-row">
+            <strong>日期</strong>
+            <span>{formatPreviewDate(quickPreview.date)}</span>
+          </div>
+          <div className="memory-preview-row">
+            <strong>人物</strong>
+            <span>{previewPeople.length ? previewPeople.join("、") : "未识别"}</span>
+          </div>
+          <div className="memory-preview-row">
+            <strong>地点</strong>
+            <span>{previewPlace || "未识别"}</span>
+          </div>
+        </div>
         <input type="hidden" name="title" value="" />
-        <input type="hidden" name="date" value={new Date().toISOString().slice(0, 10)} />
+        <input type="hidden" name="date" value={todayValue} />
         <input type="hidden" name="memoryMode" value="quick" />
         <input type="hidden" name="mood" value="日常" />
         <input type="hidden" name="tags" value="快速记录" />
-        <p className="form-hint">可以手动选择，也可以留空；保存时会尝试从内容中自动识别已有的人物和地点。</p>
+        <p className="form-hint">可以手动选择，也可以留空；保存时会按上方预览自动生成标题、日期和关联信息。</p>
       </>
     );
   }
@@ -662,7 +709,7 @@ function MemoryFields({
       <div className="form-row">
         <label>
           日期
-          <input name="date" type="date" defaultValue={memory?.date || new Date().toISOString().slice(0, 10)} required />
+          <input name="date" type="date" defaultValue={memory?.date || todayValue} required />
         </label>
         <label>
           心情
@@ -706,4 +753,13 @@ function MemoryFields({
       </label>
     </>
   );
+}
+
+function formatPreviewDate(date: string) {
+  if (!date) return "未识别";
+  return new Date(`${date}T00:00:00`).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
 }
