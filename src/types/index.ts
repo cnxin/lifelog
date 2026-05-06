@@ -10,6 +10,14 @@ export interface PreferenceGroup {
   items: string[];
 }
 
+export type PlaceLinkPlatform = "amap" | "meituan" | "dianping" | "douyin" | "custom";
+
+export interface PlaceExternalLink {
+  label: string;
+  url: string;
+  platform: PlaceLinkPlatform;
+}
+
 export interface Person {
   id: ID;
   name: string;
@@ -38,6 +46,7 @@ export interface Place {
   longitude?: number;
   mapUrl: string;
   sourceUrl: string;
+  platformLinks: PlaceExternalLink[];
   photos: string[];
   desc: string;
   tags: string[];

@@ -5,6 +5,7 @@ import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place, 
 import { useLifeLog } from "../context/LifeLogContext";
 import type { PlaceDraft } from "../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
+import { platformLinksToText } from "../utils/placeLinks";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 
 interface EntrySheetProps {
@@ -447,6 +448,15 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
       </label>
       <label>
+        平台链接
+        <textarea
+          name="platformLinks"
+          defaultValue={platformLinksToText(place?.platformLinks)}
+          placeholder="每行一个，格式：美团 | https://..."
+        />
+      </label>
+      <p className="form-hint">可保存美团、点评、抖音、高德等真实分享链接；没有填写时详情页会自动生成搜索入口。</p>
+      <label>
         照片链接
         <textarea
           name="photos"
@@ -501,6 +511,13 @@ function QuickPlaceFields() {
           识别分享
         </button>
         {message && <p className="form-hint">{message}</p>}
+        {draft.name && (
+          <div className="import-preview">
+            <span>{draft.sourceType === "generic" ? "文本" : draft.sourceType}</span>
+            <strong>{draft.name}</strong>
+            <small>{[draft.city, draft.address].filter(Boolean).join(" · ") || "可继续补充城市和地址"}</small>
+          </div>
+        )}
       </div>
 
       <label>
@@ -561,6 +578,7 @@ function QuickPlaceFields() {
       <input type="hidden" name="longitude" value={draft.longitude} />
       <input type="hidden" name="mapUrl" value={draft.mapUrl} />
       <input type="hidden" name="sourceUrl" value={draft.sourceUrl} />
+      <input type="hidden" name="platformLinks" value={draft.platformLinks} />
       <input type="hidden" name="photos" value={draft.photos} />
       <input type="hidden" name="tags" value={draft.tags} />
       <p className="form-hint">先保存核心信息即可，区域、分店、定位和链接可以在详情页继续编辑。</p>

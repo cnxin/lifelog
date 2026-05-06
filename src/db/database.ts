@@ -1,6 +1,7 @@
 import Dexie, { type Table } from "dexie";
 import { seedData } from "../data/seedData";
 import type { LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
+import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 
 const LEGACY_STORAGE_KEY = "lifelog-react-state-v1";
 
@@ -155,6 +156,7 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
       longitude: place.longitude,
       mapUrl: place.mapUrl || "",
       sourceUrl: place.sourceUrl || "",
+      platformLinks: normalizePlacePlatformLinks(place.platformLinks),
       photos: Array.isArray(place.photos) ? place.photos.filter(Boolean).map(String) : []
     })) as Place[],
     memories: (input.memories || seedData.memories) as MemoryEvent[]

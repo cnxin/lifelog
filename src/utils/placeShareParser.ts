@@ -12,6 +12,7 @@ export interface PlaceDraft {
   longitude: string;
   mapUrl: string;
   sourceUrl: string;
+  platformLinks: string;
   photos: string;
   desc: string;
   tags: string;
@@ -32,6 +33,7 @@ export function emptyPlaceDraft(): PlaceDraft {
     longitude: "",
     mapUrl: "",
     sourceUrl: "",
+    platformLinks: "",
     photos: "",
     desc: "",
     tags: "",
@@ -51,6 +53,7 @@ export function parsePlaceShare(input: string): PlaceDraft {
   const urlDraft = parseUrl(url, sourceType);
   const textDraft = parseShareText(textWithoutUrl);
   const photos = extractPhotoUrls(text).join("\n");
+  const platformLinks = buildPlatformLinks(url, sourceType).join("\n");
   const address = textDraft.address || urlDraft.address || "";
   const name = textDraft.name || urlDraft.name || fallbackName(textWithoutUrl) || "";
 
@@ -65,6 +68,7 @@ export function parsePlaceShare(input: string): PlaceDraft {
     category: textDraft.category || inferCategory(`${name} ${textWithoutUrl}`),
     mapUrl: sourceType === "amap" ? url || urlDraft.mapUrl || "" : urlDraft.mapUrl || "",
     sourceUrl: url || "",
+    platformLinks,
     photos,
     desc: text.length > 160 ? text.slice(0, 160) : text,
     tags: sourceType === "generic" ? "" : sourceLabel(sourceType),
@@ -148,6 +152,11 @@ function detectSourceType(text: string, url: string): PlaceSourceType {
   if (value.includes("meituan") || value.includes("美团")) return "meituan";
   if (value.includes("dianping") || value.includes("大众点评")) return "dianping";
   return "generic";
+}
+
+function buildPlatformLinks(url: string, sourceType: PlaceSourceType) {
+  if (!url || sourceType === "generic") return [];
+  return [`${sourceLabel(sourceType)} | ${url}`];
 }
 
 function parseCoords(value: string) {
