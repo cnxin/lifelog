@@ -622,8 +622,8 @@ function MemoryFields({
         <div className="form-row">
           <label>
             人物
-            <select name="personIds" defaultValue={initialPersonId || people[0]?.id || ""}>
-              <option value="">暂不关联</option>
+            <select name="personIds" defaultValue={initialPersonId || ""}>
+              <option value="">自动识别或暂不关联</option>
               {people.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.name}
@@ -633,8 +633,8 @@ function MemoryFields({
           </label>
           <label>
             地点
-            <select name="placeId" defaultValue={initialPlaceId || places[0]?.id || ""}>
-              <option value="">暂不关联</option>
+            <select name="placeId" defaultValue={initialPlaceId || ""}>
+              <option value="">自动识别或暂不关联</option>
               {places.map((place) => (
                 <option key={place.id} value={place.id}>
                   {place.name}
@@ -647,7 +647,7 @@ function MemoryFields({
         <input type="hidden" name="date" value={new Date().toISOString().slice(0, 10)} />
         <input type="hidden" name="mood" value="日常" />
         <input type="hidden" name="tags" value="快速记录" />
-        <p className="form-hint">先把事情记下来，保存后会进入详情页，可以继续补标题、心情和更多人物。</p>
+        <p className="form-hint">可以手动选择，也可以留空；保存时会尝试从内容中自动识别已有的人物和地点。</p>
       </>
     );
   }

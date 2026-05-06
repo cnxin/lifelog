@@ -143,12 +143,18 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const legacyPersonId = String(formData.get("personId") || "");
       const content = String(formData.get("content") || "");
       const title = buildMemoryTitle(String(formData.get("title") || ""), content);
+      const matchedPersonIds = selectedPersonIds.length
+        ? selectedPersonIds
+        : existing
+          ? [legacyPersonId].filter(Boolean)
+          : inferPersonIds(content, state.people, legacyPersonId);
+      const selectedPlaceId = String(formData.get("placeId") || "");
       const memory: MemoryEvent = {
         id: existing?.id || uid("m"),
         title,
         date: String(formData.get("date") || new Date().toISOString().slice(0, 10)),
-        personIds: selectedPersonIds.length ? selectedPersonIds : [legacyPersonId].filter(Boolean),
-        placeId: String(formData.get("placeId") || ""),
+        personIds: matchedPersonIds,
+        placeId: selectedPlaceId || (!existing ? inferPlaceId(content, state.places) : ""),
         mood: String(formData.get("mood") || "平静"),
         content,
         tags: splitList(formData.get("tags"))
@@ -308,6 +314,28 @@ function buildMemoryTitle(rawTitle: string, content: string) {
   if (!normalizedContent) return title || "新的回忆";
 
   return normalizedContent.length > 16 ? `${normalizedContent.slice(0, 16)}...` : normalizedContent;
+}
+
+function inferPersonIds(content: string, people: Person[], fallbackId = "") {
+  const normalized = content.trim();
+  const matched = people
+    .filter((person) => {
+      const names = [person.name, person.nickname].filter(Boolean);
+      return names.some((name) => normalized.includes(String(name)));
+    })
+    .map((person) => person.id);
+
+  return matched.length ? matched : [fallbackId].filter(Boolean);
+}
+
+function inferPlaceId(content: string, places: Place[]) {
+  const normalized = content.trim();
+  return (
+    places.find((place) => {
+      const names = [place.name, place.storeName, place.area, place.address].filter(Boolean);
+      return names.some((name) => String(name).length >= 2 && normalized.includes(String(name)));
+    })?.id || ""
+  );
 }
 
 export function useLifeLog() {
