@@ -141,7 +141,7 @@ export default function PersonDetail() {
         </div>
         <div className="list">
           {person.anniversaries.map((item) => (
-            <GlassCard className="detail-row" key={`${item.title}-${item.date}`}>
+            <GlassCard className="detail-row anniversary-detail-row" key={`${item.title}-${item.date}`}>
               <strong>{item.title}</strong>
               <span>
                 {formatSolarLunar(item.date)} · {anniversaryRelativeLabel(item.date)} · {anniversaryYearLabel(item.date)}

@@ -25,11 +25,6 @@ export async function openPlaceMap(place: Place) {
 
   if (Capacitor.isNativePlatform() && amapUrl) {
     openSchemeUrl(amapUrl);
-    if (place.mapUrl) {
-      window.setTimeout(() => {
-        if (document.visibilityState === "visible") void openExternalUrl(place.mapUrl);
-      }, 900);
-    }
     return;
   }
 

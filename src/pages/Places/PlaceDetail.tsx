@@ -7,7 +7,7 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
 import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
-import { buildAmapWebMarkerUrl, buildPlacePlatformLinks } from "../../utils/placeLinks";
+import { buildPlacePlatformLinks } from "../../utils/placeLinks";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
@@ -32,7 +32,6 @@ export default function PlaceDetail() {
   const relatedPeople = Array.from(
     new Set(relatedMemories.flatMap((memory) => memory.personIds).filter(Boolean))
   );
-  const amapWebUrl = buildAmapWebMarkerUrl(place);
   const platformLinks = buildPlacePlatformLinks(place);
   const photos = (place.photos || []).slice(0, 3);
   const completionTips = [
@@ -164,7 +163,7 @@ export default function PlaceDetail() {
         <div className="action-grid">
           {place.mapUrl || (place.latitude && place.longitude) ? (
             <button className="link-action" type="button" onClick={() => void openPlaceMap(place)}>
-              <Navigation /> 打开地图
+              <Navigation /> 打开高德
             </button>
           ) : (
             <span className="link-action disabled">
@@ -180,17 +179,13 @@ export default function PlaceDetail() {
               <ExternalLink /> 未设置链接
             </span>
           )}
-          {amapWebUrl ? (
-            <button className="link-action secondary" type="button" onClick={() => void openExternalUrl(amapWebUrl)}>
-              <MapPin /> 高德网页
-            </button>
-          ) : (
-            <span className="link-action disabled">
-              <MapPin /> 无定位
-            </span>
-          )}
           {platformLinks.map((link) => (
-            <button className="link-action secondary" type="button" key={link.label} onClick={() => void openExternalUrl(link.url)}>
+            <button
+              className="link-action secondary"
+              type="button"
+              key={`${link.platform}-${link.url}`}
+              onClick={() => void (link.platform === "amap" ? openPlaceMap(place) : openExternalUrl(link.url))}
+            >
               <Search /> {link.label}
             </button>
           ))}

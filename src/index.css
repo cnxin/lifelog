@@ -50,6 +50,14 @@ body {
   transition: background-color 0.3s ease;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 button,
 input,
 textarea,
@@ -166,7 +174,9 @@ h3 {
 .main-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 0 24px 112px;
+  overscroll-behavior-x: none;
   scroll-behavior: smooth;
 }
 
@@ -280,9 +290,13 @@ h3 {
 }
 
 .a-title {
+  min-width: 0;
   margin-bottom: 8px;
   font-size: 14px;
   opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .a-days {
@@ -534,6 +548,9 @@ h3 {
   align-items: center;
   gap: 14px;
   padding: 14px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .person-card {
@@ -559,6 +576,7 @@ h3 {
 
 .person-side-actions {
   align-self: center;
+  flex: 0 0 auto;
 }
 
 .place-img,
@@ -622,6 +640,15 @@ h3 {
   font-weight: 600;
 }
 
+.place-name span:first-child,
+.person-name span:first-child,
+.memory-title span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .place-rating {
   display: flex;
   align-items: center;
@@ -637,6 +664,7 @@ h3 {
   color: var(--text-sub);
   font-size: 13px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .tags {
@@ -695,10 +723,11 @@ h3 {
 
 .category-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  overflow-x: auto;
-  margin: 0 -24px 20px;
-  padding: 0 24px 4px;
+  overflow: hidden;
+  margin: 0 0 16px;
+  padding: 0;
 }
 
 .location-switcher {
@@ -710,6 +739,7 @@ h3 {
 
 .location-switcher label {
   display: grid;
+  min-width: 0;
   gap: 6px;
   color: var(--text-sub);
   font-size: 12px;
@@ -812,7 +842,12 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
   padding: 14px;
+}
+
+.detail-row strong {
+  flex: 0 0 auto;
 }
 
 .detail-button {
@@ -824,9 +859,30 @@ h3 {
 }
 
 .detail-row span {
+  min-width: 0;
   color: var(--text-sub);
   font-size: 13px;
   text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.anniversary-detail-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 0.42fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.anniversary-detail-row strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anniversary-detail-row span {
+  overflow-wrap: normal;
+  word-break: keep-all;
+  line-height: 1.45;
 }
 
 .action-grid {
@@ -835,8 +891,13 @@ h3 {
   gap: 12px;
 }
 
+.action-grid > * {
+  min-width: 0;
+}
+
 .link-action {
   min-height: 52px;
+  min-width: 0;
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -848,6 +909,7 @@ h3 {
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
+  overflow-wrap: anywhere;
   transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
@@ -907,12 +969,14 @@ h3 {
 .category-pill {
   border: 0;
   border-radius: 999px;
-  flex-shrink: 0;
+  max-width: 100%;
+  flex-shrink: 1;
   padding: 10px 14px;
   color: var(--text-sub);
   background: var(--card-bg);
   font-size: 13px;
   font-weight: 600;
+  overflow-wrap: anywhere;
   transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease, filter 0.16s ease;
 }
 

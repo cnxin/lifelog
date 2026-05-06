@@ -112,24 +112,111 @@ function parseUrl(rawUrl: string, sourceType: PlaceSourceType): Partial<PlaceDra
 }
 
 function parseShareText(text: string): Partial<PlaceDraft> {
-  const normalized = text.replace(/[「」『』【】]/g, " ").replace(/\s+/g, " ").trim();
+  const lines = normalizeShareLines(text);
+  const normalized = lines.join(" ");
+  const titleLine = pickTitleLine(lines);
+  const titleParts = splitTitleAndStore(titleLine);
   const address =
     pickMatch(normalized, /(?:地址|位置|地点)[:：]\s*([^，,。；;\n]+)/) ||
-    pickMatch(normalized, /(中国?[\u4e00-\u9fff]{2,}(?:市|县|区)[^，,。；;\n]{4,})/);
-  const city = inferCity(address) || pickMatch(normalized, /([\u4e00-\u9fff]{2,}市)/);
+    pickAddressLine(lines, titleLine) ||
+    pickMatch(normalized, /((?:[\u4e00-\u9fff]{2,}(?:省|市|县|区))?[^，,。；;\n]{2,}(?:路|街|大道|写字楼|广场|中心|国际|银泰|万达|号|F|层|地铁站)[^，,。；;\n]*)/);
+  const city = inferCity(address) || inferCity(normalized) || inferCityByDistrict(`${address} ${normalized}`);
   const explicitName = pickMatch(normalized, /(?:店名|名称|商户|地点)[:：]\s*([^，,。；;\n]+)/);
   const discoveredName =
     explicitName ||
+    titleParts.name ||
     pickMatch(normalized, /(?:发现|推荐|分享)(?:一家|一个|了)?([^，,。；;\n]{2,24})/) ||
     pickMatch(normalized, /我在(?:高德|美团|大众点评)[^，,。；;\n]*?([^，,。；;\n]{2,24})/);
 
   return {
     name: cleanName(discoveredName),
+    storeName: titleParts.storeName,
     address,
     city,
-    area: inferArea(address),
-    category: inferCategory(normalized)
+    area: inferArea(address) || inferArea(normalized) || inferDistrict(normalized),
+    category: inferCategoryFromLines(lines) || inferCategory(normalized)
   };
+}
+
+function normalizeShareLines(text: string) {
+  return text
+    .split(/\r?\n+/)
+    .map((line) => line.replace(/[「」『』【】]/g, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+function pickTitleLine(lines: string[]) {
+  return (
+    lines.find((line) => {
+      if (isUrlLine(line)) return false;
+      if (isMetaLine(line)) return false;
+      if (looksLikeAddress(line)) return false;
+      return line.length >= 2;
+    }) || ""
+  );
+}
+
+function pickAddressLine(lines: string[], titleLine: string) {
+  const candidates = lines.filter((line) => {
+    if (!line || line === titleLine) return false;
+    if (isUrlLine(line) || isMetaLine(line)) return false;
+    return looksLikeAddress(line);
+  });
+  return candidates[candidates.length - 1] || "";
+}
+
+function splitTitleAndStore(title: string) {
+  const cleaned = cleanName(title);
+  const match = cleaned.match(/[（(]([^（）()]{2,32})[）)]$/);
+  if (!match || match.index === undefined) return { name: cleaned, storeName: "" };
+
+  return {
+    name: cleaned.slice(0, match.index).trim(),
+    storeName: match[1].trim()
+  };
+}
+
+function inferCategoryFromLines(lines: string[]) {
+  const knownCategories = [
+    "西餐",
+    "中餐",
+    "火锅",
+    "烧烤",
+    "烤肉",
+    "日料",
+    "日本料理",
+    "韩餐",
+    "咖啡",
+    "茶饮",
+    "甜品",
+    "酒吧",
+    "酒店",
+    "景点",
+    "电影院"
+  ];
+
+  for (const line of lines) {
+    const parts = line
+      .split(/[·|｜]/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const direct = parts.find((part) => knownCategories.includes(part));
+    if (direct) return direct;
+  }
+
+  return knownCategories.find((category) => lines.some((line) => line.includes(category))) || "";
+}
+
+function isUrlLine(line: string) {
+  return /^(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/)/i.test(line);
+}
+
+function isMetaLine(line: string) {
+  return /(?:\d+(?:\.\d+)?分|¥\d+|￥\d+|人均|榜|排名|第\d+名)/.test(line);
+}
+
+function looksLikeAddress(line: string) {
+  return /(?:省|市|区|县|路|街|大道|写字楼|广场|中心|国际|银泰|万达|号|F|层|地铁站|步行)/i.test(line);
 }
 
 function extractFirstUrl(text: string) {
@@ -172,14 +259,57 @@ function parseCoords(value: string) {
 }
 
 function inferCity(value = "") {
-  return pickMatch(value, /([\u4e00-\u9fff]{2,}市)/);
+  return normalizeCityName(pickMatch(value, /([\u4e00-\u9fff]{2,}市)/));
 }
 
 function inferArea(value = "") {
-  return pickMatch(value, /([\u4e00-\u9fffA-Za-z0-9]+(?:商圈|广场|中心|景区|园区|街区|商场|天地|银泰|万达))/);
+  return pickMatch(value, /([\u4e00-\u9fffA-Za-z0-9]+?(?:商圈|广场|中心|景区|园区|街区|商场|天地|银泰|万达|国际))/);
+}
+
+function inferDistrict(value = "") {
+  return pickMatch(value, /([\u4e00-\u9fff]{2,}(?:区|县|市))/);
+}
+
+function inferCityByDistrict(value = "") {
+  const districtCityMap: Record<string, string> = {
+    上城区: "杭州",
+    拱墅区: "杭州",
+    西湖区: "杭州",
+    滨江区: "杭州",
+    萧山区: "杭州",
+    余杭区: "杭州",
+    临平区: "杭州",
+    钱塘区: "杭州",
+    富阳区: "杭州",
+    临安区: "杭州",
+    柯桥区: "绍兴",
+    越城区: "绍兴",
+    上虞区: "绍兴",
+    新昌县: "绍兴",
+    海曙区: "宁波",
+    江北区: "宁波",
+    镇海区: "宁波",
+    北仑区: "宁波",
+    鄞州区: "宁波",
+    奉化区: "宁波"
+  };
+
+  const matched = Object.keys(districtCityMap).find((district) => value.includes(district));
+  return matched ? districtCityMap[matched] : "";
+}
+
+function normalizeCityName(value = "") {
+  return value.replace(/市$/, "");
 }
 
 function inferCategory(value = "") {
+  if (/西餐/.test(value)) return "西餐";
+  if (/中餐/.test(value)) return "中餐";
+  if (/火锅/.test(value)) return "火锅";
+  if (/烧烤/.test(value)) return "烧烤";
+  if (/烤肉/.test(value)) return "烤肉";
+  if (/日料|日本料理/.test(value)) return "日料";
+  if (/韩餐|韩国料理/.test(value)) return "韩餐";
   if (/酒店|宾馆|民宿/.test(value)) return "酒店";
   if (/影院|影城|电影/.test(value)) return "电影院";
   if (/景区|景点|公园|博物馆|展馆/.test(value)) return "景点";
