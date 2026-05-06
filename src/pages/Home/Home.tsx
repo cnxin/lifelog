@@ -1,5 +1,7 @@
-import { Calendar, Clock, Heart, MapPin, Sparkles, Users } from "lucide-react";
+import { Calendar, Clock, Heart, MapPin, PenLine, Sparkles, Users } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -9,6 +11,7 @@ import { initials } from "../../utils/text";
 export default function Home() {
   const navigate = useNavigate();
   const { state, getPersonName, getPlaceName } = useLifeLog();
+  const [quickMemoryOpen, setQuickMemoryOpen] = useState(false);
   const upcoming = getUpcomingAnniversaries(state.people).slice(0, 4);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 2);
@@ -49,6 +52,18 @@ export default function Home() {
 
   return (
     <>
+      <section className="section">
+        <button className="quick-memory-card" onClick={() => setQuickMemoryOpen(true)}>
+          <div className="quick-memory-icon">
+            <PenLine />
+          </div>
+          <div>
+            <strong>快速记录</strong>
+            <span>先用一句话记下今天的人、地点和事情</span>
+          </div>
+        </button>
+      </section>
+
       <section className="section">
         <div className="section-header">
           <h2>
@@ -166,6 +181,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      <EntrySheet type={quickMemoryOpen ? "memory" : null} memoryMode="quick" onClose={() => setQuickMemoryOpen(false)} />
     </>
   );
 }

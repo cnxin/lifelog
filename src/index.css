@@ -75,6 +75,7 @@ a,
 .category-pill,
 .task-card,
 .completion-card,
+.quick-memory-card,
 .link-action {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -308,6 +309,53 @@ h3 {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   padding: 14px;
+}
+
+.quick-memory-card {
+  width: 100%;
+  min-height: 82px;
+  border: 0;
+  border-radius: 22px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 14px 26px rgba(108, 92, 231, 0.24);
+  text-align: left;
+  transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+}
+
+.quick-memory-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.quick-memory-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.quick-memory-card strong,
+.quick-memory-card span {
+  display: block;
+}
+
+.quick-memory-card strong {
+  margin-bottom: 4px;
+  font-size: 17px;
+}
+
+.quick-memory-card span {
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.84;
 }
 
 .metric {
@@ -1367,6 +1415,7 @@ h3 {
 .calendar-item:active,
 .task-card:active,
 .completion-card:active,
+.quick-memory-card:active,
 .fab:active,
 .sheet-close:active,
 .mini-action:active,
@@ -1391,6 +1440,7 @@ h3 {
 }
 
 .link-action:not(.disabled):active,
+.quick-memory-card:active,
 .fab:active,
 .primary-btn:active,
 .danger-btn:active {
@@ -1446,6 +1496,7 @@ button:disabled,
   .tap-chip,
   .task-card,
   .completion-card,
+  .quick-memory-card,
   .category-pill,
   .calendar-day,
   .calendar-item,

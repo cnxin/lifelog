@@ -13,6 +13,7 @@ interface EntrySheetProps {
   itemId?: string;
   initialPersonId?: string;
   initialPlaceId?: string;
+  memoryMode?: "quick" | "full";
   onClose: () => void;
 }
 
@@ -22,7 +23,14 @@ const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: str
   memory: { addTitle: "新增回忆", editTitle: "编辑回忆", kicker: "把人物和地点连接起来", redirect: "/memories" }
 };
 
-export default function EntrySheet({ type, itemId, initialPersonId, initialPlaceId, onClose }: EntrySheetProps) {
+export default function EntrySheet({
+  type,
+  itemId,
+  initialPersonId,
+  initialPlaceId,
+  memoryMode = "full",
+  onClose
+}: EntrySheetProps) {
   const navigate = useNavigate();
   const { state, savePerson, savePlace, saveMemory } = useLifeLog();
   const [error, setError] = useState("");
@@ -94,6 +102,7 @@ export default function EntrySheet({ type, itemId, initialPersonId, initialPlace
               places={state.places}
               initialPersonId={initialPersonId}
               initialPlaceId={initialPlaceId}
+              mode={memoryMode}
             />
           )}
 
@@ -591,15 +600,57 @@ function MemoryFields({
   people,
   places,
   initialPersonId,
-  initialPlaceId
+  initialPlaceId,
+  mode
 }: {
   memory?: MemoryEvent;
   people: Array<{ id: string; name: string }>;
   places: Array<{ id: string; name: string }>;
   initialPersonId?: string;
   initialPlaceId?: string;
+  mode: "quick" | "full";
 }) {
   const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
+
+  if (!memory && mode === "quick") {
+    return (
+      <>
+        <label>
+          今天发生了什么
+          <textarea name="content" autoFocus placeholder="例如：今天和小明在湖滨吃火锅，番茄锅不错，下次提前排号。" />
+        </label>
+        <div className="form-row">
+          <label>
+            人物
+            <select name="personIds" defaultValue={initialPersonId || people[0]?.id || ""}>
+              <option value="">暂不关联</option>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            地点
+            <select name="placeId" defaultValue={initialPlaceId || places[0]?.id || ""}>
+              <option value="">暂不关联</option>
+              {places.map((place) => (
+                <option key={place.id} value={place.id}>
+                  {place.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <input type="hidden" name="title" value="快速记录" />
+        <input type="hidden" name="date" value={new Date().toISOString().slice(0, 10)} />
+        <input type="hidden" name="mood" value="日常" />
+        <input type="hidden" name="tags" value="快速记录" />
+        <p className="form-hint">先把事情记下来，保存后会进入详情页，可以继续补标题、心情和更多人物。</p>
+      </>
+    );
+  }
 
   return (
     <>
