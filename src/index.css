@@ -732,7 +732,7 @@ h3 {
 
 .location-switcher {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -1646,6 +1646,10 @@ button:disabled,
 }
 
 @media (max-width: 380px) {
+  .location-switcher {
+    grid-template-columns: 1fr;
+  }
+
   .pref-editor-row {
     grid-template-columns: 1fr;
   }

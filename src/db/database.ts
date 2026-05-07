@@ -2,6 +2,7 @@ import Dexie, { type Table } from "dexie";
 import { seedData } from "../data/seedData";
 import type { LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
+import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
 
 const LEGACY_STORAGE_KEY = "lifelog-react-state-v1";
 
@@ -15,6 +16,11 @@ class LifeLogDatabase extends Dexie {
     this.version(1).stores({
       people: "id, name, birthday, relationship, favorite",
       places: "id, name, country, city, area, category, favorite",
+      memories: "id, date, placeId, *personIds"
+    });
+    this.version(2).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
       memories: "id, date, placeId, *personIds"
     });
   }
@@ -148,8 +154,15 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
     places: (input.places || seedData.places).map((place) => ({
       ...place,
       country: place.country || "中国",
-      city: place.city || "杭州",
+      province: inferProvince({
+        country: place.country || "中国",
+        province: (place as Place).province || "",
+        city: place.city || "杭州",
+        address: place.address || ""
+      }),
+      city: normalizeCityName(place.city || "杭州"),
       area: place.area || "未分组",
+      mall: (place as Place).mall || inferMallName(place.address || "") || place.area || "",
       storeName: place.storeName || "",
       address: place.address || "",
       latitude: place.latitude,

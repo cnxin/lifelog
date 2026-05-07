@@ -15,6 +15,7 @@ import {
 import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
 import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
+import { buildPlaceDisplayName, inferMallName, inferProvince, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
 import { parseGroups, splitLines, splitList } from "../utils/text";
 
 interface LifeLogContextValue {
@@ -103,16 +104,28 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function savePlace(formData: FormData, id?: string) {
       const existing = state.places.find((place) => place.id === id);
+      const country = normalizePlaceText(formData.get("country")) || "中国";
+      const province = normalizePlaceText(formData.get("province"));
+      const city = normalizeCityName(normalizePlaceText(formData.get("city")) || "杭州");
+      const address = normalizePlaceText(formData.get("address"));
+      const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address);
       const place: Place = {
         id: existing?.id || uid("l"),
         name: String(formData.get("name") || "未命名地点"),
-        country: String(formData.get("country") || "中国"),
-        city: String(formData.get("city") || "杭州"),
+        country,
+        province: inferProvince({
+          country,
+          province,
+          city,
+          address
+        }),
+        city,
         area: String(formData.get("area") || ""),
+        mall,
         storeName: String(formData.get("storeName") || ""),
         category: String(formData.get("category") || "其他"),
         rating: Number(formData.get("rating")) || 4,
-        address: String(formData.get("address") || ""),
+        address,
         latitude: Number(formData.get("latitude")) || undefined,
         longitude: Number(formData.get("longitude")) || undefined,
         mapUrl: String(formData.get("mapUrl") || ""),
@@ -231,7 +244,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     }
 
     function getPlaceName(id: string) {
-      return state.places.find((place) => place.id === id)?.name || "未关联地点";
+      const place = state.places.find((item) => item.id === id);
+      return place ? buildPlaceDisplayName(place) : "未关联地点";
     }
 
     function exportData() {

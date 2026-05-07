@@ -1,13 +1,13 @@
 import type { Place, PlaceExternalLink, PlaceLinkPlatform } from "../types";
 
 export function buildPlaceSearchKeyword(place: Place) {
-  return [place.city, place.area, place.name, place.storeName].filter(Boolean).join(" ").trim();
+  return [place.city, place.area, place.mall, place.name, place.storeName].filter(Boolean).join(" ").trim();
 }
 
 export function buildAmapWebMarkerUrl(place: Place) {
   if (!place.latitude || !place.longitude) return "";
 
-  const name = [place.name, place.storeName].filter(Boolean).join(" ");
+  const name = [place.name, place.mall, place.storeName].filter(Boolean).join(" ");
   return `https://uri.amap.com/marker?position=${place.longitude},${place.latitude}&name=${encodeURIComponent(
     name
   )}&src=lifelog.place&coordinate=gaode&callnative=0`;
@@ -55,10 +55,11 @@ export function normalizePlacePlatformLinks(value: unknown): PlaceExternalLink[]
       const link = item as Partial<PlaceExternalLink>;
       const url = String(link.url || "").trim();
       if (!url) return null;
+      const label = String(link.label || "").trim();
 
-      const platform = normalizePlatform(link.platform, url);
+      const platform = normalizePlatform(link.platform, label, url);
       return {
-        label: String(link.label || defaultPlatformLabel(platform)).trim(),
+        label: label || defaultPlatformLabel(platform),
         platform,
         url
       };
@@ -81,7 +82,7 @@ export function createPlatformLink(url: string, label = ""): PlaceExternalLink |
   const trimmedUrl = url.trim();
   if (!trimmedUrl) return null;
 
-  const platform = normalizePlatform(undefined, trimmedUrl);
+  const platform = normalizePlatform(undefined, label, trimmedUrl);
   return {
     label: label.trim() || defaultPlatformLabel(platform),
     platform,
@@ -100,16 +101,25 @@ function parsePlatformLinkLine(line: string): PlaceExternalLink | null {
   return createPlatformLink(url, label);
 }
 
-function normalizePlatform(platform: unknown, url: string): PlaceLinkPlatform {
+export function inferPlatformFromLink(url: string, label = "", platform?: PlaceLinkPlatform | string) {
+  return normalizePlatform(platform, label, url);
+}
+
+function normalizePlatform(platform: unknown, label: unknown, url: string): PlaceLinkPlatform {
   const value = String(platform || "").trim();
-  if (["amap", "meituan", "dianping", "douyin", "custom"].includes(value)) {
+  if (["amap", "meituan", "dianping", "douyin"].includes(value)) {
     return value as PlaceLinkPlatform;
   }
 
+  const lowerLabel = String(label || "").trim().toLowerCase();
   const lowerUrl = url.toLowerCase();
+  if (lowerLabel.includes("高德") || lowerLabel.includes("amap")) return "amap";
+  if (lowerLabel.includes("美团") || lowerLabel.includes("meituan")) return "meituan";
+  if (lowerLabel.includes("点评") || lowerLabel.includes("dianping")) return "dianping";
+  if (lowerLabel.includes("抖音") || lowerLabel.includes("douyin")) return "douyin";
   if (lowerUrl.includes("amap.com") || lowerUrl.startsWith("amapuri://") || lowerUrl.startsWith("androidamap://")) return "amap";
-  if (lowerUrl.includes("meituan.com")) return "meituan";
-  if (lowerUrl.includes("dianping.com")) return "dianping";
+  if (lowerUrl.includes("meituan.com") || lowerUrl.includes("meishi.meituan.com") || lowerUrl.includes("i.meituan.com")) return "meituan";
+  if (lowerUrl.includes("dianping.com") || lowerUrl.includes("dpurl.cn")) return "dianping";
   if (lowerUrl.includes("douyin.com")) return "douyin";
   return "custom";
 }

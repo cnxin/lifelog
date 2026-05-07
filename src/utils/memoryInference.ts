@@ -1,7 +1,7 @@
 import type { Person, Place } from "../types";
 
 type PersonLookup = Pick<Person, "id" | "name"> & Partial<Pick<Person, "nickname">>;
-type PlaceLookup = Pick<Place, "id" | "name"> & Partial<Pick<Place, "storeName" | "area" | "address">>;
+type PlaceLookup = Pick<Place, "id" | "name"> & Partial<Pick<Place, "storeName" | "area" | "mall" | "address">>;
 
 interface QuickMemoryInferenceInput {
   rawTitle?: string;
@@ -60,7 +60,7 @@ export function inferPlaceId(content: string, places: PlaceLookup[]) {
   const normalized = content.trim();
   return (
     places.find((place) => {
-      const names = [place.name, place.storeName, place.area, place.address].filter(Boolean);
+      const names = [place.name, place.storeName, place.mall, place.area, place.address].filter(Boolean);
       return names.some((name) => String(name).length >= 2 && normalized.includes(String(name)));
     })?.id || ""
   );

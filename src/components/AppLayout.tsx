@@ -21,6 +21,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
 function getPageMeta(pathname: string) {
   if (pageMeta[pathname]) return pageMeta[pathname];
   if (pathname.startsWith("/people/")) return { title: "人物详情", subtitle: "查看完整档案和相关回忆" };
+  if (pathname.startsWith("/places/malls/")) return { title: "商场详情", subtitle: "查看商场里的店铺和关联回忆" };
   if (pathname.startsWith("/places/")) return { title: "地点详情", subtitle: "定位、链接、评价和回忆" };
   if (pathname.startsWith("/memories/")) return { title: "回忆详情", subtitle: "查看一次经历的完整记录" };
   return pageMeta["/"];

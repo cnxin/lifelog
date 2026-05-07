@@ -7,6 +7,14 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
+import {
+  buildMallKey,
+  buildPlaceContextLine,
+  buildPlaceDisplayName,
+  buildPlaceGeoLine,
+  getPlacePlatformLink,
+  getPlaceReferenceUrl
+} from "../../utils/placeMeta";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
@@ -32,7 +40,8 @@ export default function PlaceDetail() {
     new Set(relatedMemories.flatMap((memory) => memory.personIds).filter(Boolean))
   );
   const photos = (place.photos || []).slice(0, 3);
-  const meituanLink = place.platformLinks.find((link) => link.platform === "meituan");
+  const meituanLink = getPlacePlatformLink(place, "meituan");
+  const referenceUrl = getPlaceReferenceUrl(place);
   const completionTips = [
     {
       id: "mapLink",
@@ -52,8 +61,8 @@ export default function PlaceDetail() {
       id: "address",
       icon: <Navigation />,
       title: "补充地址",
-      desc: "地址和所在区域能让地点列表更好搜索。",
-      visible: !place.address || !place.area
+      desc: "地址和商场层级能让地点列表更好搜索。",
+      visible: !place.address || !place.mall
     }
   ].filter((tip) => tip.visible);
 
@@ -70,14 +79,12 @@ export default function PlaceDetail() {
           <div className="profile-main">
             <div className="profile-title">
               <h2>
-                {place.name}
-                {place.storeName ? ` · ${place.storeName}` : ""}
+                {buildPlaceDisplayName(place)}
               </h2>
               {place.favorite && <Star />}
             </div>
-            <p>
-              {place.country} · {place.city} · {place.area || "未设置区域"}
-            </p>
+            <p>{buildPlaceGeoLine(place)}</p>
+            <p>{buildPlaceContextLine(place)}</p>
             <button className="category-pill active" onClick={() => setEditing(true)}>
               编辑地点
             </button>
@@ -117,17 +124,28 @@ export default function PlaceDetail() {
         </div>
         <div className="list">
           <GlassCard className="detail-row">
-            <strong>国家 / 城市</strong>
-            <span>
-              {place.country} · {place.city}
-            </span>
+            <strong>国家 / 省 / 市</strong>
+            <span>{buildPlaceGeoLine(place)}</span>
           </GlassCard>
           <GlassCard className="detail-row">
-            <strong>所在区域</strong>
+            <strong>区 / 商圈</strong>
             <span>{place.area || "未设置"}</span>
           </GlassCard>
           <GlassCard className="detail-row">
-            <strong>具体店铺 / 场所</strong>
+            <strong>商场 / 园区</strong>
+            <span>{place.mall || "未设置"}</span>
+          </GlassCard>
+          {place.mall ? (
+            <button
+              className="detail-row detail-button glass-card"
+              onClick={() => navigate(`/places/malls/${encodeURIComponent(buildMallKey(place))}`)}
+            >
+              <strong>查看所属商场</strong>
+              <span>{place.mall}</span>
+            </button>
+          ) : null}
+          <GlassCard className="detail-row">
+            <strong>店铺 / 场所</strong>
             <span>{place.storeName || "未设置"}</span>
           </GlassCard>
           <GlassCard className="detail-row">
@@ -161,8 +179,8 @@ export default function PlaceDetail() {
               <Store /> 打开美团
             </button>
           ) : null}
-          {place.sourceUrl ? (
-            <button className="link-action" type="button" onClick={() => void openExternalUrl(place.sourceUrl)}>
+          {referenceUrl ? (
+            <button className="link-action" type="button" onClick={() => void openExternalUrl(referenceUrl)}>
               <ExternalLink /> 参考链接
             </button>
           ) : (

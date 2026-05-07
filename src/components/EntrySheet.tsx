@@ -5,7 +5,8 @@ import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place, 
 import { useLifeLog } from "../context/LifeLogContext";
 import type { PlaceDraft } from "../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
-import { platformLinksToText } from "../utils/placeLinks";
+import { createPlatformLink } from "../utils/placeLinks";
+import { getPlacePlatformLink } from "../utils/placeMeta";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 import { inferQuickMemory } from "../utils/memoryInference";
 
@@ -402,21 +403,31 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
           <input name="country" defaultValue={place?.country || "中国"} />
         </label>
         <label>
-          城市
-          <input name="city" defaultValue={place?.city || "杭州"} />
+          省 / 州
+          <input name="province" defaultValue={place?.province || ""} placeholder="例如：浙江省" />
         </label>
       </div>
       <div className="form-row">
         <label>
-          所在区域
-          <input name="area" defaultValue={place?.area || "湖滨商圈"} placeholder="商圈、街区、景区、商场或园区" />
+          城市
+          <input name="city" defaultValue={place?.city || "杭州"} />
         </label>
         <label>
-          具体店铺 / 场所
+          区 / 商圈
+          <input name="area" defaultValue={place?.area || "上城区"} placeholder="例如：上城区、柯桥区、湖滨商圈" />
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          商场 / 园区 / 景区
+          <input name="mall" defaultValue={place?.mall || ""} placeholder="例如：湖滨银泰、万达广场、玉兰国际" />
+        </label>
+        <label>
+          店铺 / 场所
           <input name="storeName" defaultValue={place?.storeName || "湖滨店"} placeholder="分店、楼层、影厅、景点入口等" />
         </label>
       </div>
-      <p className="form-hint">层级按国家 / 城市 / 所在区域 / 具体位置记录；地点名称填写主名称。</p>
+      <p className="form-hint">层级按国家 / 省 / 市 / 商场 / 店铺记录；地点名称填主名称，商场和店铺分开更清晰。</p>
       <div className="form-row">
         <label>
           地点名称
@@ -456,7 +467,7 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         美团店铺链接
         <input
           name="platformLinks"
-          defaultValue={extractMeituanLinkText(place?.platformLinks)}
+          defaultValue={extractMeituanLinkText(place)}
           placeholder="粘贴美团店铺链接，详情页可直接打开美团 App"
         />
       </label>
@@ -521,29 +532,20 @@ function QuickPlaceFields() {
           <div className="import-preview">
             <span>{draft.sourceType === "generic" ? "文本" : draft.sourceType}</span>
             <strong>{draft.name}</strong>
-            <small>{[draft.city, draft.address].filter(Boolean).join(" · ") || "可继续补充城市和地址"}</small>
+            <small>{[draft.province, draft.city, draft.mall || draft.address].filter(Boolean).join(" · ") || "可继续补充城市和地址"}</small>
           </div>
         )}
       </div>
 
-      <label>
-        地点名称
-        <input
-          name="name"
-          value={draft.name}
-          onChange={(event) => updateDraft({ name: event.target.value })}
-          placeholder="例如：海底捞"
-          required
-        />
-      </label>
       <div className="form-row">
         <label>
-          城市
+          地点名称
           <input
-            name="city"
-            value={draft.city}
-            onChange={(event) => updateDraft({ city: event.target.value })}
-            placeholder="例如：杭州"
+            name="name"
+            value={draft.name}
+            onChange={(event) => updateDraft({ name: event.target.value })}
+            placeholder="例如：九月里·自由花园餐厅"
+            required
           />
         </label>
         <label>
@@ -556,6 +558,55 @@ function QuickPlaceFields() {
           />
         </label>
       </div>
+      <div className="form-row">
+        <label>
+          省 / 州
+          <input
+            name="province"
+            value={draft.province}
+            onChange={(event) => updateDraft({ province: event.target.value })}
+            placeholder="例如：浙江省"
+          />
+        </label>
+        <label>
+          城市
+          <input
+            name="city"
+            value={draft.city}
+            onChange={(event) => updateDraft({ city: event.target.value })}
+            placeholder="例如：绍兴"
+          />
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          区 / 商圈
+          <input
+            name="area"
+            value={draft.area}
+            onChange={(event) => updateDraft({ area: event.target.value })}
+            placeholder="例如：柯桥区"
+          />
+        </label>
+        <label>
+          商场 / 园区
+          <input
+            name="mall"
+            value={draft.mall}
+            onChange={(event) => updateDraft({ mall: event.target.value })}
+            placeholder="例如：玉兰国际"
+          />
+        </label>
+      </div>
+      <label>
+        店铺 / 场所
+        <input
+          name="storeName"
+          value={draft.storeName}
+          onChange={(event) => updateDraft({ storeName: event.target.value })}
+          placeholder="例如：玉兰国际店、B1 店、IMAX 厅"
+        />
+      </label>
       <label>
         地址
         <input
@@ -576,8 +627,6 @@ function QuickPlaceFields() {
       </label>
 
       <input type="hidden" name="country" value={draft.country || "中国"} />
-      <input type="hidden" name="area" value={draft.area} />
-      <input type="hidden" name="storeName" value={draft.storeName} />
       <input type="hidden" name="rating" value="4" />
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="latitude" value={draft.latitude} />
@@ -755,10 +804,14 @@ function formatPreviewDate(date: string) {
   });
 }
 
-function extractMeituanLinkText(links?: Place["platformLinks"]) {
-  return links?.find((link) => link.platform === "meituan")?.url || "";
+function extractMeituanLinkText(place?: Place) {
+  if (!place) return "";
+  return getPlacePlatformLink(place, "meituan")?.url || "";
 }
 
 function extractMeituanLinkTextFromDraft(draft: PlaceDraft) {
-  return draft.sourceType === "meituan" && draft.sourceUrl ? `美团 | ${draft.sourceUrl}` : "";
+  if (draft.platformLinks.trim()) return draft.platformLinks;
+  const link = createPlatformLink(draft.sourceUrl, draft.sourceType === "meituan" ? "美团" : "");
+  if (!link || link.platform !== "meituan") return "";
+  return `美团 | ${link.url}`;
 }

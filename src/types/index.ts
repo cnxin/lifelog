@@ -36,8 +36,10 @@ export interface Place {
   id: ID;
   name: string;
   country: string;
+  province: string;
   city: string;
   area: string;
+  mall: string;
   storeName: string;
   category: string;
   rating: number;

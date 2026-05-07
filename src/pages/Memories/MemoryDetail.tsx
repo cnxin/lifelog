@@ -6,6 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
+import { buildPlaceContextLine } from "../../utils/placeMeta";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
@@ -138,7 +139,7 @@ export default function MemoryDetail() {
         </div>
         <button className="detail-row detail-button glass-card" onClick={() => place && navigate(`/places/${place.id}`)}>
           <strong>{getPlaceName(memory.placeId)}</strong>
-          <span>{place ? `${place.city} · ${place.area || "未分组"}` : "未关联地点"}</span>
+          <span>{place ? `${place.city} · ${buildPlaceContextLine(place)}` : "未关联地点"}</span>
         </button>
         {place && (
           <button className="category-pill active detail-link-button" onClick={() => navigate(`/places/${place.id}`)}>
