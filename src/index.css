@@ -2012,3 +2012,34 @@ button:disabled,
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Settings page */
+.settings-inline-input {
+  text-align: right;
+  border: 0;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  font-family: inherit;
+  width: 120px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.settings-inline-input:focus {
+  border-bottom-color: var(--primary);
+}
+
+.settings-undo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-about-tags {
+  margin-top: 12px;
+}

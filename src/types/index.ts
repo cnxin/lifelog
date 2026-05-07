@@ -72,6 +72,18 @@ export interface LifeLogState {
   memories: MemoryEvent[];
 }
 
+export interface AppSettings {
+  defaultCity: string;
+  defaultRelationship: string;
+  defaultMood: string;
+}
+
+export const defaultAppSettings: AppSettings = {
+  defaultCity: "杭州",
+  defaultRelationship: "朋友",
+  defaultMood: "开心"
+};
+
 export type EntryType = "person" | "place" | "memory";
 
 export type PlaceDuplicateStrength = "strong" | "weak";

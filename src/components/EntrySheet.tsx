@@ -283,6 +283,8 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
 }
 
 function QuickPersonFields() {
+  const { settings } = useLifeLog();
+
   return (
     <>
       <label>
@@ -291,7 +293,7 @@ function QuickPersonFields() {
       </label>
       <label>
         关系
-        <input name="relationship" defaultValue="朋友" placeholder="朋友、家人、同事..." />
+        <input name="relationship" defaultValue={settings.defaultRelationship} placeholder="朋友、家人、同事..." />
       </label>
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="preferences" value="" />
@@ -485,11 +487,11 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       <div className="form-row">
         <label>
           城市
-          <input name="city" defaultValue={place?.city || "杭州"} />
+          <input name="city" defaultValue={place?.city} placeholder="杭州、绍兴..." />
         </label>
         <label>
           区 / 商圈
-          <input name="area" defaultValue={place?.area || "上城区"} placeholder="例如：上城区、柯桥区、湖滨商圈" />
+          <input name="area" defaultValue={place?.area} placeholder="例如：上城区、柯桥区、湖滨商圈" />
         </label>
       </div>
       <div className="form-row">
@@ -570,8 +572,12 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
 }
 
 function QuickPlaceFields() {
+  const { settings } = useLifeLog();
   const [shareText, setShareText] = useState("");
-  const [draft, setDraft] = useState<PlaceDraft>(() => emptyPlaceDraft());
+  const [draft, setDraft] = useState<PlaceDraft>(() => ({
+    ...emptyPlaceDraft(),
+    city: settings.defaultCity
+  }));
   const [message, setMessage] = useState("");
   const [showLocationDetails, setShowLocationDetails] = useState(false);
   const [showLinkDetails, setShowLinkDetails] = useState(false);
@@ -821,6 +827,7 @@ function MemoryFields({
   initialPlaceId?: string;
   mode: "quick" | "full";
 }) {
+  const { settings } = useLifeLog();
   const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
   const todayValue = new Date().toISOString().slice(0, 10);
   const [quickContent, setQuickContent] = useState("");
@@ -918,7 +925,7 @@ function MemoryFields({
         </label>
         <label>
           心情
-          <input name="mood" defaultValue={memory?.mood || "开心"} />
+          <input name="mood" defaultValue={memory?.mood || settings.defaultMood} />
         </label>
       </div>
       <div>

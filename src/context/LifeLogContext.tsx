@@ -5,18 +5,21 @@ import {
   deleteMemoryRecord,
   deletePersonRecord,
   deletePlaceRecord,
+  loadAppSettings,
   loadPlaceMergeHistory,
   loadLifeLogState,
   normalizeState,
   replaceAllData,
   resetDatabase,
   runPlaceMergeTransaction,
+  saveAppSettings,
   savePlaceMergeHistoryEntry,
   saveMemoryRecord,
   savePersonRecord,
   savePlaceRecord
 } from "../db/database";
 import type {
+  AppSettings,
   Anniversary,
   EntryType,
   LifeLogState,
@@ -29,6 +32,7 @@ import type {
   PlaceSaveInspection,
   PlaceSaveOptions
 } from "../types";
+import { defaultAppSettings } from "../types";
 import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
 import { buildPlaceDisplayName, inferMallName, inferProvince, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
@@ -43,6 +47,7 @@ import { parseGroups, splitLines, splitList } from "../utils/text";
 
 interface LifeLogContextValue {
   state: LifeLogState;
+  settings: AppSettings;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
@@ -59,6 +64,7 @@ interface LifeLogContextValue {
   mergeDuplicatePlaces: (group: PlaceDuplicateGroup) => Promise<void>;
   mergeAllDuplicatePlaces: () => Promise<number>;
   undoLatestPlaceMerge: () => Promise<boolean>;
+  updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   exportData: () => void;
   resetDemo: () => Promise<void>;
 }
@@ -77,6 +83,7 @@ function uid(prefix: string) {
 
 export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LifeLogState>(emptyState);
+  const [settings, setSettings] = useState<AppSettings>(defaultAppSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
 
@@ -85,8 +92,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     loadLifeLogState()
       .then(async (nextState) => {
+        const nextSettings = await loadAppSettings();
         const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
+        if (active) setSettings(nextSettings);
         if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
@@ -120,7 +129,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         id: existing?.id || uid("p"),
         name: String(formData.get("name") || "未命名"),
         nickname: String(formData.get("nickname") || ""),
-        relationship: String(formData.get("relationship") || "朋友"),
+        relationship: String(formData.get("relationship") || settings.defaultRelationship),
         birthday,
         birthdayIsLunar: false,
         favorite: formData.get("favorite") === "true",
@@ -143,7 +152,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     function inspectPlaceSave(formData: FormData, id?: string): PlaceSaveInspection {
       const existing = state.places.find((place) => place.id === id);
-      const draft = buildPlaceFromFormData(formData, existing?.id);
+      const draft = buildPlaceFromFormData(formData, existing?.id, settings);
       if (existing) {
         return {
           resolution: "save",
@@ -170,7 +179,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const existing = state.places.find((place) => place.id === id);
       const inspection =
         !existing && !options?.skipDuplicateCheck && !options?.mergeTargetId ? inspectPlaceSave(formData, id) : null;
-      const place = inspection?.draft || buildPlaceFromFormData(formData, existing?.id);
+      const place = inspection?.draft || buildPlaceFromFormData(formData, existing?.id, settings);
 
       if (inspection?.resolution === "auto-merge" && inspection.preview) {
         return mergePlacePreview(inspection.preview);
@@ -236,7 +245,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
         personIds: matchedPersonIds,
         placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
-        mood: String(formData.get("mood") || "平静"),
+        mood: String(formData.get("mood") || settings.defaultMood),
         content,
         tags: splitList(formData.get("tags"))
       };
@@ -404,6 +413,22 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return true;
     }
 
+    async function updateSettings(patch: Partial<AppSettings>) {
+      const next = {
+        ...settings,
+        ...Object.fromEntries(
+          Object.entries(patch).map(([key, value]) => [key, String(value || "").trim()])
+        ),
+      };
+      const normalized: AppSettings = {
+        defaultCity: next.defaultCity || defaultAppSettings.defaultCity,
+        defaultRelationship: next.defaultRelationship || defaultAppSettings.defaultRelationship,
+        defaultMood: next.defaultMood || defaultAppSettings.defaultMood
+      };
+      await saveAppSettings(normalized);
+      setSettings(normalized);
+    }
+
     function exportData() {
       const payload = {
         version: 2,
@@ -432,6 +457,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     return {
       state,
+      settings,
       isLoading,
       savePerson,
       inspectPlaceSave,
@@ -448,18 +474,19 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       mergeDuplicatePlaces,
       mergeAllDuplicatePlaces,
       undoLatestPlaceMerge,
+      updateSettings,
       exportData,
       resetDemo
     };
-  }, [isLoading, placeMergeHistory, state, duplicatePlaceGroups]);
+  }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }
 
-function buildPlaceFromFormData(formData: FormData, id?: string): Place {
+function buildPlaceFromFormData(formData: FormData, id: string | undefined, settings: AppSettings): Place {
   const country = normalizePlaceText(formData.get("country")) || "中国";
   const province = normalizePlaceText(formData.get("province"));
-  const city = normalizeCityName(normalizePlaceText(formData.get("city")) || "杭州");
+  const city = normalizeCityName(normalizePlaceText(formData.get("city")) || settings.defaultCity);
   const address = normalizePlaceText(formData.get("address"));
   const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address);
 

@@ -1,6 +1,15 @@
 import Dexie, { type Table } from "dexie";
 import { seedData } from "../data/seedData";
-import type { LifeLogState, MemoryEvent, Person, Place, PlaceMergeHistoryEntry, PreferenceGroup } from "../types";
+import type {
+  AppSettings,
+  LifeLogState,
+  MemoryEvent,
+  Person,
+  Place,
+  PlaceMergeHistoryEntry,
+  PreferenceGroup
+} from "../types";
+import { defaultAppSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
 
@@ -11,6 +20,7 @@ class LifeLogDatabase extends Dexie {
   places!: Table<Place, string>;
   memories!: Table<MemoryEvent, string>;
   placeMergeHistory!: Table<PlaceMergeHistoryEntry, string>;
+  appSettings!: Table<{ key: string; value: AppSettings }, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -30,6 +40,13 @@ class LifeLogDatabase extends Dexie {
       memories: "id, date, placeId, *personIds",
       placeMergeHistory: "id, happenedAt"
     });
+    this.version(4).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *personIds",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key"
+    });
   }
 }
 
@@ -38,6 +55,25 @@ export const db = new LifeLogDatabase();
 export async function loadLifeLogState(): Promise<LifeLogState> {
   await initializeDatabase();
   return readAll();
+}
+
+export async function loadAppSettings(): Promise<AppSettings> {
+  await initializeDatabase();
+  const entry = await db.appSettings.get("app");
+  return {
+    ...defaultAppSettings,
+    ...(entry?.value || {})
+  };
+}
+
+export async function saveAppSettings(settings: AppSettings) {
+  await db.appSettings.put({
+    key: "app",
+    value: {
+      ...defaultAppSettings,
+      ...settings
+    }
+  });
 }
 
 export async function savePersonRecord(person: Person) {
@@ -124,6 +160,18 @@ export async function replaceAllData(input: Partial<LifeLogState>) {
 
 export async function resetDatabase() {
   await replaceAllData(seedData);
+}
+
+export async function estimateStorageUsage() {
+  if (!("storage" in navigator) || !navigator.storage?.estimate) {
+    return null;
+  }
+
+  try {
+    return await navigator.storage.estimate();
+  } catch {
+    return null;
+  }
 }
 
 export async function runPlaceMergeTransaction(nextState: LifeLogState, removedIds: string[]) {
