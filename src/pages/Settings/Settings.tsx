@@ -234,7 +234,7 @@ export default function Settings() {
             />
           </GlassCard>
         </div>
-        <p className="form-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>
+        <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>
       </section>
 
       <section className="section">
@@ -246,7 +246,7 @@ export default function Settings() {
         <div className="list">
           <GlassCard className="detail-row">
             <strong>版本</strong>
-            <span>0.1.0-test.25</span>
+            <span>0.1.0-test.26</span>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>存储</strong>

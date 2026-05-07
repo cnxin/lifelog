@@ -1,19 +1,30 @@
 import { ArrowLeft, Calendar, Gift, Heart, MapPin, Sparkles, Star } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { anniversaryRelativeLabel, anniversaryYearLabel, formatSolarLunar } from "../../utils/date";
 import { initials } from "../../utils/text";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function PersonDetail() {
   const { personId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { state, getPlaceName } = useLifeLog();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
+  const anniversariesRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (location.hash !== "#anniversaries" || !anniversariesRef.current) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const frameId = requestAnimationFrame(() => {
+      anniversariesRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [location.hash, personId]);
   const person = state.people.find((item) => item.id === personId);
 
   if (!person) {
@@ -133,7 +144,7 @@ export default function PersonDetail() {
         <PreferenceBlocks groups={person.dislikes} emptyText="还没有记录禁忌" danger />
       </section>
 
-      <section className="section">
+      <section className="section" ref={anniversariesRef}>
         <div className="section-header">
           <h2>
             <Calendar /> 纪念日

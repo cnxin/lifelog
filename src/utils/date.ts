@@ -76,6 +76,7 @@ export function getUpcomingAnniversaries(people: Person[]) {
         const deltaDays = anniversaryDeltaDays(anniversary.date);
         return {
           ...anniversary,
+          personId: person.id,
           personName: person.name,
           days: Math.abs(deltaDays),
           deltaDays,

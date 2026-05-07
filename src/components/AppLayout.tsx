@@ -45,9 +45,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-container">
-      <Header dateLabel={todayLabel()} title={meta.title} subtitle={meta.subtitle} />
+      <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
       <main className="main-content">{children}</main>
-      <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
+      {location.pathname !== "/settings" && (
+        <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
+      )}
       <BottomNav />
       <EntrySheet type={sheetType} onClose={() => setSheetType(null)} />
     </div>

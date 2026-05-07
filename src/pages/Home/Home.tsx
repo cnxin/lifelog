@@ -61,13 +61,17 @@ export default function Home() {
           <h2>
             <Calendar /> 纪念日
           </h2>
-          <button className="see-all" onClick={() => navigate("/people")}>
+          <button className="see-all" onClick={() => navigate("/calendar")}>
             查看
           </button>
         </div>
         <div className="anniversary-scroll">
           {upcoming.map((item, index) => (
-            <GlassCard key={`${item.personName}-${item.title}`} className={`anniversary-card ${index % 2 ? "secondary" : ""}`}>
+            <button
+              key={`${item.personName}-${item.title}`}
+              className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""}`}
+              onClick={() => navigate(`/people/${item.personId}#anniversaries`)}
+            >
               <div className="a-title">
                 {item.personName} · {item.title}
               </div>
@@ -79,7 +83,7 @@ export default function Home() {
               <div className="a-date">{item.yearLabel}</div>
               <div className="a-date">{formatMonthDay(item.date)}</div>
               <div className="a-date">{formatLunarDate(item.date)}</div>
-            </GlassCard>
+            </button>
           ))}
         </div>
       </section>

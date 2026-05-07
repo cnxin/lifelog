@@ -131,23 +131,20 @@ export default function PlaceDetail() {
             <strong>区 / 商圈</strong>
             <span>{place.area || "未设置"}</span>
           </GlassCard>
-          <GlassCard className="detail-row">
-            <strong>商场 / 园区</strong>
-            <span>{place.mall || "未设置"}</span>
-          </GlassCard>
           {place.mall ? (
             <button
               className="detail-row detail-button glass-card"
               onClick={() => navigate(`/places/malls/${encodeURIComponent(buildMallKey(place))}`)}
             >
-              <strong>查看所属商场</strong>
-              <span>{place.mall}</span>
+              <strong>商场 / 园区</strong>
+              <span>{[place.mall, place.storeName].filter(Boolean).join(" · ")}</span>
             </button>
-          ) : null}
-          <GlassCard className="detail-row">
-            <strong>店铺 / 场所</strong>
-            <span>{place.storeName || "未设置"}</span>
-          </GlassCard>
+          ) : (
+            <GlassCard className="detail-row">
+              <strong>店铺 / 场所</strong>
+              <span>{place.storeName || "未设置"}</span>
+            </GlassCard>
+          )}
           <GlassCard className="detail-row">
             <strong>类型</strong>
             <span>{place.category}</span>

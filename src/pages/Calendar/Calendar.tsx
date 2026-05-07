@@ -138,7 +138,7 @@ function buildCalendarItems(
           title: `${person.name} · ${anniversary.title}`,
           subtitle: formatLunarDate(toDateKey(eventDate)),
           type: "person" as const,
-          target: `/people/${person.id}`
+          target: `/people/${person.id}#anniversaries`
         };
       })
       .filter((item) => new Date(`${item.dateKey}T00:00:00`).getMonth() === month)

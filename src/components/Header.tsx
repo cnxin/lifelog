@@ -8,7 +8,7 @@ export default function Header({ dateLabel, title, subtitle }: HeaderProps) {
   return (
     <header className="header">
       <div className="greeting">
-        <p className="date-label">{dateLabel}</p>
+        {dateLabel && <p className="date-label">{dateLabel}</p>}
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>

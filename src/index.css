@@ -292,6 +292,9 @@ h3 {
   flex-shrink: 0;
   border: 0;
   color: white;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
 }
 
@@ -2017,19 +2020,21 @@ button:disabled,
 .settings-inline-input {
   text-align: right;
   border: 0;
-  background: transparent;
-  color: var(--text-main);
-  font-size: 14px;
+  background: rgba(108, 92, 231, 0.08);
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 600;
   font-family: inherit;
   width: 120px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 6px 10px;
+  border-radius: 8px;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .settings-inline-input:focus {
-  border-bottom-color: var(--primary);
+  background: rgba(108, 92, 231, 0.14);
+  box-shadow: 0 0 0 2px var(--primary-light);
 }
 
 .settings-undo-row {
@@ -2038,6 +2043,10 @@ button:disabled,
   justify-content: space-between;
   gap: 12px;
   margin-top: 12px;
+}
+
+.settings-section-hint {
+  margin-top: 8px;
 }
 
 .settings-about-tags {
