@@ -77,30 +77,31 @@ export async function clearPlaceMergeHistory() {
 export async function deletePersonRecord(id: string) {
   await db.transaction("rw", db.people, db.memories, async () => {
     await db.people.delete(id);
-    const memories = await db.memories.toArray();
-    await Promise.all(
-      memories.map((memory) =>
-        db.memories.put({
-          ...memory,
-          personIds: memory.personIds.filter((personId) => personId !== id)
-        })
-      )
-    );
+    const affected = await db.memories.where("personIds").equals(id).toArray();
+    if (affected.length) {
+      await Promise.all(
+        affected.map((memory) =>
+          db.memories.put({
+            ...memory,
+            personIds: memory.personIds.filter((personId) => personId !== id)
+          })
+        )
+      );
+    }
   });
 }
 
 export async function deletePlaceRecord(id: string) {
   await db.transaction("rw", db.places, db.memories, async () => {
     await db.places.delete(id);
-    const memories = await db.memories.toArray();
-    await Promise.all(
-      memories.map((memory) =>
-        db.memories.put({
-          ...memory,
-          placeId: memory.placeId === id ? "" : memory.placeId
-        })
-      )
-    );
+    const affected = await db.memories.where("placeId").equals(id).toArray();
+    if (affected.length) {
+      await Promise.all(
+        affected.map((memory) =>
+          db.memories.put({ ...memory, placeId: "" })
+        )
+      );
+    }
   });
 }
 

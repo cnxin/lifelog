@@ -74,10 +74,17 @@ const chinaDistrictCityMap: Record<string, string> = {
   奉化区: "宁波"
 };
 
+const chinaDistrictAliasMap = Object.fromEntries(
+  Object.keys(chinaDistrictCityMap)
+    .sort((left, right) => right.length - left.length)
+    .map((district) => [district.replace(/(?:区|县|市)$/, ""), district])
+    .filter(([alias, district]) => alias && alias !== district)
+);
+
 const provincePattern =
   /((?:内蒙古|广西|宁夏|新疆|西藏)[^省市区]{0,4}自治区|(?:北京|上海|天津|重庆)市|(?:香港|澳门)特别行政区|[\u4e00-\u9fff]{2,8}(?:省|自治区|特别行政区))/;
 const mallPattern =
-  /([\u4e00-\u9fffA-Za-z0-9·\s-]{2,40}(?:广场|商场|商城|天地|中心|银泰|万象城|万达|印象城|大悦城|吾悦广场|天街|奥特莱斯|生活广场|国际广场|国金中心|写字楼|园区|大厦|SKP|IFS|Mall|mall))/;
+  /([\u4e00-\u9fffA-Za-z0-9·\s-]{2,40}(?:广场|商场|商城|天地|中心|银泰|万象城|万象汇|万达|印象城|大悦城|吾悦广场|天街|奥特莱斯|生活广场|国际广场|国金中心|写字楼|园区|大厦|SKP|IFS|Mall|mall))/;
 
 export function normalizePlaceText(value: unknown) {
   return String(value || "").trim();
@@ -111,16 +118,19 @@ export function inferMallName(value: string) {
 }
 
 export function inferCityByDistrict(value = "") {
-  const matched = Object.keys(chinaDistrictCityMap).find((district) => normalizePlaceText(value).includes(district));
+  const matched = findDistrictName(value);
   return matched ? chinaDistrictCityMap[matched] : "";
 }
 
 export function inferAreaFromText(value: string, mall = "") {
   const text = normalizePlaceText(value);
-  const area =
+  let area =
     text.match(/([\u4e00-\u9fff]{2,12}(?:区|县))/)?.[1]?.trim() ||
     text.match(/([\u4e00-\u9fffA-Za-z0-9]{2,20}(?:商圈|街区))/)?.[1]?.trim() ||
     "";
+  if (!area) {
+    area = findDistrictName(`${text} ${mall}`);
+  }
   if (!area) return "";
   return area === mall ? "" : area;
 }
@@ -206,4 +216,19 @@ function uniqueParts(parts: Array<string | undefined>) {
       seen.add(part);
       return true;
     });
+}
+
+function findDistrictName(value = "") {
+  const text = normalizePlaceText(value);
+  if (!text) return "";
+
+  const exact = Object.keys(chinaDistrictCityMap)
+    .sort((left, right) => right.length - left.length)
+    .find((district) => text.includes(district));
+  if (exact) return exact;
+
+  const alias = Object.keys(chinaDistrictAliasMap)
+    .sort((left, right) => right.length - left.length)
+    .find((district) => text.includes(district));
+  return alias ? chinaDistrictAliasMap[alias] : "";
 }

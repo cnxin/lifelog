@@ -1743,6 +1743,15 @@ h3 {
   min-width: 0;
 }
 
+.anniversary-editor-row.incomplete input,
+.pref-editor-row.incomplete input {
+  border-color: var(--accent-danger, #e74c3c);
+}
+
+.form-hint.danger {
+  color: var(--accent-danger, #e74c3c);
+}
+
 .mini-action {
   border: 0;
   border-radius: 14px;

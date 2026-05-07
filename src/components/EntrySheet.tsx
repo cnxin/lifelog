@@ -113,7 +113,7 @@ export default function EntrySheet({
           </button>
         </div>
 
-        <form className="form" onSubmit={handleSubmit}>
+        <form className="form" onSubmit={handleSubmit} onChange={() => error && setError("")}>
           {error && <div className="form-error">{error}</div>}
           {entryType === "person" && (
             <PersonFields person={editingItem as Person | undefined} isEditing={Boolean(itemId)} />
@@ -215,7 +215,7 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
       <div className="form-row">
         <label>
           姓名
-          <input name="name" defaultValue={person?.name || "小蓝"} required />
+          <input name="name" defaultValue={person?.name} required />
         </label>
         <label>
           昵称
@@ -225,7 +225,7 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
       <div className="form-row">
         <label>
           关系
-          <input name="relationship" defaultValue={person?.relationship || "朋友"} />
+          <input name="relationship" defaultValue={person?.relationship} placeholder="朋友、家人、同事..." />
         </label>
         <label>
           收藏
@@ -276,7 +276,7 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
       />
       <label>
         备注
-        <textarea name="notes" defaultValue={person?.notes || "这里记录一些重要细节。"} />
+        <textarea name="notes" defaultValue={person?.notes} placeholder="记录一些重要细节，例如：喜欢喝美式，不吃香菜。" />
       </label>
     </>
   );
@@ -340,28 +340,36 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
     }))
     .filter((row) => row.title && row.date);
 
+  const incompleteCount = rows.filter((row) => (row.title.trim() && !row.date) || (!row.title.trim() && row.date)).length;
+
   return (
     <div className="anniversary-editor">
       <input type="hidden" name="anniversaries" value={JSON.stringify(payload)} />
-      {rows.map((row, index) => (
-        <div className="anniversary-editor-row" key={`anniversary-${index}`}>
-          <input
-            aria-label="纪念日名称"
-            placeholder="纪念日名称"
-            value={row.title}
-            onChange={(event) => updateRow(index, { title: event.target.value })}
-          />
-          <input
-            aria-label="纪念日日期"
-            type="date"
-            value={row.date}
-            onChange={(event) => updateRow(index, { date: event.target.value })}
-          />
-          <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
-            删除
-          </button>
-        </div>
-      ))}
+      {rows.map((row, index) => {
+        const incomplete = (row.title.trim() && !row.date) || (!row.title.trim() && row.date);
+        return (
+          <div className={`anniversary-editor-row ${incomplete ? "incomplete" : ""}`} key={`anniversary-${index}`}>
+            <input
+              aria-label="纪念日名称"
+              placeholder="纪念日名称"
+              value={row.title}
+              onChange={(event) => updateRow(index, { title: event.target.value })}
+            />
+            <input
+              aria-label="纪念日日期"
+              type="date"
+              value={row.date}
+              onChange={(event) => updateRow(index, { date: event.target.value })}
+            />
+            <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
+              删除
+            </button>
+          </div>
+        );
+      })}
+      {incompleteCount > 0 && (
+        <p className="form-hint danger">有 {incompleteCount} 条纪念日信息不完整，保存时会被忽略。</p>
+      )}
       <button type="button" className="mini-action add" onClick={addRow}>
         添加纪念日
       </button>
@@ -416,28 +424,42 @@ function PreferenceGroupEditor({
     }))
     .filter((row) => row.category && row.items.length);
 
+  const incompleteCount = rows.filter((row) => {
+    const hasCategory = row.category.trim();
+    const hasItems = row.itemsText.trim();
+    return (hasCategory && !hasItems) || (!hasCategory && hasItems);
+  }).length;
+
   return (
     <div className={`pref-editor ${danger ? "danger" : ""}`}>
       <input type="hidden" name={name} value={groupsToText(groupsValue)} />
-      {rows.map((row, index) => (
-        <div className="pref-editor-row" key={`${name}-${index}`}>
-          <input
-            aria-label="分类"
-            placeholder="分类"
-            value={row.category}
-            onChange={(event) => updateRow(index, { category: event.target.value })}
-          />
-          <input
-            aria-label="项目"
-            placeholder="用顿号或分号分隔"
-            value={row.itemsText}
-            onChange={(event) => updateRow(index, { itemsText: event.target.value })}
-          />
-          <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
-            删除
-          </button>
-        </div>
-      ))}
+      {rows.map((row, index) => {
+        const hasCategory = row.category.trim();
+        const hasItems = row.itemsText.trim();
+        const incomplete = (hasCategory && !hasItems) || (!hasCategory && hasItems);
+        return (
+          <div className={`pref-editor-row ${incomplete ? "incomplete" : ""}`} key={`${name}-${index}`}>
+            <input
+              aria-label="分类"
+              placeholder="分类"
+              value={row.category}
+              onChange={(event) => updateRow(index, { category: event.target.value })}
+            />
+            <input
+              aria-label="项目"
+              placeholder="用顿号或分号分隔"
+              value={row.itemsText}
+              onChange={(event) => updateRow(index, { itemsText: event.target.value })}
+            />
+            <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
+              删除
+            </button>
+          </div>
+        );
+      })}
+      {incompleteCount > 0 && (
+        <p className="form-hint danger">有 {incompleteCount} 条记录缺少{danger ? "禁忌" : "喜好"}分类或项目，保存时会被忽略。</p>
+      )}
       <button type="button" className="mini-action add" onClick={addRow}>
         添加分类
       </button>
@@ -477,14 +499,14 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         </label>
         <label>
           店铺 / 场所
-          <input name="storeName" defaultValue={place?.storeName || "湖滨店"} placeholder="分店、楼层、影厅、景点入口等" />
+          <input name="storeName" defaultValue={place?.storeName} placeholder="分店、楼层、影厅、景点入口等" />
         </label>
       </div>
       <p className="form-hint">层级按国家 / 省 / 市 / 商场 / 店铺记录；地点名称填主名称，商场和店铺分开更清晰。</p>
       <div className="form-row">
         <label>
           地点名称
-          <input name="name" defaultValue={place?.name || "新餐厅"} required />
+          <input name="name" defaultValue={place?.name} required />
         </label>
         <label>
           分类
@@ -498,7 +520,7 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       <div className="form-row">
         <label>
           评分
-          <input name="rating" type="number" step="0.1" defaultValue={place?.rating || 4.5} />
+          <input name="rating" type="number" step="0.1" defaultValue={place?.rating ?? 4.5} />
         </label>
         <label>
           收藏
@@ -535,13 +557,13 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       <p className="form-hint">详情页会展示前 3 张照片；链接失效时会自动隐藏。</p>
       <label>
         描述
-        <textarea name="desc" defaultValue={place?.desc || "适合约会或聚餐。"} />
+        <textarea name="desc" defaultValue={place?.desc} placeholder="适合约会或聚餐，环境安静..." />
       </label>
       <input type="hidden" name="latitude" value={place?.latitude || ""} />
       <input type="hidden" name="longitude" value={place?.longitude || ""} />
       <label>
         标签，逗号分隔
-        <input name="tags" defaultValue={place?.tags.join("，") || "安静，推荐"} />
+        <input name="tags" defaultValue={place?.tags.join("，")} placeholder="安静，推荐，想再去" />
       </label>
     </>
   );
@@ -556,7 +578,10 @@ function QuickPlaceFields() {
 
   function applyShareText() {
     const parsed = parsePlaceShare(shareText);
-    setDraft((current) => ({ ...current, ...parsed }));
+    const patch = Object.fromEntries(
+      Object.entries(parsed).filter(([, v]) => v !== "" && v !== 0)
+    ) as Partial<PlaceDraft>;
+    setDraft((current) => ({ ...current, ...patch }));
     setMessage(
       parsed.confidence
         ? `已识别 ${parsed.confidence}%：${parsed.sourceType === "generic" ? "普通文本" : parsed.sourceType}`
@@ -771,7 +796,7 @@ function QuickPlaceFields() {
       </div>
 
       <input type="hidden" name="country" value={draft.country || "中国"} />
-      <input type="hidden" name="rating" value="4" />
+      <input type="hidden" name="rating" value={draft.rating || 4} />
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="latitude" value={draft.latitude} />
       <input type="hidden" name="longitude" value={draft.longitude} />

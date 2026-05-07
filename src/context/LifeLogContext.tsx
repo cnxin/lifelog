@@ -98,6 +98,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const duplicatePlaceGroups = useMemo(
+    () => findPlaceDuplicateGroups(state.places),
+    [state.places]
+  );
+
   const value = useMemo<LifeLogContextValue>(() => {
     async function savePerson(formData: FormData, id?: string) {
       const existing = state.people.find((person) => person.id === id);
@@ -283,7 +288,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function importData(file: File) {
       const text = await file.text();
-      const parsed = JSON.parse(text) as Partial<LifeLogState>;
+      let parsed: Partial<LifeLogState>;
+      try {
+        parsed = JSON.parse(text) as Partial<LifeLogState>;
+      } catch {
+        throw new Error("文件不是有效的 JSON 格式，请检查备份文件。");
+      }
+      if (!parsed || typeof parsed !== "object") {
+        throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
+      }
       const next = normalizeState(parsed);
       await replaceAllData(next);
       await clearPlaceMergeHistory();
@@ -415,7 +428,6 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       setPlaceMergeHistory([]);
     }
 
-    const duplicatePlaceGroups = findPlaceDuplicateGroups(state.places);
     const latestPlaceMerge = placeMergeHistory[0] || null;
 
     return {
@@ -439,7 +451,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       exportData,
       resetDemo
     };
-  }, [isLoading, placeMergeHistory, state]);
+  }, [isLoading, placeMergeHistory, state, duplicatePlaceGroups]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }

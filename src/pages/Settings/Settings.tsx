@@ -11,7 +11,11 @@ export default function Settings() {
   async function handleImport(file: File | undefined) {
     if (!file) return;
     if (!confirm("确认导入这个 JSON？当前 IndexedDB 数据会被覆盖。")) return;
-    await importData(file);
+    try {
+      await importData(file);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "导入失败，请检查文件格式。");
+    }
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -32,7 +36,9 @@ export default function Settings() {
               <button className="category-pill" onClick={() => fileInputRef.current?.click()}>
                 导入 JSON
               </button>
-              <button className="category-pill" onClick={resetDemo}>
+              <button className="category-pill" onClick={() => {
+                if (confirm("确认重置？所有数据将被清空并还原为示例数据。")) void resetDemo();
+              }}>
                 重置 Demo
               </button>
             </div>

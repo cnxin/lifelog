@@ -33,15 +33,23 @@ export async function openNativeStoreUrl(rawUrl: string) {
 }
 
 export async function openPlaceMap(place: Place) {
-  const amapUrl = buildAmapUrl(place);
-
-  if (Capacitor.isNativePlatform() && amapUrl) {
-    openSchemeUrl(amapUrl);
-    return;
+  if (Capacitor.isNativePlatform() && place.latitude && place.longitude) {
+    const url = buildAmapUrl(place);
+    if (url) {
+      openSchemeUrl(url);
+      return;
+    }
   }
 
   if (place.mapUrl) {
     await openExternalUrl(place.mapUrl);
+    return;
+  }
+
+  const amapUrl = buildAmapUrl(place);
+
+  if (Capacitor.isNativePlatform() && amapUrl) {
+    openSchemeUrl(amapUrl);
     return;
   }
 

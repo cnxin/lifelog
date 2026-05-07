@@ -60,8 +60,8 @@ export function inferPlaceId(content: string, places: PlaceLookup[]) {
   const normalized = content.trim();
   return (
     places.find((place) => {
-      const names = [place.name, place.storeName, place.mall, place.area, place.address].filter(Boolean);
-      return names.some((name) => String(name).length >= 2 && normalized.includes(String(name)));
+      const names = [place.name, place.storeName].filter(Boolean);
+      return names.some((name) => String(name).length >= 3 && normalized.includes(String(name)));
     })?.id || ""
   );
 }

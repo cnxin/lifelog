@@ -12,6 +12,7 @@ export interface PlaceDraft {
   mall: string;
   storeName: string;
   category: string;
+  rating: number;
   address: string;
   latitude: string;
   longitude: string;
@@ -35,6 +36,7 @@ export function emptyPlaceDraft(): PlaceDraft {
     mall: "",
     storeName: "",
     category: "其他",
+    rating: 0,
     address: "",
     latitude: "",
     longitude: "",
@@ -72,6 +74,10 @@ export function parsePlaceShare(input: string): PlaceDraft {
   const name = textDraft.name || urlDraft.name || fallbackName(cleanText);
   const platformLinks = buildPlatformLinks(url, sourceType);
   const sourceUrl = sourceType === "meituan" || sourceType === "dianping" ? "" : url;
+  const lines = normalizeShareLines(cleanText);
+  const rating = extractRating(lines);
+  const price = extractPrice(lines);
+  const desc = price ? `人均 ${price}` : "";
 
   return {
     ...draft,
@@ -84,10 +90,12 @@ export function parsePlaceShare(input: string): PlaceDraft {
     area,
     mall,
     address,
+    rating,
     mapUrl: sourceType === "amap" ? url || urlDraft.mapUrl || "" : urlDraft.mapUrl || "",
     sourceUrl,
     platformLinks,
     photos: extractPhotoUrls(text).join("\n"),
+    desc,
     tags: sourceType === "generic" ? "" : sourceLabel(sourceType),
     category: textDraft.category || inferCategory(`${name} ${cleanText}`),
     sourceType,
@@ -342,6 +350,25 @@ function buildPlatformLinks(url: string, sourceType: PlaceSourceType) {
   const link = createPlatformLink(url, label);
   if (!link) return "";
   return `${link.label} | ${link.url}`;
+}
+
+function extractRating(lines: string[]) {
+  for (const line of lines) {
+    const match = line.match(/(\d+(?:\.\d+)?)分/);
+    if (match) {
+      const value = Number(match[1]);
+      if (value > 0 && value <= 5) return value;
+    }
+  }
+  return 0;
+}
+
+function extractPrice(lines: string[]) {
+  for (const line of lines) {
+    const match = line.match(/[¥￥](\d+)(?:\/人)?/);
+    if (match) return `¥${match[1]}/人`;
+  }
+  return "";
 }
 
 function scoreDraft(name: string, address: string, url: string, sourceType: PlaceSourceType) {
