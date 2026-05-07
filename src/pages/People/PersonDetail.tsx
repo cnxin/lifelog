@@ -6,13 +6,14 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { anniversaryRelativeLabel, anniversaryYearLabel, formatSolarLunar } from "../../utils/date";
 import { initials } from "../../utils/text";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 import { useEffect, useRef, useState } from "react";
 
 export default function PersonDetail() {
   const { personId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, getPlaceName } = useLifeLog();
+  const { state, getPersonName, getPlaceName } = useLifeLog();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
   const anniversariesRef = useRef<HTMLElement>(null);
@@ -198,21 +199,27 @@ export default function PersonDetail() {
           </button>
         </div>
         <div className="list">
-          {relatedMemories.map((memory) => (
-            <GlassCard className="memory-card" key={memory.id}>
-              <div className="memory-badge">♡</div>
-              <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-title">
-                  <span>{memory.title}</span>
-                  <span className="place-rating">{formatSolarLunar(memory.date)}</span>
+          {relatedMemories.map((memory) => {
+            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+            const displayTitle = getMemoryDisplayTitle(memory, ctx);
+            const showContentLine = isManualTitle(memory) && memory.content.trim();
+            return (
+              <GlassCard className="memory-card" key={memory.id}>
+                <div className="memory-badge">♡</div>
+                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-title">
+                    <span>{displayTitle}</span>
+                    <span className="place-rating">{formatSolarLunar(memory.date)}</span>
+                  </div>
+                  <p className="memory-desc">
+                    {ctx.placeName || "未关联地点"}
+                    {showContentLine ? ` · ${memory.content}` : ""}
+                  </p>
+                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
                 </div>
-                <p className="memory-desc">
-                  {getPlaceName(memory.placeId)} · {memory.content}
-                </p>
-                <Tags items={[memory.mood, ...memory.tags]} />
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+          })}
           {!relatedMemories.length && <GlassCard className="empty">还没有相关回忆</GlassCard>}
         </div>
       </section>

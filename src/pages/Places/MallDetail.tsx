@@ -11,11 +11,12 @@ import {
   isSameMall,
   parseMallKey,
 } from "../../utils/placeMeta";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 
 export default function MallDetail() {
   const navigate = useNavigate();
   const { mallKey } = useParams();
-  const { state } = useLifeLog();
+  const { state, getPersonName, getPlaceName } = useLifeLog();
 
   const mallInfo = useMemo(() => parseMallKey(mallKey || ""), [mallKey]);
   const places = useMemo(
@@ -97,20 +98,23 @@ export default function MallDetail() {
             )
             .sort((a, b) => b.date.localeCompare(a.date))
             .slice(0, 8)
-            .map((memory) => (
-              <button
-                className="vertical-detail-card detail-button glass-card"
-                key={memory.id}
-                onClick={() => navigate(`/memories/${memory.id}`)}
-              >
-                <strong className="truncate-text" style={{ width: "100%" }}>
-                  {memory.title}
-                </strong>
-                <span className="truncate-lines-2">
-                  {memory.content || "查看回忆详情"}
-                </span>
-              </button>
-            ))}
+            .map((memory) => {
+              const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+              return (
+                <button
+                  className="vertical-detail-card detail-button glass-card"
+                  key={memory.id}
+                  onClick={() => navigate(`/memories/${memory.id}`)}
+                >
+                  <strong className="truncate-text" style={{ width: "100%" }}>
+                    {getMemoryDisplayTitle(memory, ctx)}
+                  </strong>
+                  <span className="truncate-lines-2">
+                    {memory.content || "查看回忆详情"}
+                  </span>
+                </button>
+              );
+            })}
         </div>
       </section>
     </>

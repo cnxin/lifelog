@@ -7,6 +7,7 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries } from "../../utils/date";
 import { initials } from "../../utils/text";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -159,24 +160,28 @@ export default function Home() {
           </button>
         </div>
         <div className="list">
-          {recent.map((memory) => (
-            <GlassCard className="memory-card" key={memory.id}>
-              <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-badge">♡</div>
-              </button>
-              <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-title">
-                  <span>{memory.title}</span>
-                  <span className="place-rating">{formatMonthDay(memory.date)}</span>
+          {recent.map((memory) => {
+            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+            const displayTitle = getMemoryDisplayTitle(memory, ctx);
+            const meta = [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ");
+            const showContentLine = isManualTitle(memory) && memory.content.trim();
+            return (
+              <GlassCard className="memory-card" key={memory.id}>
+                <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-badge">♡</div>
+                </button>
+                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-title">
+                    <span>{displayTitle}</span>
+                    <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                  </div>
+                  {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
+                  {showContentLine && <p className="memory-desc">{memory.content}</p>}
+                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
                 </div>
-                <p className="memory-desc">
-                  {memory.personIds.map(getPersonName).join("、")} · {getPlaceName(memory.placeId)}
-                </p>
-                <p className="memory-desc">{memory.content}</p>
-                <Tags items={[memory.mood, ...memory.tags]} />
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+          })}
         </div>
       </section>
       <EntrySheet type={quickMemoryOpen ? "memory" : null} memoryMode="quick" onClose={() => setQuickMemoryOpen(false)} />

@@ -15,11 +15,12 @@ import {
   getPlacePlatformLink,
   getPlaceReferenceUrl
 } from "../../utils/placeMeta";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
   const navigate = useNavigate();
-  const { state, getPersonName } = useLifeLog();
+  const { state, getPersonName, getPlaceName } = useLifeLog();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
   const place = state.places.find((item) => item.id === placeId);
@@ -252,21 +253,27 @@ export default function PlaceDetail() {
           </button>
         </div>
         <div className="list">
-          {relatedMemories.map((memory) => (
-            <GlassCard className="memory-card" key={memory.id}>
-              <div className="memory-badge">♡</div>
-              <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-title">
-                  <span>{memory.title}</span>
-                  <span className="place-rating">{formatMonthDay(memory.date)}</span>
+          {relatedMemories.map((memory) => {
+            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+            const displayTitle = getMemoryDisplayTitle(memory, ctx);
+            const showContentLine = isManualTitle(memory) && memory.content.trim();
+            return (
+              <GlassCard className="memory-card" key={memory.id}>
+                <div className="memory-badge">♡</div>
+                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-title">
+                    <span>{displayTitle}</span>
+                    <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                  </div>
+                  <p className="memory-desc">
+                    {ctx.personNames.join("、") || "未关联人物"}
+                    {showContentLine ? ` · ${memory.content}` : ""}
+                  </p>
+                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
                 </div>
-                <p className="memory-desc">
-                  {memory.personIds.map(getPersonName).join("、")} · {memory.content}
-                </p>
-                <Tags items={[memory.mood, ...memory.tags]} />
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+          })}
           {!relatedMemories.length && <GlassCard className="empty">还没有相关回忆</GlassCard>}
         </div>
       </section>

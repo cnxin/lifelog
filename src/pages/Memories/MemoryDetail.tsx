@@ -7,6 +7,7 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
@@ -67,7 +68,7 @@ export default function MemoryDetail() {
           </div>
           <div className="profile-main">
             <div className="profile-title">
-              <h2>{memory.title}</h2>
+              <h2>{getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}</h2>
             </div>
             <p>
               {formatMonthDay(memory.date)} · {memory.mood}

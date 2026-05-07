@@ -9,6 +9,7 @@ import Tags from "../../components/Tags";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 
 export default function Memories() {
   const { state, getPersonName, getPlaceName, deleteEntry } = useLifeLog();
@@ -22,12 +23,14 @@ export default function Memories() {
     return [...state.memories]
       .sort((a, b) => b.date.localeCompare(a.date))
       .filter((memory) => {
+        const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
         const content = [
           memory.title,
+          getMemoryDisplayTitle(memory, ctx),
           memory.content,
           memory.mood,
-          memory.personIds.map(getPersonName).join(","),
-          getPlaceName(memory.placeId),
+          ctx.personNames.join(","),
+          ctx.placeName,
           memory.tags.join(",")
         ].join(" ");
         return content.toLowerCase().includes(query.toLowerCase());
@@ -49,29 +52,33 @@ export default function Memories() {
       <SearchBar value={query} placeholder="搜索回忆、人物、地点" onChange={setQuery} />
       <section className="section">
         <div className="list">
-          {memories.map((memory) => (
-            <GlassCard className="memory-card" key={memory.id}>
-              <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-badge">
-                <Heart />
+          {memories.map((memory) => {
+            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+            const displayTitle = getMemoryDisplayTitle(memory, ctx);
+            const meta = [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ");
+            const showContentLine = isManualTitle(memory) && memory.content.trim();
+            return (
+              <GlassCard className="memory-card" key={memory.id}>
+                <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-badge">
+                    <Heart />
+                  </div>
+                </button>
+                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                  <div className="memory-title">
+                    <span>{displayTitle}</span>
+                    <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                  </div>
+                  {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
+                  {showContentLine && <p className="memory-desc">{memory.content}</p>}
+                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
                 </div>
-              </button>
-              <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                <div className="memory-title">
-                  <span>{memory.title}</span>
-                  <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                <div className="person-side-actions">
+                  <CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />
                 </div>
-                <p className="memory-desc">
-                  {memory.personIds.map(getPersonName).join("、")} · {getPlaceName(memory.placeId)}
-                </p>
-                <p className="memory-desc">{memory.content}</p>
-                <Tags items={[memory.mood, ...memory.tags]} />
-              </div>
-              <div className="person-side-actions">
-                <CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+          })}
           {!memories.length &&
             (state.memories.length === 0 ? (
               <GlassCard className="empty empty-cta">

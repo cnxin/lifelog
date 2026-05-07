@@ -19,6 +19,8 @@ import { createPlatformLink } from "../utils/placeLinks";
 import { getPlacePlatformLink } from "../utils/placeMeta";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 import { inferQuickMemory } from "../utils/memoryInference";
+import { deriveMemorySummary } from "../utils/memoryDisplay";
+import PersonPicker from "./PersonPicker";
 import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
 
 interface EntrySheetProps {
@@ -204,8 +206,8 @@ function validateForm(type: EntryType, formData: FormData) {
       if (!String(formData.get("content") || "").trim()) return "请先写下今天发生了什么。";
       return "";
     }
-    if (!String(formData.get("title") || "").trim()) return "请填写回忆标题。";
     if (!String(formData.get("date") || "").trim()) return "请选择回忆日期。";
+    if (!String(formData.get("content") || "").trim()) return "请填写回忆内容。";
   }
 
   return "";
@@ -847,7 +849,7 @@ function MemoryFields({
   const [quickContent, setQuickContent] = useState("");
   const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
   const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
-  const moodInputRef = useRef<HTMLInputElement>(null);
+  const [mood, setMood] = useState<string>(memory?.mood || settings.defaultMood);
   const quickPreview = inferQuickMemory({
     content: quickContent,
     people,
@@ -858,8 +860,22 @@ function MemoryFields({
   });
   const previewPeople = quickPreview.personIds
     .map((personId) => people.find((person) => person.id === personId)?.name)
-    .filter(Boolean);
+    .filter((name): name is string => Boolean(name));
   const previewPlace = places.find((place) => place.id === quickPreview.placeId)?.name || "";
+  const previewTitle =
+    deriveMemorySummary(
+      {
+        id: "",
+        title: "",
+        date: quickPreview.date,
+        personIds: quickPreview.personIds,
+        placeId: quickPreview.placeId,
+        mood: "",
+        content: quickContent,
+        tags: []
+      },
+      { personNames: previewPeople, placeName: previewPlace }
+    );
 
   if (!memory && mode === "quick") {
     return (
@@ -901,8 +917,8 @@ function MemoryFields({
         <div className="memory-preview" aria-live="polite">
           <span className="memory-preview-eyebrow">保存预览</span>
           <div className="memory-preview-row">
-            <strong>标题</strong>
-            <span>{quickPreview.title}</span>
+            <strong>摘要</strong>
+            <span>{previewTitle}</span>
           </div>
           <div className="memory-preview-row">
             <strong>日期</strong>
@@ -931,7 +947,11 @@ function MemoryFields({
     <>
       <label>
         标题
-        <input name="title" defaultValue={memory?.title || "新的回忆"} required />
+        <input
+          name="title"
+          defaultValue={memory?.title === "新的回忆" ? "" : memory?.title || ""}
+          placeholder="留空将自动按人物 / 地点生成摘要"
+        />
       </label>
       <div className="form-row">
         <label>
@@ -940,16 +960,19 @@ function MemoryFields({
         </label>
         <label>
           心情
-          <input ref={moodInputRef} name="mood" defaultValue={memory?.mood || settings.defaultMood} />
+          <input
+            name="mood"
+            value={mood}
+            onChange={(event) => setMood(event.target.value)}
+            placeholder="一个词描述今天的心情"
+          />
           <div className="mood-presets">
             {MOOD_PRESETS.map((preset) => (
               <button
                 type="button"
                 key={preset}
-                className="mood-preset-pill"
-                onClick={() => {
-                  if (moodInputRef.current) moodInputRef.current.value = preset;
-                }}
+                className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
+                onClick={() => setMood(preset)}
               >
                 {preset}
               </button>
@@ -959,20 +982,7 @@ function MemoryFields({
       </div>
       <div>
         <span className="field-title">关联人物</span>
-        <div className="choice-grid">
-          {people.map((person) => (
-            <label className="choice-item" key={person.id}>
-              <input
-                name="personIds"
-                type="checkbox"
-                value={person.id}
-                defaultChecked={selectedPersonIds.includes(person.id)}
-              />
-              <span>{person.name}</span>
-            </label>
-          ))}
-        </div>
-        {!people.length && <p className="form-hint">还没有人物，可以先保存回忆，后续再关联。</p>}
+        <PersonPicker people={people} defaultSelected={selectedPersonIds} />
       </div>
       <label>
         关联地点
@@ -986,11 +996,19 @@ function MemoryFields({
       </label>
       <label>
         内容
-        <textarea name="content" defaultValue={memory?.content || "记录今天发生的事，以及下次要注意什么。"} />
+        <textarea
+          name="content"
+          defaultValue={memory?.content || ""}
+          placeholder="记录今天发生的事，以及下次要注意什么。"
+        />
       </label>
       <label>
         标签，逗号分隔
-        <input name="tags" defaultValue={memory?.tags.join("，") || "日常，值得记住"} />
+        <input
+          name="tags"
+          defaultValue={memory?.tags.join("，") || ""}
+          placeholder="日常，值得记住"
+        />
       </label>
     </>
   );

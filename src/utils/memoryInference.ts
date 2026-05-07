@@ -36,12 +36,8 @@ export function inferQuickMemory({
 
 export function buildMemoryTitle(rawTitle: string, content: string) {
   const title = rawTitle.trim();
-  if (title && title !== "快速记录") return title;
-
-  const normalizedContent = content.trim().replace(/\s+/g, " ");
-  if (!normalizedContent) return title || "新的回忆";
-
-  return normalizedContent.length > 16 ? `${normalizedContent.slice(0, 16)}...` : normalizedContent;
+  if (title && title !== "快速记录" && title !== "新的回忆") return title;
+  return content.trim() ? "" : title;
 }
 
 export function inferPersonIds(content: string, people: PersonLookup[], fallbackId = "") {

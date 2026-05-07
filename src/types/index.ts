@@ -66,6 +66,11 @@ export interface MemoryEvent {
   tags: string[];
 }
 
+export interface MemoryDisplayContext {
+  personNames: string[];
+  placeName: string;
+}
+
 export interface LifeLogState {
   people: Person[];
   places: Place[];

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatLunarDate, formatMonthDay } from "../../utils/date";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 
 type CalendarItem = {
   id: string;
@@ -159,14 +160,17 @@ function buildCalendarItems(
 
   const memoryItems = state.memories
     .filter((memory) => new Date(`${memory.date}T00:00:00`).getMonth() === month)
-    .map((memory) => ({
-      id: `memory-${memory.id}`,
-      dateKey: memory.date,
-      title: memory.title,
-      subtitle: `${memory.personIds.map(getPersonName).join("、")} · ${getPlaceName(memory.placeId)}`,
-      type: "memory" as const,
-      target: `/memories/${memory.id}`
-    }));
+    .map((memory) => {
+      const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+      return {
+        id: `memory-${memory.id}`,
+        dateKey: memory.date,
+        title: getMemoryDisplayTitle(memory, ctx),
+        subtitle: [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ") || "未关联",
+        type: "memory" as const,
+        target: `/memories/${memory.id}`
+      };
+    });
 
   return [...peopleItems, ...memoryItems].sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 }
