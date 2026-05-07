@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { FormEvent } from "react";
@@ -550,6 +551,8 @@ function QuickPlaceFields() {
   const [shareText, setShareText] = useState("");
   const [draft, setDraft] = useState<PlaceDraft>(() => emptyPlaceDraft());
   const [message, setMessage] = useState("");
+  const [showLocationDetails, setShowLocationDetails] = useState(false);
+  const [showLinkDetails, setShowLinkDetails] = useState(false);
 
   function applyShareText() {
     const parsed = parsePlaceShare(shareText);
@@ -612,15 +615,6 @@ function QuickPlaceFields() {
       </div>
       <div className="form-row">
         <label>
-          省 / 州
-          <input
-            name="province"
-            value={draft.province}
-            onChange={(event) => updateDraft({ province: event.target.value })}
-            placeholder="例如：浙江省"
-          />
-        </label>
-        <label>
           城市
           <input
             name="city"
@@ -629,47 +623,18 @@ function QuickPlaceFields() {
             placeholder="例如：绍兴"
           />
         </label>
-      </div>
-      <div className="form-row">
-        <label>
-          区 / 商圈
-          <input
-            name="area"
-            value={draft.area}
-            onChange={(event) => updateDraft({ area: event.target.value })}
-            placeholder="例如：柯桥区"
-          />
-        </label>
         <label>
           商场 / 园区
           <input
             name="mall"
             value={draft.mall}
             onChange={(event) => updateDraft({ mall: event.target.value })}
-            placeholder="例如：玉兰国际"
+            placeholder="例如：玉兰国际、湖滨银泰"
           />
         </label>
       </div>
       <label>
-        店铺 / 场所
-        <input
-          name="storeName"
-          value={draft.storeName}
-          onChange={(event) => updateDraft({ storeName: event.target.value })}
-          placeholder="例如：玉兰国际店、B1 店、IMAX 厅"
-        />
-      </label>
-      <label>
-        地址
-        <input
-          name="address"
-          value={draft.address}
-          onChange={(event) => updateDraft({ address: event.target.value })}
-          placeholder="可以先空着，后续再补"
-        />
-      </label>
-      <label>
-        备注
+        一句话备注
         <textarea
           name="desc"
           value={draft.desc}
@@ -677,18 +642,141 @@ function QuickPlaceFields() {
           placeholder="例如：朋友推荐，想下次去试试。"
         />
       </label>
+      <p className="form-hint">先写名称、类型、城市和商场就够了，区、店铺、地址和外部链接可以后面再补。</p>
+
+      <button
+        type="button"
+        className={`inline-disclosure ${showLocationDetails ? "open" : ""}`}
+        onClick={() => setShowLocationDetails((current) => !current)}
+      >
+        <span className="inline-disclosure-copy">
+          <span className="inline-disclosure-title">
+            <MapPinPlus size={16} />
+            补充位置层级
+          </span>
+          <span className="inline-disclosure-meta">
+            {buildPlaceDisclosureSummary(
+              [draft.province, draft.area, draft.storeName, draft.address],
+              "省、市区、店铺、详细地址"
+            )}
+          </span>
+        </span>
+        {showLocationDetails ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </button>
+
+      <div className={`inline-disclosure-panel ${showLocationDetails ? "open" : ""}`}>
+        <div className="form-row">
+          <label>
+            省 / 州
+            <input
+              name="province"
+              value={draft.province}
+              onChange={(event) => updateDraft({ province: event.target.value })}
+              placeholder="例如：浙江省"
+            />
+          </label>
+          <label>
+            区 / 商圈
+            <input
+              name="area"
+              value={draft.area}
+              onChange={(event) => updateDraft({ area: event.target.value })}
+              placeholder="例如：柯桥区、湖滨商圈"
+            />
+          </label>
+        </div>
+        <label>
+          店铺 / 场所
+          <input
+            name="storeName"
+            value={draft.storeName}
+            onChange={(event) => updateDraft({ storeName: event.target.value })}
+            placeholder="例如：玉兰国际店、B1 店、IMAX 厅"
+          />
+        </label>
+        <label>
+          详细地址
+          <input
+            name="address"
+            value={draft.address}
+            onChange={(event) => updateDraft({ address: event.target.value })}
+            placeholder="例如：瓜渚湖地铁站 B 口步行 430 米"
+          />
+        </label>
+      </div>
+
+      <button
+        type="button"
+        className={`inline-disclosure ${showLinkDetails ? "open" : ""}`}
+        onClick={() => setShowLinkDetails((current) => !current)}
+      >
+        <span className="inline-disclosure-copy">
+          <span className="inline-disclosure-title">
+            <Link2 size={16} />
+            补充链接和标签
+          </span>
+          <span className="inline-disclosure-meta">
+            {buildPlaceDisclosureSummary(
+              [
+                draft.mapUrl && "高德",
+                extractMeituanLinkTextFromDraft(draft) && "美团",
+                draft.sourceUrl && "参考链接",
+                draft.photos && "照片",
+                draft.tags && "标签"
+              ],
+              "高德、美团、参考链接、照片、标签"
+            )}
+          </span>
+        </span>
+        {showLinkDetails ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </button>
+
+      <div className={`inline-disclosure-panel ${showLinkDetails ? "open" : ""}`}>
+        <label>
+          高德分享链接
+          <input
+            name="mapUrl"
+            value={draft.mapUrl}
+            onChange={(event) => updateDraft({ mapUrl: event.target.value })}
+            placeholder="粘贴高德分享链接，详情页可直接打开高德"
+          />
+        </label>
+        <label>
+          参考链接
+          <input
+            name="sourceUrl"
+            value={draft.sourceUrl}
+            onChange={(event) => updateDraft({ sourceUrl: event.target.value })}
+            placeholder="官网、攻略、笔记或其他参考链接"
+          />
+        </label>
+        <label>
+          照片链接
+          <textarea
+            name="photos"
+            value={draft.photos}
+            onChange={(event) => updateDraft({ photos: event.target.value })}
+            placeholder="每行一个图片链接"
+          />
+        </label>
+        <label>
+          标签，逗号分隔
+          <input
+            name="tags"
+            value={draft.tags}
+            onChange={(event) => updateDraft({ tags: event.target.value })}
+            placeholder="例如：约会、回头客、想再去"
+          />
+        </label>
+      </div>
 
       <input type="hidden" name="country" value={draft.country || "中国"} />
       <input type="hidden" name="rating" value="4" />
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="latitude" value={draft.latitude} />
       <input type="hidden" name="longitude" value={draft.longitude} />
-      <input type="hidden" name="mapUrl" value={draft.mapUrl} />
-      <input type="hidden" name="sourceUrl" value={draft.sourceUrl} />
       <input type="hidden" name="platformLinks" value={extractMeituanLinkTextFromDraft(draft)} />
-      <input type="hidden" name="photos" value={draft.photos} />
-      <input type="hidden" name="tags" value={draft.tags} />
-      <p className="form-hint">先保存核心信息即可，区域、分店、高德链接、美团链接和照片可以在详情页继续编辑。</p>
+      <p className="form-hint">如果是第一次录入，先保存核心信息即可；地点详情页里随时可以继续完善。</p>
     </>
   );
 }
@@ -866,4 +954,11 @@ function extractMeituanLinkTextFromDraft(draft: PlaceDraft) {
   const link = createPlatformLink(draft.sourceUrl, draft.sourceType === "meituan" ? "美团" : "");
   if (!link || link.platform !== "meituan") return "";
   return `美团 | ${link.url}`;
+}
+
+function buildPlaceDisclosureSummary(items: Array<string | false | undefined>, fallback: string) {
+  const normalized = items.map((item) => String(item || "").trim()).filter(Boolean);
+  if (!normalized.length) return fallback;
+  if (normalized.length <= 2) return normalized.join(" · ");
+  return `${normalized.slice(0, 2).join(" · ")} 等 ${normalized.length} 项`;
 }

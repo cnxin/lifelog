@@ -1445,6 +1445,68 @@ h3 {
   line-height: 1.4;
 }
 
+.inline-disclosure {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.inline-disclosure.open {
+  background: var(--soft-purple);
+  box-shadow: 0 12px 28px rgba(108, 92, 231, 0.12);
+}
+
+.inline-disclosure-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.inline-disclosure-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.inline-disclosure-title svg {
+  flex: 0 0 auto;
+}
+
+.inline-disclosure-meta {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.inline-disclosure-panel {
+  display: none;
+  gap: 12px;
+  margin-top: -2px;
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--line);
+}
+
+.inline-disclosure-panel.open {
+  display: grid;
+}
+
 .memory-preview {
   display: grid;
   gap: 8px;
