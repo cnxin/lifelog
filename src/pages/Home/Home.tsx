@@ -65,26 +65,28 @@ export default function Home() {
             查看
           </button>
         </div>
-        <div className="anniversary-scroll">
-          {upcoming.map((item, index) => (
-            <button
-              key={`${item.personName}-${item.title}`}
-              className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""}`}
-              onClick={() => navigate(`/people/${item.personId}#anniversaries`)}
-            >
-              <div className="a-title">
-                {item.personName} · {item.title}
-              </div>
-              <div className="a-days">
-                {item.days}
-                <span>天</span>
-              </div>
-              <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
-              <div className="a-date">{item.yearLabel}</div>
-              <div className="a-date">{formatMonthDay(item.date)}</div>
-              <div className="a-date">{formatLunarDate(item.date)}</div>
-            </button>
-          ))}
+        <div className="anniversary-scroll-wrapper">
+          <div className="anniversary-scroll">
+            {upcoming.map((item, index) => (
+              <button
+                key={`${item.personName}-${item.title}`}
+                className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""}`}
+                onClick={() => navigate(`/people/${item.personId}#anniversaries`)}
+              >
+                <div className="a-title">
+                  {item.personName} · {item.title}
+                </div>
+                <div className="a-days">
+                  {item.days}
+                  <span>天</span>
+                </div>
+                <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
+                <div className="a-date">{item.yearLabel}</div>
+                <div className="a-date">{formatMonthDay(item.date)}</div>
+                <div className="a-date">{formatLunarDate(item.date)}</div>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

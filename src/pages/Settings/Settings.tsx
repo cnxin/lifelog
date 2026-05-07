@@ -1,5 +1,5 @@
 import { BarChart3, Database, GitMerge, Info, SlidersHorizontal } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useConfirm } from "../../context/ConfirmContext";
@@ -20,6 +20,12 @@ export default function Settings() {
   } = useLifeLog();
   const confirm = useConfirm();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const importLockRef = useRef(false);
+  const mergeLockRef = useRef(false);
+  const undoLockRef = useRef(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
 
   const favoritePeopleCount = useMemo(
     () => state.people.filter((person) => person.favorite).length,
@@ -40,6 +46,7 @@ export default function Settings() {
 
   async function handleImport(file: File | undefined) {
     if (!file) return;
+    if (importLockRef.current) return;
     const accepted = await confirm({
       title: "导入数据",
       message: "确认导入这个 JSON？当前 IndexedDB 数据会被覆盖。",
@@ -50,6 +57,8 @@ export default function Settings() {
       return;
     }
 
+    importLockRef.current = true;
+    setIsImporting(true);
     try {
       await importData(file);
     } catch (error) {
@@ -59,9 +68,11 @@ export default function Settings() {
         confirmText: "知道了",
         tone: "info"
       });
+    } finally {
+      importLockRef.current = false;
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleReset() {
@@ -75,16 +86,25 @@ export default function Settings() {
   }
 
   async function handleMergeAll() {
-    const mergedCount = await mergeAllDuplicatePlaces();
-    await confirm({
-      title: "合并完成",
-      message: mergedCount ? `已合并 ${mergedCount} 条重复地点。` : "没有可自动合并的强重复地点。",
-      confirmText: "好的",
-      tone: "info"
-    });
+    if (mergeLockRef.current) return;
+    mergeLockRef.current = true;
+    setIsMerging(true);
+    try {
+      const mergedCount = await mergeAllDuplicatePlaces();
+      await confirm({
+        title: "合并完成",
+        message: mergedCount ? `已合并 ${mergedCount} 条重复地点。` : "没有可自动合并的强重复地点。",
+        confirmText: "好的",
+        tone: "info"
+      });
+    } finally {
+      mergeLockRef.current = false;
+      setIsMerging(false);
+    }
   }
 
   async function handleUndo() {
+    if (undoLockRef.current) return;
     const accepted = await confirm({
       title: "撤销上次合并",
       message: "将恢复到上次地点合并前的状态。",
@@ -92,13 +112,20 @@ export default function Settings() {
     });
     if (!accepted) return;
 
-    const reverted = await undoLatestPlaceMerge();
-    await confirm({
-      title: "撤销结果",
-      message: reverted ? "已撤销上次地点合并。" : "没有可撤销的地点合并记录。",
-      confirmText: "好的",
-      tone: "info"
-    });
+    undoLockRef.current = true;
+    setIsUndoing(true);
+    try {
+      const reverted = await undoLatestPlaceMerge();
+      await confirm({
+        title: "撤销结果",
+        message: reverted ? "已撤销上次地点合并。" : "没有可撤销的地点合并记录。",
+        confirmText: "好的",
+        tone: "info"
+      });
+    } finally {
+      undoLockRef.current = false;
+      setIsUndoing(false);
+    }
   }
 
   function handleSettingsBlur<K extends keyof typeof settings>(key: K, value: string) {
@@ -156,8 +183,12 @@ export default function Settings() {
             <strong>导出数据</strong>
             <span>下载 JSON 备份文件</span>
           </button>
-          <button className="detail-row detail-button glass-card" onClick={() => fileInputRef.current?.click()}>
-            <strong>导入数据</strong>
+          <button
+            className="detail-row detail-button glass-card"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+          >
+            <strong>{isImporting ? "导入中…" : "导入数据"}</strong>
             <span>从 JSON 备份恢复</span>
           </button>
           <button className="detail-row detail-button glass-card" onClick={() => void handleReset()}>
@@ -187,8 +218,12 @@ export default function Settings() {
                 发现 {duplicatePlaceGroups.length} 组疑似重复地点，其中 {strongCount} 组强重复可以自动合并。
               </p>
               {strongCount > 0 && (
-                <button className="category-pill active" onClick={() => void handleMergeAll()}>
-                  一键合并强重复
+                <button
+                  className="category-pill active"
+                  onClick={() => void handleMergeAll()}
+                  disabled={isMerging}
+                >
+                  {isMerging ? "合并中…" : "一键合并强重复"}
                 </button>
               )}
             </GlassCard>
@@ -207,8 +242,12 @@ export default function Settings() {
         {latestPlaceMerge && (
           <div className="settings-undo-row">
             <p className="form-hint">上次合并：{latestPlaceMerge.reason}</p>
-            <button className="category-pill" onClick={() => void handleUndo()}>
-              撤销上次合并
+            <button
+              className="category-pill"
+              onClick={() => void handleUndo()}
+              disabled={isUndoing}
+            >
+              {isUndoing ? "撤销中…" : "撤销上次合并"}
             </button>
           </div>
         )}
@@ -261,7 +300,7 @@ export default function Settings() {
         <div className="list">
           <GlassCard className="detail-row">
             <strong>版本</strong>
-            <span>0.1.0-test.27</span>
+            <span>0.1.0-test.28</span>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>存储</strong>
