@@ -300,7 +300,7 @@ export default function Settings() {
         <div className="list">
           <GlassCard className="detail-row">
             <strong>版本</strong>
-            <span>0.1.0-test.28</span>
+            <span>0.1.0-test.29</span>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>存储</strong>

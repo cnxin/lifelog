@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Heart, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -16,6 +16,7 @@ export default function Memories() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | undefined>();
+  const [creatingNew, setCreatingNew] = useState(false);
 
   const memories = useMemo(() => {
     return [...state.memories]
@@ -71,10 +72,21 @@ export default function Memories() {
               </div>
             </GlassCard>
           ))}
-          {!memories.length && <GlassCard className="empty">没有找到回忆</GlassCard>}
+          {!memories.length &&
+            (state.memories.length === 0 ? (
+              <GlassCard className="empty empty-cta">
+                <p>还没有回忆记录</p>
+                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
+                  <Plus size={16} /> 记录第一条回忆
+                </button>
+              </GlassCard>
+            ) : (
+              <GlassCard className="empty">没有找到匹配的回忆</GlassCard>
+            ))}
         </div>
       </section>
       <EntrySheet type={editingId ? "memory" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
+      <EntrySheet type={creatingNew ? "memory" : null} onClose={() => setCreatingNew(false)} />
     </>
   );
 }

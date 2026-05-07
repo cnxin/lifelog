@@ -1,4 +1,4 @@
-import { Building2, GitMerge, MapPin, Star, Store } from "lucide-react";
+import { Building2, GitMerge, MapPin, Plus, Star, Store } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -29,6 +29,7 @@ export default function Places() {
     mergeDuplicatePlaces,
     mergeAllDuplicatePlaces,
     undoLatestPlaceMerge,
+    togglePlaceFavorite,
   } = useLifeLog();
   const confirm = useConfirm();
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function Places() {
   const [area, setArea] = useState("全部");
   const [category, setCategory] = useState("全部");
   const [editingId, setEditingId] = useState<string | undefined>();
+  const [creatingNew, setCreatingNew] = useState(false);
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [weakQueueIndex, setWeakQueueIndex] = useState<number | null>(null);
   const strongDuplicateGroups = useMemo(
@@ -451,8 +453,22 @@ export default function Places() {
               >
                 <div className="place-name">
                   <span>{buildPlaceDisplayName(place)}</span>
-                  <span className="place-rating">
-                    <Star /> {place.rating}
+                  <span className="place-title-actions">
+                    <button
+                      type="button"
+                      className={`favorite-toggle ${place.favorite ? "active" : ""}`}
+                      aria-pressed={place.favorite}
+                      aria-label={place.favorite ? "取消收藏" : "收藏"}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void togglePlaceFavorite(place.id);
+                      }}
+                    >
+                      <Star size={18} fill={place.favorite ? "currentColor" : "none"} />
+                    </button>
+                    <span className="place-rating">
+                      <Star /> {place.rating}
+                    </span>
                   </span>
                 </div>
                 <p className="place-desc truncate-text">
@@ -474,15 +490,27 @@ export default function Places() {
               </div>
             </GlassCard>
           ))}
-          {!places.length && (
-            <GlassCard className="empty">没有找到地点</GlassCard>
-          )}
+          {!places.length &&
+            (state.places.length === 0 ? (
+              <GlassCard className="empty empty-cta">
+                <p>还没有地点记录</p>
+                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
+                  <Plus size={16} /> 新增第一个地点
+                </button>
+              </GlassCard>
+            ) : (
+              <GlassCard className="empty">没有找到匹配的地点</GlassCard>
+            ))}
         </div>
       </section>
       <EntrySheet
         type={editingId ? "place" : null}
         itemId={editingId}
         onClose={() => setEditingId(undefined)}
+      />
+      <EntrySheet
+        type={creatingNew ? "place" : null}
+        onClose={() => setCreatingNew(false)}
       />
       {mergePreview && (
         <MergePreviewDialog

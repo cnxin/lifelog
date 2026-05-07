@@ -176,7 +176,18 @@ export default function PersonDetail() {
             <MapPin /> 一起去过
           </h2>
         </div>
-        <Tags items={relatedPlaces.map(getPlaceName)} />
+        <div className="related-places-row">
+          {relatedPlaces.map((placeId) => (
+            <button
+              key={placeId}
+              className="tap-chip"
+              onClick={() => navigate(`/places/${placeId}`)}
+            >
+              {getPlaceName(placeId)}
+            </button>
+          ))}
+          {!relatedPlaces.length && <GlassCard className="empty">还没有一起去过的地点</GlassCard>}
+        </div>
       </section>
 
       <section className="section">

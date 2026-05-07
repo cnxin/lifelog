@@ -36,6 +36,8 @@ const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: str
   memory: { addTitle: "新增回忆", editTitle: "编辑回忆", kicker: "把人物和地点连接起来", redirect: "/memories" }
 };
 
+const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
+
 export default function EntrySheet({
   type,
   itemId,
@@ -845,6 +847,7 @@ function MemoryFields({
   const [quickContent, setQuickContent] = useState("");
   const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
   const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
+  const moodInputRef = useRef<HTMLInputElement>(null);
   const quickPreview = inferQuickMemory({
     content: quickContent,
     people,
@@ -937,7 +940,21 @@ function MemoryFields({
         </label>
         <label>
           心情
-          <input name="mood" defaultValue={memory?.mood || settings.defaultMood} />
+          <input ref={moodInputRef} name="mood" defaultValue={memory?.mood || settings.defaultMood} />
+          <div className="mood-presets">
+            {MOOD_PRESETS.map((preset) => (
+              <button
+                type="button"
+                key={preset}
+                className="mood-preset-pill"
+                onClick={() => {
+                  if (moodInputRef.current) moodInputRef.current.value = preset;
+                }}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
         </label>
       </div>
       <div>

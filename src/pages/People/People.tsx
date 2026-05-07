@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Plus, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -12,11 +12,12 @@ import { anniversaryRelativeLabel, anniversaryYearLabel, formatLunarDate } from 
 import { groupSummary, initials } from "../../utils/text";
 
 export default function People() {
-  const { state, deleteEntry } = useLifeLog();
+  const { state, deleteEntry, togglePersonFavorite } = useLifeLog();
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | undefined>();
+  const [creatingNew, setCreatingNew] = useState(false);
 
   const people = useMemo(() => {
     return state.people.filter((person) => {
@@ -60,7 +61,18 @@ export default function People() {
                       {person.name}
                       {person.nickname ? ` · ${person.nickname}` : ""}
                     </span>
-                    {person.favorite && <Star />}
+                    <button
+                      type="button"
+                      className={`favorite-toggle ${person.favorite ? "active" : ""}`}
+                      aria-pressed={person.favorite}
+                      aria-label={person.favorite ? "取消收藏" : "收藏"}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void togglePersonFavorite(person.id);
+                      }}
+                    >
+                      <Star size={18} fill={person.favorite ? "currentColor" : "none"} />
+                    </button>
                   </div>
                   <p className="person-desc">
                     {person.relationship} ·{" "}
@@ -76,10 +88,21 @@ export default function People() {
               </GlassCard>
             );
           })}
-          {!people.length && <GlassCard className="empty">没有找到人物</GlassCard>}
+          {!people.length &&
+            (state.people.length === 0 ? (
+              <GlassCard className="empty empty-cta">
+                <p>还没有人物记录</p>
+                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
+                  <Plus size={16} /> 新增第一个人物
+                </button>
+              </GlassCard>
+            ) : (
+              <GlassCard className="empty">没有找到匹配的人物</GlassCard>
+            ))}
         </div>
       </section>
       <EntrySheet type={editingId ? "person" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
+      <EntrySheet type={creatingNew ? "person" : null} onClose={() => setCreatingNew(false)} />
     </>
   );
 }

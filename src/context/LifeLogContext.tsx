@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   clearPlaceMergeHistory,
@@ -50,8 +50,10 @@ interface LifeLogContextValue {
   settings: AppSettings;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
+  togglePersonFavorite: (id: string) => Promise<void>;
   inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
   savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
+  togglePlaceFavorite: (id: string) => Promise<void>;
   saveMemory: (formData: FormData, id?: string) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   importData: (file: File) => Promise<void>;
@@ -86,6 +88,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultAppSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
+  const favoritePendingRef = useRef({ people: new Set<string>(), places: new Set<string>() });
 
   useEffect(() => {
     let active = true;
@@ -148,6 +151,40 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }));
 
       return person.id;
+    }
+
+    async function togglePersonFavorite(id: string) {
+      if (favoritePendingRef.current.people.has(id)) return;
+      const person = state.people.find((item) => item.id === id);
+      if (!person) return;
+      const next: Person = { ...person, favorite: !person.favorite };
+      favoritePendingRef.current.people.add(id);
+      setState((current) => ({
+        ...current,
+        people: current.people.map((item) => (item.id === id ? next : item))
+      }));
+      try {
+        await savePersonRecord(next);
+      } finally {
+        favoritePendingRef.current.people.delete(id);
+      }
+    }
+
+    async function togglePlaceFavorite(id: string) {
+      if (favoritePendingRef.current.places.has(id)) return;
+      const place = state.places.find((item) => item.id === id);
+      if (!place) return;
+      const next: Place = { ...place, favorite: !place.favorite };
+      favoritePendingRef.current.places.add(id);
+      setState((current) => ({
+        ...current,
+        places: current.places.map((item) => (item.id === id ? next : item))
+      }));
+      try {
+        await savePlaceRecord(next);
+      } finally {
+        favoritePendingRef.current.places.delete(id);
+      }
     }
 
     function inspectPlaceSave(formData: FormData, id?: string): PlaceSaveInspection {
@@ -460,8 +497,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       settings,
       isLoading,
       savePerson,
+      togglePersonFavorite,
       inspectPlaceSave,
       savePlace,
+      togglePlaceFavorite,
       saveMemory,
       deleteEntry,
       importData,
