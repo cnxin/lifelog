@@ -6,9 +6,15 @@ interface ConfirmOptions {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  tone?: "default" | "info";
 }
 
-interface PendingConfirm extends Required<ConfirmOptions> {
+interface PendingConfirm {
+  title: string;
+  message: string;
+  confirmText: string;
+  cancelText: string;
+  tone: NonNullable<ConfirmOptions["tone"]>;
   resolve: (value: boolean) => void;
 }
 
@@ -24,13 +30,15 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
         message: options.message,
         confirmText: options.confirmText || "确认",
         cancelText: options.cancelText || "取消",
+        tone: options.tone || "default",
         resolve
       });
     });
   }
 
   function close(result: boolean) {
-    pending?.resolve(result);
+    if (!pending) return;
+    pending.resolve(pending.tone === "info" ? true : result);
     setPending(null);
   }
 
@@ -40,14 +48,25 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {pending && (
         <div className="confirm-layer">
           <div className="confirm-backdrop" onClick={() => close(false)} />
-          <section className="confirm-dialog">
-            <h2>{pending.title}</h2>
-            <p>{pending.message}</p>
+          <section
+            className="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-title"
+            aria-describedby="confirm-message"
+          >
+            <h2 id="confirm-title">{pending.title}</h2>
+            <p id="confirm-message">{pending.message}</p>
             <div className="submit-row">
-              <button className="ghost-btn" onClick={() => close(false)}>
-                {pending.cancelText}
-              </button>
-              <button className="primary-btn danger-btn" onClick={() => close(true)}>
+              {pending.tone !== "info" && (
+                <button className="ghost-btn" onClick={() => close(false)}>
+                  {pending.cancelText}
+                </button>
+              )}
+              <button
+                className={pending.tone === "info" ? "primary-btn" : "primary-btn danger-btn"}
+                onClick={() => close(true)}
+              >
                 {pending.confirmText}
               </button>
             </div>

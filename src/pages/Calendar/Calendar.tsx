@@ -22,6 +22,7 @@ export default function Calendar() {
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(toDateKey(today));
+  const todayKey = toDateKey(today);
 
   const monthDays = useMemo(() => buildMonthDays(cursor), [cursor]);
   const items = useMemo(() => buildCalendarItems(cursor, state, getPersonName, getPlaceName), [
@@ -37,6 +38,12 @@ export default function Calendar() {
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
     setCursor(next);
     setSelectedDate(toDateKey(new Date(next.getFullYear(), next.getMonth(), 1)));
+  }
+
+  function backToToday() {
+    const now = new Date();
+    setCursor(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedDate(toDateKey(now));
   }
 
   return (
@@ -58,6 +65,12 @@ export default function Calendar() {
             </button>
           </div>
 
+          <div className="calendar-today-row">
+            <button className="category-pill calendar-today-btn" onClick={backToToday}>
+              回到今天
+            </button>
+          </div>
+
           <div className="calendar-week">
             {weekDays.map((day) => (
               <span key={day}>{day}</span>
@@ -71,7 +84,7 @@ export default function Calendar() {
                 <button
                   className={`calendar-day ${day.inMonth ? "" : "muted-day"} ${
                     selectedDate === day.dateKey ? "active" : ""
-                  }`}
+                  } ${day.dateKey === todayKey ? "today" : ""}`}
                   key={day.dateKey}
                   onClick={() => setSelectedDate(day.dateKey)}
                 >

@@ -53,7 +53,12 @@ export default function Settings() {
     try {
       await importData(file);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "导入失败，请检查文件格式。");
+      await confirm({
+        title: "导入失败",
+        message: error instanceof Error ? error.message : "请检查文件格式。",
+        confirmText: "知道了",
+        tone: "info"
+      });
     }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -71,7 +76,12 @@ export default function Settings() {
 
   async function handleMergeAll() {
     const mergedCount = await mergeAllDuplicatePlaces();
-    alert(mergedCount ? `已合并 ${mergedCount} 条重复地点。` : "没有可自动合并的强重复地点。");
+    await confirm({
+      title: "合并完成",
+      message: mergedCount ? `已合并 ${mergedCount} 条重复地点。` : "没有可自动合并的强重复地点。",
+      confirmText: "好的",
+      tone: "info"
+    });
   }
 
   async function handleUndo() {
@@ -83,7 +93,12 @@ export default function Settings() {
     if (!accepted) return;
 
     const reverted = await undoLatestPlaceMerge();
-    alert(reverted ? "已撤销上次地点合并。" : "没有可撤销的地点合并记录。");
+    await confirm({
+      title: "撤销结果",
+      message: reverted ? "已撤销上次地点合并。" : "没有可撤销的地点合并记录。",
+      confirmText: "好的",
+      tone: "info"
+    });
   }
 
   function handleSettingsBlur<K extends keyof typeof settings>(key: K, value: string) {
@@ -246,7 +261,7 @@ export default function Settings() {
         <div className="list">
           <GlassCard className="detail-row">
             <strong>版本</strong>
-            <span>0.1.0-test.26</span>
+            <span>0.1.0-test.27</span>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>存储</strong>

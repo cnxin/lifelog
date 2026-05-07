@@ -8,6 +8,7 @@ import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
 import { useState } from "react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
+import { useLifeLog } from "../context/LifeLogContext";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -37,6 +38,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const meta = getPageMeta(location.pathname);
+  const { isLoading } = useLifeLog();
   useAndroidBackButton(() => {
     if (!sheetType) return false;
     setSheetType(null);
@@ -46,7 +48,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="app-container">
       <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
-      <main className="main-content">{children}</main>
+      <main className="main-content">
+        {isLoading ? (
+          <div className="app-loading" role="status" aria-live="polite">
+            <div className="app-loading-spinner" />
+            <p>正在加载本地数据…</p>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
       {location.pathname !== "/settings" && (
         <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
       )}

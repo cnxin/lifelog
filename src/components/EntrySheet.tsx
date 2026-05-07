@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type {
   Anniversary,
@@ -49,53 +49,65 @@ export default function EntrySheet({
   const [error, setError] = useState("");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [pendingPlaceFormData, setPendingPlaceFormData] = useState<FormData | null>(null);
+  const submitLockRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!type) return null;
 
   const entryType = type;
   const current = meta[entryType];
   const editingItem = findEditingItem(entryType, itemId, state);
+  const submitText = !itemId && (entryType === "person" || entryType === "place") ? "创建" : "保存";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const validationError = validateForm(entryType, formData);
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    setIsSubmitting(true);
 
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    try {
+      const formData = new FormData(event.currentTarget);
+      const validationError = validateForm(entryType, formData);
 
-    let savedPersonId = "";
-    let savedPlaceId = "";
-    let savedMemoryId = "";
-    if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
-    if (entryType === "place") {
-      const inspection = inspectPlaceSave(formData, itemId);
-      if (inspection.resolution === "confirm-merge" && inspection.preview) {
-        setPendingPlaceFormData(formData);
-        setMergePreview(inspection.preview);
+      if (validationError) {
+        setError(validationError);
         return;
       }
 
-      savedPlaceId = await savePlace(formData, itemId);
-    }
-    if (entryType === "memory") savedMemoryId = await saveMemory(formData, itemId);
+      let savedPersonId = "";
+      let savedPlaceId = "";
+      let savedMemoryId = "";
+      if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
+      if (entryType === "place") {
+        const inspection = inspectPlaceSave(formData, itemId);
+        if (inspection.resolution === "confirm-merge" && inspection.preview) {
+          setPendingPlaceFormData(formData);
+          setMergePreview(inspection.preview);
+          return;
+        }
 
-    onClose();
-    if (entryType === "person" && !itemId && savedPersonId) {
-      navigate(`/people/${savedPersonId}`);
-      return;
+        savedPlaceId = await savePlace(formData, itemId);
+      }
+      if (entryType === "memory") savedMemoryId = await saveMemory(formData, itemId);
+
+      onClose();
+      if (entryType === "person" && !itemId && savedPersonId) {
+        navigate(`/people/${savedPersonId}`);
+        return;
+      }
+      if (entryType === "place" && !itemId && savedPlaceId) {
+        navigate(`/places/${savedPlaceId}`);
+        return;
+      }
+      if (entryType === "memory" && !itemId && savedMemoryId) {
+        navigate(`/memories/${savedMemoryId}`);
+        return;
+      }
+      navigate(current.redirect);
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
     }
-    if (entryType === "place" && !itemId && savedPlaceId) {
-      navigate(`/places/${savedPlaceId}`);
-      return;
-    }
-    if (entryType === "memory" && !itemId && savedMemoryId) {
-      navigate(`/memories/${savedMemoryId}`);
-      return;
-    }
-    navigate(current.redirect);
   }
 
   return (
@@ -134,8 +146,8 @@ export default function EntrySheet({
             <button type="button" className="ghost-btn" onClick={onClose}>
               取消
             </button>
-            <button type="submit" className="primary-btn">
-              {!itemId && (entryType === "person" || entryType === "place") ? "创建" : "保存"}
+            <button type="submit" className="primary-btn" disabled={isSubmitting}>
+              {isSubmitting ? `${submitText}中…` : submitText}
             </button>
           </div>
         </form>
@@ -238,7 +250,7 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
       <div className="birthday-editor compact">
         <label>
           年
-          <input name="birthdayYear" type="number" min="1" max="9999" defaultValue={birthdayYear} placeholder="1999" />
+          <input name="birthdayYear" type="number" min="1900" max={new Date().getFullYear()} defaultValue={birthdayYear} placeholder="1999" />
         </label>
         <label>
           月
