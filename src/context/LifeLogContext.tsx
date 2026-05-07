@@ -1,33 +1,64 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
+  clearPlaceMergeHistory,
   deleteMemoryRecord,
   deletePersonRecord,
   deletePlaceRecord,
+  loadPlaceMergeHistory,
   loadLifeLogState,
   normalizeState,
   replaceAllData,
   resetDatabase,
+  runPlaceMergeTransaction,
+  savePlaceMergeHistoryEntry,
   saveMemoryRecord,
   savePersonRecord,
   savePlaceRecord
 } from "../db/database";
-import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place } from "../types";
+import type {
+  Anniversary,
+  EntryType,
+  LifeLogState,
+  MemoryEvent,
+  Person,
+  Place,
+  PlaceDuplicateGroup,
+  PlaceMergeHistoryEntry,
+  PlaceMergePreview,
+  PlaceSaveInspection,
+  PlaceSaveOptions
+} from "../types";
 import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
 import { buildPlaceDisplayName, inferMallName, inferProvince, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
+import {
+  buildGroupMergePreview,
+  findPlaceDuplicateGroups,
+  inspectPlaceDuplicate,
+  mergeMemoryPlaceReferences,
+  mergePlaceRecords
+} from "../utils/placeDedup";
 import { parseGroups, splitLines, splitList } from "../utils/text";
 
 interface LifeLogContextValue {
   state: LifeLogState;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
-  savePlace: (formData: FormData, id?: string) => Promise<string>;
+  inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
+  savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
   saveMemory: (formData: FormData, id?: string) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   importData: (file: File) => Promise<void>;
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
+  duplicatePlaceGroups: PlaceDuplicateGroup[];
+  placeMergeHistory: PlaceMergeHistoryEntry[];
+  latestPlaceMerge: PlaceMergeHistoryEntry | null;
+  mergePlacePreview: (preview: PlaceMergePreview) => Promise<string>;
+  mergeDuplicatePlaces: (group: PlaceDuplicateGroup) => Promise<void>;
+  mergeAllDuplicatePlaces: () => Promise<number>;
+  undoLatestPlaceMerge: () => Promise<boolean>;
   exportData: () => void;
   resetDemo: () => Promise<void>;
 }
@@ -47,13 +78,16 @@ function uid(prefix: string) {
 export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LifeLogState>(emptyState);
   const [isLoading, setIsLoading] = useState(true);
+  const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
 
   useEffect(() => {
     let active = true;
 
     loadLifeLogState()
-      .then((nextState) => {
+      .then(async (nextState) => {
+        const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
+        if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -102,40 +136,56 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return person.id;
     }
 
-    async function savePlace(formData: FormData, id?: string) {
+    function inspectPlaceSave(formData: FormData, id?: string): PlaceSaveInspection {
       const existing = state.places.find((place) => place.id === id);
-      const country = normalizePlaceText(formData.get("country")) || "中国";
-      const province = normalizePlaceText(formData.get("province"));
-      const city = normalizeCityName(normalizePlaceText(formData.get("city")) || "杭州");
-      const address = normalizePlaceText(formData.get("address"));
-      const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address);
-      const place: Place = {
-        id: existing?.id || uid("l"),
-        name: String(formData.get("name") || "未命名地点"),
-        country,
-        province: inferProvince({
-          country,
-          province,
-          city,
-          address
-        }),
-        city,
-        area: String(formData.get("area") || ""),
-        mall,
-        storeName: String(formData.get("storeName") || ""),
-        category: String(formData.get("category") || "其他"),
-        rating: Number(formData.get("rating")) || 4,
-        address,
-        latitude: Number(formData.get("latitude")) || undefined,
-        longitude: Number(formData.get("longitude")) || undefined,
-        mapUrl: String(formData.get("mapUrl") || ""),
-        sourceUrl: String(formData.get("sourceUrl") || ""),
-        platformLinks: parsePlatformLinksText(formData.get("platformLinks")),
-        photos: splitLines(formData.get("photos")),
-        desc: String(formData.get("desc") || ""),
-        tags: splitList(formData.get("tags")),
-        favorite: formData.get("favorite") === "true"
+      const draft = buildPlaceFromFormData(formData, existing?.id);
+      if (existing) {
+        return {
+          resolution: "save",
+          draft
+        };
+      }
+
+      const preview = inspectPlaceDuplicate(draft, state.places);
+      if (!preview) {
+        return {
+          resolution: "save",
+          draft
+        };
+      }
+
+      return {
+        resolution: preview.strength === "strong" ? "auto-merge" : "confirm-merge",
+        draft,
+        preview
       };
+    }
+
+    async function savePlace(formData: FormData, id?: string, options?: PlaceSaveOptions) {
+      const existing = state.places.find((place) => place.id === id);
+      const inspection =
+        !existing && !options?.skipDuplicateCheck && !options?.mergeTargetId ? inspectPlaceSave(formData, id) : null;
+      const place = inspection?.draft || buildPlaceFromFormData(formData, existing?.id);
+
+      if (inspection?.resolution === "auto-merge" && inspection.preview) {
+        return mergePlacePreview(inspection.preview);
+      }
+
+      if (!existing && options?.mergeTargetId) {
+        const target = state.places.find((item) => item.id === options.mergeTargetId);
+        if (target) {
+          const preview: PlaceMergePreview = options.mergePreviewOverride || {
+            signature: `manual|${target.id}|${place.id}`,
+            reason: "手动确认合并",
+            strength: "weak",
+            canonical: target,
+            sources: [place],
+            details: ["已手动确认保留并合并这两条地点记录。"],
+            merged: mergePlaceRecords(target, place)
+          };
+          return mergePlacePreview(preview);
+        }
+      }
 
       await savePlaceRecord(place);
       setState((current) => ({
@@ -236,7 +286,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const parsed = JSON.parse(text) as Partial<LifeLogState>;
       const next = normalizeState(parsed);
       await replaceAllData(next);
+      await clearPlaceMergeHistory();
       setState(next);
+      setPlaceMergeHistory([]);
     }
 
     function getPersonName(id: string) {
@@ -246,6 +298,97 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     function getPlaceName(id: string) {
       const place = state.places.find((item) => item.id === id);
       return place ? buildPlaceDisplayName(place) : "未关联地点";
+    }
+
+    async function mergeDuplicatePlaces(group: PlaceDuplicateGroup) {
+      const preview = buildGroupMergePreview(group, state.places);
+      if (!preview) return;
+      await mergePlacePreview(preview);
+    }
+
+    async function mergeAllDuplicatePlaces() {
+      const groups = findPlaceDuplicateGroups(state.places).filter((group) => group.strength === "strong");
+      let workingPlaces = [...state.places];
+      let workingMemories = [...state.memories];
+      let mergedCount = 0;
+      let mergedGroupCount = 0;
+      const mergedPlaceIds = new Set<string>();
+
+      for (const group of groups) {
+        const preview = buildGroupMergePreview(group, workingPlaces);
+        if (!preview) continue;
+
+        const { nextState, removedIds } = resolvePlaceMerge(
+          {
+            ...state,
+            places: workingPlaces,
+            memories: workingMemories
+          },
+          preview
+        );
+        if (!removedIds.length) continue;
+
+        workingPlaces = nextState.places;
+        workingMemories = nextState.memories;
+        mergedCount += removedIds.length;
+        mergedGroupCount += 1;
+        mergedPlaceIds.add(preview.canonical.id);
+        preview.sources.forEach((source) => mergedPlaceIds.add(source.id));
+      }
+
+      if (!mergedCount) return 0;
+
+      const keepIds = new Set(workingPlaces.map((place) => place.id));
+      const removedIds = state.places.map((place) => place.id).filter((id) => !keepIds.has(id));
+      const historyEntry = buildPlaceMergeHistoryEntry(
+        state,
+        {
+          ...state,
+          places: workingPlaces,
+          memories: workingMemories
+        },
+        removedIds,
+        {
+          reason: `批量合并强重复地点（${mergedGroupCount}组）`,
+          strength: "strong",
+          placeIds: Array.from(mergedPlaceIds).sort()
+        }
+      );
+      await runPlaceMergeTransaction(historyEntry.nextState, removedIds);
+      await savePlaceMergeHistoryEntry(historyEntry.entry);
+      const nextHistory = await loadPlaceMergeHistory();
+      setState(historyEntry.nextState);
+      setPlaceMergeHistory(nextHistory);
+      return mergedCount;
+    }
+
+    async function mergePlacePreview(preview: PlaceMergePreview) {
+      const { nextState, removedIds } = resolvePlaceMerge(state, preview);
+      const { entry } = buildPlaceMergeHistoryEntry(state, nextState, removedIds, {
+        reason: preview.reason,
+        strength: preview.strength,
+        placeIds: [preview.canonical.id, ...preview.sources.map((source) => source.id)]
+      });
+      await runPlaceMergeTransaction(nextState, removedIds);
+      await savePlaceMergeHistoryEntry(entry);
+      const nextHistory = await loadPlaceMergeHistory();
+      setState(nextState);
+      setPlaceMergeHistory(nextHistory);
+      return preview.canonical.id;
+    }
+
+    async function undoLatestPlaceMerge() {
+      const latestPlaceMerge = placeMergeHistory[0] || null;
+      if (!latestPlaceMerge) return false;
+      await replaceAllData(latestPlaceMerge.snapshot);
+      const remainingHistory = placeMergeHistory.slice(1);
+      await clearPlaceMergeHistory();
+      for (const entry of remainingHistory.slice().reverse()) {
+        await savePlaceMergeHistoryEntry(entry, 20);
+      }
+      setState(latestPlaceMerge.snapshot);
+      setPlaceMergeHistory(remainingHistory);
+      return true;
     }
 
     function exportData() {
@@ -266,26 +409,123 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function resetDemo() {
       await resetDatabase();
+      await clearPlaceMergeHistory();
       const next = await loadLifeLogState();
       setState(next);
+      setPlaceMergeHistory([]);
     }
+
+    const duplicatePlaceGroups = findPlaceDuplicateGroups(state.places);
+    const latestPlaceMerge = placeMergeHistory[0] || null;
 
     return {
       state,
       isLoading,
       savePerson,
+      inspectPlaceSave,
       savePlace,
       saveMemory,
       deleteEntry,
       importData,
       getPersonName,
       getPlaceName,
+      duplicatePlaceGroups,
+      placeMergeHistory,
+      latestPlaceMerge,
+      mergePlacePreview,
+      mergeDuplicatePlaces,
+      mergeAllDuplicatePlaces,
+      undoLatestPlaceMerge,
       exportData,
       resetDemo
     };
-  }, [isLoading, state]);
+  }, [isLoading, placeMergeHistory, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
+}
+
+function buildPlaceFromFormData(formData: FormData, id?: string): Place {
+  const country = normalizePlaceText(formData.get("country")) || "中国";
+  const province = normalizePlaceText(formData.get("province"));
+  const city = normalizeCityName(normalizePlaceText(formData.get("city")) || "杭州");
+  const address = normalizePlaceText(formData.get("address"));
+  const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address);
+
+  return {
+    id: id || uid("l"),
+    name: String(formData.get("name") || "未命名地点"),
+    country,
+    province: inferProvince({
+      country,
+      province,
+      city,
+      address
+    }),
+    city,
+    area: String(formData.get("area") || ""),
+    mall,
+    storeName: String(formData.get("storeName") || ""),
+    category: String(formData.get("category") || "其他"),
+    rating: Number(formData.get("rating")) || 4,
+    address,
+    latitude: Number(formData.get("latitude")) || undefined,
+    longitude: Number(formData.get("longitude")) || undefined,
+    mapUrl: String(formData.get("mapUrl") || ""),
+    sourceUrl: String(formData.get("sourceUrl") || ""),
+    platformLinks: parsePlatformLinksText(formData.get("platformLinks")),
+    photos: splitLines(formData.get("photos")),
+    desc: String(formData.get("desc") || ""),
+    tags: splitList(formData.get("tags")),
+    favorite: formData.get("favorite") === "true"
+  };
+}
+
+function resolvePlaceMerge(state: LifeLogState, preview: PlaceMergePreview) {
+  const existingIds = new Set(state.places.map((place) => place.id));
+  const removedIds = preview.sources
+    .map((source) => source.id)
+    .filter((id) => existingIds.has(id) && id !== preview.canonical.id);
+
+  const nextMemories = removedIds.reduce(
+    (current, sourceId) => mergeMemoryPlaceReferences(current, sourceId, preview.canonical.id),
+    state.memories
+  );
+  const nextPlaces = state.places
+    .filter((place) => !removedIds.includes(place.id))
+    .map((place) => (place.id === preview.canonical.id ? preview.merged : place));
+
+  return {
+    nextState: {
+      ...state,
+      places: nextPlaces,
+      memories: nextMemories
+    },
+    removedIds
+  };
+}
+
+function buildPlaceMergeHistoryEntry(
+  snapshotState: LifeLogState,
+  nextState: LifeLogState,
+  removedIds: string[],
+  meta: Pick<PlaceMergeHistoryEntry, "reason" | "strength" | "placeIds">
+) {
+  return {
+    entry: {
+      id: `place_merge_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+      happenedAt: new Date().toISOString(),
+      reason: meta.reason,
+      strength: meta.strength,
+      placeIds: Array.from(new Set(meta.placeIds)),
+      snapshot: {
+        people: [...snapshotState.people],
+        places: [...snapshotState.places],
+        memories: [...snapshotState.memories]
+      }
+    },
+    nextState,
+    removedIds
+  };
 }
 
 function buildDate(

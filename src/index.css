@@ -42,8 +42,16 @@ body {
   justify-content: center;
   overflow: hidden;
   background:
-    radial-gradient(circle at 16% 14%, rgba(108, 92, 231, 0.24), transparent 26%),
-    radial-gradient(circle at 92% 86%, rgba(253, 160, 133, 0.34), transparent 30%),
+    radial-gradient(
+      circle at 16% 14%,
+      rgba(108, 92, 231, 0.24),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 92% 86%,
+      rgba(253, 160, 133, 0.34),
+      transparent 30%
+    ),
     var(--bg-color);
   color: var(--text-main);
   font-family: "Inter", "Noto Sans SC", "Microsoft YaHei", sans-serif;
@@ -238,7 +246,9 @@ h3 {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .glass-card:active {
@@ -339,7 +349,10 @@ h3 {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow: 0 14px 26px rgba(108, 92, 231, 0.24);
   text-align: left;
-  transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .quick-memory-icon {
@@ -415,7 +428,9 @@ h3 {
   background: var(--card-bg);
   box-shadow: var(--shadow);
   text-align: left;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
 }
 
 .task-icon {
@@ -468,7 +483,9 @@ h3 {
   background: var(--card-bg);
   box-shadow: var(--shadow);
   text-align: left;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
 }
 
 .completion-card strong,
@@ -560,13 +577,17 @@ h3 {
 .person-open {
   border: 0;
   background: transparent;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
 }
 
 .place-tap {
   border: 0;
   background: transparent;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
 }
 
 .place-info,
@@ -667,6 +688,19 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate-lines-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -694,7 +728,10 @@ h3 {
   place-items: center;
   color: var(--primary);
   background: var(--soft-purple);
-  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease;
 }
 
 .icon-action.danger {
@@ -850,12 +887,35 @@ h3 {
   flex: 0 0 auto;
 }
 
+.merge-info {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.merge-info strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merge-info span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .detail-button {
   width: 100%;
   border: 1px solid var(--line);
   color: var(--text-main);
   text-align: left;
-  transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .detail-row span {
@@ -864,6 +924,28 @@ h3 {
   font-size: 13px;
   text-align: right;
   overflow-wrap: anywhere;
+}
+
+.vertical-detail-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+}
+
+.vertical-detail-card strong {
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.vertical-detail-card span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  width: 100%;
 }
 
 .anniversary-detail-card {
@@ -924,7 +1006,10 @@ h3 {
   font-weight: 700;
   text-decoration: none;
   overflow-wrap: anywhere;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
 }
 
 .link-action.disabled {
@@ -977,7 +1062,10 @@ h3 {
   background: var(--soft-purple);
   font-size: 13px;
   font-weight: 700;
-  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease;
 }
 
 .category-pill {
@@ -991,7 +1079,11 @@ h3 {
   font-size: 13px;
   font-weight: 600;
   overflow-wrap: anywhere;
-  transition: transform 0.16s ease, background-color 0.16s ease, color 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease,
+    filter 0.16s ease;
 }
 
 .category-pill.active {
@@ -1026,7 +1118,9 @@ h3 {
   color: var(--text-sub);
   background: none;
   text-decoration: none;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .nav-item.active {
@@ -1088,7 +1182,10 @@ h3 {
   background: rgba(255, 255, 255, 0.52);
   font-size: 13px;
   font-weight: 700;
-  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease;
 }
 
 .calendar-day.muted-day {
@@ -1128,7 +1225,10 @@ h3 {
   padding: 14px;
   color: var(--text-main);
   text-align: left;
-  transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .calendar-item span {
@@ -1154,7 +1254,10 @@ h3 {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    filter 0.16s ease;
 }
 
 .fab svg {
@@ -1216,7 +1319,9 @@ h3 {
   background: rgba(99, 110, 114, 0.1);
   font-size: 24px;
   line-height: 1;
-  transition: transform 0.16s ease, background-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease;
 }
 
 .form {
@@ -1345,7 +1450,11 @@ h3 {
   gap: 8px;
   border-radius: 18px;
   padding: 14px;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.12), rgba(253, 160, 133, 0.12));
+  background: linear-gradient(
+    135deg,
+    rgba(108, 92, 231, 0.12),
+    rgba(253, 160, 133, 0.12)
+  );
   border: 1px solid rgba(108, 92, 231, 0.12);
 }
 
@@ -1374,6 +1483,168 @@ h3 {
   font-size: 13px;
   line-height: 1.45;
   word-break: break-word;
+}
+
+.merge-preview {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.merge-preview-head {
+  display: grid;
+  gap: 6px;
+}
+
+.merge-preview-head h2,
+.merge-preview-head h3 {
+  font-size: 20px;
+}
+
+.merge-preview-head p {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.merge-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.merge-badge.strong {
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.merge-badge.weak {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.merge-preview-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.merge-reason-list {
+  display: grid;
+  gap: 8px;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(99, 110, 114, 0.08);
+}
+
+.merge-reason-list p {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.merge-preview-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(99, 110, 114, 0.06);
+}
+
+.merge-preview-card.highlight {
+  border-color: rgba(108, 92, 231, 0.18);
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.12), rgba(253, 160, 133, 0.14));
+}
+
+.merge-preview-card strong {
+  font-size: 15px;
+}
+
+.merge-preview-card p {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.merge-preview-label {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.merge-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.merge-preview-card label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.merge-preview-card input,
+.merge-preview-card textarea {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  border-radius: 14px;
+  padding: 12px 13px;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.merge-preview-card textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.merge-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.merge-preview-meta span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.merge-history-badge {
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.merge-preview-actions {
+  margin-top: 0;
+}
+
+.merge-dialog {
+  max-height: min(82vh, 720px);
+  overflow-y: auto;
 }
 
 .pref-editor {
@@ -1417,7 +1688,10 @@ h3 {
   padding: 0 10px;
   font-size: 12px;
   font-weight: 700;
-  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease;
 }
 
 .mini-action.add {
@@ -1443,7 +1717,11 @@ h3 {
   border-radius: 18px;
   flex: 1;
   font-weight: 700;
-  transition: transform 0.16s ease, background-color 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .primary-btn {
@@ -1650,6 +1928,7 @@ button:disabled,
     grid-template-columns: 1fr;
   }
 
+  .merge-edit-grid,
   .pref-editor-row {
     grid-template-columns: 1fr;
   }

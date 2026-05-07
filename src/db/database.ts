@@ -1,6 +1,6 @@
 import Dexie, { type Table } from "dexie";
 import { seedData } from "../data/seedData";
-import type { LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
+import type { LifeLogState, MemoryEvent, Person, Place, PlaceMergeHistoryEntry, PreferenceGroup } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
 
@@ -10,6 +10,7 @@ class LifeLogDatabase extends Dexie {
   people!: Table<Person, string>;
   places!: Table<Place, string>;
   memories!: Table<MemoryEvent, string>;
+  placeMergeHistory!: Table<PlaceMergeHistoryEntry, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -22,6 +23,12 @@ class LifeLogDatabase extends Dexie {
       people: "id, name, birthday, relationship, favorite",
       places: "id, name, country, province, city, mall, area, category, favorite",
       memories: "id, date, placeId, *personIds"
+    });
+    this.version(3).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *personIds",
+      placeMergeHistory: "id, happenedAt"
     });
   }
 }
@@ -41,8 +48,30 @@ export async function savePlaceRecord(place: Place) {
   await db.places.put(place);
 }
 
+export async function savePlaceRecords(places: Place[]) {
+  await db.places.bulkPut(places);
+}
+
 export async function saveMemoryRecord(memory: MemoryEvent) {
   await db.memories.put(memory);
+}
+
+export async function loadPlaceMergeHistory(limit = 10) {
+  return await db.placeMergeHistory.orderBy("happenedAt").reverse().limit(limit).toArray();
+}
+
+export async function savePlaceMergeHistoryEntry(entry: PlaceMergeHistoryEntry, limit = 10) {
+  await db.transaction("rw", db.placeMergeHistory, async () => {
+    await db.placeMergeHistory.put(entry);
+    const staleEntries = await db.placeMergeHistory.orderBy("happenedAt").reverse().offset(limit).toArray();
+    if (staleEntries.length) {
+      await db.placeMergeHistory.bulkDelete(staleEntries.map((item) => item.id));
+    }
+  });
+}
+
+export async function clearPlaceMergeHistory() {
+  await db.placeMergeHistory.clear();
 }
 
 export async function deletePersonRecord(id: string) {
@@ -81,10 +110,11 @@ export async function deleteMemoryRecord(id: string) {
 
 export async function replaceAllData(input: Partial<LifeLogState>) {
   const next = normalizeState(input);
-  await db.transaction("rw", db.people, db.places, db.memories, async () => {
+  await db.transaction("rw", db.people, db.places, db.memories, db.placeMergeHistory, async () => {
     await db.people.clear();
     await db.places.clear();
     await db.memories.clear();
+    await db.placeMergeHistory.clear();
     await db.people.bulkPut(next.people);
     await db.places.bulkPut(next.places);
     await db.memories.bulkPut(next.memories);
@@ -93,6 +123,16 @@ export async function replaceAllData(input: Partial<LifeLogState>) {
 
 export async function resetDatabase() {
   await replaceAllData(seedData);
+}
+
+export async function runPlaceMergeTransaction(nextState: LifeLogState, removedIds: string[]) {
+  await db.transaction("rw", db.places, db.memories, async () => {
+    if (removedIds.length) {
+      await db.places.bulkDelete(removedIds);
+    }
+    await db.places.bulkPut(nextState.places);
+    await db.memories.bulkPut(nextState.memories);
+  });
 }
 
 async function initializeDatabase() {

@@ -1,7 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { Anniversary, EntryType, LifeLogState, MemoryEvent, Person, Place, PreferenceGroup } from "../types";
+import type {
+  Anniversary,
+  EntryType,
+  LifeLogState,
+  MemoryEvent,
+  Person,
+  Place,
+  PlaceMergePreview,
+  PreferenceGroup
+} from "../types";
 import { useLifeLog } from "../context/LifeLogContext";
 import type { PlaceDraft } from "../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
@@ -9,6 +18,7 @@ import { createPlatformLink } from "../utils/placeLinks";
 import { getPlacePlatformLink } from "../utils/placeMeta";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 import { inferQuickMemory } from "../utils/memoryInference";
+import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -34,8 +44,10 @@ export default function EntrySheet({
   onClose
 }: EntrySheetProps) {
   const navigate = useNavigate();
-  const { state, savePerson, savePlace, saveMemory } = useLifeLog();
+  const { state, inspectPlaceSave, savePerson, savePlace, saveMemory } = useLifeLog();
   const [error, setError] = useState("");
+  const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
+  const [pendingPlaceFormData, setPendingPlaceFormData] = useState<FormData | null>(null);
 
   if (!type) return null;
 
@@ -57,7 +69,16 @@ export default function EntrySheet({
     let savedPlaceId = "";
     let savedMemoryId = "";
     if (entryType === "person") savedPersonId = await savePerson(formData, itemId);
-    if (entryType === "place") savedPlaceId = await savePlace(formData, itemId);
+    if (entryType === "place") {
+      const inspection = inspectPlaceSave(formData, itemId);
+      if (inspection.resolution === "confirm-merge" && inspection.preview) {
+        setPendingPlaceFormData(formData);
+        setMergePreview(inspection.preview);
+        return;
+      }
+
+      savedPlaceId = await savePlace(formData, itemId);
+    }
     if (entryType === "memory") savedMemoryId = await saveMemory(formData, itemId);
 
     onClose();
@@ -117,6 +138,37 @@ export default function EntrySheet({
             </button>
           </div>
         </form>
+
+        {entryType === "place" && mergePreview && pendingPlaceFormData && (
+          <PlaceMergeWorkbench
+            preview={mergePreview}
+            title="合并预览"
+            confirmLabel="合并到已有地点"
+            allowKeepBoth
+            keepBothLabel="保留为新地点"
+            onCancel={() => {
+              setMergePreview(null);
+              setPendingPlaceFormData(null);
+            }}
+            onKeepBoth={async () => {
+              const savedId = await savePlace(pendingPlaceFormData, itemId, { skipDuplicateCheck: true });
+              setMergePreview(null);
+              setPendingPlaceFormData(null);
+              onClose();
+              navigate(`/places/${savedId}`);
+            }}
+            onConfirm={async (nextPreview) => {
+              const savedId = await savePlace(pendingPlaceFormData, itemId, {
+                mergeTargetId: nextPreview.canonical.id,
+                mergePreviewOverride: nextPreview,
+              });
+              setMergePreview(null);
+              setPendingPlaceFormData(null);
+              onClose();
+              navigate(`/places/${savedId}`);
+            }}
+          />
+        )}
       </section>
     </div>
   );

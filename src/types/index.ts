@@ -73,3 +73,47 @@ export interface LifeLogState {
 }
 
 export type EntryType = "person" | "place" | "memory";
+
+export type PlaceDuplicateStrength = "strong" | "weak";
+
+export interface PlaceDuplicateGroup {
+  signature: string;
+  placeIds: ID[];
+  canonicalId: ID;
+  reason: string;
+  label: string;
+  strength: PlaceDuplicateStrength;
+}
+
+export interface PlaceMergePreview {
+  signature: string;
+  reason: string;
+  strength: PlaceDuplicateStrength;
+  details: string[];
+  canonical: Place;
+  sources: Place[];
+  merged: Place;
+}
+
+export type PlaceSaveResolution = "save" | "auto-merge" | "confirm-merge";
+
+export interface PlaceSaveInspection {
+  resolution: PlaceSaveResolution;
+  draft: Place;
+  preview?: PlaceMergePreview;
+}
+
+export interface PlaceSaveOptions {
+  skipDuplicateCheck?: boolean;
+  mergeTargetId?: string;
+  mergePreviewOverride?: PlaceMergePreview;
+}
+
+export interface PlaceMergeHistoryEntry {
+  id: ID;
+  happenedAt: string;
+  reason: string;
+  strength: PlaceDuplicateStrength;
+  placeIds: ID[];
+  snapshot: LifeLogState;
+}

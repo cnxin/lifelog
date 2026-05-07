@@ -1,27 +1,61 @@
-import { Building2, MapPin, Star } from "lucide-react";
+import { Building2, GitMerge, MapPin, Star, Store } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
 import Tags from "../../components/Tags";
+import type { PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { buildMallKey, buildPlaceContextLine, buildPlaceDisplayName, buildPlaceGeoLine } from "../../utils/placeMeta";
+import { buildGroupMergePreview } from "../../utils/placeDedup";
+import {
+  buildMallKey,
+  buildPlaceContextLine,
+  buildPlaceDisplayName,
+  buildPlaceGeoLine,
+} from "../../utils/placeMeta";
 
 export default function Places() {
-  const { state, deleteEntry } = useLifeLog();
+  const {
+    state,
+    deleteEntry,
+    duplicatePlaceGroups,
+    placeMergeHistory,
+    latestPlaceMerge,
+    mergePlacePreview,
+    mergeDuplicatePlaces,
+    mergeAllDuplicatePlaces,
+    undoLatestPlaceMerge,
+  } = useLifeLog();
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const countries = useMemo(() => ["全部", ...new Set(state.places.map((place) => place.country || "中国"))], [state.places]);
+  const countries = useMemo(
+    () => [
+      "全部",
+      ...new Set(state.places.map((place) => place.country || "中国")),
+    ],
+    [state.places],
+  );
   const [country, setCountry] = useState("全部");
   const [province, setProvince] = useState("全部");
   const [city, setCity] = useState("全部");
   const [area, setArea] = useState("全部");
   const [category, setCategory] = useState("全部");
   const [editingId, setEditingId] = useState<string | undefined>();
+  const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
+  const [weakQueueIndex, setWeakQueueIndex] = useState<number | null>(null);
+  const strongDuplicateGroups = useMemo(
+    () => duplicatePlaceGroups.filter((group) => group.strength === "strong"),
+    [duplicatePlaceGroups],
+  );
+  const weakDuplicateGroups = useMemo(
+    () => duplicatePlaceGroups.filter((group) => group.strength === "weak"),
+    [duplicatePlaceGroups],
+  );
 
   const provinceOptions = useMemo(() => {
     return [
@@ -29,8 +63,8 @@ export default function Places() {
       ...new Set(
         state.places
           .filter((place) => country === "全部" || place.country === country)
-          .map((place) => place.province || "未设置")
-      )
+          .map((place) => place.province || "未设置"),
+      ),
     ];
   }, [country, state.places]);
 
@@ -41,11 +75,12 @@ export default function Places() {
         state.places
           .filter((place) => {
             const inCountry = country === "全部" || place.country === country;
-            const inProvince = province === "全部" || (place.province || "未设置") === province;
+            const inProvince =
+              province === "全部" || (place.province || "未设置") === province;
             return inCountry && inProvince;
           })
-          .map((place) => place.city || "未设置")
-      )
+          .map((place) => place.city || "未设置"),
+      ),
     ];
   }, [country, province, state.places]);
 
@@ -56,12 +91,13 @@ export default function Places() {
         state.places
           .filter((place) => {
             const inCountry = country === "全部" || place.country === country;
-            const inProvince = province === "全部" || (place.province || "未设置") === province;
+            const inProvince =
+              province === "全部" || (place.province || "未设置") === province;
             const inCity = city === "全部" || place.city === city;
             return inCountry && inProvince && inCity;
           })
-          .map((place) => place.area || "未分组")
-      )
+          .map((place) => place.area || "未分组"),
+      ),
     ];
   }, [city, country, province, state.places]);
 
@@ -87,7 +123,8 @@ export default function Places() {
   const places = useMemo(() => {
     return state.places.filter((place) => {
       const inCountry = country === "全部" || place.country === country;
-      const inProvince = province === "全部" || (place.province || "未设置") === province;
+      const inProvince =
+        province === "全部" || (place.province || "未设置") === province;
       const inCity = city === "全部" || place.city === city;
       const inArea = area === "全部" || place.area === area;
       const inCategory = category === "全部" || place.category === category;
@@ -102,9 +139,16 @@ export default function Places() {
         place.category,
         place.address,
         place.desc,
-        place.tags.join(",")
+        place.tags.join(","),
       ].join(" ");
-      return inCountry && inProvince && inCity && inArea && inCategory && content.toLowerCase().includes(query.toLowerCase());
+      return (
+        inCountry &&
+        inProvince &&
+        inCity &&
+        inArea &&
+        inCategory &&
+        content.toLowerCase().includes(query.toLowerCase())
+      );
     });
   }, [area, category, city, country, province, query, state.places]);
 
@@ -127,42 +171,109 @@ export default function Places() {
       const key = buildMallKey(place);
       if (!key) continue;
 
-      const current =
-        groups.get(key) ||
-        {
-          key,
-          mall: place.mall,
-          country: place.country,
-          province: place.province,
-          city: place.city,
-          count: 0,
-          categories: new Set<string>()
-        };
+      const current = groups.get(key) || {
+        key,
+        mall: place.mall,
+        country: place.country,
+        province: place.province,
+        city: place.city,
+        count: 0,
+        categories: new Set<string>(),
+      };
       current.count += 1;
       current.categories.add(place.category);
       groups.set(key, current);
     }
 
-    return Array.from(groups.values()).sort((a, b) => a.mall.localeCompare(b.mall, "zh-CN"));
+    return Array.from(groups.values()).sort((a, b) =>
+      a.mall.localeCompare(b.mall, "zh-CN"),
+    );
   }, [places]);
 
   async function handleDelete(id: string) {
     const accepted = await confirm({
       title: "删除地点",
       message: "确认删除这个地点？相关回忆中的地点关联也会被清空。",
-      confirmText: "删除"
+      confirmText: "删除",
     });
     if (!accepted) return;
     await deleteEntry("place", id);
   }
 
+  function handleMergeGroup(group: PlaceDuplicateGroup) {
+    const preview = buildGroupMergePreview(group, state.places);
+    if (!preview) return;
+    setMergePreview(preview);
+    setWeakQueueIndex(null);
+  }
+
+  function openWeakQueue() {
+    if (!weakDuplicateGroups.length) return;
+    const preview = buildGroupMergePreview(weakDuplicateGroups[0], state.places);
+    if (!preview) return;
+    setMergePreview(preview);
+    setWeakQueueIndex(0);
+  }
+
+  function stepWeakQueue(direction: "next" | "skip") {
+    if (weakQueueIndex === null) return;
+    const nextIndex = direction === "next" ? weakQueueIndex : weakQueueIndex + 1;
+    if (nextIndex >= weakDuplicateGroups.length) {
+      setMergePreview(null);
+      setWeakQueueIndex(null);
+      return;
+    }
+
+    const nextPreview = buildGroupMergePreview(weakDuplicateGroups[nextIndex], state.places);
+    if (!nextPreview) {
+      setMergePreview(null);
+      setWeakQueueIndex(null);
+      return;
+    }
+
+    setMergePreview(nextPreview);
+    setWeakQueueIndex(nextIndex);
+  }
+
+  async function handleMergeAll() {
+    if (!strongDuplicateGroups.length) return;
+
+    const accepted = await confirm({
+      title: "一键合并重复地点",
+      message: `当前检测到 ${strongDuplicateGroups.length} 组强重复地点，会自动合并这些明确重复项。弱重复仍然保留手动确认。`,
+      confirmText: "开始合并",
+    });
+    if (!accepted) return;
+    await mergeAllDuplicatePlaces();
+  }
+
+  async function handleUndoLatestMerge() {
+    if (!latestPlaceMerge) return;
+    const accepted = await confirm({
+      title: "撤销上一次合并",
+      message: `将恢复 ${new Date(latestPlaceMerge.happenedAt).toLocaleString("zh-CN")} 的地点合并前状态。`,
+      confirmText: "撤销",
+    });
+    if (!accepted) return;
+    await undoLatestPlaceMerge();
+    setMergePreview(null);
+    setWeakQueueIndex(null);
+  }
+
   return (
     <>
-      <SearchBar value={query} placeholder="搜索地点、区域、城市、标签" onChange={setQuery} />
+      <SearchBar
+        value={query}
+        placeholder="搜索地点、区域、城市、标签"
+        onChange={setQuery}
+      />
       <div className="location-switcher">
         <label>
           国家
-          <select value={country} onChange={(event) => setCountry(event.target.value)}>
+          <select
+            value={country}
+            onChange={(event) => setCountry(event.target.value)}
+          >
             {countries.map((item) => (
               <option key={item}>{item}</option>
             ))}
@@ -170,7 +281,10 @@ export default function Places() {
         </label>
         <label>
           省 / 州
-          <select value={province} onChange={(event) => setProvince(event.target.value)}>
+          <select
+            value={province}
+            onChange={(event) => setProvince(event.target.value)}
+          >
             {provinceOptions.map((item) => (
               <option key={item}>{item}</option>
             ))}
@@ -178,7 +292,10 @@ export default function Places() {
         </label>
         <label>
           城市
-          <select value={city} onChange={(event) => setCity(event.target.value)}>
+          <select
+            value={city}
+            onChange={(event) => setCity(event.target.value)}
+          >
             {cityOptions.map((item) => (
               <option key={item}>{item}</option>
             ))}
@@ -187,7 +304,11 @@ export default function Places() {
       </div>
       <div className="category-row">
         {areaOptions.map((item) => (
-          <button className={`category-pill ${item === area ? "active" : ""}`} key={item} onClick={() => setArea(item)}>
+          <button
+            className={`category-pill ${item === area ? "active" : ""}`}
+            key={item}
+            onClick={() => setArea(item)}
+          >
             {item}
           </button>
         ))}
@@ -203,6 +324,67 @@ export default function Places() {
           </button>
         ))}
       </div>
+      {duplicatePlaceGroups.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <GitMerge /> 重复地点
+            </h2>
+            {strongDuplicateGroups.length > 0 && (
+              <button className="see-all" onClick={() => void handleMergeAll()}>
+                一键合并
+              </button>
+            )}
+          </div>
+          {placeMergeHistory.length > 0 && (
+            <div className="list">
+              {placeMergeHistory.map((entry, index) => (
+                <GlassCard className="detail-row" key={entry.id}>
+                  <div className="merge-info">
+                    <strong>{index === 0 ? "最近一次合并" : `更早一次合并 ${index}`}</strong>
+                    <span>
+                      {new Date(entry.happenedAt).toLocaleString("zh-CN")} · {entry.reason} ·{" "}
+                      {entry.placeIds.length} 条记录
+                    </span>
+                  </div>
+                  {index === 0 ? (
+                    <button className="mini-action add" onClick={() => void handleUndoLatestMerge()}>
+                      撤销
+                    </button>
+                  ) : (
+                    <span className="merge-history-badge">已归档</span>
+                  )}
+                </GlassCard>
+              ))}
+            </div>
+          )}
+          {weakDuplicateGroups.length > 0 && (
+            <button className="link-action secondary detail-link-button" onClick={openWeakQueue}>
+              逐条处理弱重复（{weakDuplicateGroups.length}）
+            </button>
+          )}
+          <div className="list">
+            {duplicatePlaceGroups.map((group) => (
+              <GlassCard className="detail-row" key={group.signature}>
+                <div className="merge-info">
+                  <strong>{group.label}</strong>
+                  <span>
+                    {group.reason} · {group.placeIds.length} 条记录 ·{" "}
+                    {group.strength === "strong" ? "强重复" : "待确认"}
+                  </span>
+                </div>
+                <button
+                  className="mini-action add"
+                  onClick={() => handleMergeGroup(group)}
+                  type="button"
+                >
+                  预览
+                </button>
+              </GlassCard>
+            ))}
+          </div>
+        </section>
+      )}
       {mallGroups.length > 0 && (
         <section className="section">
           <div className="section-header">
@@ -215,11 +397,31 @@ export default function Places() {
               <button
                 className="detail-row detail-button glass-card"
                 key={mall.key}
-                onClick={() => navigate(`/places/malls/${encodeURIComponent(mall.key)}`)}
+                onClick={() =>
+                  navigate(`/places/malls/${encodeURIComponent(mall.key)}`)
+                }
               >
-                <strong>{mall.mall}</strong>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, var(--primary), var(--secondary))",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}
+                  >
+                    <Building2 size={18} />
+                  </div>
+                  <strong className="truncate-text">{mall.mall}</strong>
+                </div>
                 <span>
-                  {[mall.province, mall.city].filter(Boolean).join(" · ")} · {mall.count} 家店
+                  {[mall.province, mall.city].filter(Boolean).join(" · ")} ·{" "}
+                  {mall.count} 家店
                 </span>
               </button>
             ))}
@@ -227,39 +429,126 @@ export default function Places() {
         </section>
       )}
       <section className="section">
+        <div className="section-header">
+          <h2>
+            <Store /> 具体店铺 / 场所
+          </h2>
+        </div>
         <div className="list">
           {places.map((place) => (
             <GlassCard className="place-card" key={place.id}>
-              <button className="place-tap" onClick={() => navigate(`/places/${place.id}`)}>
+              <button
+                className="place-tap"
+                onClick={() => navigate(`/places/${place.id}`)}
+              >
                 <div className="place-img">
                   <MapPin />
                 </div>
               </button>
-              <div className="place-info" onClick={() => navigate(`/places/${place.id}`)}>
+              <div
+                className="place-info"
+                onClick={() => navigate(`/places/${place.id}`)}
+              >
                 <div className="place-name">
                   <span>{buildPlaceDisplayName(place)}</span>
                   <span className="place-rating">
                     <Star /> {place.rating}
                   </span>
                 </div>
-                <p className="place-desc">{buildPlaceGeoLine(place)}</p>
-                <p className="place-desc">
+                <p className="place-desc truncate-text">
+                  {buildPlaceGeoLine(place)}
+                </p>
+                <p className="place-desc truncate-text">
                   {place.category} · {buildPlaceContextLine(place)}
                 </p>
-                <p className="place-desc">
+                <p className="place-desc truncate-lines-2">
                   {place.address || place.desc}
                 </p>
                 <Tags items={place.tags} />
               </div>
               <div className="person-side-actions">
-                <CardActions onEdit={() => setEditingId(place.id)} onDelete={() => handleDelete(place.id)} />
+                <CardActions
+                  onEdit={() => setEditingId(place.id)}
+                  onDelete={() => handleDelete(place.id)}
+                />
               </div>
             </GlassCard>
           ))}
-          {!places.length && <GlassCard className="empty">没有找到地点</GlassCard>}
+          {!places.length && (
+            <GlassCard className="empty">没有找到地点</GlassCard>
+          )}
         </div>
       </section>
-      <EntrySheet type={editingId ? "place" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
+      <EntrySheet
+        type={editingId ? "place" : null}
+        itemId={editingId}
+        onClose={() => setEditingId(undefined)}
+      />
+      {mergePreview && (
+        <MergePreviewDialog
+          preview={mergePreview}
+          onClose={() => setMergePreview(null)}
+          queueState={
+            weakQueueIndex === null
+              ? null
+              : {
+                  index: weakQueueIndex + 1,
+                  total: weakDuplicateGroups.length,
+                }
+          }
+          onSkip={
+            weakQueueIndex === null
+              ? undefined
+              : () => {
+                  stepWeakQueue("skip");
+                }
+          }
+          onMerge={async (nextPreview) => {
+            await mergePlacePreview(nextPreview);
+            if (weakQueueIndex === null) {
+              setMergePreview(null);
+              return;
+            }
+            stepWeakQueue("next");
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function MergePreviewDialog({
+  preview,
+  onClose,
+  queueState,
+  onSkip,
+  onMerge,
+}: {
+  preview: PlaceMergePreview;
+  onClose: () => void;
+  queueState?: { index: number; total: number } | null;
+  onSkip?: () => void;
+  onMerge: (preview: PlaceMergePreview) => void;
+}) {
+  return (
+    <div className="confirm-layer">
+      <div className="confirm-backdrop" onClick={onClose} />
+      <section className="confirm-dialog merge-dialog">
+        {queueState && (
+          <p className="form-hint">弱重复处理进度：{queueState.index} / {queueState.total}</p>
+        )}
+        <PlaceMergeWorkbench
+          preview={preview}
+          title="地点合并预览"
+          confirmLabel="确认合并"
+          cancelLabel="关闭"
+          allowKeepBoth={Boolean(onSkip)}
+          keepBothLabel="跳过这组"
+          onCancel={onClose}
+          onKeepBoth={onSkip}
+          onConfirm={onMerge}
+        />
+      </section>
+    </div>
   );
 }

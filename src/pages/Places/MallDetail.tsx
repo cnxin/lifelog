@@ -9,7 +9,7 @@ import {
   buildPlaceDisplayName,
   buildPlaceGeoLine,
   isSameMall,
-  parseMallKey
+  parseMallKey,
 } from "../../utils/placeMeta";
 
 export default function MallDetail() {
@@ -23,7 +23,7 @@ export default function MallDetail() {
       state.places
         .filter((place) => isSameMall(place, mallInfo))
         .sort((a, b) => a.name.localeCompare(b.name, "zh-CN")),
-    [mallInfo, state.places]
+    [mallInfo, state.places],
   );
 
   const summary = places[0];
@@ -67,12 +67,18 @@ export default function MallDetail() {
         <div className="list">
           {places.map((place) => (
             <button
-              className="detail-row detail-button glass-card"
+              className="vertical-detail-card detail-button glass-card"
               key={place.id}
               onClick={() => navigate(`/places/${place.id}`)}
             >
-              <strong>{buildPlaceDisplayName(place)}</strong>
-              <span>{[place.category, buildPlaceContextLine(place), place.address].filter(Boolean).join(" · ")}</span>
+              <strong className="truncate-text" style={{ width: "100%" }}>
+                {buildPlaceDisplayName(place)}
+              </strong>
+              <span className="truncate-lines-2">
+                {[place.category, buildPlaceContextLine(place), place.address]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
             </button>
           ))}
         </div>
@@ -86,17 +92,23 @@ export default function MallDetail() {
         </div>
         <div className="list">
           {state.memories
-            .filter((memory) => places.some((place) => place.id === memory.placeId))
+            .filter((memory) =>
+              places.some((place) => place.id === memory.placeId),
+            )
             .sort((a, b) => b.date.localeCompare(a.date))
             .slice(0, 8)
             .map((memory) => (
               <button
-                className="detail-row detail-button glass-card"
+                className="vertical-detail-card detail-button glass-card"
                 key={memory.id}
                 onClick={() => navigate(`/memories/${memory.id}`)}
               >
-                <strong>{memory.title}</strong>
-                <span>{memory.content || "查看回忆详情"}</span>
+                <strong className="truncate-text" style={{ width: "100%" }}>
+                  {memory.title}
+                </strong>
+                <span className="truncate-lines-2">
+                  {memory.content || "查看回忆详情"}
+                </span>
               </button>
             ))}
         </div>
