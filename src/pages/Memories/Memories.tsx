@@ -1,4 +1,4 @@
-import { Heart, Plus } from "lucide-react";
+import { Heart, Plus, Image as ImageIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -71,7 +71,25 @@ export default function Memories() {
                   </div>
                   {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
                   {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
+                    {memory.photos.length > 0 && (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        background: 'var(--soft-purple)',
+                        color: 'var(--primary)',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}>
+                        <ImageIcon size={12} />
+                        {memory.photos.length}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="person-side-actions">
                   <CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />

@@ -5,11 +5,13 @@ import type {
   LifeLogState,
   MemoryEvent,
   Person,
+  Photo,
   Place,
   PlaceMergeHistoryEntry,
-  PreferenceGroup
+  PreferenceGroup,
+  ReminderSettings
 } from "../types";
-import { defaultAppSettings } from "../types";
+import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
 
@@ -21,6 +23,8 @@ class LifeLogDatabase extends Dexie {
   memories!: Table<MemoryEvent, string>;
   placeMergeHistory!: Table<PlaceMergeHistoryEntry, string>;
   appSettings!: Table<{ key: string; value: AppSettings }, string>;
+  photos!: Table<Photo, string>;
+  reminderSettings!: Table<{ key: string; value: ReminderSettings }, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -47,6 +51,41 @@ class LifeLogDatabase extends Dexie {
       placeMergeHistory: "id, happenedAt",
       appSettings: "key"
     });
+    this.version(5)
+      .stores({
+        people: "id, name, birthday, relationship, favorite",
+        places: "id, name, country, province, city, mall, area, category, favorite",
+        memories: "id, date, placeId, *personIds",
+        placeMergeHistory: "id, happenedAt",
+        appSettings: "key"
+      })
+      .upgrade((trans) => {
+        return trans
+          .table("memories")
+          .toCollection()
+          .modify((memory) => {
+            if (!memory.photos) {
+              memory.photos = [];
+            }
+          });
+      });
+    this.version(6).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *personIds",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order"
+    });
+    this.version(7).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *personIds",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key"
+    });
   }
 }
 
@@ -71,6 +110,25 @@ export async function saveAppSettings(settings: AppSettings) {
     key: "app",
     value: {
       ...defaultAppSettings,
+      ...settings
+    }
+  });
+}
+
+export async function loadReminderSettings(): Promise<ReminderSettings> {
+  await initializeDatabase();
+  const entry = await db.reminderSettings.get("reminder");
+  return {
+    ...defaultReminderSettings,
+    ...(entry?.value || {})
+  };
+}
+
+export async function saveReminderSettings(settings: ReminderSettings) {
+  await db.reminderSettings.put({
+    key: "reminder",
+    value: {
+      ...defaultReminderSettings,
       ...settings
     }
   });
@@ -142,7 +200,31 @@ export async function deletePlaceRecord(id: string) {
 }
 
 export async function deleteMemoryRecord(id: string) {
-  await db.memories.delete(id);
+  await db.transaction("rw", db.memories, db.photos, async () => {
+    await db.memories.delete(id);
+    // 删除关联的照片
+    await db.photos.where("memoryId").equals(id).delete();
+  });
+}
+
+export async function savePhotoRecord(photo: Photo) {
+  await db.photos.put(photo);
+}
+
+export async function savePhotoRecords(photos: Photo[]) {
+  await db.photos.bulkPut(photos);
+}
+
+export async function loadPhotosByMemoryId(memoryId: string): Promise<Photo[]> {
+  return await db.photos.where("memoryId").equals(memoryId).sortBy("order");
+}
+
+export async function deletePhotoRecord(id: string) {
+  await db.photos.delete(id);
+}
+
+export async function deletePhotosByMemoryId(memoryId: string) {
+  await db.photos.where("memoryId").equals(memoryId).delete();
 }
 
 export async function replaceAllData(input: Partial<LifeLogState>) {

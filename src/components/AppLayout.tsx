@@ -9,6 +9,7 @@ import Header from "./Header";
 import { useState } from "react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useLifeLog } from "../context/LifeLogContext";
+import { useReminderScheduling } from "../hooks/useReminderScheduling";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -44,6 +45,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     setSheetType(null);
     return true;
   });
+  useReminderScheduling();
 
   return (
     <div className="app-container">

@@ -55,6 +55,20 @@ export interface Place {
   favorite: boolean;
 }
 
+export interface Photo {
+  id: ID;
+  memoryId: ID;
+  originalBlob: Blob;
+  thumbnailBlob: Blob;
+  width: number;
+  height: number;
+  fileSize: number;
+  mimeType: string;
+  capturedAt?: string;
+  uploadedAt: string;
+  order: number;
+}
+
 export interface MemoryEvent {
   id: ID;
   title: string;
@@ -64,6 +78,7 @@ export interface MemoryEvent {
   mood: string;
   content: string;
   tags: string[];
+  photos: string[];
 }
 
 export interface MemoryDisplayContext {
@@ -134,3 +149,37 @@ export interface PlaceMergeHistoryEntry {
   placeIds: ID[];
   snapshot: LifeLogState;
 }
+
+export interface ReminderSettings {
+  birthdayEnabled: boolean;
+  birthdayAdvanceDays: number;
+  birthdayTime: string;
+
+  anniversaryEnabled: boolean;
+  anniversaryAdvanceDays: number;
+  anniversaryTime: string;
+
+  contactEnabled: boolean;
+  contactIntervalDays: number;
+  contactTime: string;
+
+  memoryEnabled: boolean;
+  memoryTime: string;
+}
+
+export const defaultReminderSettings: ReminderSettings = {
+  birthdayEnabled: true,
+  birthdayAdvanceDays: 7,
+  birthdayTime: "09:00",
+
+  anniversaryEnabled: true,
+  anniversaryAdvanceDays: 3,
+  anniversaryTime: "09:00",
+
+  contactEnabled: true,
+  contactIntervalDays: 30,
+  contactTime: "20:00",
+
+  memoryEnabled: true,
+  memoryTime: "21:00"
+};

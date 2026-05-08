@@ -1,9 +1,10 @@
-import { BarChart3, Database, GitMerge, Info, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bell, Database, GitMerge, Info, SlidersHorizontal } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
+import ReminderSettings from "./ReminderSettings";
 
 export default function Settings() {
   const {
@@ -26,6 +27,7 @@ export default function Settings() {
   const [isImporting, setIsImporting] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
+  const [showReminders, setShowReminders] = useState(false);
 
   const favoritePeopleCount = useMemo(
     () => state.people.filter((person) => person.favorite).length,
@@ -256,6 +258,21 @@ export default function Settings() {
       <section className="section">
         <div className="section-header">
           <h2>
+            <Bell /> 提醒设置
+          </h2>
+          <button
+            className="category-pill"
+            onClick={() => setShowReminders(!showReminders)}
+          >
+            {showReminders ? "收起" : "展开"}
+          </button>
+        </div>
+        {showReminders && <ReminderSettings />}
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
             <SlidersHorizontal /> 默认值
           </h2>
         </div>
@@ -271,21 +288,34 @@ export default function Settings() {
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>默认关系</strong>
-            <input
+            <select
               className="settings-inline-input"
-              defaultValue={settings.defaultRelationship}
-              placeholder="朋友"
-              onBlur={(event) => handleSettingsBlur("defaultRelationship", event.target.value)}
-            />
+              value={settings.defaultRelationship}
+              onChange={(event) => handleSettingsBlur("defaultRelationship", event.target.value)}
+            >
+              <option value="朋友">朋友</option>
+              <option value="家人">家人</option>
+              <option value="同事">同事</option>
+              <option value="同学">同学</option>
+              <option value="恋人">恋人</option>
+              <option value="其他">其他</option>
+            </select>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>默认心情</strong>
-            <input
+            <select
               className="settings-inline-input"
-              defaultValue={settings.defaultMood}
-              placeholder="开心"
-              onBlur={(event) => handleSettingsBlur("defaultMood", event.target.value)}
-            />
+              value={settings.defaultMood}
+              onChange={(event) => handleSettingsBlur("defaultMood", event.target.value)}
+            >
+              <option value="开心">开心</option>
+              <option value="平静">平静</option>
+              <option value="感动">感动</option>
+              <option value="怀念">怀念</option>
+              <option value="疲惫">疲惫</option>
+              <option value="焦虑">焦虑</option>
+              <option value="日常">日常</option>
+            </select>
           </GlassCard>
         </div>
         <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>

@@ -1,6 +1,6 @@
 # LifeLog · 生活记录本
 
-LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要的人、地点和回忆。当前版本以 React 18 + Vite + TypeScript 实现 Web/PWA Demo，后续可以通过 Capacitor 打包到 Android 和 iOS。
+LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要的人、地点和回忆。当前版本以 React 18 + Vite + TypeScript 实现 Web/PWA Demo，并通过 Capacitor 打包为 Android APK 进行真机测试。
 
 ## 当前状态
 
@@ -10,6 +10,9 @@ LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要�
 - 数据已从 `localStorage` 迁移到 IndexedDB
 - 已加入手写 PWA 支持
 - 已生成 Capacitor Android 原生工程
+- 已支持本地通知提醒设置和 Android 通知权限请求
+- 已支持生日、纪念日、定期联系、回忆回顾四类提醒
+- 已支持照片上传、压缩、缩略图和回忆详情查看
 - GitHub 私有仓库：`https://github.com/cnxin/lifelog`
 
 ## 技术栈
@@ -52,6 +55,7 @@ LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要�
 - 回忆列表和回忆详情页
 - 支持标题、日期、心情、内容、标签
 - 支持关联多个人员和一个地点
+- 支持照片上传、本地压缩、缩略图展示和全屏查看
 - 关联人员、关联地点均可点击跳转详情
 
 ### 日历
@@ -66,6 +70,10 @@ LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要�
 - 数据导出
 - 数据导入
 - 重置演示数据
+- 默认城市、关系、心情配置
+- 地点强重复自动合并与撤销
+- 本地提醒设置：生日、纪念日、定期联系、回忆回顾
+- 通知权限引导和测试通知
 - 使用应用内确认弹窗替代浏览器默认 `confirm()`
 
 ## 目录结构
@@ -92,10 +100,27 @@ src/
     People/
     Places/
     Settings/
+  hooks/               自定义 Hooks
+    useReminderScheduling.ts
   types/               业务类型
     index.ts
-  utils/               日期和文本工具
+  utils/               日期、文本、图片压缩和提醒调度工具
 ```
+
+## 本地通知提醒
+
+当前 Android 版本集成了 `@capacitor/local-notifications`：
+
+- 生日提醒：支持提前 N 天和当天提醒
+- 纪念日提醒：支持提前 N 天和当天提醒，并避免与生日重复
+- 定期联系提醒：根据最近一次关联回忆判断是否需要联系
+- 回忆回顾提醒：展示往年今天的回忆
+- 设置页可开关各类提醒、配置提醒时间和发送测试通知
+
+Android 权限已在 `android/app/src/main/AndroidManifest.xml` 中声明：
+
+- `POST_NOTIFICATIONS`：Android 13+ 通知权限
+- `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM`：精确定时提醒
 
 ## 本地开发
 
@@ -122,6 +147,28 @@ npm.cmd run build
 ```bash
 npm.cmd run preview
 ```
+
+## Android APK 构建与真机测试
+
+构建 debug APK：
+
+```bash
+npm.cmd run android:debug
+```
+
+构建成功后 APK 输出到：
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+真机测试建议：
+
+1. 安装 debug APK 到 Android 真机。
+2. 打开「设置 → 提醒设置」，点击「启用通知」并授权。
+3. 点击「发送测试通知」，确认 3 秒后收到通知。
+4. 新建一个 7 天后生日的人物，确认生日提前提醒被调度。
+5. 修改提醒时间或开关后，重新进入应用确认提醒会自动重调度。
 
 ## 数据存储
 

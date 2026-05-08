@@ -22,12 +22,15 @@
     "@capacitor/app": "^8.1.0",
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.1",
+    "@capacitor/local-notifications": "^8.1.0",
     "@vitejs/plugin-react": "latest",
+    "browser-image-compression": "^2.0.2",
     "dexie": "^4.4.2",
     "lucide-react": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.0",
+    "uuid": "^14.0.0",
     "vite": "latest"
   },
   "devDependencies": {

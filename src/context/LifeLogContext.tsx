@@ -8,6 +8,8 @@ import {
   loadAppSettings,
   loadPlaceMergeHistory,
   loadLifeLogState,
+  loadPhotosByMemoryId,
+  loadReminderSettings,
   normalizeState,
   replaceAllData,
   resetDatabase,
@@ -16,7 +18,10 @@ import {
   savePlaceMergeHistoryEntry,
   saveMemoryRecord,
   savePersonRecord,
-  savePlaceRecord
+  savePlaceRecord,
+  savePhotoRecords,
+  saveReminderSettings,
+  deletePhotosByMemoryId
 } from "../db/database";
 import type {
   AppSettings,
@@ -25,14 +30,16 @@ import type {
   LifeLogState,
   MemoryEvent,
   Person,
+  Photo,
   Place,
   PlaceDuplicateGroup,
   PlaceMergeHistoryEntry,
   PlaceMergePreview,
   PlaceSaveInspection,
-  PlaceSaveOptions
+  PlaceSaveOptions,
+  ReminderSettings
 } from "../types";
-import { defaultAppSettings } from "../types";
+import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
 import { buildPlaceDisplayName, inferMallName, inferProvince, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
@@ -48,13 +55,14 @@ import { parseGroups, splitLines, splitList } from "../utils/text";
 interface LifeLogContextValue {
   state: LifeLogState;
   settings: AppSettings;
+  reminderSettings: ReminderSettings;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   togglePersonFavorite: (id: string) => Promise<void>;
   inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
   savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
   togglePlaceFavorite: (id: string) => Promise<void>;
-  saveMemory: (formData: FormData, id?: string) => Promise<string>;
+  saveMemory: (formData: FormData, id?: string, photos?: Photo[]) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   importData: (file: File) => Promise<void>;
   getPersonName: (id: string) => string;
@@ -67,8 +75,10 @@ interface LifeLogContextValue {
   mergeAllDuplicatePlaces: () => Promise<number>;
   undoLatestPlaceMerge: () => Promise<boolean>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
+  updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   exportData: () => void;
   resetDemo: () => Promise<void>;
+  loadMemoryPhotos: (memoryId: string) => Promise<Photo[]>;
 }
 
 const emptyState: LifeLogState = {
@@ -86,6 +96,7 @@ function uid(prefix: string) {
 export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LifeLogState>(emptyState);
   const [settings, setSettings] = useState<AppSettings>(defaultAppSettings);
+  const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(defaultReminderSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
   const favoritePendingRef = useRef({ people: new Set<string>(), places: new Set<string>() });
@@ -96,9 +107,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     loadLifeLogState()
       .then(async (nextState) => {
         const nextSettings = await loadAppSettings();
+        const nextReminderSettings = await loadReminderSettings();
         const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
         if (active) setSettings(nextSettings);
+        if (active) setReminderSettings(nextReminderSettings);
         if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
@@ -249,7 +262,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return place.id;
     }
 
-    async function saveMemory(formData: FormData, id?: string) {
+    async function saveMemory(formData: FormData, id?: string, photos?: Photo[]) {
       const existing = state.memories.find((memory) => memory.id === id);
       const selectedPersonIds = formData
         .getAll("personIds")
@@ -276,18 +289,26 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         : existing
           ? [legacyPersonId].filter(Boolean)
           : quickInference.personIds;
+      const memoryId = existing?.id || uid("m");
       const memory: MemoryEvent = {
-        id: existing?.id || uid("m"),
+        id: memoryId,
         title,
         date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
         personIds: matchedPersonIds,
         placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
         mood: String(formData.get("mood") || settings.defaultMood),
         content,
-        tags: splitList(formData.get("tags"))
+        tags: splitList(formData.get("tags")),
+        photos: photos ? photos.map((p) => p.id) : existing?.photos || []
       };
 
       await saveMemoryRecord(memory);
+
+      // 保存照片到数据库
+      if (photos && photos.length > 0) {
+        await savePhotoRecords(photos);
+      }
+
       setState((current) => ({
         ...current,
         memories: existing
@@ -466,6 +487,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       setSettings(normalized);
     }
 
+    async function updateReminderSettings(patch: Partial<ReminderSettings>) {
+      const next = {
+        ...reminderSettings,
+        ...patch
+      };
+      await saveReminderSettings(next);
+      setReminderSettings(next);
+    }
+
     function exportData() {
       const payload = {
         version: 2,
@@ -492,9 +522,14 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     const latestPlaceMerge = placeMergeHistory[0] || null;
 
+    async function loadMemoryPhotos(memoryId: string): Promise<Photo[]> {
+      return await loadPhotosByMemoryId(memoryId);
+    }
+
     return {
       state,
       settings,
+      reminderSettings,
       isLoading,
       savePerson,
       togglePersonFavorite,
@@ -514,10 +549,12 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       mergeAllDuplicatePlaces,
       undoLatestPlaceMerge,
       updateSettings,
+      updateReminderSettings,
       exportData,
-      resetDemo
+      resetDemo,
+      loadMemoryPhotos
     };
-  }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, state]);
+  }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }

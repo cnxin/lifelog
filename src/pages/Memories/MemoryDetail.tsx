@@ -1,21 +1,36 @@
-import { ArrowLeft, Calendar, Heart, MapPin, Sparkles, Tag, Users } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Calendar, Heart, MapPin, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
+import { PhotoGrid } from "../../components/PhotoGrid";
+import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay } from "../../utils/date";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import type { Photo } from "../../types";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
   const navigate = useNavigate();
-  const { state, getPersonName, getPlaceName } = useLifeLog();
+  const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
   const [editing, setEditing] = useState(false);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
   const memory = state.memories.find((item) => item.id === memoryId);
   const place = state.places.find((item) => item.id === memory?.placeId);
+
+  // 加载照片
+  useEffect(() => {
+    if (memory && memory.photos.length > 0) {
+      loadMemoryPhotos(memory.id).then(setPhotos);
+    } else {
+      setPhotos([]);
+    }
+  }, [memory?.id, memory?.photos.length, loadMemoryPhotos]);
 
   if (!memory) {
     return (
@@ -116,6 +131,26 @@ export default function MemoryDetail() {
         </GlassCard>
       </section>
 
+      {photos.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <ImageIcon /> 照片 ({photos.length})
+            </h2>
+          </div>
+          <GlassCard>
+            <PhotoGrid
+              photos={photos}
+              columns={3}
+              onClick={(index) => {
+                setViewerIndex(index);
+                setViewerOpen(true);
+              }}
+            />
+          </GlassCard>
+        </section>
+      )}
+
       <section className="section">
         <div className="section-header">
           <h2>
@@ -148,6 +183,14 @@ export default function MemoryDetail() {
           </button>
         )}
       </section>
+
+      {viewerOpen && photos.length > 0 && (
+        <PhotoViewer
+          photos={photos}
+          initialIndex={viewerIndex}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
 
       <EntrySheet type={editing ? "memory" : null} itemId={memory.id} onClose={() => setEditing(false)} />
     </>

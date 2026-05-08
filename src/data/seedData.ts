@@ -134,7 +134,8 @@ export const seedData: LifeLogState = {
       placeId: "l1",
       mood: "轻松",
       content: "小明很喜欢番茄锅和虾滑，下次可以提前排号。",
-      tags: ["聚餐", "火锅"]
+      tags: ["聚餐", "火锅"],
+      photos: []
     },
     {
       id: "m2",
@@ -144,7 +145,8 @@ export const seedData: LifeLogState = {
       placeId: "l3",
       mood: "愉快",
       content: "看完电影后聊了很久，附近咖啡店可以作为下次备选。",
-      tags: ["电影"]
+      tags: ["电影"],
+      photos: []
     }
   ]
 };

@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import type {
   Anniversary,
@@ -8,6 +8,7 @@ import type {
   LifeLogState,
   MemoryEvent,
   Person,
+  Photo,
   Place,
   PlaceMergePreview,
   PreferenceGroup
@@ -22,6 +23,7 @@ import { inferQuickMemory } from "../utils/memoryInference";
 import { deriveMemorySummary } from "../utils/memoryDisplay";
 import PersonPicker from "./PersonPicker";
 import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
+import { PhotoUploader } from "./PhotoUploader";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -49,12 +51,22 @@ export default function EntrySheet({
   onClose
 }: EntrySheetProps) {
   const navigate = useNavigate();
-  const { state, inspectPlaceSave, savePerson, savePlace, saveMemory } = useLifeLog();
+  const { state, inspectPlaceSave, savePerson, savePlace, saveMemory, loadMemoryPhotos } = useLifeLog();
   const [error, setError] = useState("");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [pendingPlaceFormData, setPendingPlaceFormData] = useState<FormData | null>(null);
   const submitLockRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+
+  // 加载现有照片（编辑模式）
+  useEffect(() => {
+    if (type === "memory" && itemId) {
+      loadMemoryPhotos(itemId).then(setPhotos);
+    } else {
+      setPhotos([]);
+    }
+  }, [type, itemId, loadMemoryPhotos]);
 
   if (!type) return null;
 
@@ -92,7 +104,14 @@ export default function EntrySheet({
 
         savedPlaceId = await savePlace(formData, itemId);
       }
-      if (entryType === "memory") savedMemoryId = await saveMemory(formData, itemId);
+      if (entryType === "memory") {
+        // 如果是新建回忆，需要先生成 ID 并更新照片的 memoryId
+        const memoryId = itemId || `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const photosToSave = photos.length > 0
+          ? photos.map(p => ({ ...p, memoryId }))
+          : undefined;
+        savedMemoryId = await saveMemory(formData, itemId, photosToSave);
+      }
 
       onClose();
       if (entryType === "person" && !itemId && savedPersonId) {
@@ -143,6 +162,9 @@ export default function EntrySheet({
               initialPersonId={initialPersonId}
               initialPlaceId={initialPlaceId}
               mode={memoryMode}
+              photos={photos}
+              onPhotosChange={setPhotos}
+              isSubmitting={isSubmitting}
             />
           )}
 
@@ -834,7 +856,10 @@ function MemoryFields({
   places,
   initialPersonId,
   initialPlaceId,
-  mode
+  mode,
+  photos,
+  onPhotosChange,
+  isSubmitting
 }: {
   memory?: MemoryEvent;
   people: Array<{ id: string; name: string }>;
@@ -842,6 +867,9 @@ function MemoryFields({
   initialPersonId?: string;
   initialPlaceId?: string;
   mode: "quick" | "full";
+  photos: Photo[];
+  onPhotosChange: (photos: Photo[]) => void;
+  isSubmitting: boolean;
 }) {
   const { settings } = useLifeLog();
   const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
@@ -872,7 +900,8 @@ function MemoryFields({
         placeId: quickPreview.placeId,
         mood: "",
         content: quickContent,
-        tags: []
+        tags: [],
+        photos: []
       },
       { personNames: previewPeople, placeName: previewPlace }
     );
@@ -1000,6 +1029,16 @@ function MemoryFields({
           placeholder="记录今天发生的事，以及下次要注意什么。"
         />
       </label>
+      <div>
+        <span className="field-title">照片</span>
+        <PhotoUploader
+          photos={photos}
+          memoryId={memory?.id || "temp"}
+          maxPhotos={9}
+          onPhotosChange={onPhotosChange}
+          disabled={isSubmitting}
+        />
+      </div>
       <label>
         标签，逗号分隔
         <input
