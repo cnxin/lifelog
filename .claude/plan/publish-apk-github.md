@@ -29,16 +29,16 @@
 
 ## Step 4: 提交并推送 GitHub
 
-- [ ] 检查最终 git diff / status
-- [ ] 暂存全部当前改动
-- [ ] 创建新 commit
-- [ ] 推送到 GitHub `origin/main`
-- [ ] 推送后确认远端状态
+- [x] 检查最终 git diff / status
+- [x] 暂存全部当前改动
+- [x] 创建新 commit
+- [x] 推送到 GitHub `origin/main`
+- [x] 推送后确认远端状态
 
 ## 进度追踪
 
 - **Step 1**: ✅ 4/4
 - **Step 2**: ✅ 3/3
 - **Step 3**: ✅ 4/4
-- **Step 4**: ⬜ 0/5
-- **总进度**: 11/16
+- **Step 4**: ✅ 5/5
+- **总进度**: 16/16
