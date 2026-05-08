@@ -953,33 +953,31 @@ function MemoryFields({
           placeholder="留空将自动按人物 / 地点生成摘要"
         />
       </label>
-      <div className="form-row">
-        <label>
-          日期
-          <input name="date" type="date" defaultValue={memory?.date || todayValue} required />
-        </label>
-        <label>
-          心情
-          <input
-            name="mood"
-            value={mood}
-            onChange={(event) => setMood(event.target.value)}
-            placeholder="一个词描述今天的心情"
-          />
-          <div className="mood-presets">
-            {MOOD_PRESETS.map((preset) => (
-              <button
-                type="button"
-                key={preset}
-                className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
-                onClick={() => setMood(preset)}
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
-        </label>
-      </div>
+      <label className="inline-field">
+        <span className="inline-field-label">日期</span>
+        <input name="date" type="date" defaultValue={memory?.date || todayValue} required />
+      </label>
+      <label>
+        心情
+        <input
+          name="mood"
+          value={mood}
+          onChange={(event) => setMood(event.target.value)}
+          placeholder="一个词描述今天的心情"
+        />
+        <div className="mood-presets">
+          {MOOD_PRESETS.map((preset) => (
+            <button
+              type="button"
+              key={preset}
+              className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
+              onClick={() => setMood(preset)}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
+      </label>
       <div>
         <span className="field-title">关联人物</span>
         <PersonPicker people={people} defaultSelected={selectedPersonIds} />
