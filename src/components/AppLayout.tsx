@@ -6,7 +6,7 @@ import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
@@ -39,16 +39,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const meta = getPageMeta(location.pathname);
-  const { isLoading } = useLifeLog();
+  const { isLoading, settings } = useLifeLog();
   useAndroidBackButton(() => {
     if (!sheetType) return false;
     setSheetType(null);
     return true;
   });
+  useEffect(() => {
+    document.documentElement.dataset.themeStyle = settings.themeStyle;
+    return () => {
+      delete document.documentElement.dataset.themeStyle;
+    };
+  }, [settings.themeStyle]);
   useReminderScheduling();
 
   return (
-    <div className="app-container">
+    <div className={`app-container theme-${settings.themeStyle}`}>
       <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
       <main className="main-content">
         {isLoading ? (

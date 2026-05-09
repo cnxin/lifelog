@@ -1,6 +1,8 @@
 import { Bell, Clock, Calendar, Users, History } from "lucide-react";
 import { useEffect, useState } from "react";
 import GlassCard from "../../components/GlassCard";
+import NumberStepper from "../../components/NumberStepper";
+import TimePicker from "../../components/TimePicker";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { notifyReminderPermissionChanged } from "../../hooks/useReminderScheduling";
 import { checkNotificationPermission, requestNotificationPermission } from "../../utils/notificationPermissions";
@@ -45,11 +47,8 @@ export default function ReminderSettings() {
     });
   }
 
-  function handleNumberChange(key: keyof typeof reminderSettings, value: string) {
-    const num = parseInt(value, 10);
-    if (!isNaN(num)) {
-      void updateReminderSettings({ [key]: num });
-    }
+  function handleNumberChange(key: keyof typeof reminderSettings, value: number) {
+    void updateReminderSettings({ [key]: value });
   }
 
   function handleTimeChange(key: keyof typeof reminderSettings, value: string) {
@@ -100,22 +99,20 @@ export default function ReminderSettings() {
           <div className="reminder-config-details">
             <div className="reminder-config-row">
               <span>提前天数</span>
-              <input
-                type="number"
-                min="1"
-                max="30"
+              <NumberStepper
+                min={1}
+                max={30}
                 value={reminderSettings.birthdayAdvanceDays}
-                onChange={(e) => handleNumberChange("birthdayAdvanceDays", e.target.value)}
-                className="reminder-number-input"
+                label="生日提前天数"
+                onChange={(value) => handleNumberChange("birthdayAdvanceDays", value)}
               />
             </div>
             <div className="reminder-config-row">
               <span>提醒时间</span>
-              <input
-                type="time"
+              <TimePicker
+                label="生日提醒时间"
                 value={reminderSettings.birthdayTime}
-                onChange={(e) => handleTimeChange("birthdayTime", e.target.value)}
-                className="reminder-time-input"
+                onChange={(value) => handleTimeChange("birthdayTime", value)}
               />
             </div>
           </div>
@@ -139,22 +136,20 @@ export default function ReminderSettings() {
           <div className="reminder-config-details">
             <div className="reminder-config-row">
               <span>提前天数</span>
-              <input
-                type="number"
-                min="1"
-                max="30"
+              <NumberStepper
+                min={1}
+                max={30}
                 value={reminderSettings.anniversaryAdvanceDays}
-                onChange={(e) => handleNumberChange("anniversaryAdvanceDays", e.target.value)}
-                className="reminder-number-input"
+                label="纪念日提前天数"
+                onChange={(value) => handleNumberChange("anniversaryAdvanceDays", value)}
               />
             </div>
             <div className="reminder-config-row">
               <span>提醒时间</span>
-              <input
-                type="time"
+              <TimePicker
+                label="纪念日提醒时间"
                 value={reminderSettings.anniversaryTime}
-                onChange={(e) => handleTimeChange("anniversaryTime", e.target.value)}
-                className="reminder-time-input"
+                onChange={(value) => handleTimeChange("anniversaryTime", value)}
               />
             </div>
           </div>
@@ -178,22 +173,20 @@ export default function ReminderSettings() {
           <div className="reminder-config-details">
             <div className="reminder-config-row">
               <span>间隔天数</span>
-              <input
-                type="number"
-                min="7"
-                max="90"
+              <NumberStepper
+                min={7}
+                max={90}
                 value={reminderSettings.contactIntervalDays}
-                onChange={(e) => handleNumberChange("contactIntervalDays", e.target.value)}
-                className="reminder-number-input"
+                label="联系间隔天数"
+                onChange={(value) => handleNumberChange("contactIntervalDays", value)}
               />
             </div>
             <div className="reminder-config-row">
               <span>提醒时间</span>
-              <input
-                type="time"
+              <TimePicker
+                label="定期联系提醒时间"
                 value={reminderSettings.contactTime}
-                onChange={(e) => handleTimeChange("contactTime", e.target.value)}
-                className="reminder-time-input"
+                onChange={(value) => handleTimeChange("contactTime", value)}
               />
             </div>
           </div>
@@ -217,11 +210,10 @@ export default function ReminderSettings() {
           <div className="reminder-config-details">
             <div className="reminder-config-row">
               <span>提醒时间</span>
-              <input
-                type="time"
+              <TimePicker
+                label="回忆回顾提醒时间"
                 value={reminderSettings.memoryTime}
-                onChange={(e) => handleTimeChange("memoryTime", e.target.value)}
-                className="reminder-time-input"
+                onChange={(value) => handleTimeChange("memoryTime", value)}
               />
             </div>
           </div>

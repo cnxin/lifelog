@@ -177,7 +177,7 @@ export async function deletePersonRecord(id: string) {
         affected.map((memory) =>
           db.memories.put({
             ...memory,
-            personIds: memory.personIds.filter((personId) => personId !== id)
+            personIds: (memory.personIds || []).filter((personId) => personId !== id)
           })
         )
       );
@@ -343,6 +343,12 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
       platformLinks: normalizePlacePlatformLinks(place.platformLinks),
       photos: Array.isArray(place.photos) ? place.photos.filter(Boolean).map(String) : []
     })) as Place[],
-    memories: (input.memories || seedData.memories) as MemoryEvent[]
+    memories: (input.memories || seedData.memories).map((memory) => ({
+      ...memory,
+      personIds: Array.isArray(memory.personIds) ? memory.personIds.filter(Boolean).map(String) : [],
+      mood: memory.mood || "日常",
+      tags: Array.isArray(memory.tags) ? memory.tags.filter(Boolean).map(String) : [],
+      photos: Array.isArray(memory.photos) ? memory.photos.filter(Boolean).map(String) : []
+    })) as MemoryEvent[]
   };
 }

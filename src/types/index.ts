@@ -92,16 +92,20 @@ export interface LifeLogState {
   memories: MemoryEvent[];
 }
 
+export type ThemeStyle = "classic" | "cream" | "mint" | "mist";
+
 export interface AppSettings {
   defaultCity: string;
   defaultRelationship: string;
   defaultMood: string;
+  themeStyle: ThemeStyle;
 }
 
 export const defaultAppSettings: AppSettings = {
   defaultCity: "杭州",
   defaultRelationship: "朋友",
-  defaultMood: "开心"
+  defaultMood: "开心",
+  themeStyle: "classic"
 };
 
 export type EntryType = "person" | "place" | "memory";

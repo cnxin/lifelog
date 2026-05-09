@@ -21,9 +21,12 @@ import { getPlacePlatformLink } from "../utils/placeMeta";
 import { groupsToText, splitPreferenceItems } from "../utils/text";
 import { inferQuickMemory } from "../utils/memoryInference";
 import { deriveMemorySummary } from "../utils/memoryDisplay";
+import DateInput from "./DateInput";
+import NumberStepper from "./NumberStepper";
 import PersonPicker from "./PersonPicker";
 import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
 import { PhotoUploader } from "./PhotoUploader";
+import SelectPicker from "./SelectPicker";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -41,6 +44,12 @@ const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: str
 };
 
 const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
+const RELATIONSHIP_OPTIONS = ["朋友", "家人", "同事", "同学", "恋人", "其他"].map((item) => ({ value: item, label: item }));
+const PLACE_CATEGORY_OPTIONS = ["餐厅", "咖啡厅", "电影院", "景点", "商场", "酒店", "公园", "书店", "医院", "学校", "公司", "其他"].map((item) => ({ value: item, label: item }));
+const BOOLEAN_OPTIONS = [
+  { value: "true", label: "是" },
+  { value: "false", label: "否" }
+];
 
 export default function EntrySheet({
   type,
@@ -245,7 +254,6 @@ function findEditingItem(type: EntryType, itemId: string | undefined, state: Lif
 function PersonFields({ person, isEditing }: { person?: Person; isEditing: boolean }) {
   if (!isEditing) return <QuickPersonFields />;
 
-  const [birthdayYear = "", birthdayMonth = "", birthdayDay = ""] = (person?.birthday || "").split("-");
   const customAnniversaries = (person?.anniversaries || []).filter((item) => item.title !== "生日");
 
   return (
@@ -263,30 +271,24 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
       <div className="form-row">
         <label>
           关系
-          <input name="relationship" defaultValue={person?.relationship} placeholder="朋友、家人、同事..." />
+          <SelectPicker
+            name="relationship"
+            label="人物关系"
+            defaultValue={person?.relationship || "朋友"}
+            options={RELATIONSHIP_OPTIONS}
+          />
         </label>
         <label>
           收藏
-          <select name="favorite" defaultValue={person?.favorite ? "true" : "false"}>
-            <option value="true">是</option>
-            <option value="false">否</option>
-          </select>
+          <SelectPicker
+            name="favorite"
+            label="人物收藏"
+            defaultValue={person?.favorite ? "true" : "false"}
+            options={BOOLEAN_OPTIONS}
+          />
         </label>
       </div>
-      <div className="birthday-editor compact">
-        <label>
-          年
-          <input name="birthdayYear" type="number" min="1900" max={new Date().getFullYear()} defaultValue={birthdayYear} placeholder="1999" />
-        </label>
-        <label>
-          月
-          <input name="birthdayMonth" type="number" min="1" max="12" defaultValue={birthdayMonth} placeholder="04" />
-        </label>
-        <label>
-          日
-          <input name="birthdayDay" type="number" min="1" max="31" defaultValue={birthdayDay} placeholder="15" />
-        </label>
-      </div>
+      <BirthdayDateFields birthday={person?.birthday} />
       <p className="form-hint">只记录公历生日，农历日期会自动计算并显示。</p>
       <label>纪念日</label>
       <AnniversaryEditor anniversaries={customAnniversaries} />
@@ -320,6 +322,21 @@ function PersonFields({ person, isEditing }: { person?: Person; isEditing: boole
   );
 }
 
+function BirthdayDateFields({ birthday }: { birthday?: string }) {
+  const [birthdayValue, setBirthdayValue] = useState(birthday || "");
+  const [year = "", month = "", day = ""] = birthdayValue.split("-");
+
+  return (
+    <label className="birthday-date-field">
+      <span>生日</span>
+      <DateInput label="生日" value={birthdayValue} onChange={setBirthdayValue} />
+      <input type="hidden" name="birthdayYear" value={year} />
+      <input type="hidden" name="birthdayMonth" value={month} />
+      <input type="hidden" name="birthdayDay" value={day} />
+    </label>
+  );
+}
+
 function QuickPersonFields() {
   const { settings } = useLifeLog();
 
@@ -331,7 +348,12 @@ function QuickPersonFields() {
       </label>
       <label>
         关系
-        <input name="relationship" defaultValue={settings.defaultRelationship} placeholder="朋友、家人、同事..." />
+        <SelectPicker
+          name="relationship"
+          label="人物关系"
+          defaultValue={settings.defaultRelationship}
+          options={RELATIONSHIP_OPTIONS}
+        />
       </label>
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="preferences" value="" />
@@ -395,11 +417,10 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
               value={row.title}
               onChange={(event) => updateRow(index, { title: event.target.value })}
             />
-            <input
-              aria-label="纪念日日期"
-              type="date"
+            <DateInput
+              label="纪念日日期"
               value={row.date}
-              onChange={(event) => updateRow(index, { date: event.target.value })}
+              onChange={(value) => updateRow(index, { date: value })}
             />
             <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
               删除
@@ -550,7 +571,12 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         </label>
         <label>
           分类
-          <input name="category" defaultValue={place?.category || "餐厅"} />
+          <SelectPicker
+            name="category"
+            label="地点分类"
+            defaultValue={place?.category || "餐厅"}
+            options={PLACE_CATEGORY_OPTIONS}
+          />
         </label>
       </div>
       <label>
@@ -560,14 +586,23 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       <div className="form-row">
         <label>
           评分
-          <input name="rating" type="number" step="0.1" defaultValue={place?.rating ?? 4.5} />
+          <NumberStepper
+            name="rating"
+            min={0}
+            max={5}
+            step={0.1}
+            defaultValue={place?.rating ?? 4.5}
+            label="地点评分"
+          />
         </label>
         <label>
           收藏
-          <select name="favorite" defaultValue={place?.favorite ? "true" : "false"}>
-            <option value="true">是</option>
-            <option value="false">否</option>
-          </select>
+          <SelectPicker
+            name="favorite"
+            label="地点收藏"
+            defaultValue={place?.favorite ? "true" : "false"}
+            options={BOOLEAN_OPTIONS}
+          />
         </label>
       </div>
       <label>
@@ -674,11 +709,12 @@ function QuickPlaceFields() {
         </label>
         <label>
           类型
-          <input
+          <SelectPicker
             name="category"
+            label="地点类型"
             value={draft.category}
-            onChange={(event) => updateDraft({ category: event.target.value })}
-            placeholder="餐厅、酒店、景点..."
+            onChange={(value) => updateDraft({ category: value })}
+            options={PLACE_CATEGORY_OPTIONS}
           />
         </label>
       </div>
@@ -872,7 +908,7 @@ function MemoryFields({
   isSubmitting: boolean;
 }) {
   const { settings } = useLifeLog();
-  const selectedPersonIds = memory?.personIds.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
+  const selectedPersonIds = memory?.personIds?.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
   const todayValue = new Date().toISOString().slice(0, 10);
   const [quickContent, setQuickContent] = useState("");
   const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
@@ -922,25 +958,31 @@ function MemoryFields({
         <div className="form-row">
           <label>
             人物
-            <select name="personIds" value={quickPersonId} onChange={(event) => setQuickPersonId(event.target.value)}>
-              <option value="">自动识别或暂不关联</option>
-              {people.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.name}
-                </option>
-              ))}
-            </select>
+            <SelectPicker
+              name="personIds"
+              label="快速记录关联人物"
+              value={quickPersonId}
+              onChange={setQuickPersonId}
+              placeholder="自动识别或暂不关联"
+              options={[
+                { value: "", label: "自动识别或暂不关联" },
+                ...people.map((person) => ({ value: person.id, label: person.name }))
+              ]}
+            />
           </label>
           <label>
             地点
-            <select name="placeId" value={quickPlaceId} onChange={(event) => setQuickPlaceId(event.target.value)}>
-              <option value="">自动识别或暂不关联</option>
-              {places.map((place) => (
-                <option key={place.id} value={place.id}>
-                  {place.name}
-                </option>
-              ))}
-            </select>
+            <SelectPicker
+              name="placeId"
+              label="快速记录关联地点"
+              value={quickPlaceId}
+              onChange={setQuickPlaceId}
+              placeholder="自动识别或暂不关联"
+              options={[
+                { value: "", label: "自动识别或暂不关联" },
+                ...places.map((place) => ({ value: place.id, label: place.name }))
+              ]}
+            />
           </label>
         </div>
         <div className="memory-preview" aria-live="polite">
@@ -984,7 +1026,7 @@ function MemoryFields({
       </label>
       <label className="inline-field">
         <span className="inline-field-label">日期</span>
-        <input name="date" type="date" defaultValue={memory?.date || todayValue} required />
+        <DateInput name="date" label="回忆日期" defaultValue={memory?.date || todayValue} required />
       </label>
       <label>
         心情
@@ -1013,13 +1055,13 @@ function MemoryFields({
       </div>
       <label>
         关联地点
-        <select name="placeId" defaultValue={memory?.placeId || initialPlaceId || places[0]?.id || ""}>
-          {places.map((place) => (
-            <option key={place.id} value={place.id}>
-              {place.name}
-            </option>
-          ))}
-        </select>
+        <SelectPicker
+          name="placeId"
+          label="关联地点"
+          defaultValue={memory?.placeId || initialPlaceId || places[0]?.id || ""}
+          placeholder="选择地点"
+          options={places.map((place) => ({ value: place.id, label: place.name }))}
+        />
       </label>
       <label>
         内容

@@ -177,7 +177,7 @@ export default function Home() {
                   </div>
                   {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
                   {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
+                  <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
                 </div>
               </GlassCard>
             );

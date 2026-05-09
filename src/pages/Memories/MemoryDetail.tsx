@@ -21,16 +21,19 @@ export default function MemoryDetail() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const memory = state.memories.find((item) => item.id === memoryId);
+  const personIds = memory?.personIds || [];
+  const tags = memory?.tags || [];
+  const photoIds = memory?.photos || [];
   const place = state.places.find((item) => item.id === memory?.placeId);
 
   // 加载照片
   useEffect(() => {
-    if (memory && memory.photos.length > 0) {
+    if (memory && photoIds.length > 0) {
       loadMemoryPhotos(memory.id).then(setPhotos);
     } else {
       setPhotos([]);
     }
-  }, [memory?.id, memory?.photos.length, loadMemoryPhotos]);
+  }, [memory?.id, photoIds.length, loadMemoryPhotos]);
 
   if (!memory) {
     return (
@@ -53,7 +56,7 @@ export default function MemoryDetail() {
       icon: <Users />,
       title: "关联人物",
       desc: "关联后人物详情会自动出现这条回忆。",
-      visible: !memory.personIds.length
+      visible: !personIds.length
     },
     {
       id: "place",
@@ -67,7 +70,7 @@ export default function MemoryDetail() {
       icon: <Tag />,
       title: "补充心情和标签",
       desc: "让以后搜索和回看更容易。",
-      visible: memory.mood === "日常" || !memory.tags.length
+      visible: memory.mood === "日常" || !tags.length
     }
   ].filter((tip) => tip.visible);
 
@@ -127,7 +130,7 @@ export default function MemoryDetail() {
         </div>
         <GlassCard className="pref-block">
           <p className="memory-desc">{memory.content || "还没有记录内容"}</p>
-          <Tags items={[memory.mood, ...memory.tags]} />
+          <Tags items={[memory.mood, ...tags]} />
         </GlassCard>
       </section>
 
@@ -158,12 +161,12 @@ export default function MemoryDetail() {
           </h2>
         </div>
         <div className="tap-chip-row">
-          {memory.personIds.map((personId) => (
+          {personIds.map((personId) => (
             <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
               {getPersonName(personId)}
             </button>
           ))}
-          {!memory.personIds.length && <GlassCard className="empty">未关联人物</GlassCard>}
+          {!personIds.length && <GlassCard className="empty">未关联人物</GlassCard>}
         </div>
       </section>
 

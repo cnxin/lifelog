@@ -122,7 +122,7 @@ function generateContactReminders(
 
   for (const person of people) {
     const lastMemory = memories
-      .filter((memory) => memory.personIds.includes(person.id))
+      .filter((memory) => (memory.personIds || []).includes(person.id))
       .sort((a, b) => b.date.localeCompare(a.date))[0];
 
     if (!lastMemory) continue;

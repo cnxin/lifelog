@@ -37,7 +37,7 @@ export default function PersonDetail() {
   }
 
   const relatedMemories = state.memories
-    .filter((memory) => memory.personIds.includes(person.id))
+    .filter((memory) => (memory.personIds || []).includes(person.id))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const relatedPlaces = Array.from(
@@ -145,7 +145,7 @@ export default function PersonDetail() {
         <PreferenceBlocks groups={person.dislikes} emptyText="还没有记录禁忌" danger />
       </section>
 
-      <section className="section" ref={anniversariesRef}>
+      <section className="section person-detail-section" ref={anniversariesRef}>
         <div className="section-header">
           <h2>
             <Calendar /> 纪念日
@@ -171,7 +171,7 @@ export default function PersonDetail() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section person-detail-section">
         <div className="section-header">
           <h2>
             <MapPin /> 一起去过
@@ -191,7 +191,7 @@ export default function PersonDetail() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section person-detail-section">
         <div className="section-header">
           <h2>相关回忆</h2>
           <button className="see-all" onClick={() => setAddingMemory(true)}>
@@ -215,7 +215,7 @@ export default function PersonDetail() {
                     {ctx.placeName || "未关联地点"}
                     {showContentLine ? ` · ${memory.content}` : ""}
                   </p>
-                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
+                  <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
                 </div>
               </GlassCard>
             );

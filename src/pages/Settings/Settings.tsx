@@ -1,10 +1,41 @@
-import { BarChart3, Bell, Database, GitMerge, Info, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bell, ChevronDown, Database, GitMerge, Info, SlidersHorizontal } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import DateInput from "../../components/DateInput";
 import GlassCard from "../../components/GlassCard";
+import NumberStepper from "../../components/NumberStepper";
 import Tags from "../../components/Tags";
+import TimePicker from "../../components/TimePicker";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
+import type { ThemeStyle } from "../../types";
 import ReminderSettings from "./ReminderSettings";
+
+const themeOptions: Array<{
+  value: ThemeStyle;
+  label: string;
+  desc: string;
+}> = [
+  {
+    value: "classic",
+    label: "原版",
+    desc: "紫橙渐变"
+  },
+  {
+    value: "cream",
+    label: "奶油纸感",
+    desc: "温柔米白"
+  },
+  {
+    value: "mint",
+    label: "薄荷留白",
+    desc: "绿蓝清爽"
+  },
+  {
+    value: "mist",
+    label: "晨雾极简",
+    desc: "冷灰极简"
+  }
+];
 
 export default function Settings() {
   const {
@@ -28,6 +59,11 @@ export default function Settings() {
   const [isMerging, setIsMerging] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
+  const [openPicker, setOpenPicker] = useState<"relationship" | "mood" | null>(null);
+  const [pickerAnchor, setPickerAnchor] = useState({ top: 0, right: 0 });
+
+  const relationshipOptions = ["朋友", "家人", "同事", "同学", "恋人", "其他"];
+  const moodOptions = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑", "日常"];
 
   const favoritePeopleCount = useMemo(
     () => state.people.filter((person) => person.favorite).length,
@@ -133,6 +169,28 @@ export default function Settings() {
   function handleSettingsBlur<K extends keyof typeof settings>(key: K, value: string) {
     void updateSettings({
       [key]: value.trim()
+    });
+  }
+
+  function togglePicker(type: "relationship" | "mood", element: HTMLButtonElement) {
+    if (openPicker === type) {
+      setOpenPicker(null);
+      return;
+    }
+
+    const appContainer = element.closest(".app-container")?.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    setPickerAnchor({
+      top: rect.bottom - (appContainer?.top || 0) + 8,
+      right: (appContainer?.right || window.innerWidth) - rect.right
+    });
+    setOpenPicker(type);
+  }
+
+  function handlePickerSelect<K extends keyof typeof settings>(key: K, value: string) {
+    setOpenPicker(null);
+    void updateSettings({
+      [key]: value
     });
   }
 
@@ -277,48 +335,96 @@ export default function Settings() {
           </h2>
         </div>
         <div className="list">
-          <GlassCard className="detail-row">
+          <GlassCard className="detail-row settings-default-row">
             <strong>默认城市</strong>
             <input
-              className="settings-inline-input"
+              className="settings-default-input"
               defaultValue={settings.defaultCity}
               placeholder="杭州"
               onBlur={(event) => handleSettingsBlur("defaultCity", event.target.value)}
             />
           </GlassCard>
-          <GlassCard className="detail-row">
+          <GlassCard className="detail-row settings-default-row">
             <strong>默认关系</strong>
-            <select
-              className="settings-inline-input"
-              value={settings.defaultRelationship}
-              onChange={(event) => handleSettingsBlur("defaultRelationship", event.target.value)}
-            >
-              <option value="朋友">朋友</option>
-              <option value="家人">家人</option>
-              <option value="同事">同事</option>
-              <option value="同学">同学</option>
-              <option value="恋人">恋人</option>
-              <option value="其他">其他</option>
-            </select>
+            <div className="settings-picker">
+              <button
+                className="settings-picker-trigger"
+                type="button"
+                aria-expanded={openPicker === "relationship"}
+                onClick={(event) => togglePicker("relationship", event.currentTarget)}
+              >
+                <span>{settings.defaultRelationship}</span>
+                <ChevronDown />
+              </button>
+            </div>
           </GlassCard>
-          <GlassCard className="detail-row">
+          <GlassCard className="detail-row settings-default-row">
             <strong>默认心情</strong>
-            <select
-              className="settings-inline-input"
-              value={settings.defaultMood}
-              onChange={(event) => handleSettingsBlur("defaultMood", event.target.value)}
-            >
-              <option value="开心">开心</option>
-              <option value="平静">平静</option>
-              <option value="感动">感动</option>
-              <option value="怀念">怀念</option>
-              <option value="疲惫">疲惫</option>
-              <option value="焦虑">焦虑</option>
-              <option value="日常">日常</option>
-            </select>
+            <div className="settings-picker">
+              <button
+                className="settings-picker-trigger"
+                type="button"
+                aria-expanded={openPicker === "mood"}
+                onClick={(event) => togglePicker("mood", event.currentTarget)}
+              >
+                <span>{settings.defaultMood}</span>
+                <ChevronDown />
+              </button>
+            </div>
+          </GlassCard>
+          <GlassCard className="settings-control-demo">
+            <div className="settings-control-demo-header">
+              <strong>控件样式 Demo</strong>
+              <span>确认后可批量替换原始控件</span>
+            </div>
+            <div className="settings-control-demo-grid">
+              <label className="settings-control-field">
+                <span>日期</span>
+                <DateInput label="Demo 日期" defaultValue="2026-05-08" />
+              </label>
+              <label className="settings-control-field">
+                <span>时间</span>
+                <TimePicker label="Demo 时间" value="09:00" onChange={() => undefined} />
+              </label>
+              <label className="settings-control-field">
+                <span>数字</span>
+                <NumberStepper min={1} max={30} defaultValue={7} label="Demo 数字" />
+              </label>
+              <div className="settings-control-field inline">
+                <span>开关</span>
+                <label className="reminder-toggle">
+                  <input type="checkbox" defaultChecked />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
           </GlassCard>
         </div>
         <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <SlidersHorizontal /> 视觉风格
+          </h2>
+        </div>
+        <div className="theme-selector-row">
+          {themeOptions.map((option) => (
+            <button
+              className={`theme-option theme-option-${option.value} ${settings.themeStyle === option.value ? "active" : ""}`}
+              type="button"
+              key={option.value}
+              aria-pressed={settings.themeStyle === option.value}
+              onClick={() => void updateSettings({ themeStyle: option.value })}
+            >
+              <span className="theme-option-swatch" aria-hidden="true" />
+              <strong>{option.label}</strong>
+              <small>{option.desc}</small>
+            </button>
+          ))}
+        </div>
+        <p className="form-hint settings-section-hint">选择后会立即应用到全局页面和控件，并在刷新后保留。</p>
       </section>
 
       <section className="section">
@@ -345,6 +451,37 @@ export default function Settings() {
           <Tags items={["React 18", "Vite", "Dexie", "Capacitor 8", "PWA", "lucide-react"]} />
         </div>
       </section>
+
+      {openPicker && (
+        <>
+          <button
+            className="settings-picker-backdrop"
+            type="button"
+            aria-label="关闭选项菜单"
+            onClick={() => setOpenPicker(null)}
+          />
+          <div
+            className="settings-picker-menu"
+            style={{ top: pickerAnchor.top, right: pickerAnchor.right }}
+          >
+            {(openPicker === "relationship" ? relationshipOptions : moodOptions).map((option) => {
+              const activeValue = openPicker === "relationship" ? settings.defaultRelationship : settings.defaultMood;
+              return (
+                <button
+                  className={option === activeValue ? "active" : ""}
+                  type="button"
+                  key={option}
+                  onClick={() =>
+                    handlePickerSelect(openPicker === "relationship" ? "defaultRelationship" : "defaultMood", option)
+                  }
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </>
   );
 }

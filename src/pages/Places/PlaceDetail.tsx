@@ -38,7 +38,7 @@ export default function PlaceDetail() {
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const relatedPeople = Array.from(
-    new Set(relatedMemories.flatMap((memory) => memory.personIds).filter(Boolean))
+    new Set(relatedMemories.flatMap((memory) => memory.personIds || []).filter(Boolean))
   );
   const photos = (place.photos || []).slice(0, 3);
   const meituanLink = getPlacePlatformLink(place, "meituan");
@@ -269,7 +269,7 @@ export default function PlaceDetail() {
                     {ctx.personNames.join("、") || "未关联人物"}
                     {showContentLine ? ` · ${memory.content}` : ""}
                   </p>
-                  <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
+                  <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
                 </div>
               </GlassCard>
             );

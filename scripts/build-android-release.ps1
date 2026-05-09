@@ -34,7 +34,7 @@ try {
 
   Push-Location (Join-Path $projectRoot "android")
   try {
-    .\gradlew.bat assembleRelease --no-daemon
+    .\gradlew.bat assembleRelease
   }
   finally {
     Pop-Location

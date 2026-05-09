@@ -6,6 +6,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
+import SelectPicker from "../../components/SelectPicker";
 import Tags from "../../components/Tags";
 import type { PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
 import { useConfirm } from "../../context/ConfirmContext";
@@ -272,36 +273,30 @@ export default function Places() {
       <div className="location-switcher">
         <label>
           国家
-          <select
+          <SelectPicker
+            label="国家筛选"
             value={country}
-            onChange={(event) => setCountry(event.target.value)}
-          >
-            {countries.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
+            onChange={setCountry}
+            options={countries.map((item) => ({ value: item, label: item }))}
+          />
         </label>
         <label>
           省 / 州
-          <select
+          <SelectPicker
+            label="省州筛选"
             value={province}
-            onChange={(event) => setProvince(event.target.value)}
-          >
-            {provinceOptions.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
+            onChange={setProvince}
+            options={provinceOptions.map((item) => ({ value: item, label: item }))}
+          />
         </label>
         <label>
           城市
-          <select
+          <SelectPicker
+            label="城市筛选"
             value={city}
-            onChange={(event) => setCity(event.target.value)}
-          >
-            {cityOptions.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
+            onChange={setCity}
+            options={cityOptions.map((item) => ({ value: item, label: item }))}
+          />
         </label>
       </div>
       <div className="category-row">

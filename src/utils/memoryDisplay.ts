@@ -41,7 +41,7 @@ export function buildMemoryDisplayContext(
   getPlaceName: (id: string) => string
 ): MemoryDisplayContext {
   return {
-    personNames: memory.personIds.map(getPersonName).filter(Boolean),
+    personNames: (memory.personIds || []).map(getPersonName).filter(Boolean),
     placeName: getPlaceName(memory.placeId) || ""
   };
 }

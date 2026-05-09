@@ -31,7 +31,7 @@ export default function Memories() {
           memory.mood,
           ctx.personNames.join(","),
           ctx.placeName,
-          memory.tags.join(",")
+          (memory.tags || []).join(",")
         ].join(" ");
         return content.toLowerCase().includes(query.toLowerCase());
       });
@@ -72,8 +72,8 @@ export default function Memories() {
                   {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
                   {showContentLine && <p className="memory-desc">{memory.content}</p>}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <Tags items={[memory.mood, ...memory.tags].filter(Boolean)} />
-                    {memory.photos.length > 0 && (
+                    <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+                    {(memory.photos || []).length > 0 && (
                       <span style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -86,7 +86,7 @@ export default function Memories() {
                         fontWeight: '600'
                       }}>
                         <ImageIcon size={12} />
-                        {memory.photos.length}
+                        {(memory.photos || []).length}
                       </span>
                     )}
                   </div>

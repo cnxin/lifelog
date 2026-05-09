@@ -327,7 +327,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           people: current.people.filter((person) => person.id !== id),
           memories: current.memories.map((memory) => ({
             ...memory,
-            personIds: memory.personIds.filter((personId) => personId !== id)
+            personIds: (memory.personIds || []).filter((personId) => personId !== id)
           }))
         }));
         return;
@@ -481,7 +481,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const normalized: AppSettings = {
         defaultCity: next.defaultCity || defaultAppSettings.defaultCity,
         defaultRelationship: next.defaultRelationship || defaultAppSettings.defaultRelationship,
-        defaultMood: next.defaultMood || defaultAppSettings.defaultMood
+        defaultMood: next.defaultMood || defaultAppSettings.defaultMood,
+        themeStyle: ["classic", "cream", "mint", "mist"].includes(next.themeStyle)
+          ? next.themeStyle
+          : defaultAppSettings.themeStyle
       };
       await saveAppSettings(normalized);
       setSettings(normalized);
