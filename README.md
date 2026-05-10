@@ -160,7 +160,37 @@ npm.cmd run build
 npm.cmd run preview
 ```
 
-## Android APK 构建与真机测试
+## GitHub Actions 云端 APK 构建
+
+项目提供 `.github/workflows/build-android-apk.yml`，推送到 `main` 或手动运行 workflow 后，会在 GitHub Actions 的干净 Ubuntu runner 上构建 APK，并上传 artifact。
+
+### 手动运行
+
+1. 打开 GitHub 仓库的 **Actions** 页面。
+2. 选择 **Build Android APK**。
+3. 点击 **Run workflow**。
+4. 构建完成后，在 workflow run 的 **Artifacts** 下载 APK。
+
+### Release 签名配置
+
+如果配置以下 GitHub Secrets，workflow 会构建签名 release APK：
+
+```text
+ANDROID_KEYSTORE_BASE64
+ANDROID_KEYSTORE_PASSWORD
+ANDROID_KEY_ALIAS
+ANDROID_KEY_PASSWORD
+```
+
+`ANDROID_KEYSTORE_BASE64` 是 release keystore 文件的 base64 内容。未配置这些 Secrets 时，workflow 会自动降级构建 debug APK artifact。
+
+## 本地 Android APK 构建与真机测试
+
+一键同步 Android 版本、构建 release APK 并校验产物时间戳：
+
+```bash
+npm.cmd run release:apk
+```
 
 构建 release APK：
 

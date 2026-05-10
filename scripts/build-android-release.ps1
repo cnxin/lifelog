@@ -27,6 +27,8 @@ $env:ANDROID_HOME = $androidSdk
 $env:ANDROID_SDK_ROOT = $androidSdk
 $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\cmdline-tools\latest\bin;$env:Path"
 
+& (Join-Path $PSScriptRoot "sync-android-version.ps1")
+
 Push-Location $projectRoot
 try {
   npm.cmd run build
