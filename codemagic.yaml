@@ -1,0 +1,40 @@
+workflows:
+  flutter-workflow:
+    name: Flutter CI/CD
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd flutter-app
+          flutter packages pub get
+      - name: Generate Drift code
+        script: |
+          cd flutter-app
+          flutter pub run build_runner build --delete-conflicting-outputs
+      - name: Run tests
+        script: |
+          cd flutter-app
+          flutter test
+        ignore_failure: true
+      - name: Build APK
+        script: |
+          cd flutter-app
+          flutter build apk --release --split-per-abi
+      - name: Build Web
+        script: |
+          cd flutter-app
+          flutter build web --release
+    artifacts:
+      - flutter-app/build/app/outputs/**/*.apk
+      - flutter-app/build/web/**
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
