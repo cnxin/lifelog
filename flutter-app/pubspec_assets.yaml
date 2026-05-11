@@ -1,0 +1,8 @@
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # App icon configuration will be handled by flutter_launcher_icons
