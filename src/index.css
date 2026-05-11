@@ -3494,6 +3494,71 @@ button:disabled,
   flex: 0 0 auto;
 }
 
+.memory-filter-section {
+  margin-top: -12px;
+}
+
+.memory-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.memory-filter-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.memory-filter-summary button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.memory-filter-summary svg {
+  width: 14px;
+  height: 14px;
+}
+
+.memory-tags-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.memory-photo-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: var(--soft-purple);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 380px) {
+  .memory-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .detail-summary-card {
   display: grid;
   gap: 12px;
