@@ -493,6 +493,85 @@ html[data-theme-style="mist"] .time-picker-column button.active {
   opacity: 0.76;
 }
 
+.home-hero-section {
+  display: grid;
+  gap: 14px;
+}
+
+.home-hero-copy span,
+.home-hero-copy p {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.home-hero-copy h1 {
+  margin: 4px 0 6px;
+  color: var(--text-main);
+  font-size: 26px;
+  line-height: 1.18;
+}
+
+.home-hero-copy p {
+  max-width: 320px;
+  line-height: 1.55;
+}
+
+.home-overview-card {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.metric-wide {
+  grid-column: 1 / -1;
+  min-height: 58px;
+  background: var(--soft-orange);
+}
+
+.home-empty-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.home-empty-card.compact {
+  gap: 6px;
+}
+
+.home-empty-card strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.home-empty-card span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.home-empty-card button,
+.home-empty-actions button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 14px;
+  color: white;
+  background: var(--primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.home-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.home-empty-actions button:nth-child(2) {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
 .insight-card {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
