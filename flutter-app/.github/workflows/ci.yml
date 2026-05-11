@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, flutter-migration ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, flutter-migration ]
   workflow_dispatch:
 
 jobs:
