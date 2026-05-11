@@ -2981,6 +2981,56 @@ button:disabled,
   min-height: 44px;
 }
 
+.quick-record-intro {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  color: var(--text-main);
+  background: var(--soft-purple);
+}
+
+.quick-record-intro strong,
+.quick-record-intro span {
+  display: block;
+}
+
+.quick-record-intro strong {
+  font-size: 15px;
+}
+
+.quick-record-intro span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.quick-detail-toggle {
+  min-height: 46px;
+  border: 0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quick-detail-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.quick-detail-panel {
+  display: grid;
+  gap: 14px;
+}
+
 .form label.inline-field .date-input {
   width: auto;
   margin-left: auto;

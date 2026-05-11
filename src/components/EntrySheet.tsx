@@ -234,7 +234,9 @@ function validateForm(type: EntryType, formData: FormData) {
   if (type === "memory") {
     const memoryMode = String(formData.get("memoryMode") || "");
     if (memoryMode === "quick") {
-      if (!String(formData.get("content") || "").trim()) return "请先写下今天发生了什么。";
+      const title = String(formData.get("title") || "").trim();
+      const content = String(formData.get("content") || "").trim();
+      if (!title && !content) return "请先写下今天发生了什么。";
       return "";
     }
     if (!String(formData.get("date") || "").trim()) return "请选择回忆日期。";
@@ -911,6 +913,7 @@ function MemoryFields({
   const selectedPersonIds = memory?.personIds?.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
   const todayValue = new Date().toISOString().slice(0, 10);
   const [quickContent, setQuickContent] = useState("");
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
   const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
   const [mood, setMood] = useState<string>(memory?.mood || settings.defaultMood);
@@ -945,51 +948,109 @@ function MemoryFields({
   if (!memory && mode === "quick") {
     return (
       <>
+        <div className="quick-record-intro">
+          <strong>先记下来，之后再补细节</strong>
+          <span>只需要一句标题，日期和心情会自动带上默认值。</span>
+        </div>
         <label>
-          今天发生了什么
-          <textarea
-            name="content"
+          回忆标题
+          <input
+            name="title"
             value={quickContent}
             onChange={(event) => setQuickContent(event.target.value)}
             autoFocus
-            placeholder="例如：今天和小明在湖滨吃火锅，番茄锅不错，下次提前排号。"
+            placeholder="例如：和小林在湖边散步"
           />
         </label>
-        <div className="form-row">
-          <label>
-            人物
-            <SelectPicker
-              name="personIds"
-              label="快速记录关联人物"
-              value={quickPersonId}
-              onChange={setQuickPersonId}
-              placeholder="自动识别或暂不关联"
-              options={[
-                { value: "", label: "自动识别或暂不关联" },
-                ...people.map((person) => ({ value: person.id, label: person.name }))
-              ]}
-            />
-          </label>
-          <label>
-            地点
-            <SelectPicker
-              name="placeId"
-              label="快速记录关联地点"
-              value={quickPlaceId}
-              onChange={setQuickPlaceId}
-              placeholder="自动识别或暂不关联"
-              options={[
-                { value: "", label: "自动识别或暂不关联" },
-                ...places.map((place) => ({ value: place.id, label: place.name }))
-              ]}
-            />
-          </label>
-        </div>
+        <label className="inline-field">
+          <span className="inline-field-label">日期</span>
+          <DateInput name="date" label="回忆日期" defaultValue={todayValue} required />
+        </label>
+        <label>
+          心情
+          <input
+            name="mood"
+            value={mood}
+            onChange={(event) => setMood(event.target.value)}
+            placeholder="今天的感觉"
+          />
+          <div className="mood-presets">
+            {MOOD_PRESETS.map((preset) => (
+              <button
+                type="button"
+                key={preset}
+                className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
+                onClick={() => setMood(preset)}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+        </label>
+        <button className="quick-detail-toggle" type="button" onClick={() => setDetailsOpen((open) => !open)}>
+          {detailsOpen ? "收起补充细节" : "补充人物、地点、正文和照片"}
+          {detailsOpen ? <ChevronUp /> : <ChevronDown />}
+        </button>
+        {detailsOpen && (
+          <div className="quick-detail-panel">
+            <div className="form-row">
+              <label>
+                人物
+                <SelectPicker
+                  name="personIds"
+                  label="关联人物"
+                  value={quickPersonId}
+                  onChange={setQuickPersonId}
+                  placeholder="暂不选择"
+                  options={[
+                    { value: "", label: "暂不选择" },
+                    ...people.map((person) => ({ value: person.id, label: person.name }))
+                  ]}
+                />
+              </label>
+              <label>
+                地点
+                <SelectPicker
+                  name="placeId"
+                  label="关联地点"
+                  value={quickPlaceId}
+                  onChange={setQuickPlaceId}
+                  placeholder="暂不选择"
+                  options={[
+                    { value: "", label: "暂不选择" },
+                    ...places.map((place) => ({ value: place.id, label: place.name }))
+                  ]}
+                />
+              </label>
+            </div>
+            <label>
+              正文
+              <textarea
+                name="content"
+                placeholder="补充发生了什么，或下次要注意什么。"
+              />
+            </label>
+            <div>
+              <span className="field-title">照片</span>
+              <PhotoUploader
+                photos={photos}
+                memoryId="temp"
+                maxPhotos={9}
+                onPhotosChange={onPhotosChange}
+                disabled={isSubmitting}
+              />
+            </div>
+            <label>
+              标签，用顿号分隔
+              <input name="tags" placeholder="日常、值得记住" />
+            </label>
+          </div>
+        )}
         <div className="memory-preview" aria-live="polite">
           <span className="memory-preview-eyebrow">保存预览</span>
           <div className="memory-preview-row">
-            <strong>摘要</strong>
-            <span>{previewTitle}</span>
+            <strong>标题</strong>
+            <span>{quickContent.trim() || previewTitle}</span>
           </div>
           <div className="memory-preview-row">
             <strong>日期</strong>
@@ -997,19 +1058,19 @@ function MemoryFields({
           </div>
           <div className="memory-preview-row">
             <strong>人物</strong>
-            <span>{previewPeople.length ? previewPeople.join("、") : "未识别"}</span>
+            <span>{previewPeople.length ? previewPeople.join("、") : "暂不关联"}</span>
           </div>
           <div className="memory-preview-row">
             <strong>地点</strong>
-            <span>{previewPlace || "未识别"}</span>
+            <span>{previewPlace || "暂不关联"}</span>
           </div>
         </div>
-        <input type="hidden" name="title" value="" />
-        <input type="hidden" name="date" value={todayValue} />
+        {!detailsOpen && <input type="hidden" name="content" value={quickContent} />}
+        {!detailsOpen && <input type="hidden" name="personIds" value="" />}
+        {!detailsOpen && <input type="hidden" name="placeId" value="" />}
+        {!detailsOpen && <input type="hidden" name="tags" value="" />}
         <input type="hidden" name="memoryMode" value="quick" />
-        <input type="hidden" name="mood" value="日常" />
-        <input type="hidden" name="tags" value="快速记录" />
-        <p className="form-hint">可以手动选择，也可以留空；保存时会按上方预览自动生成标题、日期和关联信息。</p>
+        <p className="form-hint">人物、地点和照片都可以先不填，保存后再从回忆详情里慢慢补。</p>
       </>
     );
   }
