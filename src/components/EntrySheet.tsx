@@ -14,6 +14,7 @@ import type {
   PreferenceGroup
 } from "../types";
 import { useLifeLog } from "../context/LifeLogContext";
+import { useToast } from "../context/ToastContext";
 import type { PlaceDraft } from "../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../utils/placeShareParser";
 import { createPlatformLink } from "../utils/placeLinks";
@@ -60,6 +61,7 @@ export default function EntrySheet({
   onClose
 }: EntrySheetProps) {
   const navigate = useNavigate();
+  const notify = useToast();
   const { state, inspectPlaceSave, savePerson, savePlace, saveMemory, loadMemoryPhotos } = useLifeLog();
   const [error, setError] = useState("");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
@@ -123,6 +125,7 @@ export default function EntrySheet({
       }
 
       onClose();
+      notify({ message: getSaveFeedback(entryType, Boolean(itemId)), tone: "success" });
       if (entryType === "person" && !itemId && savedPersonId) {
         navigate(`/people/${savedPersonId}`);
         return;
@@ -203,6 +206,7 @@ export default function EntrySheet({
               setMergePreview(null);
               setPendingPlaceFormData(null);
               onClose();
+              notify({ message: getSaveFeedback("place", Boolean(itemId)), tone: "success" });
               navigate(`/places/${savedId}`);
             }}
             onConfirm={async (nextPreview) => {
@@ -213,6 +217,7 @@ export default function EntrySheet({
               setMergePreview(null);
               setPendingPlaceFormData(null);
               onClose();
+              notify({ message: "地点已合并并保存", tone: "success" });
               navigate(`/places/${savedId}`);
             }}
           />
@@ -220,6 +225,12 @@ export default function EntrySheet({
       </section>
     </div>
   );
+}
+
+function getSaveFeedback(type: EntryType, isEditing: boolean) {
+  if (type === "person") return isEditing ? "人物资料已更新" : "人物已保存";
+  if (type === "place") return isEditing ? "地点资料已更新" : "地点已保存";
+  return isEditing ? "回忆已更新" : "回忆已保存";
 }
 
 function validateForm(type: EntryType, formData: FormData) {

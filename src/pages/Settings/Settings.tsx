@@ -6,6 +6,7 @@ import NumberStepper from "../../components/NumberStepper";
 import Tags from "../../components/Tags";
 import TimePicker from "../../components/TimePicker";
 import { useConfirm } from "../../context/ConfirmContext";
+import { useToast } from "../../context/ToastContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { ThemeStyle } from "../../types";
 import ReminderSettings from "./ReminderSettings";
@@ -51,6 +52,7 @@ export default function Settings() {
     resetDemo
   } = useLifeLog();
   const confirm = useConfirm();
+  const notify = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const mergeLockRef = useRef(false);
@@ -108,6 +110,7 @@ export default function Settings() {
     setIsImporting(true);
     try {
       await importData(file);
+      notify({ message: "数据导入完成，当前资料已恢复", tone: "success" });
     } catch (error) {
       await confirm({
         title: "导入失败",
@@ -130,6 +133,7 @@ export default function Settings() {
     });
     if (!accepted) return;
     await resetDemo();
+    notify({ message: "已重置为示例数据", tone: "success" });
   }
 
   async function handleMergeAll() {
@@ -254,7 +258,14 @@ export default function Settings() {
             <p>数据保存在当前设备的 IndexedDB 中。导出不会修改现有数据；导入和重置会覆盖当前本地数据。</p>
           </GlassCard>
           <div className="data-action-grid">
-            <button className="data-action-card glass-card" onClick={exportData} disabled={!hasUserData}>
+            <button
+              className="data-action-card glass-card"
+              onClick={() => {
+                exportData();
+                notify({ message: "JSON 备份文件已生成", tone: "success" });
+              }}
+              disabled={!hasUserData}
+            >
               <div className="data-action-icon">
                 <Download />
               </div>

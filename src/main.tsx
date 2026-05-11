@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ConfirmProvider } from "./context/ConfirmContext";
+import { ToastProvider } from "./context/ToastContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { LifeLogProvider } from "./context/LifeLogContext";
 import App from "./App";
@@ -13,9 +14,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ErrorBoundary>
         <LifeLogProvider>
-          <ConfirmProvider>
-            <App />
-          </ConfirmProvider>
+          <ToastProvider>
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
+          </ToastProvider>
         </LifeLogProvider>
       </ErrorBoundary>
     </BrowserRouter>
