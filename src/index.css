@@ -3494,6 +3494,108 @@ button:disabled,
   flex: 0 0 auto;
 }
 
+.detail-summary-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.summary-metric {
+  min-height: 68px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px;
+  background: var(--soft-purple);
+}
+
+.summary-metric:nth-child(2) {
+  background: var(--soft-orange);
+}
+
+.summary-metric strong {
+  color: var(--text-main);
+  font-family: "Outfit", sans-serif;
+  font-size: 22px;
+}
+
+.summary-metric span,
+.summary-line span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.summary-line strong {
+  flex: 0 0 auto;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.summary-line span {
+  min-width: 0;
+  text-align: right;
+}
+
+.timeline-list {
+  display: grid;
+  gap: 18px;
+}
+
+.timeline-month {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-month-title {
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.detail-empty-action {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.detail-empty-action strong,
+.detail-empty-action span {
+  display: block;
+}
+
+.detail-empty-action span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.detail-empty-action button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 14px;
+  color: white;
+  background: var(--primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .person-detail-section > .list,
 .person-detail-section > .related-places-row {
   width: 100%;

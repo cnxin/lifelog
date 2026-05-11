@@ -4,9 +4,10 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { anniversaryRelativeLabel, anniversaryYearLabel, formatSolarLunar } from "../../utils/date";
-import { initials } from "../../utils/text";
+import type { MemoryEvent } from "../../types";
+import { anniversaryRelativeLabel, anniversaryYearLabel, formatMonthDay, formatSolarLunar } from "../../utils/date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
 
 export default function PersonDetail() {
@@ -43,6 +44,12 @@ export default function PersonDetail() {
   const relatedPlaces = Array.from(
     new Set(relatedMemories.map((memory) => memory.placeId).filter(Boolean))
   );
+  const topPlaces = getTopRelatedItems(
+    relatedMemories.map((memory) => memory.placeId).filter(Boolean),
+    getPlaceName
+  );
+  const groupedMemories = groupMemoriesByMonth(relatedMemories);
+  const latestMemory = relatedMemories[0];
   const completionTips = [
     {
       id: "birthday",
@@ -101,6 +108,37 @@ export default function PersonDetail() {
             <button className="category-pill active" onClick={() => setEditing(true)}>
               编辑资料
             </button>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section className="section person-detail-section">
+        <div className="section-header">
+          <h2>
+            <Heart /> 关系摘要
+          </h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            记录
+          </button>
+        </div>
+        <GlassCard className="detail-summary-card">
+          <div className="summary-grid">
+            <div className="summary-metric">
+              <strong>{relatedMemories.length}</strong>
+              <span>共同回忆</span>
+            </div>
+            <div className="summary-metric">
+              <strong>{latestMemory ? formatMonthDay(latestMemory.date) : "暂无"}</strong>
+              <span>最近一次</span>
+            </div>
+          </div>
+          <div className="summary-line">
+            <strong>关系</strong>
+            <span>{person.relationship || "未设置"}</span>
+          </div>
+          <div className="summary-line">
+            <strong>常出现地点</strong>
+            <span>{topPlaces.length ? topPlaces.map((item) => item.label).join("、") : "还没有共同地点"}</span>
           </div>
         </GlassCard>
       </section>
@@ -193,41 +231,56 @@ export default function PersonDetail() {
 
       <section className="section person-detail-section">
         <div className="section-header">
-          <h2>相关回忆</h2>
+          <h2>回忆时间线</h2>
           <button className="see-all" onClick={() => setAddingMemory(true)}>
             新增
           </button>
         </div>
-        <div className="list">
-          {relatedMemories.map((memory) => {
-            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-            const displayTitle = getMemoryDisplayTitle(memory, ctx);
-            const showContentLine = isManualTitle(memory) && memory.content.trim();
-            return (
-              <GlassCard className="memory-card" key={memory.id}>
-                <div className="memory-badge">♡</div>
-                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                  <div className="memory-title">
-                    <span>{displayTitle}</span>
-                    <span className="place-rating">{formatSolarLunar(memory.date)}</span>
-                  </div>
-                  <p className="memory-desc">
-                    {ctx.placeName || "未关联地点"}
-                    {showContentLine ? ` · ${memory.content}` : ""}
-                  </p>
-                  <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+        {groupedMemories.length ? (
+          <div className="timeline-list">
+            {groupedMemories.map((group) => (
+              <div className="timeline-month" key={group.month}>
+                <div className="timeline-month-title">{group.month}</div>
+                <div className="list">
+                  {group.memories.map((memory) => {
+                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+                    const displayTitle = getMemoryDisplayTitle(memory, ctx);
+                    const showContentLine = isManualTitle(memory) && memory.content.trim();
+                    return (
+                      <GlassCard className="memory-card" key={memory.id}>
+                        <div className="memory-badge">♡</div>
+                        <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                          <div className="memory-title">
+                            <span>{displayTitle}</span>
+                            <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                          </div>
+                          <p className="memory-desc">
+                            {ctx.placeName || "未关联地点"}
+                            {showContentLine ? ` · ${memory.content}` : ""}
+                          </p>
+                          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+                        </div>
+                      </GlassCard>
+                    );
+                  })}
                 </div>
-              </GlassCard>
-            );
-          })}
-          {!relatedMemories.length && <GlassCard className="empty">还没有相关回忆</GlassCard>}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty detail-empty-action">
+            <strong>还没有和 TA 相关的回忆</strong>
+            <span>记录一次相处，让这个人物变得更完整。</span>
+            <button onClick={() => setAddingMemory(true)}>记录和 TA 的回忆</button>
+          </GlassCard>
+        )}
       </section>
 
       <EntrySheet type={editing ? "person" : null} itemId={person.id} onClose={() => setEditing(false)} />
       <EntrySheet
         type={addingMemory ? "memory" : null}
         initialPersonId={person.id}
+        memoryMode="quick"
         onClose={() => setAddingMemory(false)}
       />
     </>
@@ -261,4 +314,28 @@ function PreferenceBlocks({
       ))}
     </div>
   );
+}
+
+function groupMemoriesByMonth(memories: MemoryEvent[]) {
+  const groups = new Map<string, MemoryEvent[]>();
+
+  memories.forEach((memory) => {
+    const month = new Date(`${memory.date}T00:00:00`).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long"
+    });
+    groups.set(month, [...(groups.get(month) || []), memory]);
+  });
+
+  return Array.from(groups, ([month, grouped]) => ({ month, memories: grouped }));
+}
+
+function getTopRelatedItems(ids: string[], getLabel: (id: string) => string) {
+  const counts = new Map<string, number>();
+  ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
+
+  return Array.from(counts, ([id, count]) => ({ id, count, label: getLabel(id) }))
+    .filter((item) => item.label)
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"))
+    .slice(0, 3);
 }
