@@ -182,7 +182,9 @@ ANDROID_KEY_ALIAS
 ANDROID_KEY_PASSWORD
 ```
 
-`ANDROID_KEYSTORE_BASE64` 是 release keystore 文件的 base64 内容。未配置这些 Secrets 时，workflow 会自动降级构建 debug APK artifact。
+`ANDROID_KEYSTORE_BASE64` 是 release keystore 文件的 base64 内容。未配置这些 Secrets 时，workflow 会直接失败，避免产出无法覆盖安装 release 包的 debug APK。
+
+本地构建时，如果 `android/keystore.properties` 存在，`debug` 和 `release` 都会使用同一套 release 签名，方便在真机上直接覆盖安装；如果不存在，debug APK 仍会使用 Android 默认 debug 签名。
 
 ## 本地 Android APK 构建与真机测试
 
