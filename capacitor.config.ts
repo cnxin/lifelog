@@ -7,6 +7,13 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https",
   },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: true,
+      style: "DARK",
+      backgroundColor: "#00000000",
+    },
+  },
 };
 
 export default config;

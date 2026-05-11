@@ -8,6 +8,7 @@ import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
 import { useEffect, useState } from "react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
+import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
 
@@ -52,6 +53,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     };
   }, [settings.themeStyle]);
   useReminderScheduling();
+  useStatusBar(settings.themeStyle);
 
   return (
     <div className={`app-container theme-${settings.themeStyle}`}>

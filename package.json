@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.39",
+  "version": "0.1.0-test.40",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -25,6 +25,7 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/core": "^8.3.1",
     "@capacitor/local-notifications": "^8.1.0",
+    "@capacitor/status-bar": "^8.0.2",
     "@vitejs/plugin-react": "latest",
     "browser-image-compression": "^2.0.2",
     "dexie": "^4.4.2",
