@@ -1,5 +1,8 @@
 # LifeLog · 生活记录本
 
+> **⚠️ 本项目已迁移至 Flutter 版本：[cnxin/lifelog-v2](https://github.com/cnxin/lifelog-v2)**  
+> React 版本不再维护，详见 [MIGRATION_NOTICE.md](./MIGRATION_NOTICE.md)
+
 LifeLog 是一个移动端优先的跨平台 Web App，用来记录身边重要的人、地点和回忆。当前版本以 React 18 + Vite + TypeScript 实现 Web/PWA Demo，并通过 Capacitor 打包为 Android APK 进行真机测试。
 
 ## 当前状态
