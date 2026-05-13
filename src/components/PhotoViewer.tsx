@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Photo } from "../types";
 import { blobToDataURL } from "../utils/imageCompression";
@@ -13,7 +13,8 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
-
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartYRef = useRef<number | null>(null);
   const currentPhoto = photos[currentIndex];
 
   // 加载当前照片的原图
@@ -42,6 +43,14 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
     };
   }, [currentPhoto]);
 
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
+  }, [photos.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
+  }, [photos.length]);
+
   // 键盘导航
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,15 +65,13 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, photos.length]);
+  }, [handleNext, handlePrevious, onClose]);
 
-  const handlePrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
-  }, [photos.length]);
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
-  }, [photos.length]);
+  useEffect(() => {
+    const handleCloseRequest = () => onClose();
+    window.addEventListener("lifelog:close-photo-viewer", handleCloseRequest);
+    return () => window.removeEventListener("lifelog:close-photo-viewer", handleCloseRequest);
+  }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -72,9 +79,36 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
     }
   };
 
+  const handlePointerDown = (event: React.PointerEvent) => {
+    dragStartYRef.current = event.clientY;
+  };
+
+  const handlePointerMove = (event: React.PointerEvent) => {
+    if (dragStartYRef.current === null) return;
+    const nextOffset = event.clientY - dragStartYRef.current;
+    if (Math.abs(nextOffset) < 4) return;
+    setDragOffset(nextOffset);
+  };
+
+  const handlePointerUp = () => {
+    if (Math.abs(dragOffset) > 88) {
+      onClose();
+      return;
+    }
+    dragStartYRef.current = null;
+    setDragOffset(0);
+  };
+
   return (
     <div className="photo-viewer-overlay" onClick={handleBackdropClick}>
-      <div className="photo-viewer-container">
+      <div
+        className="photo-viewer-container"
+        style={{ transform: `translateY(${dragOffset}px)`, opacity: Math.max(0.35, 1 - Math.abs(dragOffset) / 260) }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
         {/* 关闭按钮 */}
         <button
           className="photo-viewer-close"

@@ -11,6 +11,10 @@ export function useAndroidBackButton(onCloseSheet?: () => boolean) {
     if (!Capacitor.isNativePlatform()) return;
 
     const listener = CapacitorApp.addListener("backButton", () => {
+      if (document.querySelector(".photo-viewer-overlay")) {
+        window.dispatchEvent(new Event("lifelog:close-photo-viewer"));
+        return;
+      }
       if (onCloseSheet?.()) return;
       if (location.pathname !== "/") {
         navigate(-1);

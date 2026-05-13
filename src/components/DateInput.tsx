@@ -1,7 +1,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { formatLunarDate } from "../utils/date";
+import { formatLunarDate, getLunarDateInfo } from "../utils/date";
 
 interface DateInputProps {
   name?: string;
@@ -169,7 +169,7 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
         >
           {showLunar ? "隐藏农历" : "显示农历"}
         </button>
-        {showLunar && <div className="date-lunar-current">当前选中：{formatLunarDate(draftValue)}</div>}
+        {showLunar && <LunarDateSummary date={draftValue} />}
         <div className="date-calendar-weekdays">
           {weekDays.map((day) => (
             <span key={day}>{day}</span>
@@ -250,8 +250,20 @@ function buildCalendarDays(year: number, month: number) {
   return [...blanks, ...days];
 }
 
+function LunarDateSummary({ date }: { date: string }) {
+  const info = getLunarDateInfo(date);
+  if (!info) return <div className="date-lunar-current">当前选中：{formatLunarDate(date)}</div>;
+
+  return (
+    <div className="date-lunar-current">
+      <strong>{info.fullText}</strong>
+      <span>{[info.lunarText, info.jieQi, ...info.festivals].filter(Boolean).join(" · ")}</span>
+    </div>
+  );
+}
+
 function formatLunarDay(date: string) {
-  return formatLunarDate(date).replace(/^农历/, "").replace(/^.*年/, "");
+  return getLunarDateInfo(date)?.cellText || formatLunarDate(date).replace(/^农历/, "").replace(/^.*年/, "");
 }
 
 function formatDateValue(year: number, month: number, day: number) {

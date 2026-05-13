@@ -128,19 +128,18 @@ export default function EntrySheet({
 
       onClose();
       notify({ message: getSaveFeedback(entryType, Boolean(itemId)), tone: "success" });
-      if (entryType === "person" && !itemId && savedPersonId) {
+      if (itemId) return;
+      if (entryType === "person" && savedPersonId) {
         navigate(`/people/${savedPersonId}`);
         return;
       }
-      if (entryType === "place" && !itemId && savedPlaceId) {
+      if (entryType === "place" && savedPlaceId) {
         navigate(`/places/${savedPlaceId}`);
         return;
       }
-      if (entryType === "memory" && !itemId && savedMemoryId) {
+      if (entryType === "memory" && savedMemoryId) {
         navigate(`/memories/${savedMemoryId}`);
-        return;
       }
-      navigate(current.redirect);
     } finally {
       submitLockRef.current = false;
       setIsSubmitting(false);
@@ -215,7 +214,7 @@ export default function EntrySheet({
               setPendingPlaceFormData(null);
               onClose();
               notify({ message: getSaveFeedback("place", Boolean(itemId)), tone: "success" });
-              navigate(`/places/${savedId}`);
+              if (!itemId) navigate(`/places/${savedId}`);
             }}
             onConfirm={async (nextPreview) => {
               const savedId = await savePlace(pendingPlaceFormData, itemId, {
@@ -226,7 +225,7 @@ export default function EntrySheet({
               setPendingPlaceFormData(null);
               onClose();
               notify({ message: "地点已合并并保存", tone: "success" });
-              navigate(`/places/${savedId}`);
+              if (!itemId) navigate(`/places/${savedId}`);
             }}
           />
         )}

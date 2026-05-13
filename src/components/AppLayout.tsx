@@ -1,12 +1,11 @@
 import { useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import type { EntryType } from "../types";
 import { todayLabel } from "../utils/date";
 import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
-import { useEffect, useState } from "react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -41,6 +40,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const meta = getPageMeta(location.pathname);
   const { isLoading, settings } = useLifeLog();
+
+  useLayoutEffect(() => {
+    document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location.pathname]);
   useAndroidBackButton(() => {
     if (!sheetType) return false;
     setSheetType(null);

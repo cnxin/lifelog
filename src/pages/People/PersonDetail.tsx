@@ -6,7 +6,7 @@ import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { MemoryEvent } from "../../types";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
-import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, formatSolarLunar } from "../../utils/date";
+import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
@@ -86,7 +86,8 @@ export default function PersonDetail() {
   return (
     <>
       <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className="profile-card detail-profile-card">
+        <GlassCard className="profile-card detail-profile-card person-detail-profile-card">
+          {person.favorite && <Star className="person-profile-favorite" />}
           <div className="detail-profile-nav">
             <button className="back-button" type="button" onClick={() => navigate("/people")}>
               <ArrowLeft /> 返回人物
@@ -104,17 +105,10 @@ export default function PersonDetail() {
                   {person.name}
                   {person.nickname ? ` · ${person.nickname}` : ""}
                 </h2>
-                {person.favorite && <Star />}
               </div>
               <p>{person.relationship}</p>
-              {person.birthday && (
-                <p>
-                  公历生日 · {person.birthday}
-                  <br />
-                  {formatSolarLunar(person.birthday)}
-                </p>
-              )}
-              <button className="category-pill active" onClick={() => setEditing(true)}>
+              {person.birthday && <BirthdaySummary date={person.birthday} />}
+              <button className="category-pill active person-profile-edit" onClick={() => setEditing(true)}>
                 编辑资料
               </button>
             </div>
@@ -294,6 +288,24 @@ export default function PersonDetail() {
         onClose={() => setAddingMemory(false)}
       />
     </>
+  );
+}
+
+function BirthdaySummary({ date }: { date: string }) {
+  const lunar = getLunarDateInfo(date);
+
+  return (
+    <p className="person-birthday-summary">
+      <span>公历生日 · {date}</span>
+      {lunar ? (
+        <>
+          <span>{lunar.lunarText} · 属{lunar.zodiac}</span>
+          <span>{lunar.ganZhiText}</span>
+        </>
+      ) : (
+        <span>农历信息暂不可用</span>
+      )}
+    </p>
   );
 }
 

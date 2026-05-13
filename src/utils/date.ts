@@ -1,3 +1,4 @@
+import { Solar } from "lunar-javascript";
 import type { Anniversary, Person } from "../types";
 
 export function formatMonthDay(date?: string) {
@@ -8,24 +9,64 @@ export function formatMonthDay(date?: string) {
   });
 }
 
-export function formatLunarDate(date?: string) {
-  if (!date) return "农历未设置";
+export interface LunarDateInfo {
+  fullText: string;
+  lunarText: string;
+  ganZhiText: string;
+  zodiac: string;
+  cellText: string;
+  festivals: string[];
+  jieQi: string;
+}
 
-  try {
-    const lunar = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    }).format(new Date(`${date}T00:00:00`));
-    return `农历${lunar}`;
-  } catch {
-    return "农历转换不可用";
-  }
+export function getLunarDateInfo(date?: string): LunarDateInfo | null {
+  if (!date) return null;
+
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) return null;
+
+  const solar = Solar.fromYmd(year, month, day);
+  const lunar = solar.getLunar();
+  const jieQi = lunar.getJieQi();
+  const festivals = [
+    ...lunar.getFestivals(),
+    ...lunar.getOtherFestivals(),
+    ...solar.getFestivals(),
+    ...solar.getOtherFestivals()
+  ].filter(Boolean);
+  const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+  const ganZhiText = `${lunar.getYearInGanZhi()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`;
+  const zodiac = lunar.getYearShengXiao();
+  const cellText = festivals[0] || jieQi || lunar.getDayInChinese();
+
+  return {
+    fullText: `${ganZhiText}【属${zodiac}】周${solar.getWeekInChinese()} 第${getWeekOfYear(year, month, day)}周`,
+    lunarText,
+    ganZhiText,
+    zodiac,
+    cellText,
+    festivals,
+    jieQi
+  };
+}
+
+export function formatLunarDate(date?: string) {
+  const info = getLunarDateInfo(date);
+  if (!date) return "农历未设置";
+  if (!info) return "农历转换不可用";
+  return `${info.fullText} · ${info.lunarText}`;
 }
 
 export function formatSolarLunar(date?: string) {
   if (!date) return "未设置";
   return `${formatMonthDay(date)} · ${formatLunarDate(date)}`;
+}
+
+function getWeekOfYear(year: number, month: number, day: number) {
+  const target = new Date(year, month - 1, day);
+  const start = new Date(year, 0, 1);
+  const days = Math.floor((target.getTime() - start.getTime()) / 86400000);
+  return Math.floor((days + start.getDay()) / 7) + 1;
 }
 
 export function daysUntil(date: string) {

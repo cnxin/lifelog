@@ -286,6 +286,33 @@ html[data-theme-style="cream"] .time-picker-column button.active {
   background: linear-gradient(135deg, rgba(159, 123, 85, 0.92), rgba(221, 204, 178, 0.95));
 }
 
+.app-container.theme-cream .avatar,
+.app-container.theme-cream .fav-avatar,
+.app-container.theme-cream .person-photo,
+.app-container.theme-cream .profile-photo,
+.app-container.theme-cream .memory-badge {
+  color: #7b5d3d;
+  background: linear-gradient(135deg, #fff3df 0%, #ead2ad 58%, #d7b889 100%);
+  box-shadow: 0 10px 22px rgba(159, 123, 85, 0.12);
+}
+
+.app-container.theme-cream .quick-memory-card,
+.app-container.theme-cream .link-action,
+.app-container.theme-cream .primary-btn,
+.app-container.theme-cream .category-pill.active,
+.app-container.theme-cream .calendar-day.active,
+.app-container.theme-cream .merge-badge.strong,
+.app-container.theme-cream .fab,
+html[data-theme-style="cream"] .select-picker-menu button.active,
+html[data-theme-style="cream"] .date-input-column button.active,
+html[data-theme-style="cream"] .time-picker-column button.active,
+html[data-theme-style="cream"] .date-wheel-column button.active,
+html[data-theme-style="cream"] .date-calendar-grid button.active {
+  color: #6f5235;
+  background: linear-gradient(135deg, #fff0d7 0%, #e5c89c 100%);
+  box-shadow: 0 10px 22px rgba(159, 123, 85, 0.12);
+}
+
 .app-container.theme-cream .link-action.secondary {
   color: #8f6f4e;
   background: rgba(159, 123, 85, 0.1);
@@ -304,9 +331,118 @@ html[data-theme-style="mist"] .time-picker-column button.active {
   background: linear-gradient(135deg, #56606d, #7b8796);
 }
 
+.app-container.theme-mist .avatar,
+.app-container.theme-mist .fav-avatar,
+.app-container.theme-mist .person-photo,
+.app-container.theme-mist .profile-photo,
+.app-container.theme-mist .memory-badge {
+  color: #f8fafc;
+  background: linear-gradient(135deg, #aeb7c2 0%, #8894a3 100%);
+  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.1);
+}
+
+.app-container.theme-mist .quick-memory-card,
+.app-container.theme-mist .link-action,
+.app-container.theme-mist .primary-btn,
+.app-container.theme-mist .category-pill.active,
+.app-container.theme-mist .calendar-day.active,
+.app-container.theme-mist .merge-badge.strong,
+.app-container.theme-mist .fab,
+html[data-theme-style="mist"] .select-picker-menu button.active,
+html[data-theme-style="mist"] .date-input-column button.active,
+html[data-theme-style="mist"] .time-picker-column button.active,
+html[data-theme-style="mist"] .date-wheel-column button.active,
+html[data-theme-style="mist"] .date-calendar-grid button.active {
+  color: white;
+  background: linear-gradient(135deg, #8f99a6 0%, #6f7b89 100%);
+  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.11);
+}
+
 .app-container.theme-mist .link-action.secondary {
   color: #4b5563;
   background: rgba(75, 85, 99, 0.08);
+}
+
+.app-container.theme-mint .avatar,
+.app-container.theme-mint .fav-avatar,
+.app-container.theme-mint .person-photo,
+.app-container.theme-mint .profile-photo,
+.app-container.theme-mint .memory-badge {
+  background: linear-gradient(135deg, #7edfd0 0%, #7bbdf2 100%);
+  box-shadow: 0 10px 22px rgba(18, 184, 134, 0.11);
+}
+
+.app-container.theme-mint .quick-memory-card,
+.app-container.theme-mint .link-action,
+.app-container.theme-mint .primary-btn,
+.app-container.theme-mint .category-pill.active,
+.app-container.theme-mint .calendar-day.active,
+.app-container.theme-mint .merge-badge.strong,
+.app-container.theme-mint .fab,
+html[data-theme-style="mint"] .select-picker-menu button.active,
+html[data-theme-style="mint"] .date-input-column button.active,
+html[data-theme-style="mint"] .time-picker-column button.active,
+html[data-theme-style="mint"] .date-wheel-column button.active,
+html[data-theme-style="mint"] .date-calendar-grid button.active {
+  background: linear-gradient(135deg, #68d8c8 0%, #74b9ef 100%);
+  box-shadow: 0 10px 22px rgba(18, 184, 134, 0.12);
+}
+
+.app-container.theme-cream .insight-card .metric {
+  color: #6f5235;
+  background: linear-gradient(135deg, rgba(255, 240, 215, 0.92), rgba(232, 205, 166, 0.48));
+  box-shadow: inset 0 0 0 1px rgba(159, 123, 85, 0.08);
+}
+
+.app-container.theme-cream .insight-card .metric:nth-child(2) {
+  background: linear-gradient(135deg, rgba(247, 229, 200, 0.95), rgba(216, 185, 141, 0.5));
+}
+
+.app-container.theme-cream .insight-card .metric:nth-child(3),
+.app-container.theme-cream .insight-card .metric-wide {
+  background: linear-gradient(135deg, rgba(243, 214, 184, 0.94), rgba(207, 168, 121, 0.46));
+}
+
+.app-container.theme-cream .insight-card .metric strong {
+  color: #7b5d3d;
+}
+
+.app-container.theme-mint .insight-card .metric {
+  color: #0f766e;
+  background: linear-gradient(135deg, rgba(218, 255, 246, 0.9), rgba(126, 223, 208, 0.34));
+  box-shadow: inset 0 0 0 1px rgba(18, 184, 134, 0.08);
+}
+
+.app-container.theme-mint .insight-card .metric:nth-child(2) {
+  background: linear-gradient(135deg, rgba(226, 251, 255, 0.92), rgba(123, 189, 242, 0.34));
+}
+
+.app-container.theme-mint .insight-card .metric:nth-child(3),
+.app-container.theme-mint .insight-card .metric-wide {
+  background: linear-gradient(135deg, rgba(226, 255, 239, 0.92), rgba(161, 234, 216, 0.38));
+}
+
+.app-container.theme-mint .insight-card .metric strong {
+  color: #128777;
+}
+
+.app-container.theme-mist .insight-card .metric {
+  color: #475569;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(203, 213, 225, 0.5));
+  box-shadow: inset 0 0 0 1px rgba(75, 85, 99, 0.07);
+}
+
+.app-container.theme-mist .insight-card .metric:nth-child(2) {
+  background: linear-gradient(135deg, rgba(241, 245, 249, 0.96), rgba(174, 183, 194, 0.46));
+}
+
+.app-container.theme-mist .insight-card .metric:nth-child(3),
+.app-container.theme-mist .insight-card .metric-wide {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(136, 148, 163, 0.34));
+}
+
+.app-container.theme-mist .insight-card .metric strong {
+  color: #4b5563;
 }
 
 .app-container.theme-cream .anniversary-card.secondary,
@@ -808,6 +944,45 @@ html[data-theme-style="mist"] .time-picker-column button.active {
   background: linear-gradient(135deg, #ff8fb0, var(--secondary));
 }
 
+.app-container.theme-cream .favorite-item:nth-child(1) .fav-avatar {
+  color: #7b5d3d;
+  background: linear-gradient(135deg, #fff3df 0%, #ead2ad 100%);
+}
+
+.app-container.theme-cream .favorite-item:nth-child(2) .fav-avatar {
+  color: #7b5d3d;
+  background: linear-gradient(135deg, #f7e5c8 0%, #d8b98d 100%);
+}
+
+.app-container.theme-cream .favorite-item:nth-child(3) .fav-avatar {
+  color: #7b5d3d;
+  background: linear-gradient(135deg, #f3d6b8 0%, #cfa879 100%);
+}
+
+.app-container.theme-mint .favorite-item:nth-child(1) .fav-avatar {
+  background: linear-gradient(135deg, #8ee8d8 0%, #8fc9f6 100%);
+}
+
+.app-container.theme-mint .favorite-item:nth-child(2) .fav-avatar {
+  background: linear-gradient(135deg, #78ddcb 0%, #6fb9ec 100%);
+}
+
+.app-container.theme-mint .favorite-item:nth-child(3) .fav-avatar {
+  background: linear-gradient(135deg, #a1ead8 0%, #81c7d9 100%);
+}
+
+.app-container.theme-mist .favorite-item:nth-child(1) .fav-avatar {
+  background: linear-gradient(135deg, #bec6d0 0%, #909baa 100%);
+}
+
+.app-container.theme-mist .favorite-item:nth-child(2) .fav-avatar {
+  background: linear-gradient(135deg, #aab4c0 0%, #7f8b99 100%);
+}
+
+.app-container.theme-mist .favorite-item:nth-child(3) .fav-avatar {
+  background: linear-gradient(135deg, #c5ccd5 0%, #98a2ae 100%);
+}
+
 .fav-name {
   max-width: 68px;
   overflow: hidden;
@@ -1121,6 +1296,70 @@ html[data-theme-style="mist"] .time-picker-column button.active {
   transition:
     opacity 0.18s ease,
     transform 0.18s ease;
+}
+
+.person-detail-profile-card {
+  position: relative;
+}
+
+.person-profile-favorite {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 20px;
+  height: 20px;
+  color: #fdcb6e;
+  fill: currentColor;
+}
+
+.detail-hero-section.collapsed .person-profile-favorite {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.person-detail-profile-card .detail-profile-body {
+  align-items: center;
+  gap: 14px;
+}
+
+.person-detail-profile-card .profile-photo {
+  flex: 0 0 82px;
+}
+
+.person-detail-profile-card .profile-main {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.person-detail-profile-card .profile-title {
+  justify-content: center;
+}
+
+.person-detail-profile-card .profile-title h2 {
+  line-height: 1.18;
+}
+
+.person-detail-profile-card .profile-main > p {
+  margin: 0;
+}
+
+.person-birthday-summary {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  line-height: 1.34;
+}
+
+.person-birthday-summary span {
+  display: block;
+}
+
+.person-profile-edit {
+  width: fit-content;
+  margin-top: 0;
+  padding-inline: 14px;
 }
 
 .detail-profile-body {
@@ -3298,11 +3537,25 @@ button:disabled,
 }
 
 .date-lunar-current {
+  display: grid;
+  gap: 4px;
   margin: -4px 0 12px;
   color: var(--text-sub);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.35;
   text-align: center;
+}
+
+.date-lunar-current strong {
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.date-lunar-current span {
+  color: var(--text-sub);
+  font-size: 12px;
 }
 
 .date-today-button:active,
@@ -4505,12 +4758,16 @@ button:disabled,
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .photo-viewer-close {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
+  right: 18px;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -4532,7 +4789,7 @@ button:disabled,
 
 .photo-viewer-counter {
   position: absolute;
-  top: 20px;
+  top: calc(env(safe-area-inset-top, 0px) + 24px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -4634,12 +4891,12 @@ button:disabled,
   }
 
   .photo-viewer-close {
-    top: 10px;
-    right: 10px;
+    top: calc(env(safe-area-inset-top, 0px) + 18px);
+    right: 14px;
   }
 
   .photo-viewer-counter {
-    top: 10px;
+    top: calc(env(safe-area-inset-top, 0px) + 18px);
   }
 
   .photo-viewer-info {
