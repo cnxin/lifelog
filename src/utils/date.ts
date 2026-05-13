@@ -13,6 +13,7 @@ export function formatLunarDate(date?: string) {
 
   try {
     const lunar = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+      year: "numeric",
       month: "long",
       day: "numeric"
     }).format(new Date(`${date}T00:00:00`));
@@ -69,6 +70,19 @@ export function anniversaryYearLabel(date: string) {
   return `${years} 周年`;
 }
 
+export function birthdayAgeLabel(date: string) {
+  const source = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let age = today.getFullYear() - source.getFullYear();
+  const thisYearBirthday = new Date(today.getFullYear(), source.getMonth(), source.getDate());
+  if (thisYearBirthday > today) age -= 1;
+
+  if (age <= 0) return "出生第一年";
+  return `${age} 岁`;
+}
+
 export function getUpcomingAnniversaries(people: Person[]) {
   return people
     .flatMap((person) =>
@@ -81,7 +95,7 @@ export function getUpcomingAnniversaries(people: Person[]) {
           days: Math.abs(deltaDays),
           deltaDays,
           label: anniversaryRelativeLabel(anniversary.date),
-          yearLabel: anniversaryYearLabel(anniversary.date)
+          yearLabel: anniversary.title === "生日" ? birthdayAgeLabel(anniversary.date) : anniversaryYearLabel(anniversary.date)
         };
       })
     )

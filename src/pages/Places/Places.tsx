@@ -17,6 +17,8 @@ import {
   buildPlaceContextLine,
   buildPlaceDisplayName,
   buildPlaceGeoLine,
+  getPlaceMallName,
+  isMallRecord,
 } from "../../utils/placeMeta";
 
 export default function Places() {
@@ -170,13 +172,13 @@ export default function Places() {
     >();
 
     for (const place of places) {
-      if (!place.mall) continue;
+      if (!getPlaceMallName(place)) continue;
       const key = buildMallKey(place);
       if (!key) continue;
 
       const current = groups.get(key) || {
         key,
-        mall: place.mall,
+        mall: getPlaceMallName(place),
         country: place.country,
         province: place.province,
         city: place.city,
@@ -262,6 +264,8 @@ export default function Places() {
     setMergePreview(null);
     setWeakQueueIndex(null);
   }
+
+  const storePlaces = places.filter((place) => !isMallRecord(place));
 
   return (
     <>
@@ -388,6 +392,9 @@ export default function Places() {
             <h2>
               <Building2 /> 商场 / 园区
             </h2>
+            <button className="see-all" onClick={() => setCreatingNew(true)}>
+              新建
+            </button>
           </div>
           <div className="list">
             {mallGroups.map((mall) => (
@@ -430,9 +437,14 @@ export default function Places() {
           <h2>
             <Store /> 具体店铺 / 场所
           </h2>
+          {!mallGroups.length && (
+            <button className="see-all" onClick={() => setCreatingNew(true)}>
+              新建商场
+            </button>
+          )}
         </div>
         <div className="list">
-          {places.map((place) => (
+          {storePlaces.map((place) => (
             <GlassCard className="place-card" key={place.id}>
               <button
                 className="place-tap"

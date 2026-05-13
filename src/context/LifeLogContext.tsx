@@ -8,6 +8,7 @@ import {
   loadAppSettings,
   loadPlaceMergeHistory,
   loadLifeLogState,
+  loadPhotosByIds,
   loadPhotosByMemoryId,
   loadReminderSettings,
   normalizeState,
@@ -42,7 +43,7 @@ import type {
 import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { parsePlatformLinksText } from "../utils/placeLinks";
-import { buildPlaceDisplayName, inferMallName, inferProvince, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
+import { buildPlaceDisplayName, inferMallName, inferProvince, isMallRecord, normalizeCityName, normalizePlaceText } from "../utils/placeMeta";
 import {
   buildGroupMergePreview,
   findPlaceDuplicateGroups,
@@ -78,7 +79,7 @@ interface LifeLogContextValue {
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   exportData: () => void;
   resetDemo: () => Promise<void>;
-  loadMemoryPhotos: (memoryId: string) => Promise<Photo[]>;
+  loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
 }
 
 const emptyState: LifeLogState = {
@@ -289,7 +290,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         : existing
           ? [legacyPersonId].filter(Boolean)
           : quickInference.personIds;
-      const memoryId = existing?.id || uid("m");
+      const memoryId = existing?.id || String(formData.get("memoryId") || "") || uid("m");
       const memory: MemoryEvent = {
         id: memoryId,
         title,
@@ -304,9 +305,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
       await saveMemoryRecord(memory);
 
-      // 保存照片到数据库
-      if (photos && photos.length > 0) {
-        await savePhotoRecords(photos);
+      if (photos) {
+        await deletePhotosByMemoryId(memoryId);
+        if (photos.length > 0) {
+          await savePhotoRecords(photos);
+        }
       }
 
       setState((current) => ({
@@ -525,8 +528,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     const latestPlaceMerge = placeMergeHistory[0] || null;
 
-    async function loadMemoryPhotos(memoryId: string): Promise<Photo[]> {
-      return await loadPhotosByMemoryId(memoryId);
+    async function loadMemoryPhotos(memoryId: string, photoIds: string[] = []): Promise<Photo[]> {
+      const photos = await loadPhotosByMemoryId(memoryId);
+      return photos.length ? photos : loadPhotosByIds(photoIds);
     }
 
     return {
@@ -567,11 +571,13 @@ function buildPlaceFromFormData(formData: FormData, id: string | undefined, sett
   const province = normalizePlaceText(formData.get("province"));
   const city = normalizeCityName(normalizePlaceText(formData.get("city")) || settings.defaultCity);
   const address = normalizePlaceText(formData.get("address"));
-  const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address);
+  const category = String(formData.get("category") || "其他");
+  const name = String(formData.get("name") || "未命名地点");
+  const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address) || (isMallRecord({ name, category }) ? name : "");
 
   return {
     id: id || uid("l"),
-    name: String(formData.get("name") || "未命名地点"),
+    name,
     country,
     province: inferProvince({
       country,
@@ -583,7 +589,7 @@ function buildPlaceFromFormData(formData: FormData, id: string | undefined, sett
     area: String(formData.get("area") || ""),
     mall,
     storeName: String(formData.get("storeName") || ""),
-    category: String(formData.get("category") || "其他"),
+    category,
     rating: Number(formData.get("rating")) || 4,
     address,
     latitude: Number(formData.get("latitude")) || undefined,

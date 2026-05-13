@@ -5,7 +5,8 @@ import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { MemoryEvent } from "../../types";
-import { anniversaryRelativeLabel, anniversaryYearLabel, formatMonthDay, formatSolarLunar } from "../../utils/date";
+import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, formatSolarLunar } from "../../utils/date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
@@ -15,6 +16,7 @@ export default function PersonDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, getPersonName, getPlaceName } = useLifeLog();
+  const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
   const anniversariesRef = useRef<HTMLElement>(null);
@@ -83,31 +85,39 @@ export default function PersonDetail() {
 
   return (
     <>
-      <section className="section">
-        <button className="back-button" onClick={() => navigate("/people")}>
-          <ArrowLeft /> 返回人物
-        </button>
-        <GlassCard className="profile-card">
-          <div className="profile-photo">{initials(person.name)}</div>
-          <div className="profile-main">
-            <div className="profile-title">
-              <h2>
-                {person.name}
-                {person.nickname ? ` · ${person.nickname}` : ""}
-              </h2>
-              {person.favorite && <Star />}
-            </div>
-            <p>{person.relationship}</p>
-            {person.birthday && (
-              <p>
-                公历生日 · {person.birthday}
-                <br />
-                {formatSolarLunar(person.birthday)}
-              </p>
-            )}
-            <button className="category-pill active" onClick={() => setEditing(true)}>
-              编辑资料
+      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card">
+          <div className="detail-profile-nav">
+            <button className="back-button" type="button" onClick={() => navigate("/people")}>
+              <ArrowLeft /> 返回人物
             </button>
+            <strong className="detail-compact-title">
+              {person.name}
+              {person.nickname ? ` · ${person.nickname}` : ""}
+            </strong>
+          </div>
+          <div className="detail-profile-body">
+            <div className="profile-photo">{initials(person.name)}</div>
+            <div className="profile-main">
+              <div className="profile-title">
+                <h2>
+                  {person.name}
+                  {person.nickname ? ` · ${person.nickname}` : ""}
+                </h2>
+                {person.favorite && <Star />}
+              </div>
+              <p>{person.relationship}</p>
+              {person.birthday && (
+                <p>
+                  公历生日 · {person.birthday}
+                  <br />
+                  {formatSolarLunar(person.birthday)}
+                </p>
+              )}
+              <button className="category-pill active" onClick={() => setEditing(true)}>
+                编辑资料
+              </button>
+            </div>
           </div>
         </GlassCard>
       </section>
@@ -197,7 +207,7 @@ export default function PersonDetail() {
                 <span className="anniversary-detail-date">{item.date}</span>
               </div>
               <div className="anniversary-detail-meta">
-                {anniversaryRelativeLabel(item.date)} · {anniversaryYearLabel(item.date)}
+                {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? birthdayAgeLabel(item.date) : anniversaryYearLabel(item.date)}
               </div>
             </GlassCard>
           ))}

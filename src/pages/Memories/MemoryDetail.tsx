@@ -7,6 +7,7 @@ import Tags from "../../components/Tags";
 import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import { formatMonthDay } from "../../utils/date";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
@@ -16,6 +17,7 @@ export default function MemoryDetail() {
   const { memoryId } = useParams();
   const navigate = useNavigate();
   const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
+  const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -29,7 +31,7 @@ export default function MemoryDetail() {
   // 加载照片
   useEffect(() => {
     if (memory && photoIds.length > 0) {
-      loadMemoryPhotos(memory.id).then(setPhotos);
+      loadMemoryPhotos(memory.id, photoIds).then(setPhotos);
     } else {
       setPhotos([]);
     }
@@ -76,24 +78,31 @@ export default function MemoryDetail() {
 
   return (
     <>
-      <section className="section">
-        <button className="back-button" onClick={() => navigate("/memories")}>
-          <ArrowLeft /> 返回回忆
-        </button>
-        <GlassCard className="profile-card">
-          <div className="profile-photo">
-            <Heart />
-          </div>
-          <div className="profile-main">
-            <div className="profile-title">
-              <h2>{getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}</h2>
-            </div>
-            <p>
-              {formatMonthDay(memory.date)} · {memory.mood}
-            </p>
-            <button className="category-pill active" onClick={() => setEditing(true)}>
-              编辑回忆
+      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card">
+          <div className="detail-profile-nav">
+            <button className="back-button" type="button" onClick={() => navigate("/memories")}>
+              <ArrowLeft /> 返回回忆
             </button>
+            <strong className="detail-compact-title">
+              {getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}
+            </strong>
+          </div>
+          <div className="detail-profile-body">
+            <div className="profile-photo">
+              <Heart />
+            </div>
+            <div className="profile-main">
+              <div className="profile-title">
+                <h2>{getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}</h2>
+              </div>
+              <p>
+                {formatMonthDay(memory.date)} · {memory.mood}
+              </p>
+              <button className="category-pill active" onClick={() => setEditing(true)}>
+                编辑回忆
+              </button>
+            </div>
           </div>
         </GlassCard>
       </section>

@@ -478,7 +478,7 @@ export default function Settings() {
         <div className="list">
           <GlassCard className="detail-row">
             <strong>版本</strong>
-            <span>0.1.0-test.29</span>
+            <span>0.1.0-test.41</span>
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>存储</strong>
@@ -486,11 +486,29 @@ export default function Settings() {
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>技术栈</strong>
-            <span>React + TypeScript + Capacitor</span>
+            <span>React 18 + TypeScript + Capacitor 8</span>
+          </GlassCard>
+          <GlassCard className="settings-capability-overview">
+            <div className="settings-capability-overview-head">
+              <strong>当前能力</strong>
+              <span>本地优先</span>
+            </div>
+            <div className="settings-capability-overview-list">
+              {[
+                { label: "资料管理", value: "人物、地点、商场" },
+                { label: "生活记录", value: "回忆、照片" },
+                { label: "辅助能力", value: "提醒、本地备份" }
+              ].map((item) => (
+                <div className="settings-capability-overview-item" key={item.label}>
+                  <em>{item.label}</em>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </div>
           </GlassCard>
         </div>
         <div className="settings-about-tags">
-          <Tags items={["React 18", "Vite", "Dexie", "Capacitor 8", "PWA", "lucide-react"]} />
+          <Tags items={["React 18", "Vite", "Dexie", "Capacitor 8", "照片", "提醒", "本地优先"]} />
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import type { MemoryEvent } from "../../types";
 import { formatMonthDay } from "../../utils/date";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
@@ -22,6 +23,7 @@ export default function PlaceDetail() {
   const { placeId } = useParams();
   const navigate = useNavigate();
   const { state, getPersonName, getPlaceName } = useLifeLog();
+  const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
   const place = state.places.find((item) => item.id === placeId);
@@ -76,26 +78,31 @@ export default function PlaceDetail() {
 
   return (
     <>
-      <section className="section">
-        <button className="back-button" onClick={() => navigate("/places")}>
-          <ArrowLeft /> 返回地点
-        </button>
-        <GlassCard className="profile-card">
-          <div className="profile-photo">
-            <MapPin />
-          </div>
-          <div className="profile-main">
-            <div className="profile-title">
-              <h2>
-                {buildPlaceDisplayName(place)}
-              </h2>
-              {place.favorite && <Star />}
-            </div>
-            <p>{buildPlaceGeoLine(place)}</p>
-            <p>{buildPlaceContextLine(place)}</p>
-            <button className="category-pill active" onClick={() => setEditing(true)}>
-              编辑地点
+      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card">
+          <div className="detail-profile-nav">
+            <button className="back-button" type="button" onClick={() => navigate("/places")}>
+              <ArrowLeft /> 返回地点
             </button>
+            <strong className="detail-compact-title">{buildPlaceDisplayName(place)}</strong>
+          </div>
+          <div className="detail-profile-body">
+            <div className="profile-photo">
+              <MapPin />
+            </div>
+            <div className="profile-main">
+              <div className="profile-title">
+                <h2>
+                  {buildPlaceDisplayName(place)}
+                </h2>
+                {place.favorite && <Star />}
+              </div>
+              <p>{buildPlaceGeoLine(place)}</p>
+              <p>{buildPlaceContextLine(place)}</p>
+              <button className="category-pill active" onClick={() => setEditing(true)}>
+                编辑地点
+              </button>
+            </div>
           </div>
         </GlassCard>
       </section>

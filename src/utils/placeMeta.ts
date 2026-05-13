@@ -152,13 +152,25 @@ export function buildPlaceLocationDetail(place: Pick<Place, "country" | "provinc
   return uniqueParts([place.country, place.province, place.city, place.area, place.mall]).join(" · ");
 }
 
-export function buildMallKey(fields: Pick<Place, "country" | "province" | "city" | "mall">) {
-  const mall = normalizePlaceText(fields.mall);
+export function buildMallKey(fields: Pick<Place, "country" | "province" | "city" | "mall"> & Partial<Pick<Place, "name" | "category">>) {
+  const mall = getPlaceMallName(fields);
   if (!mall) return "";
 
   return [fields.country || "中国", fields.province || "", fields.city || "", mall]
     .map((part) => normalizePlaceText(part))
     .join("__");
+}
+
+export function getPlaceMallName(fields: Pick<Place, "mall"> & Partial<Pick<Place, "name" | "category">>) {
+  const mall = normalizePlaceText(fields.mall);
+  if (mall) return mall;
+  return isMallRecord(fields) ? normalizePlaceText(fields.name) : "";
+}
+
+export function isMallRecord(fields: Partial<Pick<Place, "name" | "category" | "storeName">>) {
+  const category = normalizePlaceText(fields.category);
+  const name = normalizePlaceText(fields.name);
+  return Boolean(name) && ["商场", "购物中心", "园区", "景区"].some((keyword) => category.includes(keyword));
 }
 
 export function parseMallKey(value: string) {
@@ -167,11 +179,11 @@ export function parseMallKey(value: string) {
 }
 
 export function isSameMall(
-  place: Pick<Place, "country" | "province" | "city" | "mall">,
+  place: Pick<Place, "country" | "province" | "city" | "mall"> & Partial<Pick<Place, "name" | "category">>,
   mallInfo: Pick<Place, "country" | "province" | "city" | "mall">
 ) {
   return (
-    normalizePlaceText(place.mall) === normalizePlaceText(mallInfo.mall) &&
+    normalizePlaceText(getPlaceMallName(place)) === normalizePlaceText(mallInfo.mall) &&
     normalizePlaceText(place.city) === normalizePlaceText(mallInfo.city) &&
     normalizePlaceText(place.province) === normalizePlaceText(mallInfo.province) &&
     normalizePlaceText(place.country || "中国") === normalizePlaceText(mallInfo.country || "中国")

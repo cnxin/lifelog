@@ -1,6 +1,6 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { Person, MemoryEvent, ReminderSettings } from '../types';
-import { daysUntil, anniversaryYearLabel } from './date';
+import { daysUntil, anniversaryYearLabel, birthdayAgeLabel } from './date';
 
 const REMINDER_WINDOW_DAYS = 30;
 
@@ -70,7 +70,7 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
       notifications.push({
         id: generateId('birthday-today', person.id),
         title: `今天是${person.name}的生日 🎂`,
-        body: `${anniversaryYearLabel(person.birthday)}，记得送上祝福`,
+        body: `${birthdayAgeLabel(person.birthday)}，记得送上祝福`,
         schedule: { at: getScheduleDate(days, settings.birthdayTime) }
       });
     }

@@ -219,6 +219,15 @@ export async function loadPhotosByMemoryId(memoryId: string): Promise<Photo[]> {
   return await db.photos.where("memoryId").equals(memoryId).sortBy("order");
 }
 
+export async function loadPhotosByIds(photoIds: string[]): Promise<Photo[]> {
+  if (!photoIds.length) return [];
+  const order = new Map(photoIds.map((id, index) => [id, index]));
+  const photos = await db.photos.bulkGet(photoIds);
+  return photos
+    .filter((photo): photo is Photo => Boolean(photo))
+    .sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+}
+
 export async function deletePhotoRecord(id: string) {
   await db.photos.delete(id);
 }

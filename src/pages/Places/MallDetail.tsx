@@ -1,13 +1,17 @@
-import { ArrowLeft, Building2, MapPin, Store } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowLeft, Building2, Edit3, MapPin, PlusCircle, Store } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import type { Place } from "../../types";
 import {
   buildPlaceContextLine,
   buildPlaceDisplayName,
   buildPlaceGeoLine,
+  isMallRecord,
   isSameMall,
   parseMallKey,
 } from "../../utils/placeMeta";
@@ -17,6 +21,9 @@ export default function MallDetail() {
   const navigate = useNavigate();
   const { mallKey } = useParams();
   const { state, getPersonName, getPlaceName } = useLifeLog();
+  const headerCollapsed = useCollapsingDetailHeader();
+  const [editingId, setEditingId] = useState<string | undefined>();
+  const [creatingMallRecord, setCreatingMallRecord] = useState(false);
 
   const mallInfo = useMemo(() => parseMallKey(mallKey || ""), [mallKey]);
   const places = useMemo(
@@ -28,7 +35,26 @@ export default function MallDetail() {
   );
 
   const summary = places[0];
+  const mallRecord = places.find((place) => isMallRecord(place));
   const categories = Array.from(new Set(places.map((place) => place.category)));
+  const initialMallDraft = useMemo<Partial<Place> | undefined>(() => {
+    if (!summary) return undefined;
+    return {
+      name: mallInfo.mall,
+      country: mallInfo.country,
+      province: mallInfo.province,
+      city: mallInfo.city,
+      area: summary.area,
+      mall: mallInfo.mall,
+      category: "商场",
+      address: summary.address,
+      mapUrl: summary.mapUrl,
+      latitude: summary.latitude,
+      longitude: summary.longitude,
+      desc: `${mallInfo.mall} 的商场资料`,
+      tags: ["商场"]
+    };
+  }, [mallInfo, summary]);
 
   if (!summary) {
     return (
@@ -40,23 +66,36 @@ export default function MallDetail() {
 
   return (
     <>
-      <section className="section">
-        <button className="back-button" onClick={() => navigate("/places")}>
-          <ArrowLeft /> 返回地点
-        </button>
-        <GlassCard className="profile-card">
-          <div className="profile-photo">
-            <Building2 />
+      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card">
+          <div className="detail-profile-nav">
+            <button className="back-button" type="button" onClick={() => navigate("/places")}>
+              <ArrowLeft /> 返回地点
+            </button>
+            <strong className="detail-compact-title">{mallInfo.mall || summary.mall}</strong>
           </div>
-          <div className="profile-main">
-            <div className="profile-title">
-              <h2>{summary.mall}</h2>
+          <div className="detail-profile-body">
+            <div className="profile-photo">
+              <Building2 />
             </div>
-            <p>{buildPlaceGeoLine(summary)}</p>
-            <p>{summary.area || "未设置区位"}</p>
-            <Tags items={categories} />
+            <div className="profile-main">
+              <div className="profile-title">
+                <h2>{mallInfo.mall || summary.mall}</h2>
+              </div>
+              <p>{buildPlaceGeoLine(summary)}</p>
+              <p>{summary.area || "未设置区位"}</p>
+              <Tags items={categories} />
+            </div>
           </div>
         </GlassCard>
+        <button
+          className="mall-profile-action glass-card"
+          type="button"
+          onClick={() => (mallRecord ? setEditingId(mallRecord.id) : setCreatingMallRecord(true))}
+        >
+          {mallRecord ? <Edit3 /> : <PlusCircle />}
+          <span>{mallRecord ? "编辑商场资料" : "补充商场资料"}</span>
+        </button>
       </section>
 
       <section className="section">
@@ -117,6 +156,12 @@ export default function MallDetail() {
             })}
         </div>
       </section>
+      <EntrySheet type={editingId ? "place" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
+      <EntrySheet
+        type={creatingMallRecord ? "place" : null}
+        initialPlaceDraft={initialMallDraft}
+        onClose={() => setCreatingMallRecord(false)}
+      />
     </>
   );
 }

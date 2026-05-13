@@ -34,6 +34,7 @@ interface EntrySheetProps {
   itemId?: string;
   initialPersonId?: string;
   initialPlaceId?: string;
+  initialPlaceDraft?: Partial<Place>;
   memoryMode?: "quick" | "full";
   onClose: () => void;
 }
@@ -57,6 +58,7 @@ export default function EntrySheet({
   itemId,
   initialPersonId,
   initialPlaceId,
+  initialPlaceDraft,
   memoryMode = "full",
   onClose
 }: EntrySheetProps) {
@@ -70,20 +72,21 @@ export default function EntrySheet({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
 
+  const editingItem = type ? findEditingItem(type, itemId, state) : undefined;
+
   // 加载现有照片（编辑模式）
   useEffect(() => {
     if (type === "memory" && itemId) {
-      loadMemoryPhotos(itemId).then(setPhotos);
+      loadMemoryPhotos(itemId, (editingItem as MemoryEvent | undefined)?.photos || []).then(setPhotos);
     } else {
       setPhotos([]);
     }
-  }, [type, itemId, loadMemoryPhotos]);
+  }, [type, itemId, editingItem, loadMemoryPhotos]);
 
   if (!type) return null;
 
   const entryType = type;
   const current = meta[entryType];
-  const editingItem = findEditingItem(entryType, itemId, state);
   const submitText = !itemId && (entryType === "person" || entryType === "place") ? "创建" : "保存";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -118,9 +121,8 @@ export default function EntrySheet({
       if (entryType === "memory") {
         // 如果是新建回忆，需要先生成 ID 并更新照片的 memoryId
         const memoryId = itemId || `m_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-        const photosToSave = photos.length > 0
-          ? photos.map(p => ({ ...p, memoryId }))
-          : undefined;
+        const photosToSave = photos.map(p => ({ ...p, memoryId }));
+        formData.set("memoryId", memoryId);
         savedMemoryId = await saveMemory(formData, itemId, photosToSave);
       }
 
@@ -165,7 +167,13 @@ export default function EntrySheet({
           {entryType === "person" && (
             <PersonFields person={editingItem as Person | undefined} isEditing={Boolean(itemId)} />
           )}
-          {entryType === "place" && <PlaceFields place={editingItem as Place | undefined} isEditing={Boolean(itemId)} />}
+          {entryType === "place" && (
+            <PlaceFields
+              place={editingItem as Place | undefined}
+              initialPlaceDraft={initialPlaceDraft}
+              isEditing={Boolean(itemId)}
+            />
+          )}
           {entryType === "memory" && (
             <MemoryFields
               memory={editingItem as MemoryEvent | undefined}
@@ -541,8 +549,16 @@ function PreferenceGroupEditor({
   );
 }
 
-function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }) {
-  if (!isEditing) return <QuickPlaceFields />;
+function PlaceFields({
+  place,
+  initialPlaceDraft,
+  isEditing
+}: {
+  place?: Place;
+  initialPlaceDraft?: Partial<Place>;
+  isEditing: boolean;
+}) {
+  if (!isEditing) return <QuickPlaceFields initialPlaceDraft={initialPlaceDraft} />;
 
   return (
     <>
@@ -569,7 +585,7 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
       <div className="form-row">
         <label>
           商场 / 园区 / 景区
-          <input name="mall" defaultValue={place?.mall || ""} placeholder="例如：湖滨银泰、万达广场、玉兰国际" />
+          <input name="mall" defaultValue={place?.mall || ""} placeholder="如果这是商场本体，可留空；店铺可填所在商场" />
         </label>
         <label>
           店铺 / 场所
@@ -618,14 +634,27 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
           />
         </label>
       </div>
-      <label>
-        高德分享链接
-        <input name="mapUrl" defaultValue={place?.mapUrl || ""} placeholder="粘贴高德分享链接，详情页可直接打开高德" />
-      </label>
-      <label>
-        参考链接 / 攻略链接
-        <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
-      </label>
+      <div className="form-row">
+        <label>
+          高德分享链接
+          <input name="mapUrl" defaultValue={place?.mapUrl || ""} placeholder="粘贴高德分享链接，详情页可直接打开高德" />
+        </label>
+        <label>
+          参考链接 / 攻略链接
+          <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          纬度
+          <input name="latitude" defaultValue={place?.latitude || ""} inputMode="decimal" placeholder="例如：30.2741" />
+        </label>
+        <label>
+          经度
+          <input name="longitude" defaultValue={place?.longitude || ""} inputMode="decimal" placeholder="例如：120.1551" />
+        </label>
+      </div>
+      <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
       <label>
         美团店铺链接
         <input
@@ -647,8 +676,6 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
         描述
         <textarea name="desc" defaultValue={place?.desc} placeholder="适合约会或聚餐，环境安静..." />
       </label>
-      <input type="hidden" name="latitude" value={place?.latitude || ""} />
-      <input type="hidden" name="longitude" value={place?.longitude || ""} />
       <label>
         标签，逗号分隔
         <input name="tags" defaultValue={place?.tags.join("，")} placeholder="安静，推荐，想再去" />
@@ -657,12 +684,36 @@ function PlaceFields({ place, isEditing }: { place?: Place; isEditing: boolean }
   );
 }
 
-function QuickPlaceFields() {
+function placeToDraft(place?: Partial<Place>): Partial<PlaceDraft> {
+  if (!place) return {};
+  return {
+    name: place.name || "",
+    country: place.country || "中国",
+    province: place.province || "",
+    city: place.city || "",
+    area: place.area || "",
+    mall: place.mall || "",
+    storeName: place.storeName || "",
+    category: place.category || "其他",
+    rating: place.rating || 4,
+    address: place.address || "",
+    latitude: place.latitude ? String(place.latitude) : "",
+    longitude: place.longitude ? String(place.longitude) : "",
+    mapUrl: place.mapUrl || "",
+    sourceUrl: place.sourceUrl || "",
+    photos: (place.photos || []).join("\n"),
+    desc: place.desc || "",
+    tags: (place.tags || []).join("，")
+  };
+}
+
+function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<Place> }) {
   const { settings } = useLifeLog();
   const [shareText, setShareText] = useState("");
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     ...emptyPlaceDraft(),
-    city: settings.defaultCity
+    ...placeToDraft(initialPlaceDraft),
+    city: initialPlaceDraft?.city || settings.defaultCity
   }));
   const [message, setMessage] = useState("");
   const [showLocationDetails, setShowLocationDetails] = useState(false);
@@ -726,7 +777,10 @@ function QuickPlaceFields() {
             name="category"
             label="地点类型"
             value={draft.category}
-            onChange={(value) => updateDraft({ category: value })}
+            onChange={(value) => updateDraft({
+              category: value,
+              mall: value === "商场" && draft.name && !draft.mall ? draft.name : draft.mall
+            })}
             options={PLACE_CATEGORY_OPTIONS}
           />
         </label>
@@ -747,7 +801,7 @@ function QuickPlaceFields() {
             name="mall"
             value={draft.mall}
             onChange={(event) => updateDraft({ mall: event.target.value })}
-            placeholder="例如：玉兰国际、湖滨银泰"
+            placeholder="商场本体可填自己的名称；店铺可填所在商场"
           />
         </label>
       </div>
@@ -821,6 +875,29 @@ function QuickPlaceFields() {
             placeholder="例如：瓜渚湖地铁站 B 口步行 430 米"
           />
         </label>
+        <div className="form-row">
+          <label>
+            纬度
+            <input
+              name="latitude"
+              inputMode="decimal"
+              value={draft.latitude}
+              onChange={(event) => updateDraft({ latitude: event.target.value })}
+              placeholder="例如：30.2741"
+            />
+          </label>
+          <label>
+            经度
+            <input
+              name="longitude"
+              inputMode="decimal"
+              value={draft.longitude}
+              onChange={(event) => updateDraft({ longitude: event.target.value })}
+              placeholder="例如：120.1551"
+            />
+          </label>
+        </div>
+        <p className="form-hint">如果没有高德链接，可以先填经纬度作为定位。</p>
       </div>
 
       <button
@@ -891,8 +968,6 @@ function QuickPlaceFields() {
       <input type="hidden" name="country" value={draft.country || "中国"} />
       <input type="hidden" name="rating" value={draft.rating || 4} />
       <input type="hidden" name="favorite" value="false" />
-      <input type="hidden" name="latitude" value={draft.latitude} />
-      <input type="hidden" name="longitude" value={draft.longitude} />
       <input type="hidden" name="platformLinks" value={extractMeituanLinkTextFromDraft(draft)} />
       <p className="form-hint">如果是第一次录入，先保存核心信息即可；地点详情页里随时可以继续完善。</p>
     </>
@@ -1130,9 +1205,12 @@ function MemoryFields({
         <SelectPicker
           name="placeId"
           label="关联地点"
-          defaultValue={memory?.placeId || initialPlaceId || places[0]?.id || ""}
-          placeholder="选择地点"
-          options={places.map((place) => ({ value: place.id, label: place.name }))}
+          defaultValue={memory?.placeId || initialPlaceId || ""}
+          placeholder="无地点"
+          options={[
+            { value: "", label: "无" },
+            ...places.map((place) => ({ value: place.id, label: place.name }))
+          ]}
         />
       </label>
       <label>
