@@ -13,7 +13,10 @@ export interface LunarDateInfo {
   fullText: string;
   lunarText: string;
   ganZhiText: string;
+  ganZhiZodiacText: string;
   zodiac: string;
+  weekText: string;
+  weekOfYearText: string;
   cellText: string;
   festivals: string[];
   jieQi: string;
@@ -30,20 +33,23 @@ export function getLunarDateInfo(date?: string): LunarDateInfo | null {
   const jieQi = lunar.getJieQi();
   const festivals = [
     ...lunar.getFestivals(),
-    ...lunar.getOtherFestivals(),
-    ...solar.getFestivals(),
-    ...solar.getOtherFestivals()
+    ...lunar.getOtherFestivals()
   ].filter(Boolean);
   const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
   const ganZhiText = `${lunar.getYearInGanZhi()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`;
   const zodiac = lunar.getYearShengXiao();
+  const weekText = `周${solar.getWeekInChinese()}`;
+  const weekOfYearText = `第${getWeekOfYear(year, month, day)}周`;
   const cellText = festivals[0] || jieQi || lunar.getDayInChinese();
 
   return {
-    fullText: `${ganZhiText}【属${zodiac}】周${solar.getWeekInChinese()} 第${getWeekOfYear(year, month, day)}周`,
+    fullText: `${ganZhiText}【属${zodiac}】${weekText} ${weekOfYearText}`,
     lunarText,
     ganZhiText,
+    ganZhiZodiacText: `${lunar.getYearInGanZhi()}${zodiac}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`,
     zodiac,
+    weekText,
+    weekOfYearText,
     cellText,
     festivals,
     jieQi
@@ -60,6 +66,17 @@ export function formatLunarDate(date?: string) {
 export function formatSolarLunar(date?: string) {
   if (!date) return "未设置";
   return `${formatMonthDay(date)} · ${formatLunarDate(date)}`;
+}
+
+export function formatCalendarLunarSummary(date?: string) {
+  const info = getLunarDateInfo(date);
+  if (!date) return { ganZhiLine: "未设置", weekLine: "", lunarLine: "" };
+  if (!info) return { ganZhiLine: "农历转换不可用", weekLine: "", lunarLine: "" };
+  return {
+    ganZhiLine: info.ganZhiZodiacText,
+    weekLine: `${info.weekText} ${info.weekOfYearText}`,
+    lunarLine: info.lunarText
+  };
 }
 
 function getWeekOfYear(year: number, month: number, day: number) {

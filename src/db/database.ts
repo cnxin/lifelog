@@ -228,6 +228,10 @@ export async function loadPhotosByIds(photoIds: string[]): Promise<Photo[]> {
     .sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
 }
 
+export async function loadAllPhotos(): Promise<Photo[]> {
+  return await db.photos.toArray();
+}
+
 export async function deletePhotoRecord(id: string) {
   await db.photos.delete(id);
 }
@@ -247,6 +251,44 @@ export async function replaceAllData(input: Partial<LifeLogState>) {
     await db.places.bulkPut(next.places);
     await db.memories.bulkPut(next.memories);
   });
+}
+
+export async function replaceAllBackupData({
+  state,
+  photos = [],
+  settings = defaultAppSettings,
+  reminderSettings = defaultReminderSettings,
+  placeMergeHistory = []
+}: {
+  state: Partial<LifeLogState>;
+  photos?: Photo[];
+  settings?: AppSettings;
+  reminderSettings?: ReminderSettings;
+  placeMergeHistory?: PlaceMergeHistoryEntry[];
+}) {
+  const next = normalizeState(state);
+  await db.transaction(
+    "rw",
+    [db.people, db.places, db.memories, db.placeMergeHistory, db.appSettings, db.reminderSettings, db.photos],
+    async () => {
+      await db.people.clear();
+      await db.places.clear();
+      await db.memories.clear();
+      await db.placeMergeHistory.clear();
+      await db.appSettings.clear();
+      await db.reminderSettings.clear();
+      await db.photos.clear();
+      await db.people.bulkPut(next.people);
+      await db.places.bulkPut(next.places);
+      await db.memories.bulkPut(next.memories);
+      if (photos.length) await db.photos.bulkPut(photos);
+      if (placeMergeHistory.length) await db.placeMergeHistory.bulkPut(placeMergeHistory);
+      await db.appSettings.put({ key: "app", value: { ...defaultAppSettings, ...settings } });
+      await db.reminderSettings.put({ key: "reminder", value: { ...defaultReminderSettings, ...reminderSettings } });
+    }
+  );
+
+  return next;
 }
 
 export async function resetDatabase() {

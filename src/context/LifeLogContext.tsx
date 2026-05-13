@@ -5,6 +5,7 @@ import {
   deleteMemoryRecord,
   deletePersonRecord,
   deletePlaceRecord,
+  loadAllPhotos,
   loadAppSettings,
   loadPlaceMergeHistory,
   loadLifeLogState,
@@ -12,6 +13,7 @@ import {
   loadPhotosByMemoryId,
   loadReminderSettings,
   normalizeState,
+  replaceAllBackupData,
   replaceAllData,
   resetDatabase,
   runPlaceMergeTransaction,
@@ -77,7 +79,7 @@ interface LifeLogContextValue {
   undoLatestPlaceMerge: () => Promise<boolean>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
-  exportData: () => void;
+  exportData: () => Promise<void>;
   resetDemo: () => Promise<void>;
   loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
 }
@@ -89,6 +91,39 @@ const emptyState: LifeLogState = {
 };
 
 const LifeLogContext = createContext<LifeLogContextValue | null>(null);
+
+interface BackupPhotoRecord {
+  id: string;
+  memoryId: string;
+  originalDataUrl: string;
+  thumbnailDataUrl: string;
+  width: number;
+  height: number;
+  fileSize: number;
+  mimeType: string;
+  capturedAt?: string;
+  uploadedAt: string;
+  order: number;
+}
+
+interface FullBackupPayload {
+  schemaVersion: 3;
+  version: 3;
+  storage: "indexeddb";
+  exportedAt: string;
+  appVersion: string;
+  data: LifeLogState;
+  settings: AppSettings;
+  reminderSettings: ReminderSettings;
+  placeMergeHistory: PlaceMergeHistoryEntry[];
+  photos: BackupPhotoRecord[];
+  integrity: {
+    people: number;
+    places: number;
+    memories: number;
+    photos: number;
+  };
+}
 
 function uid(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -358,20 +393,22 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function importData(file: File) {
       const text = await file.text();
-      let parsed: Partial<LifeLogState>;
+      let parsed: unknown;
       try {
-        parsed = JSON.parse(text) as Partial<LifeLogState>;
+        parsed = JSON.parse(text) as unknown;
       } catch {
         throw new Error("文件不是有效的 JSON 格式，请检查备份文件。");
       }
-      if (!parsed || typeof parsed !== "object") {
+      if (!isRecord(parsed)) {
         throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
       }
-      const next = normalizeState(parsed);
-      await replaceAllData(next);
-      await clearPlaceMergeHistory();
+
+      const backup = await normalizeBackupPayload(parsed);
+      const next = await replaceAllBackupData(backup);
       setState(next);
-      setPlaceMergeHistory([]);
+      setSettings(backup.settings);
+      setReminderSettings(backup.reminderSettings);
+      setPlaceMergeHistory(backup.placeMergeHistory);
     }
 
     function getPersonName(id: string) {
@@ -502,18 +539,32 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       setReminderSettings(next);
     }
 
-    function exportData() {
-      const payload = {
-        version: 2,
+    async function exportData() {
+      const photos = await loadAllPhotos();
+      const backupPhotos = await Promise.all(photos.map(serializeBackupPhoto));
+      const payload: FullBackupPayload = {
+        schemaVersion: 3,
+        version: 3,
         storage: "indexeddb",
         exportedAt: new Date().toISOString(),
-        ...state
+        appVersion: "0.1.0-test.42",
+        data: state,
+        settings,
+        reminderSettings,
+        placeMergeHistory,
+        photos: backupPhotos,
+        integrity: {
+          people: state.people.length,
+          places: state.places.length,
+          memories: state.memories.length,
+          photos: backupPhotos.length
+        }
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `lifelog-indexeddb-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -564,6 +615,162 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+async function serializeBackupPhoto(photo: Photo): Promise<BackupPhotoRecord> {
+  return {
+    id: photo.id,
+    memoryId: photo.memoryId,
+    originalDataUrl: await blobToDataUrl(photo.originalBlob),
+    thumbnailDataUrl: await blobToDataUrl(photo.thumbnailBlob),
+    width: photo.width,
+    height: photo.height,
+    fileSize: photo.fileSize,
+    mimeType: photo.mimeType,
+    capturedAt: photo.capturedAt,
+    uploadedAt: photo.uploadedAt,
+    order: photo.order
+  };
+}
+
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("照片备份生成失败，请稍后重试。"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function dataUrlToBlob(dataUrl: string) {
+  const response = await fetch(dataUrl);
+  return await response.blob();
+}
+
+async function normalizeBackupPayload(input: Record<string, unknown>) {
+  const sourceState = isRecord(input.data) ? input.data : input;
+  if (!isBackupStateLike(sourceState)) {
+    throw new Error("备份文件缺少人物、地点或回忆数据，导入已取消。");
+  }
+  const nextState = normalizeState(sourceState as Partial<LifeLogState>);
+  const settings = normalizeAppSettings(input.settings);
+  const reminderSettings = normalizeReminderSettings(input.reminderSettings);
+  const placeMergeHistory = normalizePlaceMergeHistory(input.placeMergeHistory);
+  const photos = await normalizeBackupPhotos(input.photos, nextState);
+  const validPhotoIds = new Set(photos.map((photo) => photo.id));
+  const safeState: LifeLogState = {
+    ...nextState,
+    memories: nextState.memories.map((memory) => ({
+      ...memory,
+      photos: memory.photos.filter((photoId) => validPhotoIds.has(photoId))
+    }))
+  };
+
+  validateIntegrity(input.integrity, safeState, photos);
+
+  return {
+    state: safeState,
+    photos,
+    settings,
+    reminderSettings,
+    placeMergeHistory
+  };
+}
+
+function isBackupStateLike(value: unknown) {
+  if (!isRecord(value)) return false;
+  return ["people", "places", "memories"].every((key) => Array.isArray(value[key]));
+}
+
+function normalizeAppSettings(value: unknown): AppSettings {
+  if (!isRecord(value)) return defaultAppSettings;
+  const themeStyle = String(value.themeStyle || defaultAppSettings.themeStyle);
+  return {
+    defaultCity: String(value.defaultCity || defaultAppSettings.defaultCity),
+    defaultRelationship: String(value.defaultRelationship || defaultAppSettings.defaultRelationship),
+    defaultMood: String(value.defaultMood || defaultAppSettings.defaultMood),
+    themeStyle: ["classic", "cream", "mint", "mist"].includes(themeStyle) ? (themeStyle as AppSettings["themeStyle"]) : defaultAppSettings.themeStyle
+  };
+}
+
+function normalizeReminderSettings(value: unknown): ReminderSettings {
+  if (!isRecord(value)) return defaultReminderSettings;
+  return {
+    birthdayEnabled: Boolean(value.birthdayEnabled ?? defaultReminderSettings.birthdayEnabled),
+    birthdayAdvanceDays: Number(value.birthdayAdvanceDays) || defaultReminderSettings.birthdayAdvanceDays,
+    birthdayTime: String(value.birthdayTime || defaultReminderSettings.birthdayTime),
+    anniversaryEnabled: Boolean(value.anniversaryEnabled ?? defaultReminderSettings.anniversaryEnabled),
+    anniversaryAdvanceDays: Number(value.anniversaryAdvanceDays) || defaultReminderSettings.anniversaryAdvanceDays,
+    anniversaryTime: String(value.anniversaryTime || defaultReminderSettings.anniversaryTime),
+    contactEnabled: Boolean(value.contactEnabled ?? defaultReminderSettings.contactEnabled),
+    contactIntervalDays: Number(value.contactIntervalDays) || defaultReminderSettings.contactIntervalDays,
+    contactTime: String(value.contactTime || defaultReminderSettings.contactTime),
+    memoryEnabled: Boolean(value.memoryEnabled ?? defaultReminderSettings.memoryEnabled),
+    memoryTime: String(value.memoryTime || defaultReminderSettings.memoryTime)
+  };
+}
+
+function normalizePlaceMergeHistory(value: unknown): PlaceMergeHistoryEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is PlaceMergeHistoryEntry => {
+    if (!isRecord(item)) return false;
+    return typeof item.id === "string" && typeof item.happenedAt === "string" && isRecord(item.snapshot);
+  });
+}
+
+async function normalizeBackupPhotos(value: unknown, state: LifeLogState): Promise<Photo[]> {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error("备份中的照片结构不正确。请检查文件是否完整。");
+  const memoryIds = new Set(state.memories.map((memory) => memory.id));
+  const result: Photo[] = [];
+
+  for (const item of value) {
+    if (!isBackupPhotoRecord(item)) {
+      throw new Error("备份中的照片字段不完整，导入已取消。");
+    }
+    if (!memoryIds.has(item.memoryId)) continue;
+    result.push({
+      id: item.id,
+      memoryId: item.memoryId,
+      originalBlob: await dataUrlToBlob(item.originalDataUrl),
+      thumbnailBlob: await dataUrlToBlob(item.thumbnailDataUrl),
+      width: Number(item.width) || 0,
+      height: Number(item.height) || 0,
+      fileSize: Number(item.fileSize) || 0,
+      mimeType: item.mimeType,
+      capturedAt: item.capturedAt,
+      uploadedAt: item.uploadedAt,
+      order: Number(item.order) || 0
+    });
+  }
+
+  return result;
+}
+
+function isBackupPhotoRecord(value: unknown): value is BackupPhotoRecord {
+  if (!isRecord(value)) return false;
+  return ["id", "memoryId", "originalDataUrl", "thumbnailDataUrl", "mimeType", "uploadedAt"].every((key) => typeof value[key] === "string");
+}
+
+function validateIntegrity(value: unknown, state: LifeLogState, photos: Photo[]) {
+  if (value === undefined) return;
+  if (!isRecord(value)) throw new Error("备份完整性信息不正确，导入已取消。");
+  const expected = {
+    people: state.people.length,
+    places: state.places.length,
+    memories: state.memories.length,
+    photos: photos.length
+  };
+
+  for (const key of Object.keys(expected) as Array<keyof typeof expected>) {
+    if (Number(value[key]) !== expected[key]) {
+      throw new Error("备份完整性校验失败，导入已取消。请重新导出备份后再试。");
+    }
+  }
 }
 
 function buildPlaceFromFormData(formData: FormData, id: string | undefined, settings: AppSettings): Place {

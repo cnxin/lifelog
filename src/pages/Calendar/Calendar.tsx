@@ -2,15 +2,19 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
+import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { formatLunarDate, formatMonthDay } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { formatCalendarLunarSummary, formatMonthDay, getLunarDateInfo } from "../../utils/date";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 
 type CalendarItem = {
   id: string;
   dateKey: string;
   title: string;
   subtitle: string;
+  subtitleLines?: string[];
+  content?: string;
+  tagItems?: string[];
   type: "person" | "memory";
   target: string;
 };
@@ -23,6 +27,7 @@ export default function Calendar() {
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(toDateKey(today));
+  const [showLunar, setShowLunar] = useState(true);
   const todayKey = toDateKey(today);
 
   const monthDays = useMemo(() => buildMonthDays(cursor), [cursor]);
@@ -34,6 +39,7 @@ export default function Calendar() {
   ]);
   const itemsByDate = useMemo(() => groupByDate(items), [items]);
   const selectedItems = itemsByDate[selectedDate] || [];
+  const selectedLunar = getLunarDateInfo(selectedDate);
 
   function moveMonth(offset: number) {
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
@@ -55,11 +61,19 @@ export default function Calendar() {
             <button className="icon-action" onClick={() => moveMonth(-1)} aria-label="上个月">
               <ChevronLeft />
             </button>
-            <div>
+            <div className="calendar-title-block">
               <h2>
                 {cursor.getFullYear()}年 {cursor.getMonth() + 1}月
               </h2>
-              <p>{formatLunarDate(selectedDate)}</p>
+              {selectedLunar ? (
+                <>
+                  <p className="calendar-lunar-line">{selectedLunar.ganZhiZodiacText}</p>
+                  <p className="calendar-week-line">{selectedLunar.weekText} {selectedLunar.weekOfYearText}</p>
+                  <p className="calendar-date-line">{selectedLunar.lunarText}</p>
+                </>
+              ) : (
+                <p className="calendar-week-line">农历转换不可用</p>
+              )}
             </div>
             <button className="icon-action" onClick={() => moveMonth(1)} aria-label="下个月">
               <ChevronRight />
@@ -72,13 +86,21 @@ export default function Calendar() {
             </button>
           </div>
 
+          <button
+            className={`date-lunar-toggle calendar-lunar-toggle ${showLunar ? "active" : ""}`}
+            type="button"
+            onClick={() => setShowLunar((current) => !current)}
+          >
+            {showLunar ? "隐藏农历" : "显示农历"}
+          </button>
+
           <div className="calendar-week">
             {weekDays.map((day) => (
               <span key={day}>{day}</span>
             ))}
           </div>
 
-          <div className="calendar-grid">
+          <div className={`calendar-grid ${showLunar ? "with-lunar" : ""}`}>
             {monthDays.map((day) => {
               const dateItems = itemsByDate[day.dateKey] || [];
               return (
@@ -90,6 +112,7 @@ export default function Calendar() {
                   onClick={() => setSelectedDate(day.dateKey)}
                 >
                   <span>{day.date.getDate()}</span>
+                  {showLunar && <small>{getLunarDateInfo(day.dateKey)?.cellText}</small>}
                   {dateItems.length > 0 && <i>{dateItems.length}</i>}
                 </button>
               );
@@ -106,7 +129,23 @@ export default function Calendar() {
           {selectedItems.map((item) => (
             <button className="calendar-item glass-card" key={item.id} onClick={() => navigate(item.target)}>
               <strong>{item.title}</strong>
-              <span>{item.subtitle}</span>
+              {item.subtitleLines ? (
+                <div className="calendar-item-meta">
+                  {item.subtitleLines.map((line) => (
+                    <span key={line}>{line}</span>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {item.subtitle && <span className="memory-meta-line">{item.subtitle}</span>}
+                  {item.content && <p className="memory-desc calendar-memory-content">{item.content}</p>}
+                  {item.tagItems?.length ? (
+                    <div className="memory-tags-line calendar-memory-tags">
+                      <Tags items={item.tagItems} />
+                    </div>
+                  ) : null}
+                </>
+              )}
             </button>
           ))}
           {!selectedItems.length && <GlassCard className="empty">这一天还没有记录</GlassCard>}
@@ -146,11 +185,14 @@ function buildCalendarItems(
       .map((anniversary) => {
         const date = new Date(`${anniversary.date}T00:00:00`);
         const eventDate = new Date(year, date.getMonth(), date.getDate());
+        const dateKey = toDateKey(eventDate);
+        const summary = formatCalendarLunarSummary(dateKey);
         return {
           id: `person-${person.id}-${anniversary.title}`,
-          dateKey: toDateKey(eventDate),
+          dateKey,
           title: `${person.name} · ${anniversary.title}`,
-          subtitle: formatLunarDate(toDateKey(eventDate)),
+          subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
+          subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
           type: "person" as const,
           target: `/people/${person.id}#anniversaries`
         };
@@ -162,11 +204,14 @@ function buildCalendarItems(
     .filter((memory) => new Date(`${memory.date}T00:00:00`).getMonth() === month)
     .map((memory) => {
       const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+      const content = isManualTitle(memory) ? memory.content.trim() : "";
       return {
         id: `memory-${memory.id}`,
         dateKey: memory.date,
         title: getMemoryDisplayTitle(memory, ctx),
         subtitle: [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ") || "未关联",
+        content,
+        tagItems: [memory.mood, ...(memory.tags || [])].filter(Boolean),
         type: "memory" as const,
         target: `/memories/${memory.id}`
       };

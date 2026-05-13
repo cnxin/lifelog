@@ -10,6 +10,7 @@ import Memories from "./pages/Memories/Memories";
 import MemoryDetail from "./pages/Memories/MemoryDetail";
 import Calendar from "./pages/Calendar/Calendar";
 import Settings from "./pages/Settings/Settings";
+import Account from "./pages/Account/Account";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/memories/:memoryId" element={<MemoryDetail />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/account" element={<Account />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppLayout>

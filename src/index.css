@@ -13,6 +13,13 @@ html[data-theme-style="classic"] {
   --line: rgba(124, 140, 248, 0.1);
   --soft-purple: rgba(124, 140, 248, 0.09);
   --soft-orange: rgba(245, 163, 174, 0.12);
+  --control-tint: linear-gradient(135deg, rgba(124, 140, 248, 0.1), rgba(245, 163, 174, 0.1));
+  --control-border: rgba(124, 140, 248, 0.16);
+  --control-shadow: 0 8px 18px rgba(124, 140, 248, 0.07);
+  --focus-ring: rgba(124, 140, 248, 0.14);
+  --danger: #b94040;
+  --danger-soft: rgba(217, 87, 87, 0.12);
+  --switch-knob: #ffffff;
   --shadow: 0 8px 22px rgba(55, 65, 110, 0.05);
   --press-shadow: 0 4px 14px rgba(55, 65, 110, 0.08);
 }
@@ -29,6 +36,13 @@ html[data-theme-style="cream"] {
   --line: rgba(176, 133, 83, 0.14);
   --soft-purple: rgba(159, 123, 85, 0.09);
   --soft-orange: rgba(232, 205, 166, 0.24);
+  --control-tint: linear-gradient(135deg, rgba(255, 240, 215, 0.8), rgba(232, 205, 166, 0.24));
+  --control-border: rgba(159, 123, 85, 0.16);
+  --control-shadow: 0 8px 18px rgba(117, 88, 58, 0.06);
+  --focus-ring: rgba(159, 123, 85, 0.14);
+  --danger: #9f5f4e;
+  --danger-soft: rgba(159, 95, 78, 0.11);
+  --switch-knob: #fffaf1;
   --shadow: 0 10px 24px rgba(117, 88, 58, 0.06);
   --press-shadow: 0 5px 16px rgba(117, 88, 58, 0.09);
 }
@@ -45,6 +59,13 @@ html[data-theme-style="mint"] {
   --line: rgba(18, 184, 134, 0.16);
   --soft-purple: rgba(18, 184, 134, 0.13);
   --soft-orange: rgba(77, 171, 247, 0.2);
+  --control-tint: linear-gradient(135deg, rgba(218, 255, 246, 0.78), rgba(77, 171, 247, 0.16));
+  --control-border: rgba(18, 184, 134, 0.17);
+  --control-shadow: 0 8px 18px rgba(18, 184, 134, 0.07);
+  --focus-ring: rgba(18, 184, 134, 0.14);
+  --danger: #c05647;
+  --danger-soft: rgba(192, 86, 71, 0.1);
+  --switch-knob: #f7fffd;
   --shadow: 0 12px 26px rgba(18, 184, 134, 0.08);
   --press-shadow: 0 5px 16px rgba(18, 184, 134, 0.12);
 }
@@ -61,6 +82,13 @@ html[data-theme-style="mist"] {
   --line: rgba(31, 41, 55, 0.09);
   --soft-purple: rgba(75, 85, 99, 0.06);
   --soft-orange: rgba(156, 163, 175, 0.12);
+  --control-tint: linear-gradient(135deg, rgba(248, 250, 252, 0.92), rgba(203, 213, 225, 0.28));
+  --control-border: rgba(75, 85, 99, 0.12);
+  --control-shadow: 0 8px 18px rgba(17, 24, 39, 0.04);
+  --focus-ring: rgba(75, 85, 99, 0.12);
+  --danger: #9f5f5f;
+  --danger-soft: rgba(159, 95, 95, 0.09);
+  --switch-knob: #ffffff;
   --shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
   --press-shadow: 0 3px 12px rgba(17, 24, 39, 0.07);
 }
@@ -75,6 +103,13 @@ html[data-theme-style="mist"] {
     --line: rgba(255, 255, 255, 0.1);
     --soft-purple: rgba(91, 108, 255, 0.16);
     --soft-orange: rgba(255, 127, 159, 0.16);
+    --control-tint: linear-gradient(135deg, rgba(91, 108, 255, 0.18), rgba(255, 127, 159, 0.12));
+    --control-border: rgba(255, 255, 255, 0.12);
+    --control-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    --focus-ring: rgba(91, 108, 255, 0.22);
+    --danger: #ff9f8c;
+    --danger-soft: rgba(255, 159, 140, 0.14);
+    --switch-knob: #ffffff;
   }
 }
 
@@ -289,6 +324,7 @@ html[data-theme-style="cream"] .time-picker-column button.active {
 .app-container.theme-cream .avatar,
 .app-container.theme-cream .fav-avatar,
 .app-container.theme-cream .person-photo,
+.app-container.theme-cream .place-img,
 .app-container.theme-cream .profile-photo,
 .app-container.theme-cream .memory-badge {
   color: #7b5d3d;
@@ -328,17 +364,19 @@ html[data-theme-style="cream"] .date-calendar-grid button.active {
 html[data-theme-style="mist"] .select-picker-menu button.active,
 html[data-theme-style="mist"] .date-input-column button.active,
 html[data-theme-style="mist"] .time-picker-column button.active {
-  background: linear-gradient(135deg, #56606d, #7b8796);
+  color: #f8fafc;
+  background: linear-gradient(135deg, #aeb7c2 0%, #8f99a6 100%);
 }
 
 .app-container.theme-mist .avatar,
 .app-container.theme-mist .fav-avatar,
 .app-container.theme-mist .person-photo,
+.app-container.theme-mist .place-img,
 .app-container.theme-mist .profile-photo,
 .app-container.theme-mist .memory-badge {
   color: #f8fafc;
-  background: linear-gradient(135deg, #aeb7c2 0%, #8894a3 100%);
-  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.1);
+  background: linear-gradient(135deg, #c7ced8 0%, #a4adba 100%);
+  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.08);
 }
 
 .app-container.theme-mist .quick-memory-card,
@@ -353,9 +391,9 @@ html[data-theme-style="mist"] .date-input-column button.active,
 html[data-theme-style="mist"] .time-picker-column button.active,
 html[data-theme-style="mist"] .date-wheel-column button.active,
 html[data-theme-style="mist"] .date-calendar-grid button.active {
-  color: white;
-  background: linear-gradient(135deg, #8f99a6 0%, #6f7b89 100%);
-  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.11);
+  color: #f8fafc;
+  background: linear-gradient(135deg, #b8c0ca 0%, #96a0ad 100%);
+  box-shadow: 0 10px 22px rgba(75, 85, 99, 0.08);
 }
 
 .app-container.theme-mist .link-action.secondary {
@@ -366,6 +404,7 @@ html[data-theme-style="mist"] .date-calendar-grid button.active {
 .app-container.theme-mint .avatar,
 .app-container.theme-mint .fav-avatar,
 .app-container.theme-mint .person-photo,
+.app-container.theme-mint .place-img,
 .app-container.theme-mint .profile-photo,
 .app-container.theme-mint .memory-badge {
   background: linear-gradient(135deg, #7edfd0 0%, #7bbdf2 100%);
@@ -492,7 +531,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   justify-content: center;
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 10px 22px rgba(108, 92, 231, 0.24);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 20%, transparent);
   font-size: 20px;
   font-weight: 700;
 }
@@ -1127,6 +1166,30 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   overflow-wrap: anywhere;
 }
 
+.memory-meta-line {
+  color: color-mix(in srgb, var(--text-sub) 86%, var(--text-main));
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-memory-content {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.calendar-memory-tags {
+  margin-top: 1px;
+}
+
+.memory-content-block,
+.memory-tag-block {
+  display: grid;
+  gap: 8px;
+}
+
 .truncate-text {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1174,8 +1237,8 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .icon-action.danger {
-  color: #e17055;
-  background: var(--soft-orange);
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .icon-action svg {
@@ -1193,8 +1256,8 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .tag.orange {
-  color: #e17055;
-  background: var(--soft-orange);
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .category-row {
@@ -1415,7 +1478,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   place-items: center;
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 10px 22px rgba(108, 92, 231, 0.24);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 20%, transparent);
   font-size: 26px;
   font-weight: 800;
 }
@@ -1752,12 +1815,18 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: start;
+  gap: 8px;
   margin-bottom: 16px;
   text-align: center;
+}
+
+.calendar-title-block {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
 }
 
 .calendar-header h2 {
@@ -1765,15 +1834,36 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .calendar-header p {
-  margin-top: 4px;
+  margin: 0;
+}
+
+.calendar-lunar-line {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.calendar-week-line {
   color: var(--text-sub);
   font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-date-line {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.calendar-lunar-toggle {
+  margin: -4px 0 14px;
 }
 
 .calendar-week,
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -1787,6 +1877,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 
 .calendar-day {
   position: relative;
+  min-width: 0;
   border: 0;
   aspect-ratio: 1;
   border-radius: 14px;
@@ -1796,10 +1887,34 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   background: rgba(255, 255, 255, 0.52);
   font-size: 13px;
   font-weight: 700;
+  overflow: hidden;
   transition:
     transform 0.16s ease,
     background-color 0.16s ease,
     filter 0.16s ease;
+}
+
+.calendar-grid.with-lunar {
+  row-gap: 7px;
+}
+
+.calendar-grid.with-lunar .calendar-day {
+  grid-template-rows: minmax(0, 17px) minmax(0, 12px);
+  gap: 1px;
+  padding: 6px 1px;
+  place-items: center;
+}
+
+.calendar-day small {
+  max-width: 100%;
+  color: currentColor;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 11px;
+  opacity: 0.68;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .calendar-day.muted-day {
@@ -1828,13 +1943,13 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 
 .calendar-day.active i {
   color: var(--primary);
-  background: white;
+  background: var(--switch-knob);
 }
 
 .calendar-item {
   border: 1px solid var(--line);
   display: grid;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
   padding: 14px;
   color: var(--text-main);
@@ -1848,6 +1963,26 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 .calendar-item span {
   color: var(--text-sub);
   font-size: 13px;
+}
+
+.calendar-item-meta {
+  display: grid;
+  gap: 1px;
+}
+
+.calendar-item-meta span {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.calendar-item-meta span:first-child {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.calendar-item-meta span:nth-child(2),
+.calendar-item-meta span:nth-child(3) {
+  color: var(--text-sub);
 }
 
 .fab-container {
@@ -1961,7 +2096,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   border-radius: 16px;
   padding: 13px 14px;
   color: var(--text-main);
-  background: rgba(99, 110, 114, 0.08);
+  background: var(--soft-purple);
   transition:
     border-color 0.16s ease,
     background-color 0.16s ease,
@@ -1973,7 +2108,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 .form select:focus {
   border-color: var(--primary);
   background: var(--card-solid, #fff);
-  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+  box-shadow: 0 0 0 3px var(--soft-purple);
 }
 
 .form input[type="date"] {
@@ -1996,7 +2131,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   gap: 12px;
   padding: 10px 14px;
   border-radius: 16px;
-  background: rgba(99, 110, 114, 0.06);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
   color: var(--text-sub);
   font-size: 13px;
   font-weight: 600;
@@ -2022,7 +2157,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 .form .inline-field input:focus {
   border-color: var(--primary);
   background: var(--card-solid, #fff);
-  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+  box-shadow: 0 0 0 3px var(--soft-purple);
 }
 
 .form .inline-field input[type="date"] {
@@ -2059,7 +2194,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   align-items: center;
   gap: 6px;
   padding: 6px 10px 6px 12px;
-  border: 1px solid rgba(108, 92, 231, 0.28);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
   border-radius: 999px;
   background: var(--soft-purple);
   color: var(--primary);
@@ -2072,7 +2207,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .picker-chip:hover {
-  background: rgba(108, 92, 231, 0.18);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .picker-chip:active {
@@ -2133,7 +2268,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 
 .person-picker-results button:hover {
   background: var(--soft-purple);
-  border-color: rgba(108, 92, 231, 0.3);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
   color: var(--primary);
 }
 
@@ -2148,7 +2283,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .birthday-date-field {
-  border: 1px solid rgba(108, 92, 231, 0.12);
+  border: 1px solid var(--soft-purple);
   border-radius: 18px;
   padding: 12px 14px;
   background: rgba(99, 110, 114, 0.05);
@@ -2244,7 +2379,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 
 .inline-disclosure.open {
   background: var(--soft-purple);
-  box-shadow: 0 12px 28px rgba(108, 92, 231, 0.12);
+  box-shadow: 0 12px 28px var(--soft-purple);
 }
 
 .inline-disclosure-copy {
@@ -2292,10 +2427,10 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   padding: 14px;
   background: linear-gradient(
     135deg,
-    rgba(108, 92, 231, 0.12),
-    rgba(253, 160, 133, 0.12)
+    var(--soft-purple),
+    color-mix(in srgb, var(--secondary) 18%, transparent)
   );
-  border: 1px solid rgba(108, 92, 231, 0.12);
+  border: 1px solid var(--soft-purple);
 }
 
 .memory-preview-eyebrow {
@@ -2382,7 +2517,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   gap: 8px;
   border-radius: 16px;
   padding: 12px 14px;
-  background: rgba(99, 110, 114, 0.08);
+  background: var(--soft-purple);
 }
 
 .merge-reason-list p {
@@ -2397,12 +2532,12 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 14px;
-  background: rgba(99, 110, 114, 0.06);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
 .merge-preview-card.highlight {
-  border-color: rgba(108, 92, 231, 0.18);
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.12), rgba(253, 160, 133, 0.14));
+  border-color: color-mix(in srgb, var(--primary) 18%, transparent);
+  background: linear-gradient(135deg, var(--soft-purple), color-mix(in srgb, var(--secondary) 22%, transparent));
 }
 
 .merge-preview-card strong {
@@ -2549,8 +2684,8 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .mini-action.danger {
-  color: #e17055;
-  background: var(--soft-orange);
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .submit-row {
@@ -2640,7 +2775,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 }
 
 .danger-btn {
-  background: linear-gradient(135deg, #e17055, var(--secondary));
+  background: linear-gradient(135deg, var(--danger), var(--secondary));
 }
 
 .see-all:active,
@@ -2826,7 +2961,7 @@ button:disabled,
 }
 
 .toast-message.error {
-  color: #b94040;
+  color: var(--danger);
   background: rgba(255, 238, 238, 0.94);
 }
 
@@ -2840,6 +2975,49 @@ button:disabled,
     transform: translate(-50%, 0);
     opacity: 1;
   }
+}
+
+.account-profile-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+}
+
+.account-profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 18%, transparent);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.account-profile-main {
+  display: grid;
+  gap: 5px;
+}
+
+.account-profile-main strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.account-profile-main span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.account-profile-card > svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
 }
 
 .data-management-panel {
@@ -2932,18 +3110,18 @@ button:disabled,
 }
 
 .data-action-card.danger .data-action-icon {
-  color: #d95757;
-  background: rgba(217, 87, 87, 0.12);
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .data-action-card.danger strong {
-  color: #b94040;
+  color: var(--danger);
 }
 
 .settings-inline-input {
   text-align: right;
   border: 0;
-  background: rgba(108, 92, 231, 0.08);
+  background: var(--soft-purple);
   color: var(--primary);
   font-size: 15px;
   font-weight: 600;
@@ -2956,7 +3134,7 @@ button:disabled,
 }
 
 .settings-inline-input:focus {
-  background: rgba(108, 92, 231, 0.14);
+  background: var(--focus-ring);
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
@@ -2971,16 +3149,16 @@ button:disabled,
 .settings-picker-trigger {
   width: 132px;
   min-height: 44px;
-  border: 1px solid rgba(108, 92, 231, 0.16);
+  border: 1px solid var(--control-border);
   border-radius: 18px;
   outline: 0;
   color: var(--primary);
   background:
-    linear-gradient(135deg, rgba(108, 92, 231, 0.12), rgba(253, 160, 133, 0.1)),
-    rgba(255, 255, 255, 0.62);
+    var(--control-tint),
+    var(--card-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 10px 22px rgba(108, 92, 231, 0.08);
+    0 10px 22px var(--soft-purple);
   font-size: 14px;
   font-weight: 800;
   transition:
@@ -2999,8 +3177,8 @@ button:disabled,
   border-color: var(--primary-light);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.48),
-    0 0 0 3px rgba(108, 92, 231, 0.14),
-    0 12px 24px rgba(108, 92, 231, 0.12);
+    0 0 0 3px var(--focus-ring),
+    0 12px 24px var(--soft-purple);
 }
 
 .settings-picker {
@@ -3036,13 +3214,13 @@ button:disabled,
   width: 132px;
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid rgba(108, 92, 231, 0.14);
+  border: 1px solid var(--focus-ring);
   border-radius: 18px;
   padding: 6px;
   background: var(--card-solid);
   box-shadow:
     0 18px 36px rgba(45, 52, 54, 0.14),
-    0 4px 14px rgba(108, 92, 231, 0.12);
+    0 4px 14px var(--soft-purple);
 }
 
 .settings-picker-backdrop {
@@ -3122,17 +3300,17 @@ button:disabled,
 .settings-control-input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(108, 92, 231, 0.16);
+  border: 1px solid var(--control-border);
   border-radius: 16px;
   outline: 0;
   padding: 0 12px;
   color: var(--primary);
   background:
-    linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(253, 160, 133, 0.1)),
+    var(--control-tint),
     var(--card-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 8px 18px rgba(108, 92, 231, 0.07);
+    var(--control-shadow);
   font-size: 14px;
   font-weight: 800;
   text-align: center;
@@ -3150,8 +3328,8 @@ button:disabled,
   border-color: var(--primary-light);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 0 0 3px rgba(108, 92, 231, 0.14),
-    0 10px 22px rgba(108, 92, 231, 0.12);
+    0 0 0 3px var(--focus-ring),
+    0 10px 22px var(--soft-purple);
 }
 
 .settings-control-input:active {
@@ -3162,7 +3340,7 @@ button:disabled,
   .settings-default-input,
   .settings-picker-trigger {
     background:
-      linear-gradient(135deg, rgba(108, 92, 231, 0.18), rgba(253, 160, 133, 0.12)),
+      linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, transparent), color-mix(in srgb, var(--secondary) 18%, transparent)),
       rgba(36, 36, 58, 0.82);
   }
 }
@@ -3180,7 +3358,7 @@ button:disabled,
 .time-picker-trigger {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(108, 92, 231, 0.16);
+  border: 1px solid var(--control-border);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -3188,11 +3366,11 @@ button:disabled,
   gap: 8px;
   color: var(--primary);
   background:
-    linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(253, 160, 133, 0.1)),
+    var(--control-tint),
     var(--card-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 8px 18px rgba(108, 92, 231, 0.07);
+    var(--control-shadow);
   font-size: 14px;
   font-weight: 800;
   transition:
@@ -3210,8 +3388,8 @@ button:disabled,
   border-color: var(--primary-light);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 0 0 3px rgba(108, 92, 231, 0.14),
-    0 10px 22px rgba(108, 92, 231, 0.12);
+    0 0 0 3px var(--focus-ring),
+    0 10px 22px var(--soft-purple);
 }
 
 .time-picker-trigger:active {
@@ -3230,7 +3408,7 @@ button:disabled,
   position: fixed;
   z-index: 9999;
   width: 136px;
-  border: 1px solid rgba(108, 92, 231, 0.14);
+  border: 1px solid var(--focus-ring);
   border-radius: 18px;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3239,7 +3417,7 @@ button:disabled,
   background: var(--card-solid);
   box-shadow:
     0 18px 36px rgba(45, 52, 54, 0.14),
-    0 4px 14px rgba(108, 92, 231, 0.12);
+    0 4px 14px var(--soft-purple);
 }
 
 .time-picker-column {
@@ -3273,7 +3451,7 @@ button:disabled,
 @media (prefers-color-scheme: dark) {
   .time-picker-trigger {
     background:
-      linear-gradient(135deg, rgba(108, 92, 231, 0.18), rgba(253, 160, 133, 0.12)),
+      linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, transparent), color-mix(in srgb, var(--secondary) 18%, transparent)),
       rgba(36, 36, 58, 0.82);
   }
 }
@@ -3290,15 +3468,15 @@ button:disabled,
 .number-stepper {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(108, 92, 231, 0.16);
+  border: 1px solid var(--control-border);
   border-radius: 16px;
   color: var(--primary);
   background:
-    linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(253, 160, 133, 0.1)),
+    var(--control-tint),
     var(--card-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 8px 18px rgba(108, 92, 231, 0.07);
+    var(--control-shadow);
   font-size: 14px;
   font-weight: 800;
   transition:
@@ -3318,7 +3496,7 @@ button:disabled,
 }
 
 .date-input-trigger {
-  border: 1px solid rgba(108, 92, 231, 0.16);
+  border: 1px solid var(--control-border);
 }
 
 .date-input-trigger span,
@@ -3354,8 +3532,8 @@ button:disabled,
   border-color: var(--primary-light);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 0 0 3px rgba(108, 92, 231, 0.14),
-    0 10px 22px rgba(108, 92, 231, 0.12);
+    0 0 0 3px var(--focus-ring),
+    0 10px 22px var(--soft-purple);
 }
 
 .select-picker-trigger:active,
@@ -3379,13 +3557,13 @@ button:disabled,
   right: max(18px, env(safe-area-inset-right, 0px));
   bottom: max(18px, env(safe-area-inset-bottom, 0px));
   left: max(18px, env(safe-area-inset-left, 0px));
-  border: 1px solid rgba(108, 92, 231, 0.12);
+  border: 1px solid var(--soft-purple);
   border-radius: 28px;
   padding: 22px 18px 18px;
   background: var(--card-solid);
   box-shadow:
     0 26px 64px rgba(45, 52, 54, 0.2),
-    0 8px 20px rgba(108, 92, 231, 0.12);
+    0 8px 20px var(--soft-purple);
 }
 
 .date-calendar-head {
@@ -3419,14 +3597,14 @@ button:disabled,
   border-radius: 14px;
   padding: 8px 10px;
   color: var(--text-main);
-  background: rgba(99, 110, 114, 0.08);
+  background: var(--soft-purple);
   font-size: 18px;
   font-weight: 800;
   text-align: center;
 }
 
 .date-calendar-title input:focus {
-  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+  box-shadow: 0 0 0 3px var(--soft-purple);
 }
 
 .date-calendar-title strong {
@@ -3443,7 +3621,7 @@ button:disabled,
   margin: 8px 0 12px;
   padding: 10px 8px;
   border-radius: 20px;
-  background: rgba(99, 110, 114, 0.06);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
   overflow: hidden;
 }
 
@@ -3523,7 +3701,7 @@ button:disabled,
 
 .date-apply-button:disabled {
   color: var(--text-sub);
-  background: rgba(99, 110, 114, 0.07);
+  background: color-mix(in srgb, var(--text-sub) 9%, transparent);
 }
 
 .date-lunar-toggle {
@@ -3674,7 +3852,7 @@ button:disabled,
 .date-calendar-grid button.active {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 8px 18px rgba(108, 92, 231, 0.22);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 22%, transparent);
 }
 
 .date-calendar-grid button:active {
@@ -3700,7 +3878,7 @@ button:disabled,
   z-index: 9999;
   max-height: 240px;
   overflow-y: auto;
-  border: 1px solid rgba(108, 92, 231, 0.14);
+  border: 1px solid var(--focus-ring);
   border-radius: 18px;
   display: grid;
   gap: 3px;
@@ -3708,7 +3886,7 @@ button:disabled,
   background: var(--card-solid);
   box-shadow:
     0 18px 36px rgba(45, 52, 54, 0.14),
-    0 4px 14px rgba(108, 92, 231, 0.12);
+    0 4px 14px var(--soft-purple);
 }
 
 .select-picker-menu::-webkit-scrollbar {
@@ -3752,7 +3930,7 @@ button:disabled,
   border: 0;
   border-radius: 12px;
   color: var(--primary);
-  background: rgba(108, 92, 231, 0.1);
+  background: var(--soft-purple);
   font-size: 18px;
   font-weight: 900;
   line-height: 1;
@@ -3854,7 +4032,7 @@ button:disabled,
   .date-input-trigger,
   .number-stepper {
     background:
-      linear-gradient(135deg, rgba(108, 92, 231, 0.18), rgba(253, 160, 133, 0.12)),
+      linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, transparent), color-mix(in srgb, var(--secondary) 18%, transparent)),
       rgba(36, 36, 58, 0.82);
   }
 }
@@ -3993,7 +4171,7 @@ button:disabled,
   gap: 1px;
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(108, 92, 231, 0.08);
+  background: var(--soft-purple);
 }
 
 .settings-capability-overview-item {
@@ -4002,7 +4180,7 @@ button:disabled,
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.56);
+  background: color-mix(in srgb, var(--card-solid) 72%, var(--primary) 6%);
 }
 
 .settings-capability-overview-item em {
@@ -4066,7 +4244,7 @@ button:disabled,
 }
 
 .permission-status.denied {
-  color: #e17055;
+  color: var(--danger);
 }
 
 .reminder-config-block {
@@ -4105,7 +4283,7 @@ button:disabled,
   outline: none;
   padding: 8px 10px;
   color: var(--primary);
-  background: rgba(108, 92, 231, 0.08);
+  background: var(--soft-purple);
   font-size: 14px;
   font-weight: 700;
   text-align: center;
@@ -4129,7 +4307,7 @@ button:disabled,
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  background: rgba(99, 110, 114, 0.22);
+  background: color-mix(in srgb, var(--text-sub) 22%, transparent);
   transition: background 0.2s ease;
 }
 
@@ -4141,7 +4319,7 @@ button:disabled,
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--switch-knob);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
   transition: transform 0.2s ease;
 }
@@ -4155,7 +4333,7 @@ button:disabled,
 }
 
 .reminder-toggle input:focus-visible + .toggle-slider {
-  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .calendar-today-row {
@@ -4247,14 +4425,14 @@ button:disabled,
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(108, 92, 231, 0.1);
+  background: var(--soft-purple);
   color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .search-clear:active {
-  background: rgba(108, 92, 231, 0.2);
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 .anniversary-scroll-wrapper {
@@ -4289,7 +4467,7 @@ button:disabled,
 }
 
 .favorite-toggle:active {
-  background: rgba(108, 92, 231, 0.1);
+  background: var(--soft-purple);
 }
 
 .favorite-toggle.active {
@@ -4314,7 +4492,7 @@ button:disabled,
   padding: 5px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(99, 110, 114, 0.06);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
   color: var(--text-sub);
   font-size: 12px;
   font-weight: 600;
@@ -4327,7 +4505,7 @@ button:disabled,
 
 .mood-preset-pill.active {
   background: var(--soft-purple);
-  border-color: rgba(108, 92, 231, 0.35);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
   color: var(--primary);
 }
 

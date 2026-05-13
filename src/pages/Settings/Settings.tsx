@@ -1,12 +1,10 @@
-import { BarChart3, Bell, ChevronDown, Database, Download, GitMerge, Info, RotateCcw, SlidersHorizontal, Upload } from "lucide-react";
+import { BarChart3, Bell, ChevronDown, GitMerge, SlidersHorizontal } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import DateInput from "../../components/DateInput";
 import GlassCard from "../../components/GlassCard";
 import NumberStepper from "../../components/NumberStepper";
-import Tags from "../../components/Tags";
 import TimePicker from "../../components/TimePicker";
 import { useConfirm } from "../../context/ConfirmContext";
-import { useToast } from "../../context/ToastContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { ThemeStyle } from "../../types";
 import ReminderSettings from "./ReminderSettings";
@@ -46,18 +44,11 @@ export default function Settings() {
     latestPlaceMerge,
     mergeAllDuplicatePlaces,
     undoLatestPlaceMerge,
-    updateSettings,
-    exportData,
-    importData,
-    resetDemo
+    updateSettings
   } = useLifeLog();
   const confirm = useConfirm();
-  const notify = useToast();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const importLockRef = useRef(false);
   const mergeLockRef = useRef(false);
   const undoLockRef = useRef(false);
-  const [isImporting, setIsImporting] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
@@ -79,62 +70,10 @@ export default function Settings() {
     () => new Set(state.places.map((place) => place.city).filter(Boolean)).size,
     [state.places]
   );
-  const dataSummary = useMemo(
-    () => [
-      `${state.people.length} 个人物`,
-      `${state.places.length} 个地点`,
-      `${state.memories.length} 条回忆`
-    ].join(" · "),
-    [state.memories.length, state.people.length, state.places.length]
-  );
-  const hasUserData = state.people.length > 0 || state.places.length > 0 || state.memories.length > 0;
   const strongCount = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong").length,
     [duplicatePlaceGroups]
   );
-
-  async function handleImport(file: File | undefined) {
-    if (!file) return;
-    if (importLockRef.current) return;
-    const accepted = await confirm({
-      title: "导入数据",
-      message: `导入会覆盖当前本地数据（${dataSummary}）。建议先导出备份，再确认导入这个 JSON 文件。`,
-      confirmText: "确认覆盖导入"
-    });
-    if (!accepted) {
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    importLockRef.current = true;
-    setIsImporting(true);
-    try {
-      await importData(file);
-      notify({ message: "数据导入完成，当前资料已恢复", tone: "success" });
-    } catch (error) {
-      await confirm({
-        title: "导入失败",
-        message: error instanceof Error ? error.message : "请检查文件格式。",
-        confirmText: "知道了",
-        tone: "info"
-      });
-    } finally {
-      importLockRef.current = false;
-      setIsImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  async function handleReset() {
-    const accepted = await confirm({
-      title: "重置为示例数据",
-      message: `这会清空当前本地数据（${dataSummary}）并替换为 Demo 示例数据。建议先导出备份。`,
-      confirmText: "确认重置"
-    });
-    if (!accepted) return;
-    await resetDemo();
-    notify({ message: "已重置为示例数据", tone: "success" });
-  }
 
   async function handleMergeAll() {
     if (mergeLockRef.current) return;
@@ -212,6 +151,30 @@ export default function Settings() {
       <section className="section">
         <div className="section-header">
           <h2>
+            <SlidersHorizontal /> 视觉风格
+          </h2>
+        </div>
+        <div className="theme-selector-row">
+          {themeOptions.map((option) => (
+            <button
+              className={`theme-option theme-option-${option.value} ${settings.themeStyle === option.value ? "active" : ""}`}
+              type="button"
+              key={option.value}
+              aria-pressed={settings.themeStyle === option.value}
+              onClick={() => void updateSettings({ themeStyle: option.value })}
+            >
+              <span className="theme-option-swatch" aria-hidden="true" />
+              <strong>{option.label}</strong>
+              <small>{option.desc}</small>
+            </button>
+          ))}
+        </div>
+        <p className="form-hint settings-section-hint">选择后会立即应用到全局页面和控件，并在刷新后保留。</p>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
             <BarChart3 /> 数据概览
           </h2>
         </div>
@@ -243,68 +206,6 @@ export default function Settings() {
             <span>去过的城市</span>
           </div>
         </GlassCard>
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Database /> 数据管理
-          </h2>
-        </div>
-        <div className="data-management-panel">
-          <GlassCard className="data-management-intro">
-            <strong>本地数据备份</strong>
-            <span>{dataSummary}</span>
-            <p>数据保存在当前设备的 IndexedDB 中。导出不会修改现有数据；导入和重置会覆盖当前本地数据。</p>
-          </GlassCard>
-          <div className="data-action-grid">
-            <button
-              className="data-action-card glass-card"
-              onClick={() => {
-                exportData();
-                notify({ message: "JSON 备份文件已生成", tone: "success" });
-              }}
-              disabled={!hasUserData}
-            >
-              <div className="data-action-icon">
-                <Download />
-              </div>
-              <div>
-                <strong>导出 JSON 备份</strong>
-                <span>保存人物、地点、回忆和设置</span>
-              </div>
-            </button>
-            <button
-              className="data-action-card glass-card"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-            >
-              <div className="data-action-icon">
-                <Upload />
-              </div>
-              <div>
-                <strong>{isImporting ? "导入中…" : "从 JSON 恢复"}</strong>
-                <span>导入前会再次确认覆盖风险</span>
-              </div>
-            </button>
-            <button className="data-action-card danger glass-card" onClick={() => void handleReset()}>
-              <div className="data-action-icon">
-                <RotateCcw />
-              </div>
-              <div>
-                <strong>重置为示例数据</strong>
-                <span>清空当前数据并还原 Demo</span>
-              </div>
-            </button>
-          </div>
-        </div>
-        <input
-          ref={fileInputRef}
-          className="hidden-file"
-          type="file"
-          accept=".json,application/json"
-          onChange={(event) => void handleImport(event.target.files?.[0])}
-        />
       </section>
 
       <section className="section">
@@ -443,73 +344,6 @@ export default function Settings() {
           </GlassCard>
         </div>
         <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <SlidersHorizontal /> 视觉风格
-          </h2>
-        </div>
-        <div className="theme-selector-row">
-          {themeOptions.map((option) => (
-            <button
-              className={`theme-option theme-option-${option.value} ${settings.themeStyle === option.value ? "active" : ""}`}
-              type="button"
-              key={option.value}
-              aria-pressed={settings.themeStyle === option.value}
-              onClick={() => void updateSettings({ themeStyle: option.value })}
-            >
-              <span className="theme-option-swatch" aria-hidden="true" />
-              <strong>{option.label}</strong>
-              <small>{option.desc}</small>
-            </button>
-          ))}
-        </div>
-        <p className="form-hint settings-section-hint">选择后会立即应用到全局页面和控件，并在刷新后保留。</p>
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Info /> 关于
-          </h2>
-        </div>
-        <div className="list">
-          <GlassCard className="detail-row">
-            <strong>版本</strong>
-            <span>0.1.0-test.41</span>
-          </GlassCard>
-          <GlassCard className="detail-row">
-            <strong>存储</strong>
-            <span>IndexedDB (Dexie v4)</span>
-          </GlassCard>
-          <GlassCard className="detail-row">
-            <strong>技术栈</strong>
-            <span>React 18 + TypeScript + Capacitor 8</span>
-          </GlassCard>
-          <GlassCard className="settings-capability-overview">
-            <div className="settings-capability-overview-head">
-              <strong>当前能力</strong>
-              <span>本地优先</span>
-            </div>
-            <div className="settings-capability-overview-list">
-              {[
-                { label: "资料管理", value: "人物、地点、商场" },
-                { label: "生活记录", value: "回忆、照片" },
-                { label: "辅助能力", value: "提醒、本地备份" }
-              ].map((item) => (
-                <div className="settings-capability-overview-item" key={item.label}>
-                  <em>{item.label}</em>
-                  <span>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-        <div className="settings-about-tags">
-          <Tags items={["React 18", "Vite", "Dexie", "Capacitor 8", "照片", "提醒", "本地优先"]} />
-        </div>
       </section>
 
       {openPicker && (

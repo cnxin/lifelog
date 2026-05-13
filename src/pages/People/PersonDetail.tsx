@@ -258,11 +258,11 @@ export default function PersonDetail() {
                             <span>{displayTitle}</span>
                             <span className="place-rating">{formatMonthDay(memory.date)}</span>
                           </div>
-                          <p className="memory-desc">
-                            {ctx.placeName || "未关联地点"}
-                            {showContentLine ? ` · ${memory.content}` : ""}
-                          </p>
-                          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+                          <p className="memory-desc memory-meta-line">{ctx.placeName || "未关联地点"}</p>
+                          {showContentLine && <p className="memory-desc">{memory.content}</p>}
+                          <div className="memory-tags-line">
+                            <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+                          </div>
                         </div>
                       </GlassCard>
                     );

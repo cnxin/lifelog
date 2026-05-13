@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 interface HeaderProps {
   dateLabel: string;
   title: string;
@@ -5,6 +7,8 @@ interface HeaderProps {
 }
 
 export default function Header({ dateLabel, title, subtitle }: HeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header className="header">
       <div className="greeting">
@@ -12,7 +16,7 @@ export default function Header({ dateLabel, title, subtitle }: HeaderProps) {
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>
-      <button className="avatar" aria-label="个人资料">
+      <button className="avatar" aria-label="账号管理" onClick={() => navigate("/account")}>
         L
       </button>
     </header>

@@ -137,8 +137,18 @@ export default function MemoryDetail() {
             <Calendar /> 内容
           </h2>
         </div>
-        <GlassCard className="pref-block">
+        <GlassCard className="pref-block memory-content-block">
           <p className="memory-desc">{memory.content || "还没有记录内容"}</p>
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <Tag /> 标签
+          </h2>
+        </div>
+        <GlassCard className="pref-block memory-tag-block">
           <Tags items={[memory.mood, ...tags]} />
         </GlassCard>
       </section>

@@ -17,7 +17,8 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/places": { title: "地点", subtitle: "餐厅、酒店、景点和电影院" },
   "/memories": { title: "回忆", subtitle: "把人物和地点串起来" },
   "/calendar": { title: "日历", subtitle: "生日、纪念日和回忆时间线" },
-  "/settings": { title: "设置", subtitle: "本地数据和后续能力" }
+  "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
+  "/account": { title: "账号管理", subtitle: "本地资料、备份和应用信息" }
 };
 
 function getPageMeta(pathname: string) {
@@ -33,6 +34,10 @@ function entryTypeForPath(pathname: string): EntryType {
   if (pathname.startsWith("/people")) return "person";
   if (pathname.startsWith("/places")) return "place";
   return "memory";
+}
+
+function isUtilityPage(pathname: string) {
+  return pathname === "/settings" || pathname === "/account";
 }
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -71,7 +76,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           children
         )}
       </main>
-      {location.pathname !== "/settings" && (
+      {!isUtilityPage(location.pathname) && (
         <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
       )}
       <BottomNav />
