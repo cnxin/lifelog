@@ -156,7 +156,7 @@ export default function MallDetail() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" style={{ paddingBottom: "50vh" }}>
         <div className="section-header">
           <h2>
             <MapPin /> 关联回忆
