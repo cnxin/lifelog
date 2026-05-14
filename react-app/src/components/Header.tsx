@@ -17,7 +17,15 @@ export default function Header({ dateLabel, title, subtitle }: HeaderProps) {
         <p>{subtitle}</p>
       </div>
       <button className="avatar" aria-label="账号管理" onClick={() => navigate("/account")}>
-        <img src="/ingot.png" alt="金元宝" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img
+          src="/ingot.png"
+          alt="金元宝"
+          style={{
+            width: '90%',
+            height: '90%',
+            objectFit: 'contain'
+          }}
+        />
       </button>
     </header>
   );

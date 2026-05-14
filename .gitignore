@@ -7,7 +7,9 @@ react-app/dist/
 react-app/android/app/build/
 react-app/android/build/
 react-app/android/.gradle/
+react-app/.gradle/
 react-app/.gradle-build-home/
+react-app/.tmp-chrome-webtest/
 
 # IDE
 .vscode/

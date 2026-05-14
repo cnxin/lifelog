@@ -9,12 +9,13 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.cnxin.lifelog"
     compileSdk = rootProject.ext.compileSdkVersion
+
     defaultConfig {
         applicationId "com.cnxin.lifelog"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 42
-        versionName "0.1.0-test.42"
+        versionCode 44
+        versionName "0.1.0-test.44"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
