@@ -350,7 +350,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 24px 20vh;
+  padding: 0 24px 25vh;
   overscroll-behavior-x: none;
   scroll-behavior: smooth;
 }
