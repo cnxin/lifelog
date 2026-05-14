@@ -1,0 +1,86 @@
+import { useLocation } from "react-router-dom";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import type { EntryType } from "../types";
+import { todayLabel } from "../utils/date";
+import BottomNav from "./BottomNav";
+import EntrySheet from "./EntrySheet";
+import FloatingActionButton from "./FloatingActionButton";
+import Header from "./Header";
+import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
+import { useStatusBar } from "../hooks/useStatusBar";
+import { useLifeLog } from "../context/LifeLogContext";
+import { useReminderScheduling } from "../hooks/useReminderScheduling";
+
+const pageMeta: Record<string, { title: string; subtitle: string }> = {
+  "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
+  "/people": { title: "人物", subtitle: "记录喜好、禁忌和纪念日" },
+  "/places": { title: "地点", subtitle: "餐厅、酒店、景点和电影院" },
+  "/memories": { title: "回忆", subtitle: "把人物和地点串起来" },
+  "/calendar": { title: "日历", subtitle: "生日、纪念日和回忆时间线" },
+  "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
+  "/account": { title: "账号管理", subtitle: "本地资料、备份和应用信息" }
+};
+
+function getPageMeta(pathname: string) {
+  if (pageMeta[pathname]) return pageMeta[pathname];
+  if (pathname.startsWith("/people/")) return { title: "人物详情", subtitle: "查看完整档案和相关回忆" };
+  if (pathname.startsWith("/places/malls/")) return { title: "商场详情", subtitle: "查看商场里的店铺和关联回忆" };
+  if (pathname.startsWith("/places/")) return { title: "地点详情", subtitle: "定位、链接、评价和回忆" };
+  if (pathname.startsWith("/memories/")) return { title: "回忆详情", subtitle: "查看一次经历的完整记录" };
+  return pageMeta["/"];
+}
+
+function entryTypeForPath(pathname: string): EntryType {
+  if (pathname.startsWith("/people")) return "person";
+  if (pathname.startsWith("/places")) return "place";
+  return "memory";
+}
+
+function isUtilityPage(pathname: string) {
+  return pathname === "/settings" || pathname === "/account";
+}
+
+export default function AppLayout({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const [sheetType, setSheetType] = useState<EntryType | null>(null);
+  const meta = getPageMeta(location.pathname);
+  const { isLoading, settings } = useLifeLog();
+
+  useLayoutEffect(() => {
+    document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location.pathname]);
+  useAndroidBackButton(() => {
+    if (!sheetType) return false;
+    setSheetType(null);
+    return true;
+  });
+  useEffect(() => {
+    document.documentElement.dataset.themeStyle = settings.themeStyle;
+    return () => {
+      delete document.documentElement.dataset.themeStyle;
+    };
+  }, [settings.themeStyle]);
+  useReminderScheduling();
+  useStatusBar(settings.themeStyle);
+
+  return (
+    <div className={`app-container theme-${settings.themeStyle}`}>
+      <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
+      <main className="main-content">
+        {isLoading ? (
+          <div className="app-loading" role="status" aria-live="polite">
+            <div className="app-loading-spinner" />
+            <p>正在加载本地数据…</p>
+          </div>
+        ) : (
+          children
+        )}
+      </main>
+      {!isUtilityPage(location.pathname) && (
+        <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
+      )}
+      <BottomNav />
+      <EntrySheet type={sheetType} onClose={() => setSheetType(null)} />
+    </div>
+  );
+}

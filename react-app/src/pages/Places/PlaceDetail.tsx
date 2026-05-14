@@ -1,0 +1,373 @@
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Sparkles, Star, Store, Users } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import EntrySheet from "../../components/EntrySheet";
+import GlassCard from "../../components/GlassCard";
+import Tags from "../../components/Tags";
+import { useLifeLog } from "../../context/LifeLogContext";
+import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import type { MemoryEvent } from "../../types";
+import { formatMonthDay } from "../../utils/date";
+import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import {
+  buildMallKey,
+  buildPlaceContextLine,
+  buildPlaceDisplayName,
+  buildPlaceGeoLine,
+  getPlacePlatformLink,
+  getPlaceReferenceUrl
+} from "../../utils/placeMeta";
+
+export default function PlaceDetail() {
+  const { placeId } = useParams();
+  const navigate = useNavigate();
+  const { state, getPersonName, getPlaceName } = useLifeLog();
+  const headerCollapsed = useCollapsingDetailHeader();
+  const [editing, setEditing] = useState(false);
+  const [addingMemory, setAddingMemory] = useState(false);
+  const place = state.places.find((item) => item.id === placeId);
+
+  if (!place) {
+    return (
+      <section className="section">
+        <GlassCard className="empty">没有找到这个地点</GlassCard>
+      </section>
+    );
+  }
+
+  const relatedMemories = state.memories
+    .filter((memory) => memory.placeId === place.id)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const relatedPeople = Array.from(
+    new Set(relatedMemories.flatMap((memory) => memory.personIds || []).filter(Boolean))
+  );
+  const topPeople = getTopRelatedItems(
+    relatedMemories.flatMap((memory) => memory.personIds || []).filter(Boolean),
+    getPersonName
+  );
+  const groupedMemories = groupMemoriesByMonth(relatedMemories);
+  const latestMemory = relatedMemories[0];
+  const photos = (place.photos || []).slice(0, 3);
+  const meituanLink = getPlacePlatformLink(place, "meituan");
+  const referenceUrl = getPlaceReferenceUrl(place);
+  const completionTips = [
+    {
+      id: "mapLink",
+      icon: <MapPin />,
+      title: "补充高德入口",
+      desc: "保存高德分享链接后可以直接打开高德。",
+      visible: !place.mapUrl && !(place.latitude && place.longitude)
+    },
+    {
+      id: "photos",
+      icon: <Camera />,
+      title: "补充照片",
+      desc: "添加图片链接后详情页会展示前三张照片。",
+      visible: !place.photos.length
+    },
+    {
+      id: "address",
+      icon: <Navigation />,
+      title: "补充地址",
+      desc: "地址和商场层级能让地点列表更好搜索。",
+      visible: !place.address || !place.mall
+    }
+  ].filter((tip) => tip.visible);
+
+  return (
+    <>
+      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card">
+          <div className="detail-profile-nav">
+            <button className="back-button" type="button" onClick={() => navigate("/places")}>
+              <ArrowLeft /> 返回地点
+            </button>
+            <strong className="detail-compact-title">{buildPlaceDisplayName(place)}</strong>
+          </div>
+          <div className="detail-profile-body">
+            <div className="profile-photo">
+              <MapPin />
+            </div>
+            <div className="profile-main">
+              <div className="profile-title">
+                <h2>
+                  {buildPlaceDisplayName(place)}
+                </h2>
+                {place.favorite && <Star />}
+              </div>
+              <p>{buildPlaceGeoLine(place)}</p>
+              <p>{buildPlaceContextLine(place)}</p>
+              <button className="category-pill active" onClick={() => setEditing(true)}>
+                编辑地点
+              </button>
+            </div>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <MapPin /> 到访摘要
+          </h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            记录
+          </button>
+        </div>
+        <GlassCard className="detail-summary-card">
+          <div className="summary-grid">
+            <div className="summary-metric">
+              <strong>{relatedMemories.length}</strong>
+              <span>相关回忆</span>
+            </div>
+            <div className="summary-metric">
+              <strong>{latestMemory ? formatMonthDay(latestMemory.date) : "暂无"}</strong>
+              <span>最近一次</span>
+            </div>
+          </div>
+          <div className="summary-line">
+            <strong>类型</strong>
+            <span>{place.category || "未设置"}</span>
+          </div>
+          <div className="summary-line">
+            <strong>常关联人物</strong>
+            <span>{topPeople.length ? topPeople.map((item) => item.label).join("、") : "还没有关联人物"}</span>
+          </div>
+        </GlassCard>
+      </section>
+
+      {completionTips.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 建议补充
+            </h2>
+            <button className="see-all" onClick={() => setEditing(true)}>
+              去编辑
+            </button>
+          </div>
+          <div className="completion-list">
+            {completionTips.map((tip) => (
+              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
+                <div className="task-icon">{tip.icon}</div>
+                <div>
+                  <strong>{tip.title}</strong>
+                  <span>{tip.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <MapPin /> 地点信息
+          </h2>
+        </div>
+        <div className="list">
+          <GlassCard className="detail-row">
+            <strong>国家 / 省 / 市</strong>
+            <span>{buildPlaceGeoLine(place)}</span>
+          </GlassCard>
+          <GlassCard className="detail-row">
+            <strong>区 / 商圈</strong>
+            <span>{place.area || "未设置"}</span>
+          </GlassCard>
+          {place.mall ? (
+            <button
+              className="detail-row detail-button glass-card"
+              onClick={() => navigate(`/places/malls/${encodeURIComponent(buildMallKey(place))}`)}
+            >
+              <strong>商场 / 园区</strong>
+              <span>{[place.mall, place.storeName].filter(Boolean).join(" · ")}</span>
+            </button>
+          ) : (
+            <GlassCard className="detail-row">
+              <strong>店铺 / 场所</strong>
+              <span>{place.storeName || "未设置"}</span>
+            </GlassCard>
+          )}
+          <GlassCard className="detail-row">
+            <strong>类型</strong>
+            <span>{place.category}</span>
+          </GlassCard>
+          <GlassCard className="detail-row">
+            <strong>地址</strong>
+            <span>{place.address || "未设置"}</span>
+          </GlassCard>
+          <GlassCard className="detail-row">
+            <strong>评分</strong>
+            <span>{place.rating}</span>
+          </GlassCard>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="action-grid">
+          {place.mapUrl || (place.latitude && place.longitude) ? (
+            <button className="link-action" type="button" onClick={() => void openPlaceMap(place)}>
+              <Navigation /> 打开高德
+            </button>
+          ) : (
+            <span className="link-action disabled">
+              <Navigation /> 未设置地图
+            </span>
+          )}
+          {meituanLink ? (
+            <button className="link-action secondary" type="button" onClick={() => void openNativeStoreUrl(meituanLink.url)}>
+              <Store /> 打开美团
+            </button>
+          ) : null}
+          {referenceUrl ? (
+            <button className="link-action" type="button" onClick={() => void openExternalUrl(referenceUrl)}>
+              <ExternalLink /> 参考链接
+            </button>
+          ) : (
+            <span className="link-action disabled">
+              <ExternalLink /> 未设置链接
+            </span>
+          )}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <Camera /> 照片
+          </h2>
+        </div>
+        {photos.length ? (
+          <div className="place-photo-strip">
+            {photos.map((photo) => (
+              <img
+                alt={place.name}
+                className="place-photo"
+                key={photo}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                src={photo}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty">还没有照片，可以编辑地点添加图片链接</GlassCard>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>评价</h2>
+        </div>
+        <GlassCard className="pref-block">
+          <p className="memory-desc">{place.desc || "还没有评价"}</p>
+          <Tags items={place.tags} />
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <Users /> 一起去过的人
+          </h2>
+        </div>
+        {relatedPeople.length ? (
+          <div className="tap-chip-row">
+            {relatedPeople.map((personId) => (
+              <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
+                {getPersonName(personId)}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty">还没有关联人物</GlassCard>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>地点时间线</h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            新增
+          </button>
+        </div>
+        {groupedMemories.length ? (
+          <div className="timeline-list">
+            {groupedMemories.map((group) => (
+              <div className="timeline-month" key={group.month}>
+                <div className="timeline-month-title">{group.month}</div>
+                <div className="list">
+                  {group.memories.map((memory) => {
+                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+                    const displayTitle = getMemoryDisplayTitle(memory, ctx);
+                    const showContentLine = isManualTitle(memory) && memory.content.trim();
+                    return (
+                      <GlassCard className="memory-card" key={memory.id}>
+                        <div className="memory-badge">♡</div>
+                        <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
+                          <div className="memory-title">
+                            <span>{displayTitle}</span>
+                            <span className="place-rating">{formatMonthDay(memory.date)}</span>
+                          </div>
+                          <p className="memory-desc">
+                            {ctx.personNames.join("、") || "未关联人物"}
+                            {showContentLine ? ` · ${memory.content}` : ""}
+                          </p>
+                          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+                        </div>
+                      </GlassCard>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty detail-empty-action">
+            <strong>还没有在这里发生的回忆</strong>
+            <span>记录一次到访，让这个地点变得更有故事。</span>
+            <button onClick={() => setAddingMemory(true)}>记录在这里发生的事</button>
+          </GlassCard>
+        )}
+      </section>
+
+      <EntrySheet type={editing ? "place" : null} itemId={place.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={addingMemory ? "memory" : null}
+        initialPlaceId={place.id}
+        memoryMode="quick"
+        onClose={() => setAddingMemory(false)}
+      />
+    </>
+  );
+}
+
+function groupMemoriesByMonth(memories: MemoryEvent[]) {
+  const groups = new Map<string, MemoryEvent[]>();
+
+  memories.forEach((memory) => {
+    const month = new Date(`${memory.date}T00:00:00`).toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "long"
+    });
+    groups.set(month, [...(groups.get(month) || []), memory]);
+  });
+
+  return Array.from(groups, ([month, grouped]) => ({ month, memories: grouped }));
+}
+
+function getTopRelatedItems(ids: string[], getLabel: (id: string) => string) {
+  const counts = new Map<string, number>();
+  ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
+
+  return Array.from(counts, ([id, count]) => ({ id, count, label: getLabel(id) }))
+    .filter((item) => item.label)
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"))
+    .slice(0, 3);
+}

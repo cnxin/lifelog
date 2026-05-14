@@ -1,0 +1,46 @@
+{
+  "name": "lifelog-react-app",
+  "private": true,
+  "version": "0.1.0-test.42",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
+    "cap:copy": "cap copy",
+    "cap:sync": "cap sync",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "android:sync-version": "powershell -ExecutionPolicy Bypass -File scripts/sync-android-version.ps1",
+    "android:debug": "powershell -ExecutionPolicy Bypass -File scripts/build-android-debug.ps1",
+    "android:release": "powershell -ExecutionPolicy Bypass -File scripts/build-android-release.ps1",
+    "release:apk": "powershell -ExecutionPolicy Bypass -File scripts/release-apk.ps1",
+    "android:install:release": "powershell -ExecutionPolicy Bypass -File scripts/install-android-release.ps1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/local-notifications": "^8.1.0",
+    "@capacitor/status-bar": "^8.0.2",
+    "@vitejs/plugin-react": "latest",
+    "browser-image-compression": "^2.0.2",
+    "dexie": "^4.4.2",
+    "lucide-react": "latest",
+    "lunar-javascript": "^1.7.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.23.0",
+    "uuid": "^14.0.0",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.1",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "typescript": "^5.2.2"
+  }
+}

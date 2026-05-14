@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeLog · 生活记录本</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="header">
+        <div class="greeting">
+          <p class="date-label" id="todayLabel">今天</p>
+          <h1 id="pageTitle">下午好</h1>
+          <p id="pageSubtitle">记录重要的人、地点和回忆</p>
+        </div>
+        <button class="avatar" id="profileBtn" aria-label="个人资料">L</button>
+      </header>
+
+      <main class="main-content" id="mainContent"></main>
+
+      <div class="fab-container">
+        <button class="fab" id="fabBtn" aria-label="新增">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+
+      <nav class="bottom-nav" id="bottomNav" aria-label="主导航"></nav>
+    </div>
+
+    <div class="sheet hidden" id="sheet">
+      <div class="sheet-backdrop" id="sheetBackdrop"></div>
+      <section class="sheet-panel">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <p class="date-label" id="sheetKicker">新增</p>
+            <h2 id="sheetTitle">记录</h2>
+          </div>
+          <button class="sheet-close" id="sheetClose" aria-label="关闭">×</button>
+        </div>
+        <form class="form" id="entryForm"></form>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
