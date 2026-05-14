@@ -8,12 +8,40 @@
   "orientation": "portrait",
   "background_color": "#F8F9FA",
   "theme_color": "#6C5CE7",
+  "lang": "zh-CN",
+  "categories": ["lifestyle", "productivity", "personalization"],
   "icons": [
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/ingot.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新增回忆",
+      "short_name": "回忆",
+      "description": "快速记录一段新回忆",
+      "url": "/memories?new=1"
+    },
+    {
+      "name": "新增人物",
+      "short_name": "人物",
+      "description": "添加一个新的人物档案",
+      "url": "/people?new=1"
+    },
+    {
+      "name": "查看日历",
+      "short_name": "日历",
+      "description": "打开日历视图",
+      "url": "/calendar"
     }
   ]
 }

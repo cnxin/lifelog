@@ -6,6 +6,7 @@ import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton from "./FloatingActionButton";
 import Header from "./Header";
+import NetworkBanner from "./NetworkBanner";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -65,6 +66,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className={`app-container theme-${settings.themeStyle}`}>
+      <NetworkBanner />
       <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
       <main className="main-content">
         {isLoading ? (
