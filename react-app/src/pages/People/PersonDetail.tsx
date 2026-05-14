@@ -1,13 +1,13 @@
 import { ArrowLeft, Calendar, Gift, Heart, MapPin, Sparkles, Star } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
-import Tags from "../../components/Tags";
+import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { MemoryEvent } from "../../types";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
 
@@ -52,7 +52,7 @@ export default function PersonDetail() {
   );
   const groupedMemories = groupMemoriesByMonth(relatedMemories);
   const latestMemory = relatedMemories[0];
-  const completionTips = [
+  const completionTips: CompletionTip[] = [
     {
       id: "birthday",
       icon: <Calendar />,
@@ -81,7 +81,7 @@ export default function PersonDetail() {
       desc: "相识日、重要节点会自动计算农历和周年。",
       visible: person.anniversaries.length <= (person.birthday ? 1 : 0)
     }
-  ].filter((tip) => tip.visible);
+  ];
 
   return (
     <>
@@ -147,29 +147,7 @@ export default function PersonDetail() {
         </GlassCard>
       </section>
 
-      {completionTips.length > 0 && (
-        <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 建议补充
-            </h2>
-            <button className="see-all" onClick={() => setEditing(true)}>
-              去编辑
-            </button>
-          </div>
-          <div className="completion-list">
-            {completionTips.map((tip) => (
-              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
-                <div className="task-icon">{tip.icon}</div>
-                <div>
-                  <strong>{tip.title}</strong>
-                  <span>{tip.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
 
       <section className="section">
         <div className="section-header">
@@ -233,52 +211,16 @@ export default function PersonDetail() {
         </div>
       </section>
 
-      <section className="section person-detail-section">
-        <div className="section-header">
-          <h2>回忆时间线</h2>
-          <button className="see-all" onClick={() => setAddingMemory(true)}>
-            新增
-          </button>
-        </div>
-        {groupedMemories.length ? (
-          <div className="timeline-list">
-            {groupedMemories.map((group) => (
-              <div className="timeline-month" key={group.month}>
-                <div className="timeline-month-title">{group.month}</div>
-                <div className="list">
-                  {group.memories.map((memory) => {
-                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-                    const displayTitle = getMemoryDisplayTitle(memory, ctx);
-                    const showContentLine = isManualTitle(memory) && memory.content.trim();
-                    return (
-                      <GlassCard className="memory-card" key={memory.id}>
-                        <div className="memory-badge">♡</div>
-                        <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                          <div className="memory-title">
-                            <span>{displayTitle}</span>
-                            <span className="place-rating">{formatMonthDay(memory.date)}</span>
-                          </div>
-                          <p className="memory-desc memory-meta-line">{ctx.placeName || "未关联地点"}</p>
-                          {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                          <div className="memory-tags-line">
-                            <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
-                          </div>
-                        </div>
-                      </GlassCard>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <GlassCard className="empty detail-empty-action">
-            <strong>还没有和 TA 相关的回忆</strong>
-            <span>记录一次相处，让这个人物变得更完整。</span>
-            <button onClick={() => setAddingMemory(true)}>记录和 TA 的回忆</button>
-          </GlassCard>
-        )}
-      </section>
+      <MemoryTimelineSection
+        title="回忆时间线"
+        groupedMemories={groupedMemories}
+        getPersonName={getPersonName}
+        getPlaceName={getPlaceName}
+        onAddMemory={() => setAddingMemory(true)}
+        emptyTitle="还没有和 TA 相关的回忆"
+        emptyDesc="记录一次相处，让这个人物变得更完整。"
+        emptyAction="记录和 TA 的回忆"
+      />
 
       <EntrySheet type={editing ? "person" : null} itemId={person.id} onClose={() => setEditing(false)} />
       <EntrySheet
@@ -338,26 +280,3 @@ function PreferenceBlocks({
   );
 }
 
-function groupMemoriesByMonth(memories: MemoryEvent[]) {
-  const groups = new Map<string, MemoryEvent[]>();
-
-  memories.forEach((memory) => {
-    const month = new Date(`${memory.date}T00:00:00`).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "long"
-    });
-    groups.set(month, [...(groups.get(month) || []), memory]);
-  });
-
-  return Array.from(groups, ([month, grouped]) => ({ month, memories: grouped }));
-}
-
-function getTopRelatedItems(ids: string[], getLabel: (id: string) => string) {
-  const counts = new Map<string, number>();
-  ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
-
-  return Array.from(counts, ([id, count]) => ({ id, count, label: getLabel(id) }))
-    .filter((item) => item.label)
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"))
-    .slice(0, 3);
-}

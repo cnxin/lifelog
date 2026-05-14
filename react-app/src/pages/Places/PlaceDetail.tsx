@@ -1,15 +1,16 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Sparkles, Star, Store, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
-import type { MemoryEvent } from "../../types";
 import { formatMonthDay } from "../../utils/date";
+import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
 import {
   buildMallKey,
   buildPlaceContextLine,
@@ -52,7 +53,7 @@ export default function PlaceDetail() {
   const photos = (place.photos || []).slice(0, 3);
   const meituanLink = getPlacePlatformLink(place, "meituan");
   const referenceUrl = getPlaceReferenceUrl(place);
-  const completionTips = [
+  const completionTips: CompletionTip[] = [
     {
       id: "mapLink",
       icon: <MapPin />,
@@ -74,7 +75,7 @@ export default function PlaceDetail() {
       desc: "地址和商场层级能让地点列表更好搜索。",
       visible: !place.address || !place.mall
     }
-  ].filter((tip) => tip.visible);
+  ];
 
   return (
     <>
@@ -138,29 +139,7 @@ export default function PlaceDetail() {
         </GlassCard>
       </section>
 
-      {completionTips.length > 0 && (
-        <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 建议补充
-            </h2>
-            <button className="see-all" onClick={() => setEditing(true)}>
-              去编辑
-            </button>
-          </div>
-          <div className="completion-list">
-            {completionTips.map((tip) => (
-              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
-                <div className="task-icon">{tip.icon}</div>
-                <div>
-                  <strong>{tip.title}</strong>
-                  <span>{tip.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
 
       <section className="section">
         <div className="section-header">
@@ -290,52 +269,22 @@ export default function PlaceDetail() {
         )}
       </section>
 
-      <section className="section">
-        <div className="section-header">
-          <h2>地点时间线</h2>
-          <button className="see-all" onClick={() => setAddingMemory(true)}>
-            新增
-          </button>
-        </div>
-        {groupedMemories.length ? (
-          <div className="timeline-list">
-            {groupedMemories.map((group) => (
-              <div className="timeline-month" key={group.month}>
-                <div className="timeline-month-title">{group.month}</div>
-                <div className="list">
-                  {group.memories.map((memory) => {
-                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-                    const displayTitle = getMemoryDisplayTitle(memory, ctx);
-                    const showContentLine = isManualTitle(memory) && memory.content.trim();
-                    return (
-                      <GlassCard className="memory-card" key={memory.id}>
-                        <div className="memory-badge">♡</div>
-                        <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                          <div className="memory-title">
-                            <span>{displayTitle}</span>
-                            <span className="place-rating">{formatMonthDay(memory.date)}</span>
-                          </div>
-                          <p className="memory-desc">
-                            {ctx.personNames.join("、") || "未关联人物"}
-                            {showContentLine ? ` · ${memory.content}` : ""}
-                          </p>
-                          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
-                        </div>
-                      </GlassCard>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <GlassCard className="empty detail-empty-action">
-            <strong>还没有在这里发生的回忆</strong>
-            <span>记录一次到访，让这个地点变得更有故事。</span>
-            <button onClick={() => setAddingMemory(true)}>记录在这里发生的事</button>
-          </GlassCard>
+      <MemoryTimelineSection
+        title="地点时间线"
+        groupedMemories={groupedMemories}
+        getPersonName={getPersonName}
+        getPlaceName={getPlaceName}
+        onAddMemory={() => setAddingMemory(true)}
+        emptyTitle="还没有在这里发生的回忆"
+        emptyDesc="记录一次到访，让这个地点变得更有故事。"
+        emptyAction="记录在这里发生的事"
+        renderMeta={(memory, ctx, showContentLine) => (
+          <p className="memory-desc">
+            {ctx.personNames.join("、") || "未关联人物"}
+            {showContentLine ? ` · ${memory.content}` : ""}
+          </p>
         )}
-      </section>
+      />
 
       <EntrySheet type={editing ? "place" : null} itemId={place.id} onClose={() => setEditing(false)} />
       <EntrySheet
@@ -348,26 +297,3 @@ export default function PlaceDetail() {
   );
 }
 
-function groupMemoriesByMonth(memories: MemoryEvent[]) {
-  const groups = new Map<string, MemoryEvent[]>();
-
-  memories.forEach((memory) => {
-    const month = new Date(`${memory.date}T00:00:00`).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "long"
-    });
-    groups.set(month, [...(groups.get(month) || []), memory]);
-  });
-
-  return Array.from(groups, ([month, grouped]) => ({ month, memories: grouped }));
-}
-
-function getTopRelatedItems(ids: string[], getLabel: (id: string) => string) {
-  const counts = new Map<string, number>();
-  ids.forEach((id) => counts.set(id, (counts.get(id) || 0) + 1));
-
-  return Array.from(counts, ([id, count]) => ({ id, count, label: getLabel(id) }))
-    .filter((item) => item.label)
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"))
-    .slice(0, 3);
-}

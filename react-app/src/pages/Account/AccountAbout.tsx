@@ -13,7 +13,7 @@ export default function AccountAbout() {
       <div className="list">
         <GlassCard className="detail-row">
           <strong>版本</strong>
-          <span>0.1.0-test.52</span>
+          <span>0.1.0-test.53</span>
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>存储</strong>
