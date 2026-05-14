@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap");
+
+:root,
+html[data-theme-style="classic"] {
+  --primary: #7c8cf8;
+  --primary-light: #aeb8ff;
+  --secondary: #f5a3ae;
+  --bg-color: #fafbff;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --card-solid: #ffffff;
+  --text-main: #20263a;
+  --text-sub: #737b91;
+  --line: rgba(124, 140, 248, 0.1);
+  --soft-purple: rgba(124, 140, 248, 0.09);
+  --soft-orange: rgba(245, 163, 174, 0.12);
+  --control-tint: linear-gradient(135deg, rgba(124, 140, 248, 0.1), rgba(245, 163, 174, 0.1));
+  --control-border: rgba(124, 140, 248, 0.16);
+  --control-shadow: 0 8px 18px rgba(124, 140, 248, 0.07);
+  --focus-ring: rgba(124, 140, 248, 0.14);
+  --danger: #b94040;
+  --danger-soft: rgba(217, 87, 87, 0.12);
+  --switch-knob: #ffffff;
+  --shadow: 0 8px 22px rgba(55, 65, 110, 0.05);
+  --press-shadow: 0 4px 14px rgba(55, 65, 110, 0.08);
+}
+
+html[data-theme-style="cream"] {
+  --primary: #9f7b55;
+  --primary-light: #d7bea1;
+  --secondary: #ead7bd;
+  --bg-color: #fff7ea;
+  --card-bg: rgba(255, 252, 246, 0.9);
+  --card-solid: #fffdf8;
+  --text-main: #4d4033;
+  --text-sub: #8a7258;
+  --line: rgba(176, 133, 83, 0.14);
+  --soft-purple: rgba(159, 123, 85, 0.09);
+  --soft-orange: rgba(232, 205, 166, 0.24);
+  --control-tint: linear-gradient(135deg, rgba(255, 240, 215, 0.8), rgba(232, 205, 166, 0.24));
+  --control-border: rgba(159, 123, 85, 0.16);
+  --control-shadow: 0 8px 18px rgba(117, 88, 58, 0.06);
+  --focus-ring: rgba(159, 123, 85, 0.14);
+  --danger: #9f5f4e;
+  --danger-soft: rgba(159, 95, 78, 0.11);
+  --switch-knob: #fffaf1;
+  --shadow: 0 10px 24px rgba(117, 88, 58, 0.06);
+  --press-shadow: 0 5px 16px rgba(117, 88, 58, 0.09);
+}
+
+html[data-theme-style="mint"] {
+  --primary: #12b886;
+  --primary-light: #8cefd8;
+  --secondary: #4dabf7;
+  --bg-color: #effff8;
+  --card-bg: rgba(248, 255, 252, 0.9);
+  --card-solid: #fbfffd;
+  --text-main: #123f38;
+  --text-sub: #4d8b7d;
+  --line: rgba(18, 184, 134, 0.16);
+  --soft-purple: rgba(18, 184, 134, 0.13);
+  --soft-orange: rgba(77, 171, 247, 0.2);
+  --control-tint: linear-gradient(135deg, rgba(218, 255, 246, 0.78), rgba(77, 171, 247, 0.16));
+  --control-border: rgba(18, 184, 134, 0.17);
+  --control-shadow: 0 8px 18px rgba(18, 184, 134, 0.07);
+  --focus-ring: rgba(18, 184, 134, 0.14);
+  --danger: #c05647;
+  --danger-soft: rgba(192, 86, 71, 0.1);
+  --switch-knob: #f7fffd;
+  --shadow: 0 12px 26px rgba(18, 184, 134, 0.08);
+  --press-shadow: 0 5px 16px rgba(18, 184, 134, 0.12);
+}
+
+html[data-theme-style="mist"] {
+  --primary: #4b5563;
+  --primary-light: #9ca3af;
+  --secondary: #c5cbd3;
+  --bg-color: #f3f4f6;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --card-solid: #ffffff;
+  --text-main: #1f2937;
+  --text-sub: #6b7280;
+  --line: rgba(31, 41, 55, 0.09);
+  --soft-purple: rgba(75, 85, 99, 0.06);
+  --soft-orange: rgba(156, 163, 175, 0.12);
+  --control-tint: linear-gradient(135deg, rgba(248, 250, 252, 0.92), rgba(203, 213, 225, 0.28));
+  --control-border: rgba(75, 85, 99, 0.12);
+  --control-shadow: 0 8px 18px rgba(17, 24, 39, 0.04);
+  --focus-ring: rgba(75, 85, 99, 0.12);
+  --danger: #9f5f5f;
+  --danger-soft: rgba(159, 95, 95, 0.09);
+  --switch-knob: #ffffff;
+  --shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
+  --press-shadow: 0 3px 12px rgba(17, 24, 39, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1a1a2e;
+    --card-bg: rgba(30, 30, 46, 0.85);
+    --card-solid: #24243a;
+    --text-main: #f8f9fa;
+    --text-sub: #b2bec3;
+    --line: rgba(255, 255, 255, 0.1);
+    --soft-purple: rgba(91, 108, 255, 0.16);
+    --soft-orange: rgba(255, 127, 159, 0.16);
+    --control-tint: linear-gradient(135deg, rgba(91, 108, 255, 0.18), rgba(255, 127, 159, 0.12));
+    --control-border: rgba(255, 255, 255, 0.12);
+    --control-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    --focus-ring: rgba(91, 108, 255, 0.22);
+    --danger: #ff9f8c;
+    --danger-soft: rgba(255, 159, 140, 0.14);
+    --switch-knob: #ffffff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 16% 14%,
+      rgba(124, 140, 248, 0.1),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 92% 86%,
+      rgba(245, 163, 174, 0.1),
+      transparent 30%
+    ),
+    var(--bg-color);
+  color: var(--text-main);
+  font-family: "Inter", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  transition: background-color 0.3s ease;
+}
+

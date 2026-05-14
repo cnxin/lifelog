@@ -1,0 +1,46 @@
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button,
+a,
+[role="button"],
+.glass-card,
+.person-info,
+.place-info,
+.memory-info,
+.favorite-button,
+.calendar-day,
+.calendar-item,
+.tap-chip,
+.category-pill,
+.task-card,
+.completion-card,
+.quick-memory-card,
+.link-action {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Outfit", "Inter", "Noto Sans SC", sans-serif;
+  letter-spacing: 0;
+}
+
