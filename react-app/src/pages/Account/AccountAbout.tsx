@@ -13,7 +13,7 @@ export default function AccountAbout() {
       <div className="list">
         <GlassCard className="detail-row">
           <strong>版本</strong>
-          <span>0.1.0-test.46</span>
+          <span>0.1.0-test.47</span>
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>存储</strong>
@@ -21,7 +21,7 @@ export default function AccountAbout() {
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>技术栈</strong>
-          <span>React 19 + TypeScript + Capacitor 8</span>
+          <span>React 18 + TypeScript + Capacitor 8</span>
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>GitHub</strong>
@@ -47,7 +47,7 @@ export default function AccountAbout() {
         </GlassCard>
       </div>
       <div className="settings-about-tags">
-        <Tags items={["React 19", "Vite 8", "Dexie", "Capacitor 8", "TipTap", "农历", "本地优先"]} />
+        <Tags items={["React 18", "Vite 8", "Dexie", "Capacitor 8", "TipTap", "农历", "本地优先"]} />
       </div>
     </section>
   );
