@@ -13,9 +13,7 @@ export function useStatusBar(themeStyle: string) {
       StatusBar.setOverlaysWebView({ overlay: true });
       StatusBar.setBackgroundColor({ color: "#00000000" });
 
-      const isDark =
-        themeStyle === "mist" ||
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = themeStyle === "dark";
       StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
     });
 
