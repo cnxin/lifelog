@@ -1,5 +1,5 @@
 import { Building2, GitMerge, MapPin, Plus, Star, Store } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
@@ -11,6 +11,7 @@ import Tags from "../../components/Tags";
 import type { PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
 import {
   buildMallKey,
@@ -37,17 +38,22 @@ export default function Places() {
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const countries = useMemo(
-    () => [
-      "全部",
-      ...new Set(state.places.map((place) => place.country || "中国")),
-    ],
-    [state.places],
-  );
-  const [country, setCountry] = useState("全部");
-  const [province, setProvince] = useState("全部");
-  const [city, setCity] = useState("全部");
-  const [area, setArea] = useState("全部");
+  const locationFilter = usePlaceLocationFilter(state.places);
+  const {
+    country,
+    province,
+    city,
+    area,
+    setCountry,
+    setProvince,
+    setCity,
+    setArea,
+    countries,
+    provinceOptions,
+    cityOptions,
+    areaOptions,
+    matches: matchesLocation,
+  } = locationFilter;
   const [category, setCategory] = useState("全部");
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
@@ -62,76 +68,12 @@ export default function Places() {
     [duplicatePlaceGroups],
   );
 
-  const provinceOptions = useMemo(() => {
-    return [
-      "全部",
-      ...new Set(
-        state.places
-          .filter((place) => country === "全部" || place.country === country)
-          .map((place) => place.province || "未设置"),
-      ),
-    ];
-  }, [country, state.places]);
-
-  const cityOptions = useMemo(() => {
-    return [
-      "全部",
-      ...new Set(
-        state.places
-          .filter((place) => {
-            const inCountry = country === "全部" || place.country === country;
-            const inProvince =
-              province === "全部" || (place.province || "未设置") === province;
-            return inCountry && inProvince;
-          })
-          .map((place) => place.city || "未设置"),
-      ),
-    ];
-  }, [country, province, state.places]);
-
-  const areaOptions = useMemo(() => {
-    return [
-      "全部",
-      ...new Set(
-        state.places
-          .filter((place) => {
-            const inCountry = country === "全部" || place.country === country;
-            const inProvince =
-              province === "全部" || (place.province || "未设置") === province;
-            const inCity = city === "全部" || place.city === city;
-            return inCountry && inProvince && inCity;
-          })
-          .map((place) => place.area || "未分组"),
-      ),
-    ];
-  }, [city, country, province, state.places]);
-
   const categories = useMemo(() => {
     return ["全部", ...new Set(state.places.map((place) => place.category))];
   }, [state.places]);
 
-  useEffect(() => {
-    setProvince("全部");
-    setCity("全部");
-    setArea("全部");
-  }, [country]);
-
-  useEffect(() => {
-    setCity("全部");
-    setArea("全部");
-  }, [province]);
-
-  useEffect(() => {
-    setArea("全部");
-  }, [city]);
-
   const places = useMemo(() => {
     return state.places.filter((place) => {
-      const inCountry = country === "全部" || place.country === country;
-      const inProvince =
-        province === "全部" || (place.province || "未设置") === province;
-      const inCity = city === "全部" || place.city === city;
-      const inArea = area === "全部" || place.area === area;
       const inCategory = category === "全部" || place.category === category;
       const content = [
         place.name,
@@ -147,15 +89,12 @@ export default function Places() {
         place.tags.join(","),
       ].join(" ");
       return (
-        inCountry &&
-        inProvince &&
-        inCity &&
-        inArea &&
+        matchesLocation(place) &&
         inCategory &&
         content.toLowerCase().includes(query.toLowerCase())
       );
     });
-  }, [area, category, city, country, province, query, state.places]);
+  }, [category, matchesLocation, query, state.places]);
 
   const mallGroups = useMemo(() => {
     const groups = new Map<
