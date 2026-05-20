@@ -15,7 +15,7 @@ export function MemoryFields({
   memory,
   people,
   places,
-  initialPersonId,
+  initialPersonIds = [],
   initialPlaceId,
   mode,
   photos,
@@ -25,7 +25,7 @@ export function MemoryFields({
   memory?: MemoryEvent;
   people: Array<{ id: string; name: string }>;
   places: Array<{ id: string; name: string }>;
-  initialPersonId?: string;
+  initialPersonIds?: string[];
   initialPlaceId?: string;
   mode: "quick" | "full";
   photos: Photo[];
@@ -33,19 +33,23 @@ export function MemoryFields({
   isSubmitting: boolean;
 }) {
   const { settings } = useLifeLog();
-  const selectedPersonIds = memory?.personIds?.length ? memory.personIds : [initialPersonId || people[0]?.id || ""].filter(Boolean);
+  const selectedPersonIds = memory?.personIds?.length ? memory.personIds : initialPersonIds.filter(Boolean);
   const todayValue = new Date().toISOString().slice(0, 10);
+  const [quickDate, setQuickDate] = useState(todayValue);
   const [quickContent, setQuickContent] = useState("");
+  const [quickDetailsContent, setQuickDetailsContent] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
+  const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => initialPersonIds.filter(Boolean));
   const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
   const [mood, setMood] = useState<string>(memory ? memory.mood : settings.defaultMood);
+  const quickInferenceContent = detailsOpen ? quickDetailsContent : quickContent;
   const quickPreview = inferQuickMemory({
-    content: quickContent,
+    rawTitle: quickContent,
+    content: quickInferenceContent,
     people,
     places,
-    fallbackDate: todayValue,
-    selectedPersonIds: quickPersonId ? [quickPersonId] : [],
+    fallbackDate: quickDate,
+    selectedPersonIds: quickPersonIds,
     selectedPlaceId: quickPlaceId
   });
   const previewPeople = quickPreview.personIds
@@ -61,7 +65,7 @@ export function MemoryFields({
         personIds: quickPreview.personIds,
         placeId: quickPreview.placeId,
         mood: "",
-        content: quickContent,
+        content: quickInferenceContent,
         tags: [],
         photos: []
       },
@@ -87,7 +91,7 @@ export function MemoryFields({
         </label>
         <label className="inline-field">
           <span className="inline-field-label">日期</span>
-          <DateInput name="date" label="回忆日期" defaultValue={todayValue} required />
+          <DateInput name="date" label="回忆日期" value={quickDate} onChange={setQuickDate} required />
         </label>
         <label>
           心情
@@ -117,20 +121,10 @@ export function MemoryFields({
         {detailsOpen && (
           <div className="quick-detail-panel">
             <div className="form-row">
-              <label>
-                人物
-                <SelectPicker
-                  name="personIds"
-                  label="关联人物"
-                  value={quickPersonId}
-                  onChange={setQuickPersonId}
-                  placeholder="暂不选择"
-                  options={[
-                    { value: "", label: "暂不选择" },
-                    ...people.map((person) => ({ value: person.id, label: person.name }))
-                  ]}
-                />
-              </label>
+              <div>
+                <span className="field-title">人物</span>
+                <PersonPicker people={people} value={quickPersonIds} onChange={setQuickPersonIds} />
+              </div>
               <label>
                 地点
                 <SelectPicker
@@ -150,6 +144,8 @@ export function MemoryFields({
               正文
               <textarea
                 name="content"
+                value={quickDetailsContent}
+                onChange={(event) => setQuickDetailsContent(event.target.value)}
                 placeholder="补充发生了什么，或下次要注意什么。"
               />
             </label>
@@ -189,8 +185,8 @@ export function MemoryFields({
           </div>
         </div>
         {!detailsOpen && <input type="hidden" name="content" value={quickContent} />}
-        {!detailsOpen && <input type="hidden" name="personIds" value="" />}
-        {!detailsOpen && <input type="hidden" name="placeId" value="" />}
+        {!detailsOpen && quickPersonIds.map((personId) => <input key={personId} type="hidden" name="personIds" value={personId} />)}
+        {!detailsOpen && <input type="hidden" name="placeId" value={quickPlaceId} />}
         {!detailsOpen && <input type="hidden" name="tags" value="" />}
         <input type="hidden" name="memoryMode" value="quick" />
         <p className="form-hint">人物、地点和照片都可以先不填，保存后再从回忆详情里慢慢补。</p>

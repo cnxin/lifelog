@@ -2,6 +2,7 @@ import type {
   Anniversary,
   AppSettings,
   LifeLogState,
+  MemoryEvent,
   Place,
   PlaceMergeHistoryEntry,
   PlaceMergePreview,
@@ -9,6 +10,7 @@ import type {
 import { mergeMemoryPlaceReferences } from "./placeDedup";
 import { parsePlatformLinksText } from "./placeLinks";
 import { inferMallName, inferProvince, isMallRecord, normalizeCityName, normalizePlaceText } from "./placeMeta";
+import { buildMemoryTitle, inferQuickMemory } from "./memoryInference";
 import { splitLines, splitList } from "./text";
 
 export function uid(prefix: string) {
@@ -104,6 +106,61 @@ export function buildPlaceFromFormData(formData: FormData, id: string | undefine
     desc: String(formData.get("desc") || ""),
     tags: splitList(formData.get("tags")),
     favorite: formData.get("favorite") === "true"
+  };
+}
+
+export function buildMemoryFromFormData({
+  formData,
+  existing,
+  people,
+  places,
+  settings,
+  photoIds,
+}: {
+  formData: FormData;
+  existing?: MemoryEvent;
+  people: Array<{ id: string; name: string; nickname?: string }>;
+  places: Array<{ id: string; name: string; storeName?: string; area?: string; mall?: string; address?: string }>;
+  settings: AppSettings;
+  photoIds?: string[];
+}): MemoryEvent {
+  const selectedPersonIds = formData
+    .getAll("personIds")
+    .map((item) => String(item))
+    .filter(Boolean);
+  const legacyPersonId = String(formData.get("personId") || "");
+  const rawTitle = String(formData.get("title") || "");
+  const content = String(formData.get("content") || "");
+  const memoryMode = String(formData.get("memoryMode") || "");
+  const selectedPlaceId = String(formData.get("placeId") || "");
+  const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
+  const quickInference = inferQuickMemory({
+    rawTitle,
+    content,
+    people,
+    places,
+    fallbackDate: inputDate,
+    selectedPersonIds,
+    selectedPlaceId,
+    fallbackPersonId: legacyPersonId
+  });
+  const matchedPersonIds = selectedPersonIds.length
+    ? selectedPersonIds
+    : existing
+      ? [legacyPersonId].filter(Boolean)
+      : quickInference.personIds;
+  const memoryId = existing?.id || String(formData.get("memoryId") || "") || uid("m");
+
+  return {
+    id: memoryId,
+    title: buildMemoryTitle(rawTitle, content),
+    date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
+    personIds: matchedPersonIds,
+    placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
+    mood: String(formData.get("mood") || (existing ? "" : settings.defaultMood)),
+    content,
+    tags: splitList(formData.get("tags")),
+    photos: photoIds !== undefined ? photoIds : existing?.photos || []
   };
 }
 

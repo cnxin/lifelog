@@ -19,6 +19,7 @@ export default function MemoryDetail() {
   const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
+  const [addingRelated, setAddingRelated] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -101,6 +102,9 @@ export default function MemoryDetail() {
               </p>
               <button className="category-pill active" onClick={() => setEditing(true)}>
                 编辑回忆
+              </button>
+              <button className="category-pill" onClick={() => setAddingRelated(true)}>
+                再记一条相关回忆
               </button>
             </div>
           </div>
@@ -195,14 +199,18 @@ export default function MemoryDetail() {
             <MapPin /> 关联地点
           </h2>
         </div>
-        <button className="detail-row detail-button glass-card" onClick={() => place && navigate(`/places/${place.id}`)}>
-          <strong>{getPlaceName(memory.placeId)}</strong>
-          <span>{place ? `${place.city} · ${buildPlaceContextLine(place)}` : "未关联地点"}</span>
-        </button>
-        {place && (
-          <button className="category-pill active detail-link-button" onClick={() => navigate(`/places/${place.id}`)}>
-            查看地点详情
-          </button>
+        {place ? (
+          <>
+            <button className="detail-row detail-button glass-card" onClick={() => navigate(`/places/${place.id}`)}>
+              <strong>{getPlaceName(memory.placeId)}</strong>
+              <span>{place.city} · {buildPlaceContextLine(place)}</span>
+            </button>
+            <button className="category-pill active detail-link-button" onClick={() => navigate(`/places/${place.id}`)}>
+              查看地点详情
+            </button>
+          </>
+        ) : (
+          <GlassCard className="empty">未关联地点，点击“编辑回忆”可以补充。</GlassCard>
         )}
       </section>
 
@@ -215,6 +223,13 @@ export default function MemoryDetail() {
       )}
 
       <EntrySheet type={editing ? "memory" : null} itemId={memory.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={addingRelated ? "memory" : null}
+        initialPersonIds={personIds}
+        initialPlaceId={memory.placeId}
+        memoryMode="quick"
+        onClose={() => setAddingRelated(false)}
+      />
     </>
   );
 }

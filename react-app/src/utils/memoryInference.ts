@@ -25,12 +25,13 @@ export function inferQuickMemory({
   fallbackPersonId = ""
 }: QuickMemoryInferenceInput) {
   const manualPersonIds = selectedPersonIds.filter(Boolean);
+  const inferenceText = [rawTitle, content].map((item) => item.trim()).filter(Boolean).join("\n");
 
   return {
     title: buildMemoryTitle(rawTitle, content),
-    date: inferMemoryDate(content, fallbackDate),
-    personIds: manualPersonIds.length ? manualPersonIds : inferPersonIds(content, people, fallbackPersonId),
-    placeId: selectedPlaceId || inferPlaceId(content, places)
+    date: inferMemoryDate(inferenceText, fallbackDate),
+    personIds: manualPersonIds.length ? manualPersonIds : inferPersonIds(inferenceText, people, fallbackPersonId),
+    placeId: selectedPlaceId || inferPlaceId(inferenceText, places)
   };
 }
 
@@ -54,30 +55,55 @@ export function inferPersonIds(content: string, people: PersonLookup[], fallback
 
 export function inferPlaceId(content: string, places: PlaceLookup[]) {
   const normalized = content.trim();
-  return (
-    places.find((place) => {
-      const names = [place.name, place.storeName].filter(Boolean);
-      return names.some((name) => String(name).length >= 3 && normalized.includes(String(name)));
-    })?.id || ""
-  );
+  const directMatch = pickUniquePlaceMatch(normalized, places, (place) => [place.name, place.storeName], 2);
+  if (directMatch) return directMatch;
+
+  return pickUniquePlaceMatch(normalized, places, (place) => [place.mall, place.area], 3);
 }
 
 export function inferMemoryDate(content: string, fallbackDate: string) {
   const normalized = content.trim();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const baseDate = parseDateValue(fallbackDate) || new Date();
+  baseDate.setHours(0, 0, 0, 0);
 
-  if (normalized.includes("前天")) return formatDateValue(addDays(today, -2));
-  if (normalized.includes("昨天") || normalized.includes("昨晚")) return formatDateValue(addDays(today, -1));
-  if (normalized.includes("明天")) return formatDateValue(addDays(today, 1));
+  if (normalized.includes("前天")) return formatDateValue(addDays(baseDate, -2));
+  if (normalized.includes("昨天") || normalized.includes("昨晚")) return formatDateValue(addDays(baseDate, -1));
+  if (normalized.includes("今天") || normalized.includes("今晚")) return formatDateValue(baseDate);
+  if (normalized.includes("明天")) return formatDateValue(addDays(baseDate, 1));
+  if (normalized.includes("后天")) return formatDateValue(addDays(baseDate, 2));
 
-  const fullDateMatch = normalized.match(/(\d{4})[年/-](\d{1,2})[月/-](\d{1,2})日?/);
+  const fullDateMatch = normalized.match(/(\d{4})[年./-](\d{1,2})[月./-](\d{1,2})日?/);
   if (fullDateMatch) return normalizeDateParts(fullDateMatch[1], fullDateMatch[2], fullDateMatch[3], fallbackDate);
 
-  const monthDayMatch = normalized.match(/(\d{1,2})月(\d{1,2})日?/);
-  if (monthDayMatch) return normalizeDateParts(String(today.getFullYear()), monthDayMatch[1], monthDayMatch[2], fallbackDate);
+  const monthDayMatch = normalized.match(/(\d{1,2})[月./-](\d{1,2})日?/);
+  if (monthDayMatch) return normalizeDateParts(String(baseDate.getFullYear()), monthDayMatch[1], monthDayMatch[2], fallbackDate);
 
   return fallbackDate;
+}
+
+function pickUniquePlaceMatch(
+  content: string,
+  places: PlaceLookup[],
+  getAliases: (place: PlaceLookup) => Array<string | undefined>,
+  minLength: number
+) {
+  const matches = places
+    .map((place) => {
+      const aliases = getAliases(place)
+        .map((item) => String(item || "").trim())
+        .filter((item) => item.length >= minLength && content.includes(item));
+      if (!aliases.length) return null;
+      return {
+        id: place.id,
+        score: Math.max(...aliases.map((item) => item.length))
+      };
+    })
+    .filter((item): item is { id: string; score: number } => Boolean(item))
+    .sort((left, right) => right.score - left.score);
+
+  if (!matches.length) return "";
+  if (matches.length === 1) return matches[0].id;
+  return matches[0].score > matches[1].score ? matches[0].id : "";
 }
 
 function normalizeDateParts(yearValue: string, monthValue: string, dayValue: string, fallbackDate: string) {
@@ -89,6 +115,14 @@ function normalizeDateParts(yearValue: string, monthValue: string, dayValue: str
   const date = new Date(year, month - 1, day);
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return fallbackDate;
   return formatDateValue(date);
+}
+
+function parseDateValue(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  if (formatDateValue(date) !== value) return null;
+  return date;
 }
 
 function addDays(date: Date, days: number) {

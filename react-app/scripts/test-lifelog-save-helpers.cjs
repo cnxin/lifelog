@@ -30,7 +30,7 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { buildPlaceFromFormData } = loadTs("src/utils/lifelogHelpers.ts");
+const { buildMemoryFromFormData, buildPlaceFromFormData } = loadTs("src/utils/lifelogHelpers.ts");
 
 const settings = {
   defaultCity: "杭州",
@@ -90,9 +90,83 @@ assertEqual("edited place keeps empty city", editedPlace.city, "");
 assertEqual("edited place keeps empty mall", editedPlace.mall, "");
 assertEqual("zero rating remains zero", editedPlace.rating, 0);
 
+const people = [
+  { id: "p1", name: "\u5c0f\u6797", nickname: "\u6797\u6797" },
+  { id: "p2", name: "\u963f\u5468" }
+];
+const places = [
+  { id: "l1", name: "\u84dd\u86d9", storeName: "\u6e56\u6ee8\u94f6\u6cf0in77\u5e97", mall: "\u6e56\u6ee8\u94f6\u6cf0", area: "\u4e0a\u57ce\u533a" },
+  { id: "l2", name: "Seesaw Coffee", storeName: "\u5609\u91cc\u4e2d\u5fc3\u5e97", mall: "\u676d\u5dde\u5609\u91cc\u4e2d\u5fc3", area: "\u62f1\u5885\u533a" }
+];
+
+const quickMemory = buildMemoryFromFormData({
+  formData: makeFormData({
+    memoryId: "m1",
+    memoryMode: "quick",
+    title: "\u6628\u5929\u548c\u5c0f\u6797\u5728Seesaw Coffee",
+    content: "",
+    date: "2026-05-20",
+    mood: "平静",
+    tags: "\u65e5\u5e38\u3001\u503c\u5f97\u8bb0\u4f4f"
+  }),
+  people,
+  places,
+  settings
+});
+assertEqual("quick memory infers date from title", quickMemory.date, "2026-05-19");
+assertEqual("quick memory infers person from title", quickMemory.personIds, ["p1"]);
+assertEqual("quick memory infers place from title", quickMemory.placeId, "l2");
+assertEqual("quick memory parses tags", quickMemory.tags, ["日常", "值得记住"]);
+
+const contextualQuickMemory = buildMemoryFromFormData({
+  formData: makeFormData({
+    memoryId: "m2",
+    memoryMode: "quick",
+    title: "\u987a\u624b\u8bb0\u4e00\u4e0b",
+    content: "\u6b63\u6587\u6ca1\u6709\u660e\u786e\u4eba\u7269\u548c\u5730\u70b9",
+    date: "2026-05-20",
+    personIds: "p2",
+    placeId: "l1"
+  }),
+  people,
+  places,
+  settings
+});
+assertEqual("quick memory keeps contextual person", contextualQuickMemory.personIds, ["p2"]);
+assertEqual("quick memory keeps contextual place", contextualQuickMemory.placeId, "l1");
+assertEqual("quick memory uses default mood when new mood empty", contextualQuickMemory.mood, "开心");
+
+const editedMemory = buildMemoryFromFormData({
+  formData: makeFormData({
+    memoryId: "ignored",
+    title: "\u5df2\u7f16\u8f91",
+    content: "\u66f4\u65b0\u6b63\u6587",
+    date: "2026-05-20",
+    mood: ""
+  }),
+  existing: {
+    id: "m_existing",
+    title: "\u65e7\u56de\u5fc6",
+    date: "2026-05-19",
+    personIds: ["p1"],
+    placeId: "l1",
+    mood: "开心",
+    content: "\u65e7\u6b63\u6587",
+    tags: ["old"],
+    photos: ["photo-1"]
+  },
+  people,
+  places,
+  settings
+});
+assertEqual("edited memory keeps existing id", editedMemory.id, "m_existing");
+assertEqual("edited memory keeps empty mood", editedMemory.mood, "");
+assertEqual("edited memory clears place when form is empty", editedMemory.placeId, "");
+assertEqual("edited memory keeps existing photos when no photo ids passed", editedMemory.photos, ["photo-1"]);
+
 if (failures) {
   console.error(`LifeLog save helper regression failed: ${failures} mismatch(es).`);
   process.exit(1);
 }
 
-console.log("LifeLog save helper regression passed: 7 cases.");
+console.log("LifeLog save helper regression passed: 18 cases.");

@@ -4,18 +4,24 @@ import { useMemo, useState } from "react";
 interface PersonPickerProps {
   people: Array<{ id: string; name: string }>;
   defaultSelected?: string[];
+  value?: string[];
+  onChange?: (ids: string[]) => void;
   name?: string;
 }
 
 export default function PersonPicker({
   people,
   defaultSelected = [],
+  value,
+  onChange,
   name = "personIds"
 }: PersonPickerProps) {
-  const [selected, setSelected] = useState<string[]>(() =>
+  const isControlled = value !== undefined;
+  const [internalSelected, setInternalSelected] = useState<string[]>(() =>
     defaultSelected.filter((id) => people.some((person) => person.id === id))
   );
   const [query, setQuery] = useState("");
+  const selected = isControlled ? value : internalSelected;
 
   const selectedPeople = useMemo(
     () => selected.map((id) => people.find((person) => person.id === id)).filter(Boolean) as typeof people,
@@ -30,13 +36,18 @@ export default function PersonPicker({
       .slice(0, 12);
   }, [people, selected, query]);
 
+  function setSelected(nextSelected: string[]) {
+    if (!isControlled) setInternalSelected(nextSelected);
+    onChange?.(nextSelected);
+  }
+
   function add(id: string) {
-    setSelected((current) => (current.includes(id) ? current : [...current, id]));
+    setSelected(selected.includes(id) ? selected : [...selected, id]);
     setQuery("");
   }
 
   function remove(id: string) {
-    setSelected((current) => current.filter((item) => item !== id));
+    setSelected(selected.filter((item) => item !== id));
   }
 
   return (

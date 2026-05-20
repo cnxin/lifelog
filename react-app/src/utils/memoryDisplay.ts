@@ -2,6 +2,8 @@ import type { MemoryDisplayContext, MemoryEvent } from "../types";
 
 const SENTENCE_SPLIT = /[。！？!?\n]/;
 const SUMMARY_MAX = 24;
+const UNLINKED_PERSON_LABEL = "未关联人物";
+const UNLINKED_PLACE_LABEL = "未关联地点";
 
 export function getMemoryDisplayTitle(memory: MemoryEvent, ctx: MemoryDisplayContext): string {
   const manual = memory.title?.trim();
@@ -40,8 +42,14 @@ export function buildMemoryDisplayContext(
   getPersonName: (id: string) => string,
   getPlaceName: (id: string) => string
 ): MemoryDisplayContext {
+  const personNames = (memory.personIds || [])
+    .filter(Boolean)
+    .map(getPersonName)
+    .filter((name) => Boolean(name) && name !== UNLINKED_PERSON_LABEL);
+  const placeName = memory.placeId ? getPlaceName(memory.placeId) : "";
+
   return {
-    personNames: (memory.personIds || []).map(getPersonName).filter(Boolean),
-    placeName: getPlaceName(memory.placeId) || ""
+    personNames,
+    placeName: placeName && placeName !== UNLINKED_PLACE_LABEL ? placeName : ""
   };
 }

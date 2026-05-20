@@ -42,7 +42,6 @@ import type {
   ReminderSettings
 } from "../types";
 import { defaultAppSettings, defaultReminderSettings } from "../types";
-import { buildMemoryTitle, inferQuickMemory } from "../utils/memoryInference";
 import { buildPlaceDisplayName } from "../utils/placeMeta";
 import {
   buildGroupMergePreview,
@@ -50,9 +49,10 @@ import {
   inspectPlaceDuplicate,
   mergePlaceRecords
 } from "../utils/placeDedup";
-import { parseGroups, splitList } from "../utils/text";
+import { parseGroups } from "../utils/text";
 import {
   buildDate,
+  buildMemoryFromFormData,
   buildPlaceFromFormData,
   buildPlaceMergeHistoryEntry,
   isRecord,
@@ -275,44 +275,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function saveMemory(formData: FormData, id?: string, photos?: Photo[]) {
       const existing = state.memories.find((memory) => memory.id === id);
-      const selectedPersonIds = formData
-        .getAll("personIds")
-        .map((item) => String(item))
-        .filter(Boolean);
-      const legacyPersonId = String(formData.get("personId") || "");
-      const content = String(formData.get("content") || "");
-      const title = buildMemoryTitle(String(formData.get("title") || ""), content);
-      const memoryMode = String(formData.get("memoryMode") || "");
-      const selectedPlaceId = String(formData.get("placeId") || "");
-      const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
-      const mood = String(formData.get("mood") || (existing ? "" : settings.defaultMood));
-      const quickInference = inferQuickMemory({
-        rawTitle: String(formData.get("title") || ""),
-        content,
+      const memory = buildMemoryFromFormData({
+        formData,
+        existing,
         people: state.people,
         places: state.places,
-        fallbackDate: inputDate,
-        selectedPersonIds,
-        selectedPlaceId,
-        fallbackPersonId: legacyPersonId
+        settings,
+        photoIds: photos ? photos.map((p) => p.id) : undefined
       });
-      const matchedPersonIds = selectedPersonIds.length
-        ? selectedPersonIds
-        : existing
-          ? [legacyPersonId].filter(Boolean)
-          : quickInference.personIds;
-      const memoryId = existing?.id || String(formData.get("memoryId") || "") || uid("m");
-      const memory: MemoryEvent = {
-        id: memoryId,
-        title,
-        date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
-        personIds: matchedPersonIds,
-        placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
-        mood,
-        content,
-        tags: splitList(formData.get("tags")),
-        photos: photos ? photos.map((p) => p.id) : existing?.photos || []
-      };
+      const memoryId = memory.id;
 
       await saveMemoryRecord(memory);
 
