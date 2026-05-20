@@ -118,8 +118,21 @@ function normalizePlatform(platform: unknown, label: unknown, url: string): Plac
   if (lowerLabel.includes("点评") || lowerLabel.includes("dianping")) return "dianping";
   if (lowerLabel.includes("抖音") || lowerLabel.includes("douyin")) return "douyin";
   if (lowerUrl.includes("amap.com") || lowerUrl.startsWith("amapuri://") || lowerUrl.startsWith("androidamap://")) return "amap";
-  if (lowerUrl.includes("meituan.com") || lowerUrl.includes("meishi.meituan.com") || lowerUrl.includes("i.meituan.com")) return "meituan";
-  if (lowerUrl.includes("dianping.com") || lowerUrl.includes("dpurl.cn")) return "dianping";
+  if (
+    lowerUrl.includes("meituan.com") ||
+    lowerUrl.includes("meishi.meituan.com") ||
+    lowerUrl.includes("i.meituan.com") ||
+    lowerUrl.startsWith("imeituan://") ||
+    lowerUrl.startsWith("meituan://") ||
+    lowerUrl.startsWith("meituanwaimai://")
+  ) return "meituan";
+  if (
+    lowerUrl.includes("dianping.com") ||
+    lowerUrl.includes("dpurl.cn") ||
+    lowerUrl.startsWith("dianping://") ||
+    lowerUrl.startsWith("dianpingapp://") ||
+    lowerUrl.startsWith("dper://")
+  ) return "dianping";
   if (lowerUrl.includes("douyin.com")) return "douyin";
   return "custom";
 }

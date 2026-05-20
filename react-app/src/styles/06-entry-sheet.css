@@ -755,6 +755,7 @@
   color: var(--text-sub);
   font-size: 14px;
   line-height: 1.6;
+  white-space: pre-line;
 }
 
 .danger-btn {
@@ -959,4 +960,3 @@ button:disabled,
     opacity: 1;
   }
 }
-

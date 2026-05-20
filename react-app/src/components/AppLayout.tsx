@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
-import type { EntryType } from "../types";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import type { EntryType, Place } from "../types";
 import { todayLabel } from "../utils/date";
 import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
@@ -10,7 +10,10 @@ import NetworkBanner from "./NetworkBanner";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
+import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
+import { parsePlatformLinksText } from "../utils/placeLinks";
+import { parsePlaceShare } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -44,8 +47,12 @@ function isUtilityPage(pathname: string) {
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
+  const [initialPlaceDraft, setInitialPlaceDraft] = useState<Partial<Place> | undefined>();
+  const [placeDraftKey, setPlaceDraftKey] = useState(0);
+  const seenShareTextsRef = useRef(new Set<string>());
   const meta = getPageMeta(location.pathname);
   const { isLoading, settings } = useLifeLog();
+  const notify = useToast();
 
   useLayoutEffect(() => {
     document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -61,6 +68,32 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       delete document.documentElement.dataset.themeStyle;
     };
   }, [settings.themeStyle]);
+  useEffect(() => {
+    function handleAndroidShare(event: Event) {
+      const text = String((event as CustomEvent<{ text?: unknown }>).detail?.text || "").trim();
+      const seenShares = seenShareTextsRef.current;
+      if (!text || seenShares.has(text)) return;
+      seenShares.add(text);
+      window.setTimeout(() => seenShares.delete(text), 5000);
+
+      const parsed = parsePlaceShare(text);
+      if (!parsed.name && !parsed.address && !parsed.mapUrl && !parsed.sourceUrl && !parsed.platformLinks) {
+        notify({ message: "没有识别到明确地点，可手动粘贴分享内容", tone: "info" });
+        return;
+      }
+
+      setInitialPlaceDraft(placeShareToInitialDraft(parsed));
+      setPlaceDraftKey((current) => current + 1);
+      setSheetType("place");
+      notify({
+        message: parsed.name ? `已识别分享地点：${parsed.name}` : "已读取分享内容，请补充地点名称",
+        tone: "success"
+      });
+    }
+
+    window.addEventListener("lifelog:android-share-text", handleAndroidShare);
+    return () => window.removeEventListener("lifelog:android-share-text", handleAndroidShare);
+  }, [notify]);
   useReminderScheduling();
   useStatusBar(settings.themeStyle);
 
@@ -79,10 +112,67 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         )}
       </main>
       {!isUtilityPage(location.pathname) && (
-        <FloatingActionButton onClick={() => setSheetType(entryTypeForPath(location.pathname))} />
+        <FloatingActionButton
+          onClick={() => {
+            setInitialPlaceDraft(undefined);
+            setSheetType(entryTypeForPath(location.pathname));
+          }}
+        />
       )}
       <BottomNav />
-      <EntrySheet type={sheetType} onClose={() => setSheetType(null)} />
+      <EntrySheet
+        key={`entry-sheet-${sheetType || "closed"}-${placeDraftKey}`}
+        type={sheetType}
+        initialPlaceDraft={sheetType === "place" ? initialPlaceDraft : undefined}
+        onClose={() => setSheetType(null)}
+      />
     </div>
   );
+}
+
+function placeShareToInitialDraft(parsed: ReturnType<typeof parsePlaceShare>): Partial<Place> {
+  return {
+    name: parsed.name,
+    country: parsed.country,
+    province: parsed.province,
+    city: parsed.city,
+    area: parsed.area,
+    mall: parsed.mall,
+    storeName: parsed.storeName,
+    category: parsed.category || "其他",
+    rating: parsed.rating || 4,
+    address: parsed.address,
+    latitude: parseOptionalNumber(parsed.latitude),
+    longitude: parseOptionalNumber(parsed.longitude),
+    mapUrl: parsed.mapUrl,
+    sourceUrl: parsed.sourceUrl || extractFirstPlatformUrl(parsed.platformLinks),
+    platformLinks: parseDraftPlatformLinks(parsed.platformLinks),
+    photos: splitDraftLines(parsed.photos),
+    desc: parsed.desc,
+    tags: splitDraftTags(parsed.tags),
+    favorite: false
+  };
+}
+
+function parseOptionalNumber(value: string) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed !== 0 ? parsed : undefined;
+}
+
+function splitDraftLines(value: string) {
+  return value.split(/\r?\n+/).map((item) => item.trim()).filter(Boolean);
+}
+
+function splitDraftTags(value: string) {
+  return value.split(/[，,\s]+/).map((item) => item.trim()).filter(Boolean);
+}
+
+function extractFirstPlatformUrl(value: string) {
+  const firstLine = splitDraftLines(value)[0] || "";
+  const parts = firstLine.split("|");
+  return (parts.length > 1 ? parts.slice(1).join("|") : firstLine).trim();
+}
+
+function parseDraftPlatformLinks(value: string) {
+  return parsePlatformLinksText(value);
 }

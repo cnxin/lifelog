@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
-import type { Place } from "../../types";
+import type { Place, PlaceExternalLink } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { PlaceDraft } from "../../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../../utils/placeShareParser";
@@ -122,11 +122,11 @@ export function PlaceFields({
       </div>
       <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
       <label>
-        美团店铺链接
+        平台店铺链接
         <input
           name="platformLinks"
-          defaultValue={extractMeituanLinkText(place)}
-          placeholder="粘贴美团店铺链接，详情页可直接打开美团 App"
+          defaultValue={extractPlatformLinksText(place)}
+          placeholder="每行一个平台链接，例如：美团 | https://..."
         />
       </label>
       <label>
@@ -380,7 +380,7 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
             {buildPlaceDisclosureSummary(
               [
                 draft.mapUrl && "高德",
-                extractMeituanLinkTextFromDraft(draft) && "美团",
+                extractPlatformLinksTextFromDraft(draft) && "平台链接",
                 draft.sourceUrl && "参考链接",
                 draft.photos && "照片",
                 draft.tags && "标签"
@@ -434,22 +434,28 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
       <input type="hidden" name="country" value={draft.country || "中国"} />
       <input type="hidden" name="rating" value={draft.rating || 4} />
       <input type="hidden" name="favorite" value="false" />
-      <input type="hidden" name="platformLinks" value={extractMeituanLinkTextFromDraft(draft)} />
+      <input type="hidden" name="platformLinks" value={extractPlatformLinksTextFromDraft(draft)} />
       <p className="form-hint">如果是第一次录入，先保存核心信息即可；地点详情页里随时可以继续完善。</p>
     </>
   );
 }
 
-function extractMeituanLinkText(place?: Place) {
+function extractPlatformLinksText(place?: Place) {
   if (!place) return "";
-  return getPlacePlatformLink(place, "meituan")?.url || "";
+  return [getPlacePlatformLink(place, "meituan"), getPlacePlatformLink(place, "dianping")]
+    .filter((link): link is PlaceExternalLink => Boolean(link))
+    .map((link) => `${link.label} | ${link.url}`)
+    .join("\n");
 }
 
-function extractMeituanLinkTextFromDraft(draft: PlaceDraft) {
+function extractPlatformLinksTextFromDraft(draft: PlaceDraft) {
   if (draft.platformLinks.trim()) return draft.platformLinks;
-  const link = createPlatformLink(draft.sourceUrl, draft.sourceType === "meituan" ? "美团" : "");
-  if (!link || link.platform !== "meituan") return "";
-  return `美团 | ${link.url}`;
+  const link = createPlatformLink(
+    draft.sourceUrl,
+    draft.sourceType === "meituan" ? "美团" : draft.sourceType === "dianping" ? "点评" : ""
+  );
+  if (!link || (link.platform !== "meituan" && link.platform !== "dianping")) return "";
+  return `${link.label} | ${link.url}`;
 }
 
 function buildPlaceDisclosureSummary(items: Array<string | false | undefined>, fallback: string) {

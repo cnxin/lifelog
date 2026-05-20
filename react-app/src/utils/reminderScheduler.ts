@@ -1,8 +1,19 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
+import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import type { Person, MemoryEvent, ReminderSettings } from '../types';
 import { daysUntil, anniversaryYearLabel, birthdayAgeLabel } from './date';
 
 const REMINDER_WINDOW_DAYS = 30;
+const MAX_PENDING_REMINDERS = 64;
+
+export interface ReminderScheduleSummary {
+  totalGenerated: number;
+  scheduledCount: number;
+  capped: boolean;
+  nextAt: Date | null;
+  enabledTypes: string[];
+  error?: string;
+}
 
 /**
  * 调度所有提醒
@@ -11,7 +22,9 @@ export async function scheduleAllReminders(
   people: Person[],
   memories: MemoryEvent[],
   settings: ReminderSettings
-): Promise<void> {
+): Promise<ReminderScheduleSummary> {
+  const preview = previewReminderSchedule(people, memories, settings);
+
   try {
     const pending = await LocalNotifications.getPending();
     if (pending.notifications.length > 0) {
@@ -20,36 +33,68 @@ export async function scheduleAllReminders(
       });
     }
 
-    const notifications = [];
-
-    if (settings.birthdayEnabled) {
-      notifications.push(...generateBirthdayReminders(people, settings));
-    }
-
-    if (settings.anniversaryEnabled) {
-      notifications.push(...generateAnniversaryReminders(people, settings));
-    }
-
-    if (settings.contactEnabled) {
-      notifications.push(...generateContactReminders(people, memories, settings));
-    }
-
-    if (settings.memoryEnabled) {
-      notifications.push(...generateMemoryReminders(memories, settings));
-    }
+    const notifications = generateReminderNotifications(people, memories, settings);
 
     if (notifications.length > 0) {
-      const limited = notifications.slice(0, 64);
+      const limited = notifications.slice(0, MAX_PENDING_REMINDERS);
       await LocalNotifications.schedule({ notifications: limited });
       console.log(`已调度 ${limited.length} 个提醒`);
     }
+
+    return preview;
   } catch (error) {
     console.error('调度提醒失败:', error);
+    return {
+      ...preview,
+      error: error instanceof Error ? error.message : '调度提醒失败'
+    };
   }
 }
 
-function generateBirthdayReminders(people: Person[], settings: ReminderSettings) {
-  const notifications = [];
+export function previewReminderSchedule(
+  people: Person[],
+  memories: MemoryEvent[],
+  settings: ReminderSettings
+): ReminderScheduleSummary {
+  const notifications = generateReminderNotifications(people, memories, settings);
+  const scheduled = notifications.slice(0, MAX_PENDING_REMINDERS);
+  return {
+    totalGenerated: notifications.length,
+    scheduledCount: scheduled.length,
+    capped: notifications.length > MAX_PENDING_REMINDERS,
+    nextAt: getNextReminderDate(scheduled),
+    enabledTypes: getEnabledReminderTypes(settings)
+  };
+}
+
+function generateReminderNotifications(
+  people: Person[],
+  memories: MemoryEvent[],
+  settings: ReminderSettings
+): LocalNotificationSchema[] {
+  const notifications: LocalNotificationSchema[] = [];
+
+  if (settings.birthdayEnabled) {
+    notifications.push(...generateBirthdayReminders(people, settings));
+  }
+
+  if (settings.anniversaryEnabled) {
+    notifications.push(...generateAnniversaryReminders(people, settings));
+  }
+
+  if (settings.contactEnabled) {
+    notifications.push(...generateContactReminders(people, memories, settings));
+  }
+
+  if (settings.memoryEnabled) {
+    notifications.push(...generateMemoryReminders(memories, settings));
+  }
+
+  return notifications.sort((a, b) => getNotificationTime(a) - getNotificationTime(b));
+}
+
+function generateBirthdayReminders(people: Person[], settings: ReminderSettings): LocalNotificationSchema[] {
+  const notifications: LocalNotificationSchema[] = [];
 
   for (const person of people) {
     if (!person.birthday) continue;
@@ -79,8 +124,8 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
   return notifications;
 }
 
-function generateAnniversaryReminders(people: Person[], settings: ReminderSettings) {
-  const notifications = [];
+function generateAnniversaryReminders(people: Person[], settings: ReminderSettings): LocalNotificationSchema[] {
+  const notifications: LocalNotificationSchema[] = [];
 
   for (const person of people) {
     for (const anniversary of person.anniversaries) {
@@ -117,7 +162,7 @@ function generateContactReminders(
   memories: MemoryEvent[],
   settings: ReminderSettings
 ) {
-  const notifications = [];
+  const notifications: LocalNotificationSchema[] = [];
   const now = new Date();
 
   for (const person of people) {
@@ -143,8 +188,8 @@ function generateContactReminders(
   return notifications;
 }
 
-function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSettings) {
-  const notifications = [];
+function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSettings): LocalNotificationSchema[] {
+  const notifications: LocalNotificationSchema[] = [];
   const today = new Date();
   const month = today.getMonth() + 1;
   const day = today.getDate();
@@ -191,6 +236,27 @@ function getScheduleDate(daysFromNow: number, time: string): Date {
   date.setDate(date.getDate() + daysFromNow);
   date.setHours(hours, minutes, 0, 0);
   return date;
+}
+
+function getNotificationTime(notification: LocalNotificationSchema) {
+  return notification.schedule?.at?.getTime() || Number.MAX_SAFE_INTEGER;
+}
+
+function getNextReminderDate(notifications: LocalNotificationSchema[]) {
+  const next = notifications
+    .map((notification) => notification.schedule?.at)
+    .filter((date): date is Date => Boolean(date))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  return next || null;
+}
+
+function getEnabledReminderTypes(settings: ReminderSettings) {
+  return [
+    settings.birthdayEnabled && "生日",
+    settings.anniversaryEnabled && "纪念日",
+    settings.contactEnabled && "联系",
+    settings.memoryEnabled && "回忆"
+  ].filter((item): item is string => Boolean(item));
 }
 
 export async function sendTestNotification(): Promise<boolean> {

@@ -1,9 +1,11 @@
-import { Database, Download, RotateCcw, Upload } from "lucide-react";
+import { Database, Download, RotateCcw, ShieldCheck, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
+import { buildBackupHealthReport, buildBackupImportPreview } from "../../utils/backupHealth";
+import { isRecord } from "../../utils/lifelogHelpers";
 
 export default function AccountDataManagement() {
   const { state, exportData, importData, resetDemo } = useLifeLog();
@@ -12,6 +14,7 @@ export default function AccountDataManagement() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
+  const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
 
   const dataSummary = useMemo(
     () => [
@@ -26,9 +29,37 @@ export default function AccountDataManagement() {
   async function handleImport(file: File | undefined) {
     if (!file) return;
     if (importLockRef.current) return;
+    let parsed: unknown;
+    let previewMessage = "";
+
+    try {
+      const text = await file.text();
+      parsed = JSON.parse(text) as unknown;
+      if (!isRecord(parsed)) {
+        throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
+      }
+      const preview = buildBackupImportPreview(parsed);
+      previewMessage = [
+        `将导入：${preview.people} 个人物 · ${preview.places} 个地点 · ${preview.memories} 条回忆 · ${preview.photos} 张照片。`,
+        preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
+        preview.appVersion ? `备份版本：${preview.appVersion}。` : "",
+        preview.issueCount ? `预检发现 ${preview.issueCount} 个关联问题：${preview.issues.slice(0, 2).join("；")}。` : "预检未发现明显关联问题。",
+        `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份。`
+      ].filter(Boolean).join("\n");
+    } catch (error) {
+      await confirm({
+        title: "导入失败",
+        message: error instanceof Error ? error.message : "文件不是有效的 JSON 格式，请检查备份文件。",
+        confirmText: "知道了",
+        tone: "info"
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     const accepted = await confirm({
-      title: "导入数据",
-      message: `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份，再确认导入这个 JSON 文件。`,
+      title: "导入预检",
+      message: previewMessage,
       confirmText: "确认覆盖导入"
     });
     if (!accepted) {
@@ -79,6 +110,22 @@ export default function AccountDataManagement() {
           <span>{dataSummary}</span>
           <p>数据保存在当前设备的 IndexedDB 中。完整备份会包含资料、照片、设置和提醒；导入和重置会覆盖当前本地数据。</p>
         </GlassCard>
+        <GlassCard className={`backup-health-card ${healthReport.status}`}>
+          <div className="backup-health-head">
+            <ShieldCheck />
+            <div>
+              <strong>{healthReport.status === "ok" ? "备份健康：可备份" : "备份健康：需检查"}</strong>
+              <span>
+                {healthReport.people} 人物 · {healthReport.places} 地点 · {healthReport.memories} 回忆 · {healthReport.photoRefs} 照片引用
+              </span>
+            </div>
+          </div>
+          <p>
+            {healthReport.status === "ok"
+              ? "当前数据关联完整，可以直接导出完整备份。"
+              : `${healthReport.issueCount} 个问题：${healthReport.issues.slice(0, 2).join("；")}`}
+          </p>
+        </GlassCard>
         <div className="data-action-grid">
           <button
             className="data-action-card glass-card"
@@ -128,4 +175,16 @@ export default function AccountDataManagement() {
       />
     </section>
   );
+}
+
+function formatBackupDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }

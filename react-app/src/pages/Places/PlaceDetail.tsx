@@ -52,6 +52,7 @@ export default function PlaceDetail() {
   const latestMemory = relatedMemories[0];
   const photos = (place.photos || []).slice(0, 3);
   const meituanLink = getPlacePlatformLink(place, "meituan");
+  const dianpingLink = getPlacePlatformLink(place, "dianping");
   const referenceUrl = getPlaceReferenceUrl(place);
   const completionTips: CompletionTip[] = [
     {
@@ -201,6 +202,11 @@ export default function PlaceDetail() {
               <Store /> 打开美团
             </button>
           ) : null}
+          {dianpingLink ? (
+            <button className="link-action secondary" type="button" onClick={() => void openNativeStoreUrl(dianpingLink.url)}>
+              <Store /> 打开点评
+            </button>
+          ) : null}
           {referenceUrl ? (
             <button className="link-action" type="button" onClick={() => void openExternalUrl(referenceUrl)}>
               <ExternalLink /> 参考链接
@@ -296,4 +302,3 @@ export default function PlaceDetail() {
     </>
   );
 }
-

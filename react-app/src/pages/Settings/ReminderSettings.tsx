@@ -6,14 +6,15 @@ import TimePicker from "../../components/TimePicker";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { notifyReminderPermissionChanged } from "../../hooks/useReminderScheduling";
 import { checkNotificationPermission, requestNotificationPermission } from "../../utils/notificationPermissions";
-import { sendTestNotification } from "../../utils/reminderScheduler";
+import { previewReminderSchedule, sendTestNotification } from "../../utils/reminderScheduler";
 
 export default function ReminderSettings() {
-  const { reminderSettings, updateReminderSettings } = useLifeLog();
+  const { state, reminderSettings, updateReminderSettings } = useLifeLog();
   const [hasPermission, setHasPermission] = useState(false);
   const [isCheckingPermission, setIsCheckingPermission] = useState(true);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const schedulePreview = previewReminderSchedule(state.people, state.memories, reminderSettings);
 
   useEffect(() => {
     checkNotificationPermission()
@@ -80,6 +81,41 @@ export default function ReminderSettings() {
             {isRequestingPermission ? "请求中..." : "启用通知"}
           </button>
         )}
+      </GlassCard>
+
+      <GlassCard className={`reminder-schedule-summary ${hasPermission ? "ready" : "blocked"}`}>
+        <div className="reminder-schedule-summary-head">
+          <Clock size={18} />
+          <div>
+            <strong>{hasPermission ? "提醒调度状态" : "提醒已配置但不会调度"}</strong>
+            <span>
+              {schedulePreview.enabledTypes.length
+                ? schedulePreview.enabledTypes.join("、")
+                : "未启用任何提醒类型"}
+            </span>
+          </div>
+        </div>
+        <div className="reminder-schedule-metrics">
+          <span>
+            <strong>{schedulePreview.scheduledCount}</strong>
+            预计调度
+          </span>
+          <span>
+            <strong>{schedulePreview.totalGenerated}</strong>
+            生成提醒
+          </span>
+          <span>
+            <strong>{schedulePreview.nextAt ? formatReminderDate(schedulePreview.nextAt) : "无"}</strong>
+            下次提醒
+          </span>
+        </div>
+        <p>
+          {hasPermission
+            ? schedulePreview.capped
+              ? "系统最多保留 64 条待触发提醒，超出的提醒会在后续重新调度时补上。"
+              : "保存设置后会自动重新调度本地通知。"
+            : "请先启用通知权限，否则这些提醒只会保存在设置中，不会触发系统通知。"}
+        </p>
       </GlassCard>
 
       <GlassCard className="reminder-config-block">
@@ -231,4 +267,13 @@ export default function ReminderSettings() {
       )}
     </div>
   );
+}
+
+function formatReminderDate(date: Date) {
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
