@@ -225,11 +225,12 @@ function parseShareText(text: string, sourceType: PlaceSourceType): Partial<Plac
     explicitName ||
     sharedName ||
     "";
-  const mall =
-    pickFieldValue(lines, ["所在商场", "所在商城", "商场", "商城", "购物中心", "园区"]) ||
-    titleParts.mall ||
-    inferMallFromText(address) ||
-    inferMallFromText(normalized);
+  const mall = pickBestMallName(
+    pickFieldValue(lines, ["所在商场", "所在商城", "商场", "商城", "购物中心", "园区"]),
+    titleParts.mall,
+    inferMallFromText(address),
+    inferMallFromText(normalized)
+  );
   const city = normalizeCityName(inferCity(address) || inferCity(normalized) || inferCityByDistrict(`${address} ${normalized}`));
   const province = inferProvince({
     country: "中国",
@@ -340,6 +341,7 @@ function isNonCategoryFieldLine(line: string) {
 
 function looksLikeAddress(line: string) {
   if (/^(?:地址|位置|详细地址|商户地址|商家地址|门店地址|店铺地址)\s*[:：]/.test(line)) return true;
+  if (/^[^\s，,；;]{2,80}(?:\([^()]{2,32}\)|（[^（）]{2,32}）)$/.test(line)) return false;
   const indicators = [
     /(?:省|市|区|县|镇|乡|村)/,
     /(?:路|街|大道|巷|弄|号)/,
@@ -423,7 +425,7 @@ function inferCity(value = "") {
 }
 
 function inferCategory(value = "") {
-  if (/咖啡|咖啡厅|咖啡馆|Coffee|coffee|奶茶|茶饮|甜品|蛋糕|面包|烘焙|酒吧/.test(value)) return "咖啡厅";
+  if (/%\s*Arabica|Arabica|咖啡|咖啡厅|咖啡馆|Coffee|coffee|奶茶|茶饮|甜品|蛋糕|面包|烘焙|酒吧/.test(value)) return "咖啡厅";
   if (/西餐|中餐|火锅|烧烤|烤肉|日料|日本料理|韩餐|韩国料理|餐厅|料理|面馆|小吃|饭店|美食|店/.test(value)) return "餐厅";
   if (/商场|商城|购物中心|百货|Mall|mall|广场/.test(value)) return "商场";
   if (/酒店|宾馆|民宿/.test(value)) return "酒店";
@@ -533,6 +535,12 @@ function inferMallFromText(value: string) {
     .replace(/^.*?(?=[\u4e00-\u9fffA-Za-z0-9·\s-]{2,24}(?:广场|商场|商城|天地|中心|银泰|万象城|万象汇|万达|印象城|大悦城|吾悦广场|天街|奥特莱斯|生活广场|国际广场|国金中心|写字楼|园区|大厦|SKP|IFS|Mall|mall)$)/, "")
     .replace(/^(?:.*(?:省|市|区|县|路|街|大道|巷|弄|号))/, "")
     .trim() || raw;
+}
+
+function pickBestMallName(...values: string[]) {
+  const candidates = values.map((item) => item.trim()).filter(Boolean);
+  if (!candidates.length) return "";
+  return candidates.sort((left, right) => right.length - left.length)[0];
 }
 
 function buildDescription(existing: string, price: string) {

@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
+import { APP_VERSION } from "../../constants/version";
 
 export default function AccountAbout() {
   return (
@@ -13,7 +14,7 @@ export default function AccountAbout() {
       <div className="list">
         <GlassCard className="detail-row">
           <strong>版本</strong>
-          <span>0.1.0-test.55</span>
+          <span>{APP_VERSION}</span>
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>存储</strong>

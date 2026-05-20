@@ -22,7 +22,7 @@ export function initials(name: string) {
 
 export function splitList(value: FormDataEntryValue | null) {
   return String(value || "")
-    .split(/[，,]/)
+    .split(/[，,、;；\r\n]+/)
     .map((item) => item.trim())
     .filter(Boolean);
 }

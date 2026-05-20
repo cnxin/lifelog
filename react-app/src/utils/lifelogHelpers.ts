@@ -65,33 +65,38 @@ export function mergeBirthdayAnniversary(birthday: string, anniversaries: Annive
 }
 
 export function buildPlaceFromFormData(formData: FormData, id: string | undefined, settings: AppSettings): Place {
+  const isEditing = Boolean(id);
   const country = normalizePlaceText(formData.get("country")) || "中国";
   const province = normalizePlaceText(formData.get("province"));
-  const city = normalizeCityName(normalizePlaceText(formData.get("city")) || settings.defaultCity);
+  const city = normalizeCityName(normalizePlaceText(formData.get("city")) || (isEditing ? "" : settings.defaultCity));
   const address = normalizePlaceText(formData.get("address"));
   const category = String(formData.get("category") || "其他");
   const name = String(formData.get("name") || "未命名地点");
-  const mall = normalizePlaceText(formData.get("mall")) || inferMallName(address) || (isMallRecord({ name, category }) ? name : "");
+  const inferredMall = !isEditing ? inferMallName(address) || (isMallRecord({ name, category }) ? name : "") : "";
+  const mall = normalizePlaceText(formData.get("mall")) || inferredMall;
+  const rawRating = String(formData.get("rating") ?? "").trim();
 
   return {
     id: id || uid("l"),
     name,
     country,
-    province: inferProvince({
-      country,
-      province,
-      city,
-      address
-    }),
+    province: isEditing
+      ? province
+      : inferProvince({
+          country,
+          province,
+          city,
+          address
+        }),
     city,
     area: String(formData.get("area") || ""),
     mall,
     storeName: String(formData.get("storeName") || ""),
     category,
-    rating: Number(formData.get("rating")) || 4,
+    rating: parseRating(rawRating),
     address,
-    latitude: Number(formData.get("latitude")) || undefined,
-    longitude: Number(formData.get("longitude")) || undefined,
+    latitude: parseOptionalNumber(formData.get("latitude")),
+    longitude: parseOptionalNumber(formData.get("longitude")),
     mapUrl: String(formData.get("mapUrl") || ""),
     sourceUrl: String(formData.get("sourceUrl") || ""),
     platformLinks: parsePlatformLinksText(formData.get("platformLinks")),
@@ -100,6 +105,19 @@ export function buildPlaceFromFormData(formData: FormData, id: string | undefine
     tags: splitList(formData.get("tags")),
     favorite: formData.get("favorite") === "true"
   };
+}
+
+function parseRating(value: string) {
+  if (!value) return 4;
+  const rating = Number(value);
+  return Number.isFinite(rating) ? rating : 4;
+}
+
+function parseOptionalNumber(value: FormDataEntryValue | null) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return undefined;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 export function resolvePlaceMerge(state: LifeLogState, preview: PlaceMergePreview) {

@@ -39,7 +39,7 @@ export function MemoryFields({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [quickPersonId, setQuickPersonId] = useState(initialPersonId || "");
   const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
-  const [mood, setMood] = useState<string>(memory?.mood || settings.defaultMood);
+  const [mood, setMood] = useState<string>(memory ? memory.mood : settings.defaultMood);
   const quickPreview = inferQuickMemory({
     content: quickContent,
     people,
@@ -164,8 +164,8 @@ export function MemoryFields({
               />
             </div>
             <label>
-              标签，用顿号分隔
-              <input name="tags" placeholder="日常、值得记住" />
+              标签
+              <input name="tags" placeholder="日常、值得记住；可用顿号、逗号或分号分隔" />
             </label>
           </div>
         )}
@@ -269,11 +269,11 @@ export function MemoryFields({
         />
       </div>
       <label>
-        标签，逗号分隔
+        标签
         <input
           name="tags"
           defaultValue={memory?.tags.join("，") || ""}
-          placeholder="日常，值得记住"
+          placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
         />
       </label>
     </>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import type { Anniversary, Person, PreferenceGroup } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { groupsToText, splitPreferenceItems } from "../../utils/text";
@@ -133,6 +133,12 @@ interface AnniversaryRow {
   date: string;
 }
 
+interface PreferenceEditorRow {
+  category: string;
+  items: string[];
+  draftItem: string;
+}
+
 function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] }) {
   const [rows, setRows] = useState<AnniversaryRow[]>(
     anniversaries?.length
@@ -211,13 +217,14 @@ function PreferenceGroupEditor({
   danger?: boolean;
 }) {
   const [rows, setRows] = useState(() =>
-    (groups?.length ? groups : defaults).map((group) => ({
+    (groups ?? defaults).map((group) => ({
       category: group.category,
-      itemsText: group.items.join("、")
+      items: [...group.items],
+      draftItem: ""
     }))
   );
 
-  function updateRow(index: number, patch: Partial<{ category: string; itemsText: string }>) {
+  function updateRow(index: number, patch: Partial<PreferenceEditorRow>) {
     setRows((current) =>
       current.map((row, rowIndex) =>
         rowIndex === index
@@ -231,23 +238,56 @@ function PreferenceGroupEditor({
   }
 
   function addRow() {
-    setRows((current) => [...current, { category: "", itemsText: "" }]);
+    setRows((current) => [...current, { category: "", items: [], draftItem: "" }]);
   }
 
   function removeRow(index: number) {
     setRows((current) => current.filter((_, rowIndex) => rowIndex !== index));
   }
 
+  function addDraftItems(index: number) {
+    setRows((current) =>
+      current.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              items: mergePreferenceItems(row.items, splitPreferenceItems(row.draftItem)),
+              draftItem: ""
+            }
+          : row
+      )
+    );
+  }
+
+  function removeItem(rowIndex: number, itemIndex: number) {
+    setRows((current) =>
+      current.map((row, index) =>
+        index === rowIndex
+          ? {
+              ...row,
+              items: row.items.filter((_, currentItemIndex) => currentItemIndex !== itemIndex)
+            }
+          : row
+      )
+    );
+  }
+
+  function handleItemKeyDown(event: KeyboardEvent<HTMLInputElement>, index: number) {
+    if (!["Enter", "、", ";", "；"].includes(event.key)) return;
+    event.preventDefault();
+    addDraftItems(index);
+  }
+
   const groupsValue: PreferenceGroup[] = rows
     .map((row) => ({
       category: row.category.trim(),
-      items: splitPreferenceItems(row.itemsText)
+      items: mergePreferenceItems(row.items, splitPreferenceItems(row.draftItem))
     }))
     .filter((row) => row.category && row.items.length);
 
   const incompleteCount = rows.filter((row) => {
     const hasCategory = row.category.trim();
-    const hasItems = row.itemsText.trim();
+    const hasItems = row.items.length || splitPreferenceItems(row.draftItem).length;
     return (hasCategory && !hasItems) || (!hasCategory && hasItems);
   }).length;
 
@@ -256,7 +296,7 @@ function PreferenceGroupEditor({
       <input type="hidden" name={name} value={groupsToText(groupsValue)} />
       {rows.map((row, index) => {
         const hasCategory = row.category.trim();
-        const hasItems = row.itemsText.trim();
+        const hasItems = row.items.length || splitPreferenceItems(row.draftItem).length;
         const incomplete = (hasCategory && !hasItems) || (!hasCategory && hasItems);
         return (
           <div className={`pref-editor-row ${incomplete ? "incomplete" : ""}`} key={`${name}-${index}`}>
@@ -266,12 +306,33 @@ function PreferenceGroupEditor({
               value={row.category}
               onChange={(event) => updateRow(index, { category: event.target.value })}
             />
-            <input
-              aria-label="项目"
-              placeholder="用顿号或分号分隔"
-              value={row.itemsText}
-              onChange={(event) => updateRow(index, { itemsText: event.target.value })}
-            />
+            <div className="pref-items-editor">
+              {row.items.length > 0 && (
+                <div className="pref-chip-list" aria-label={`${danger ? "禁忌" : "喜好"}项目`}>
+                  {row.items.map((item, itemIndex) => (
+                    <span className={`pref-chip ${danger ? "danger" : ""}`} key={`${name}-${index}-${item}`}>
+                      {item}
+                      <button type="button" aria-label={`删除${item}`} onClick={() => removeItem(index, itemIndex)}>
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="pref-item-input-row">
+                <input
+                  aria-label="新增项目"
+                  placeholder="输入后点添加，或按 Enter"
+                  value={row.draftItem}
+                  onBlur={() => addDraftItems(index)}
+                  onChange={(event) => updateRow(index, { draftItem: event.target.value })}
+                  onKeyDown={(event) => handleItemKeyDown(event, index)}
+                />
+                <button type="button" className="mini-action add" onClick={() => addDraftItems(index)}>
+                  添加项目
+                </button>
+              </div>
+            </div>
             <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
               删除
             </button>
@@ -284,6 +345,21 @@ function PreferenceGroupEditor({
       <button type="button" className="mini-action add" onClick={addRow}>
         添加分类
       </button>
+      <p className="form-hint">
+        多个项目可以用“、”或“；”一次性输入；不添加任何分类时，保存后会保持为空。
+      </p>
     </div>
   );
+}
+
+function mergePreferenceItems(currentItems: string[], nextItems: string[]) {
+  const seen = new Set<string>();
+  return [...currentItems, ...nextItems]
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => {
+      if (seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
 }

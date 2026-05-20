@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Place, PlaceMergePreview } from "../types";
 import { buildPlaceDisplayName, buildPlaceGeoLine } from "../utils/placeMeta";
+import { splitList } from "../utils/text";
 
 interface PlaceMergeWorkbenchProps {
   preview: PlaceMergePreview;
@@ -147,15 +148,7 @@ function PlaceMergeDraftCard({
         标签
         <input
           value={place.tags.join("，")}
-          onChange={(event) =>
-            onChange(
-              "tags",
-              event.target.value
-                .split(/[，,]/)
-                .map((item) => item.trim())
-                .filter(Boolean),
-            )
-          }
+          onChange={(event) => onChange("tags", splitList(event.target.value))}
         />
       </label>
       <div className="merge-preview-meta">

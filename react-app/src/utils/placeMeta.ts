@@ -114,7 +114,8 @@ export function inferProvince(fields: {
 }
 
 export function inferMallName(value: string) {
-  return normalizePlaceText(value).match(mallPattern)?.[1]?.trim() || "";
+  const matched = normalizePlaceText(value).match(mallPattern)?.[1]?.trim() || "";
+  return cleanMallName(matched);
 }
 
 export function inferCityByDistrict(value = "") {
@@ -228,6 +229,14 @@ function uniqueParts(parts: Array<string | undefined>) {
       seen.add(part);
       return true;
     });
+}
+
+function cleanMallName(value: string) {
+  return normalizePlaceText(value)
+    .replace(/^.*?(?:省|自治区|特别行政区)/, "")
+    .replace(/^.*?(?:区|县)/, "")
+    .replace(/^.*?(?:路|街|大道|巷|弄|号)/, "")
+    .trim();
 }
 
 function findDistrictName(value = "") {

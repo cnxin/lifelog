@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { APP_VERSION } from "../constants/version";
 import {
   clearPlaceMergeHistory,
   deleteMemoryRecord,
@@ -283,7 +284,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const title = buildMemoryTitle(String(formData.get("title") || ""), content);
       const memoryMode = String(formData.get("memoryMode") || "");
       const selectedPlaceId = String(formData.get("placeId") || "");
-      const inputDate = String(formData.get("date") || new Date().toISOString().slice(0, 10));
+      const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
+      const mood = String(formData.get("mood") || (existing ? "" : settings.defaultMood));
       const quickInference = inferQuickMemory({
         rawTitle: String(formData.get("title") || ""),
         content,
@@ -306,7 +308,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
         personIds: matchedPersonIds,
         placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
-        mood: String(formData.get("mood") || settings.defaultMood),
+        mood,
         content,
         tags: splitList(formData.get("tags")),
         photos: photos ? photos.map((p) => p.id) : existing?.photos || []
@@ -521,7 +523,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         version: 3,
         storage: "indexeddb",
         exportedAt: new Date().toISOString(),
-        appVersion: "0.1.0-test.49",
+        appVersion: APP_VERSION,
         data: state,
         settings,
         reminderSettings,

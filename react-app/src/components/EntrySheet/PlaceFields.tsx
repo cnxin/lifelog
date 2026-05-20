@@ -4,7 +4,7 @@ import type { Place, PlaceExternalLink } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { PlaceDraft } from "../../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../../utils/placeShareParser";
-import { createPlatformLink } from "../../utils/placeLinks";
+import { createPlatformLink, platformLinksToText } from "../../utils/placeLinks";
 import { getPlacePlatformLink } from "../../utils/placeMeta";
 import NumberStepper from "../NumberStepper";
 import SelectPicker from "../SelectPicker";
@@ -123,7 +123,7 @@ export function PlaceFields({
       <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
       <label>
         平台店铺链接
-        <input
+        <textarea
           name="platformLinks"
           defaultValue={extractPlatformLinksText(place)}
           placeholder="每行一个平台链接，例如：美团 | https://..."
@@ -143,8 +143,8 @@ export function PlaceFields({
         <textarea name="desc" defaultValue={place?.desc} placeholder="适合约会或聚餐，环境安静..." />
       </label>
       <label>
-        标签，逗号分隔
-        <input name="tags" defaultValue={place?.tags.join("，")} placeholder="安静，推荐，想再去" />
+        标签
+        <input name="tags" defaultValue={place?.tags.join("，")} placeholder="安静、推荐；可用顿号、逗号或分号分隔" />
       </label>
     </>
   );
@@ -167,6 +167,7 @@ function placeToDraft(place?: Partial<Place>): Partial<PlaceDraft> {
     longitude: place.longitude ? String(place.longitude) : "",
     mapUrl: place.mapUrl || "",
     sourceUrl: place.sourceUrl || "",
+    platformLinks: platformLinksToText(place.platformLinks || []),
     photos: (place.photos || []).join("\n"),
     desc: place.desc || "",
     tags: (place.tags || []).join("，")
@@ -421,12 +422,21 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
           />
         </label>
         <label>
-          标签，逗号分隔
+          平台店铺链接
+          <textarea
+            name="platformLinks"
+            value={draft.platformLinks}
+            onChange={(event) => updateDraft({ platformLinks: event.target.value })}
+            placeholder="每行一个平台链接，例如：美团 | https://..."
+          />
+        </label>
+        <label>
+          标签
           <input
             name="tags"
             value={draft.tags}
             onChange={(event) => updateDraft({ tags: event.target.value })}
-            placeholder="例如：约会、回头客、想再去"
+            placeholder="约会、回头客；可用顿号、逗号或分号分隔"
           />
         </label>
       </div>
@@ -442,6 +452,9 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
 
 function extractPlatformLinksText(place?: Place) {
   if (!place) return "";
+  const savedLinksText = platformLinksToText(place.platformLinks);
+  if (savedLinksText) return savedLinksText;
+
   return [getPlacePlatformLink(place, "meituan"), getPlacePlatformLink(place, "dianping")]
     .filter((link): link is PlaceExternalLink => Boolean(link))
     .map((link) => `${link.label} | ${link.url}`)

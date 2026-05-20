@@ -622,6 +622,54 @@
   min-width: 0;
 }
 
+.pref-items-editor {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.pref-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pref-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 6px 8px 6px 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pref-chip.danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.pref-chip button {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.58);
+  line-height: 1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pref-item-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
 .anniversary-editor {
   display: grid;
   gap: 10px;
@@ -898,6 +946,10 @@ button:disabled,
 
   .merge-edit-grid,
   .pref-editor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pref-item-input-row {
     grid-template-columns: 1fr;
   }
 

@@ -14,6 +14,7 @@ import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
 import { parsePlatformLinksText } from "../utils/placeLinks";
 import { parsePlaceShare } from "../utils/placeShareParser";
+import { splitList } from "../utils/text";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -164,7 +165,7 @@ function splitDraftLines(value: string) {
 }
 
 function splitDraftTags(value: string) {
-  return value.split(/[，,\s]+/).map((item) => item.trim()).filter(Boolean);
+  return splitList(value);
 }
 
 function extractFirstPlatformUrl(value: string) {
