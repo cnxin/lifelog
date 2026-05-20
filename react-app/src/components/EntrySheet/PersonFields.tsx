@@ -311,7 +311,7 @@ function PreferenceGroupEditor({
                 <div className="pref-chip-list" aria-label={`${danger ? "禁忌" : "喜好"}项目`}>
                   {row.items.map((item, itemIndex) => (
                     <span className={`pref-chip ${danger ? "danger" : ""}`} key={`${name}-${index}-${item}`}>
-                      {item}
+                      <span className="pref-chip-text">{item}</span>
                       <button type="button" aria-label={`删除${item}`} onClick={() => removeItem(index, itemIndex)}>
                         ×
                       </button>
@@ -322,7 +322,7 @@ function PreferenceGroupEditor({
               <div className="pref-item-input-row">
                 <input
                   aria-label="新增项目"
-                  placeholder="输入后点添加，或按 Enter"
+                  placeholder="输入后点添加；多个可用 、 或 ； 分隔"
                   value={row.draftItem}
                   onBlur={() => addDraftItems(index)}
                   onChange={(event) => updateRow(index, { draftItem: event.target.value })}
@@ -346,7 +346,7 @@ function PreferenceGroupEditor({
         添加分类
       </button>
       <p className="form-hint">
-        多个项目可以用“、”或“；”一次性输入；不添加任何分类时，保存后会保持为空。
+        输入内容后点击“添加项目”生成标签，可点标签上的 × 删除；多个项目可用“、”或“；”一次性添加。不添加任何分类时，保存后会保持为空。
       </p>
     </div>
   );

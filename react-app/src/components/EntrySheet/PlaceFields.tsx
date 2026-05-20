@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
-import type { Place, PlaceExternalLink } from "../../types";
+import type { Place, PlaceExternalLink, PlaceLinkPlatform } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { PlaceDraft } from "../../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../../utils/placeShareParser";
-import { createPlatformLink, platformLinksToText } from "../../utils/placeLinks";
+import { createPlatformLink, parsePlatformLinksText, platformLinksToText } from "../../utils/placeLinks";
 import { getPlacePlatformLink } from "../../utils/placeMeta";
 import NumberStepper from "../NumberStepper";
 import SelectPicker from "../SelectPicker";
@@ -13,6 +13,16 @@ const PLACE_CATEGORY_OPTIONS = ["餐厅", "咖啡厅", "电影院", "景点", "�
 const BOOLEAN_OPTIONS = [
   { value: "true", label: "是" },
   { value: "false", label: "否" }
+];
+const PLATFORM_PRESETS: Array<{
+  platform: Exclude<PlaceLinkPlatform, "custom">;
+  label: string;
+  placeholder: string;
+}> = [
+  { platform: "amap", label: "高德", placeholder: "粘贴高德地点页、分享链接或 amapuri:// 链接" },
+  { platform: "meituan", label: "美团", placeholder: "粘贴美团店铺页、分享链接或 meituan:// 链接" },
+  { platform: "dianping", label: "大众点评", placeholder: "粘贴点评店铺页、dpurl.cn 或 dianping:// 链接" },
+  { platform: "douyin", label: "抖音", placeholder: "粘贴抖音地点页、团购页或搜索结果链接" }
 ];
 
 export function PlaceFields({
@@ -121,14 +131,7 @@ export function PlaceFields({
         </label>
       </div>
       <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
-      <label>
-        平台店铺链接
-        <textarea
-          name="platformLinks"
-          defaultValue={extractPlatformLinksText(place)}
-          placeholder="每行一个平台链接，例如：美团 | https://..."
-        />
-      </label>
+      <PlatformLinksEditor initialText={extractPlatformLinksText(place)} />
       <label>
         照片链接
         <textarea
@@ -421,15 +424,11 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
             placeholder="每行一个图片链接"
           />
         </label>
-        <label>
-          平台店铺链接
-          <textarea
-            name="platformLinks"
-            value={draft.platformLinks}
-            onChange={(event) => updateDraft({ platformLinks: event.target.value })}
-            placeholder="每行一个平台链接，例如：美团 | https://..."
-          />
-        </label>
+        <PlatformLinksEditor
+          initialText={draft.platformLinks}
+          includeHiddenInput={false}
+          onChange={(platformLinks) => updateDraft({ platformLinks })}
+        />
         <label>
           标签
           <input
@@ -458,6 +457,179 @@ function extractPlatformLinksText(place?: Place) {
   return [getPlacePlatformLink(place, "meituan"), getPlacePlatformLink(place, "dianping")]
     .filter((link): link is PlaceExternalLink => Boolean(link))
     .map((link) => `${link.label} | ${link.url}`)
+    .join("\n");
+}
+
+interface PlatformLinkEditorRow {
+  id: string;
+  platform: PlaceLinkPlatform;
+  label: string;
+  url: string;
+  enabled: boolean;
+}
+
+function PlatformLinksEditor({
+  initialText,
+  includeHiddenInput = true,
+  onChange
+}: {
+  initialText: string;
+  includeHiddenInput?: boolean;
+  onChange?: (value: string) => void;
+}) {
+  const lastEmittedText = useRef("");
+  const [rows, setRows] = useState<PlatformLinkEditorRow[]>(() => buildPlatformLinkRows(initialText));
+  const visibleRows = rows.filter((row) => row.enabled || row.url.trim() || row.platform === "custom");
+  const payload = buildPlatformLinksPayload(rows);
+
+  useEffect(() => {
+    if (initialText === lastEmittedText.current) return;
+    setRows(buildPlatformLinkRows(initialText));
+  }, [initialText]);
+
+  function commitRows(nextRows: PlatformLinkEditorRow[]) {
+    const nextPayload = buildPlatformLinksPayload(nextRows);
+    lastEmittedText.current = nextPayload;
+    setRows(nextRows);
+    onChange?.(nextPayload);
+  }
+
+  function enablePreset(platform: Exclude<PlaceLinkPlatform, "custom">) {
+    commitRows(
+      rows.map((row) =>
+        row.platform === platform
+          ? {
+              ...row,
+              enabled: true
+            }
+          : row
+      )
+    );
+  }
+
+  function updateRow(id: string, patch: Partial<PlatformLinkEditorRow>) {
+    commitRows(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
+  function collapseRow(id: string) {
+    commitRows(
+      rows
+        .map((row) => (row.id === id ? { ...row, url: "", enabled: row.platform === "custom" ? true : false } : row))
+        .filter((row) => row.platform !== "custom" || row.id !== id)
+    );
+  }
+
+  function addCustomLink() {
+    commitRows([
+      ...rows,
+      {
+        id: `custom-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        platform: "custom",
+        label: "",
+        url: "",
+        enabled: true
+      }
+    ]);
+  }
+
+  return (
+    <div className="platform-link-editor">
+      {includeHiddenInput && <input type="hidden" name="platformLinks" value={payload} />}
+      <div className="field-title">平台店铺链接</div>
+      <div className="platform-link-selector" aria-label="选择平台链接类型">
+        {PLATFORM_PRESETS.map((preset) => {
+          const row = rows.find((item) => item.platform === preset.platform);
+          const active = Boolean(row?.enabled || row?.url.trim());
+          return (
+            <button
+              type="button"
+              className={`platform-link-chip ${active ? "active" : ""}`}
+              key={preset.platform}
+              onClick={() => enablePreset(preset.platform)}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+        <button type="button" className="platform-link-chip custom" onClick={addCustomLink}>
+          自定义
+        </button>
+      </div>
+
+      {visibleRows.length > 0 && (
+        <div className="platform-link-list">
+          {visibleRows.map((row) => {
+            const preset = PLATFORM_PRESETS.find((item) => item.platform === row.platform);
+            return (
+              <div className="platform-link-row" key={row.id}>
+                <div className="platform-link-row-head">
+                  <strong>{preset?.label || row.label || "自定义链接"}</strong>
+                  <button type="button" className="mini-action danger" onClick={() => collapseRow(row.id)}>
+                    移除
+                  </button>
+                </div>
+                {row.platform === "custom" && (
+                  <input
+                    aria-label="自定义平台名称"
+                    value={row.label}
+                    onChange={(event) => updateRow(row.id, { label: event.target.value })}
+                    placeholder="平台名称，例如：小红书、官网、公众号"
+                  />
+                )}
+                <input
+                  aria-label={`${preset?.label || row.label || "自定义"}链接`}
+                  value={row.url}
+                  onChange={(event) => updateRow(row.id, { url: event.target.value })}
+                  placeholder={preset?.placeholder || "粘贴对应平台链接"}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <p className="form-hint">先选择高德、美团、点评、抖音等平台，再填写对应店铺链接；未填写链接的平台不会保存。</p>
+    </div>
+  );
+}
+
+function buildPlatformLinkRows(value: string): PlatformLinkEditorRow[] {
+  const parsedLinks = parsePlatformLinksText(value);
+  const usedLinkIndexes = new Set<number>();
+  const presetRows = PLATFORM_PRESETS.map((preset) => {
+    const linkIndex = parsedLinks.findIndex((link, index) => link.platform === preset.platform && !usedLinkIndexes.has(index));
+    const link = linkIndex >= 0 ? parsedLinks[linkIndex] : undefined;
+    if (linkIndex >= 0) usedLinkIndexes.add(linkIndex);
+
+    return {
+      id: preset.platform,
+      platform: preset.platform,
+      label: preset.label,
+      url: link?.url || "",
+      enabled: Boolean(link?.url)
+    };
+  });
+  const customRows = parsedLinks
+    .filter((link, index) => link.platform === "custom" || !usedLinkIndexes.has(index))
+    .map((link, index) => ({
+      id: `custom-${index}-${link.url}`,
+      platform: "custom" as const,
+      label: link.label,
+      url: link.url,
+      enabled: true
+    }));
+
+  return [...presetRows, ...customRows];
+}
+
+function buildPlatformLinksPayload(rows: PlatformLinkEditorRow[]) {
+  return rows
+    .map((row) => {
+      const url = row.url.trim();
+      if (!url) return "";
+      const label = row.platform === "custom" ? row.label.trim() || "链接" : PLATFORM_PRESETS.find((item) => item.platform === row.platform)?.label || row.label;
+      return `${label} | ${url}`;
+    })
+    .filter(Boolean)
     .join("\n");
 }
 

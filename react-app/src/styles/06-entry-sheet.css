@@ -613,9 +613,9 @@
 
 .pref-editor-row {
   display: grid;
-  grid-template-columns: 0.85fr 1.4fr auto;
+  grid-template-columns: minmax(104px, 0.78fr) minmax(0, 1.6fr) auto;
   gap: 8px;
-  align-items: center;
+  align-items: start;
 }
 
 .pref-editor-row input {
@@ -636,7 +636,7 @@
 
 .pref-chip {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   max-width: 100%;
   border-radius: 999px;
@@ -647,12 +647,21 @@
   font-weight: 700;
 }
 
+.pref-chip-text {
+  min-width: 0;
+  max-width: min(100%, 260px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .pref-chip.danger {
   color: var(--danger);
   background: var(--danger-soft);
 }
 
 .pref-chip button {
+  flex: 0 0 auto;
   width: 18px;
   height: 18px;
   border: 0;
@@ -668,6 +677,69 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
+}
+
+.field-title {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.platform-link-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.platform-link-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.platform-link-chip {
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.64);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.platform-link-chip.active {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 42%, transparent);
+  background: var(--soft-purple);
+}
+
+.platform-link-chip.custom {
+  border-style: dashed;
+}
+
+.platform-link-list {
+  display: grid;
+  gap: 10px;
+}
+
+.platform-link-row {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(99, 110, 114, 0.12);
+  border-radius: 16px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.platform-link-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.platform-link-row-head strong {
+  color: var(--text-main);
+  font-size: 13px;
 }
 
 .anniversary-editor {
