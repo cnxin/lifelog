@@ -41,6 +41,153 @@
   color: var(--primary);
 }
 
+.release-note-card,
+.release-history-card,
+.update-check-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.update-check-card {
+  border: 1px solid var(--soft-purple);
+}
+
+.update-check-card.has-update {
+  border-color: color-mix(in srgb, var(--primary) 36%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 60%),
+    var(--card-bg);
+}
+
+.update-check-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.update-check-head > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.update-check-head span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.update-check-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.update-check-head small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.update-check-head .mini-action {
+  flex: 0 0 auto;
+  min-height: 34px;
+}
+
+.release-note-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.release-note-head div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.release-note-head span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.release-note-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.release-note-head em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.release-note-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.release-note-list li {
+  position: relative;
+  padding-left: 14px;
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.release-note-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.release-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.release-history-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--soft-purple);
+}
+
+.release-history-item strong {
+  color: var(--primary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.release-history-item span {
+  min-width: 0;
+  color: var(--text-main);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .data-management-panel {
   display: grid;
   gap: 12px;
