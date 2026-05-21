@@ -1,4 +1,5 @@
 import { Building2, GitMerge, MapPin, Plus, Star, Store } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -270,13 +271,23 @@ export default function Places() {
         <section className="section">
           <div className="section-header">
             <h2>
-              <GitMerge /> 重复地点
+              <GitMerge /> 疑似重复地点
             </h2>
             {strongDuplicateGroups.length > 0 && (
               <button className="see-all" onClick={() => void handleMergeAll()}>
                 一键合并
               </button>
             )}
+          </div>
+          <div className="duplicate-summary-grid">
+            <GlassCard className="duplicate-summary-card strong">
+              <strong>{strongDuplicateGroups.length}</strong>
+              <span>强重复，可批量合并</span>
+            </GlassCard>
+            <GlassCard className="duplicate-summary-card weak">
+              <strong>{weakDuplicateGroups.length}</strong>
+              <span>疑似重复，建议人工确认</span>
+            </GlassCard>
           </div>
           {placeMergeHistory.length > 0 && (
             <div className="list">
@@ -300,31 +311,25 @@ export default function Places() {
               ))}
             </div>
           )}
-          {weakDuplicateGroups.length > 0 && (
-            <button className="link-action secondary detail-link-button" onClick={openWeakQueue}>
-              逐条处理弱重复（{weakDuplicateGroups.length}）
-            </button>
-          )}
-          <div className="list">
-            {duplicatePlaceGroups.map((group) => (
-              <GlassCard className="detail-row" key={group.signature}>
-                <div className="merge-info">
-                  <strong>{group.label}</strong>
-                  <span>
-                    {group.reason} · {group.placeIds.length} 条记录 ·{" "}
-                    {group.strength === "strong" ? "强重复" : "待确认"}
-                  </span>
-                </div>
-                <button
-                  className="mini-action add"
-                  onClick={() => handleMergeGroup(group)}
-                  type="button"
-                >
-                  预览
+          <DuplicateGroupList
+            groups={strongDuplicateGroups}
+            title="强重复"
+            emptyText="暂无强重复地点"
+            onPreview={handleMergeGroup}
+          />
+          <DuplicateGroupList
+            groups={weakDuplicateGroups}
+            title="待确认"
+            emptyText="暂无待确认重复地点"
+            action={
+              weakDuplicateGroups.length > 0 ? (
+                <button className="mini-action add" onClick={openWeakQueue} type="button">
+                  逐条处理
                 </button>
-              </GlassCard>
-            ))}
-          </div>
+              ) : null
+            }
+            onPreview={handleMergeGroup}
+          />
         </section>
       )}
       {mallGroups.length > 0 && (
@@ -490,6 +495,48 @@ export default function Places() {
         />
       )}
     </>
+  );
+}
+
+function DuplicateGroupList({
+  groups,
+  title,
+  emptyText,
+  action,
+  onPreview
+}: {
+  groups: PlaceDuplicateGroup[];
+  title: string;
+  emptyText: string;
+  action?: ReactNode;
+  onPreview: (group: PlaceDuplicateGroup) => void;
+}) {
+  return (
+    <div className="duplicate-group-section">
+      <div className="duplicate-group-head">
+        <strong>{title}</strong>
+        {action}
+      </div>
+      {groups.length ? (
+        <div className="list">
+          {groups.map((group) => (
+            <GlassCard className="detail-row" key={group.signature}>
+              <div className="merge-info">
+                <strong>{group.label}</strong>
+                <span>
+                  {group.reason} · {group.placeIds.length} 条记录 · {group.strength === "strong" ? "强重复" : "待确认"}
+                </span>
+              </div>
+              <button className="mini-action add" onClick={() => onPreview(group)} type="button">
+                预览
+              </button>
+            </GlassCard>
+          ))}
+        </div>
+      ) : (
+        <GlassCard className="empty">{emptyText}</GlassCard>
+      )}
+    </div>
   );
 }
 

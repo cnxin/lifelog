@@ -10,6 +10,7 @@ import type {
   Place,
   PlaceMergePreview
 } from "../types";
+import type { PlaceDraft } from "../utils/placeShareParser";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
@@ -24,6 +25,7 @@ interface EntrySheetProps {
   initialPersonIds?: string[];
   initialPlaceId?: string;
   initialPlaceDraft?: Partial<Place>;
+  initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
   onClose: () => void;
 }
@@ -41,6 +43,7 @@ export default function EntrySheet({
   initialPersonIds,
   initialPlaceId,
   initialPlaceDraft,
+  initialPlaceShareReview,
   memoryMode = "full",
   onClose
 }: EntrySheetProps) {
@@ -150,6 +153,7 @@ export default function EntrySheet({
             <PlaceFields
               place={editingItem as Place | undefined}
               initialPlaceDraft={initialPlaceDraft}
+              initialShareReview={initialPlaceShareReview}
               isEditing={Boolean(itemId)}
             />
           )}

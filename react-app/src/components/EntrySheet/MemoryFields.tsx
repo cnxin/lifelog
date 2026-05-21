@@ -4,6 +4,7 @@ import type { MemoryEvent, Photo } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { inferQuickMemory } from "../../utils/memoryInference";
 import { deriveMemorySummary } from "../../utils/memoryDisplay";
+import { buildDefaultQuickMemoryTitle, buildQuickMemoryTemplates } from "../../utils/quickMemoryContext";
 import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
 import { PhotoUploader } from "../PhotoUploader";
@@ -36,7 +37,14 @@ export function MemoryFields({
   const selectedPersonIds = memory?.personIds?.length ? memory.personIds : initialPersonIds.filter(Boolean);
   const todayValue = new Date().toISOString().slice(0, 10);
   const [quickDate, setQuickDate] = useState(todayValue);
-  const [quickContent, setQuickContent] = useState("");
+  const [quickContent, setQuickContent] = useState(() =>
+    !memory && mode === "quick"
+      ? buildDefaultQuickMemoryTitle({
+          personNames: resolvePersonNames(initialPersonIds, people),
+          placeName: resolvePlaceName(initialPlaceId, places)
+        })
+      : ""
+  );
   const [quickDetailsContent, setQuickDetailsContent] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => initialPersonIds.filter(Boolean));
@@ -56,6 +64,8 @@ export function MemoryFields({
     .map((personId) => people.find((person) => person.id === personId)?.name)
     .filter((name): name is string => Boolean(name));
   const previewPlace = places.find((place) => place.id === quickPreview.placeId)?.name || "";
+  const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
+  const quickTemplates = buildQuickMemoryTemplates(previewPeople, previewPlace);
   const previewTitle =
     deriveMemorySummary(
       {
@@ -77,8 +87,39 @@ export function MemoryFields({
       <>
         <div className="quick-record-intro">
           <strong>先记下来，之后再补细节</strong>
-          <span>只需要一句标题，日期和心情会自动带上默认值。</span>
+          <span>{hasQuickContext ? "已带入当前人物或地点，可以直接保存，也可以点模板改成更准确的标题。" : "只需要一句标题，日期和心情会自动带上默认值。"}</span>
         </div>
+        {hasQuickContext && (
+          <div className="quick-context-card">
+            <span className="quick-context-eyebrow">已自动关联</span>
+            <div className="quick-context-list">
+              {previewPeople.map((name) => (
+                <span className="quick-context-token" key={`person-${name}`}>
+                  人物 · {name}
+                </span>
+              ))}
+              {previewPlace && (
+                <span className="quick-context-token">
+                  地点 · {previewPlace}
+                </span>
+              )}
+            </div>
+            {quickTemplates.length > 0 && (
+              <div className="quick-template-grid">
+                {quickTemplates.map((template) => (
+                  <button
+                    type="button"
+                    className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
+                    key={template}
+                    onClick={() => setQuickContent(template)}
+                  >
+                    {template}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <label>
           回忆标题
           <input
@@ -283,4 +324,16 @@ function formatPreviewDate(date: string) {
     month: "long",
     day: "numeric"
   });
+}
+
+function resolvePersonNames(personIds: string[] = [], people: Array<{ id: string; name: string }>) {
+  return personIds
+    .filter(Boolean)
+    .map((personId) => people.find((person) => person.id === personId)?.name || "")
+    .filter(Boolean);
+}
+
+function resolvePlaceName(placeId: string | undefined, places: Array<{ id: string; name: string }>) {
+  if (!placeId) return "";
+  return places.find((place) => place.id === placeId)?.name || "";
 }

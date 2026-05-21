@@ -1050,6 +1050,56 @@
   line-height: 1.45;
 }
 
+.quick-context-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--soft-purple);
+  border-radius: 18px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 56%),
+    var(--card-bg);
+}
+
+.quick-context-eyebrow {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.quick-context-list,
+.quick-template-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-context-token,
+.quick-template-chip {
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quick-context-token {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.quick-template-chip {
+  border: 1px solid var(--soft-purple);
+  color: var(--text-main);
+  background: var(--card-bg);
+}
+
+.quick-template-chip.active {
+  border-color: transparent;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
 .quick-detail-toggle {
   min-height: 46px;
   border: 0;

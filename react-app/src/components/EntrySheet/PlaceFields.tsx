@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Link2, MapPinPlus } from "lucide-react";
 import type { Place, PlaceExternalLink, PlaceLinkPlatform } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { PlaceDraft } from "../../utils/placeShareParser";
+import type { PlaceDraft, PlaceSourceType } from "../../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../../utils/placeShareParser";
 import {
   createPlatformLink,
@@ -26,13 +26,15 @@ const PLATFORM_PRESETS = PLACE_LINK_PLATFORM_DEFS;
 export function PlaceFields({
   place,
   initialPlaceDraft,
+  initialShareReview,
   isEditing
 }: {
   place?: Place;
   initialPlaceDraft?: Partial<Place>;
+  initialShareReview?: PlaceDraft;
   isEditing: boolean;
 }) {
-  if (!isEditing) return <QuickPlaceFields initialPlaceDraft={initialPlaceDraft} />;
+  if (!isEditing) return <QuickPlaceFields initialPlaceDraft={initialPlaceDraft} initialShareReview={initialShareReview} />;
 
   return (
     <>
@@ -175,7 +177,13 @@ function placeToDraft(place?: Partial<Place>): Partial<PlaceDraft> {
   };
 }
 
-function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<Place> }) {
+function QuickPlaceFields({
+  initialPlaceDraft,
+  initialShareReview
+}: {
+  initialPlaceDraft?: Partial<Place>;
+  initialShareReview?: PlaceDraft;
+}) {
   const { settings } = useLifeLog();
   const [shareText, setShareText] = useState("");
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
@@ -183,25 +191,43 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
     ...placeToDraft(initialPlaceDraft),
     city: initialPlaceDraft?.city || settings.defaultCity
   }));
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialShareReview ? "已读取系统分享，请确认识别结果后再应用到表单。" : "");
+  const [shareReview, setShareReview] = useState<PlaceDraft | null>(initialShareReview || null);
   const [showLocationDetails, setShowLocationDetails] = useState(false);
   const [showLinkDetails, setShowLinkDetails] = useState(false);
 
   function applyShareText() {
     const parsed = parsePlaceShare(shareText);
-    const patch = Object.fromEntries(
-      Object.entries(parsed).filter(([, v]) => v !== "" && v !== 0)
-    ) as Partial<PlaceDraft>;
-    setDraft((current) => ({ ...current, ...patch }));
+    if (!hasParsedShareContent(parsed)) {
+      setShareReview(null);
+      setMessage("没有识别到明确地点，可以先手动填写。");
+      return;
+    }
+
+    setShareReview(parsed);
     setMessage(
       parsed.confidence
-        ? `已识别 ${parsed.confidence}%：${parsed.sourceType === "generic" ? "普通文本" : parsed.sourceType}`
-        : "没有识别到明确地点，可以先手动填写。"
+        ? `已识别 ${parsed.confidence}%：请先确认识别结果，再应用到表单。`
+        : "已读取分享内容，请确认后应用。"
     );
   }
 
   function updateDraft(patch: Partial<PlaceDraft>) {
     setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  function confirmShareReview(options: { onlyFillEmpty?: boolean } = {}) {
+    if (!shareReview) return;
+    const patch = buildSharePatch(shareReview);
+    setDraft((current) => {
+      if (!options.onlyFillEmpty) return { ...current, ...patch };
+      return {
+        ...current,
+        ...Object.fromEntries(Object.entries(patch).filter(([key]) => isDraftFieldEmpty(current[key as keyof PlaceDraft])))
+      };
+    });
+    setShareReview(null);
+    setMessage("已应用识别结果，保存前可以继续修正名称、地址和平台链接。");
   }
 
   return (
@@ -219,9 +245,20 @@ function QuickPlaceFields({ initialPlaceDraft }: { initialPlaceDraft?: Partial<P
           识别分享
         </button>
         {message && <p className="form-hint">{message}</p>}
+        {shareReview && (
+          <ShareImportReview
+            draft={shareReview}
+            onApply={() => confirmShareReview()}
+            onFillEmpty={() => confirmShareReview({ onlyFillEmpty: true })}
+            onDismiss={() => {
+              setShareReview(null);
+              setMessage("已取消这次识别结果，表单内容未改变。");
+            }}
+          />
+        )}
         {draft.name && (
           <div className="import-preview">
-            <span>{draft.sourceType === "generic" ? "文本" : draft.sourceType}</span>
+            <span>当前表单</span>
             <strong>{draft.name}</strong>
             <small>{[draft.province, draft.city, draft.mall || draft.address].filter(Boolean).join(" · ") || "可继续补充城市和地址"}</small>
           </div>
@@ -456,6 +493,91 @@ function extractPlatformLinksText(place?: Place) {
     .filter((link): link is PlaceExternalLink => Boolean(link))
     .map((link) => `${link.label} | ${link.url}`)
     .join("\n");
+}
+
+function ShareImportReview({
+  draft,
+  onApply,
+  onFillEmpty,
+  onDismiss
+}: {
+  draft: PlaceDraft;
+  onApply: () => void;
+  onFillEmpty: () => void;
+  onDismiss: () => void;
+}) {
+  const platformLinks = parsePlatformLinksText(draft.platformLinks);
+  const fields = [
+    { label: "名称", value: [draft.name, draft.storeName].filter(Boolean).join(" · ") },
+    { label: "分类", value: draft.category },
+    { label: "位置", value: [draft.province, draft.city, draft.area, draft.mall].filter(Boolean).join(" · ") },
+    { label: "地址", value: draft.address },
+    { label: "平台", value: platformLinks.map((link) => link.label).join("、") },
+    { label: "链接", value: draft.mapUrl || draft.sourceUrl },
+    { label: "备注", value: draft.desc }
+  ].filter((item) => item.value);
+
+  return (
+    <div className="share-review-card">
+      <div className="share-review-head">
+        <div>
+          <span className="merge-badge weak">{formatSourceType(draft.sourceType)}</span>
+          <strong>{draft.confidence ? `识别可信度 ${draft.confidence}%` : "待确认识别结果"}</strong>
+        </div>
+        <button type="button" className="mini-action danger" onClick={onDismiss}>
+          忽略
+        </button>
+      </div>
+      <div className="share-review-grid">
+        {fields.map((field) => (
+          <div className="share-review-item" key={field.label}>
+            <span>{field.label}</span>
+            <strong>{field.value}</strong>
+          </div>
+        ))}
+      </div>
+      <div className="share-review-actions">
+        <button type="button" className="ghost-btn" onClick={onFillEmpty}>
+          只补空白项
+        </button>
+        <button type="button" className="primary-btn" onClick={onApply}>
+          应用到表单
+        </button>
+      </div>
+      <p className="form-hint">应用后仍可继续修改名称、商场、地址和链接；不确认时不会覆盖当前表单。</p>
+    </div>
+  );
+}
+
+function hasParsedShareContent(draft: PlaceDraft) {
+  return Boolean(draft.name || draft.address || draft.mapUrl || draft.sourceUrl || draft.platformLinks);
+}
+
+function buildSharePatch(draft: PlaceDraft): Partial<PlaceDraft> {
+  return Object.fromEntries(
+    Object.entries(draft).filter(([, value]) => value !== "" && value !== 0)
+  ) as Partial<PlaceDraft>;
+}
+
+function isDraftFieldEmpty(value: PlaceDraft[keyof PlaceDraft]) {
+  if (typeof value === "number") return value === 0;
+  return !String(value || "").trim();
+}
+
+function formatSourceType(sourceType: PlaceSourceType) {
+  const labels: Record<PlaceSourceType, string> = {
+    amap: "高德",
+    meituan: "美团",
+    dianping: "大众点评",
+    douyin: "抖音",
+    xiaohongshu: "小红书",
+    baidu: "百度地图",
+    tencent: "腾讯地图",
+    wechat: "微信",
+    official: "官网",
+    generic: "普通文本"
+  };
+  return labels[sourceType];
 }
 
 interface PlatformLinkEditorRow {

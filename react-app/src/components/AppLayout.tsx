@@ -12,9 +12,7 @@ import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
-import { parsePlatformLinksText } from "../utils/placeLinks";
-import { parsePlaceShare } from "../utils/placeShareParser";
-import { splitList } from "../utils/text";
+import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
@@ -49,6 +47,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const [initialPlaceDraft, setInitialPlaceDraft] = useState<Partial<Place> | undefined>();
+  const [initialPlaceShareReview, setInitialPlaceShareReview] = useState<PlaceDraft | undefined>();
   const [placeDraftKey, setPlaceDraftKey] = useState(0);
   const seenShareTextsRef = useRef(new Set<string>());
   const meta = getPageMeta(location.pathname);
@@ -83,11 +82,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         return;
       }
 
-      setInitialPlaceDraft(placeShareToInitialDraft(parsed));
+      setInitialPlaceDraft(undefined);
+      setInitialPlaceShareReview(parsed);
       setPlaceDraftKey((current) => current + 1);
       setSheetType("place");
       notify({
-        message: parsed.name ? `已识别分享地点：${parsed.name}` : "已读取分享内容，请补充地点名称",
+        message: parsed.name ? `已识别分享地点：${parsed.name}，请确认后应用` : "已读取分享内容，请确认识别结果",
         tone: "success"
       });
     }
@@ -116,6 +116,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <FloatingActionButton
           onClick={() => {
             setInitialPlaceDraft(undefined);
+            setInitialPlaceShareReview(undefined);
             setSheetType(entryTypeForPath(location.pathname));
           }}
         />
@@ -125,55 +126,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         key={`entry-sheet-${sheetType || "closed"}-${placeDraftKey}`}
         type={sheetType}
         initialPlaceDraft={sheetType === "place" ? initialPlaceDraft : undefined}
-        onClose={() => setSheetType(null)}
+        initialPlaceShareReview={sheetType === "place" ? initialPlaceShareReview : undefined}
+        onClose={() => {
+          setSheetType(null);
+          setInitialPlaceDraft(undefined);
+          setInitialPlaceShareReview(undefined);
+        }}
       />
     </div>
   );
-}
-
-function placeShareToInitialDraft(parsed: ReturnType<typeof parsePlaceShare>): Partial<Place> {
-  return {
-    name: parsed.name,
-    country: parsed.country,
-    province: parsed.province,
-    city: parsed.city,
-    area: parsed.area,
-    mall: parsed.mall,
-    storeName: parsed.storeName,
-    category: parsed.category || "其他",
-    rating: parsed.rating || 4,
-    address: parsed.address,
-    latitude: parseOptionalNumber(parsed.latitude),
-    longitude: parseOptionalNumber(parsed.longitude),
-    mapUrl: parsed.mapUrl,
-    sourceUrl: parsed.sourceUrl || extractFirstPlatformUrl(parsed.platformLinks),
-    platformLinks: parseDraftPlatformLinks(parsed.platformLinks),
-    photos: splitDraftLines(parsed.photos),
-    desc: parsed.desc,
-    tags: splitDraftTags(parsed.tags),
-    favorite: false
-  };
-}
-
-function parseOptionalNumber(value: string) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed !== 0 ? parsed : undefined;
-}
-
-function splitDraftLines(value: string) {
-  return value.split(/\r?\n+/).map((item) => item.trim()).filter(Boolean);
-}
-
-function splitDraftTags(value: string) {
-  return splitList(value);
-}
-
-function extractFirstPlatformUrl(value: string) {
-  const firstLine = splitDraftLines(value)[0] || "";
-  const parts = firstLine.split("|");
-  return (parts.length > 1 ? parts.slice(1).join("|") : firstLine).trim();
-}
-
-function parseDraftPlatformLinks(value: string) {
-  return parsePlatformLinksText(value);
 }

@@ -255,6 +255,64 @@
   color: var(--primary);
 }
 
+.share-review-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 20px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 58%),
+    rgba(255, 255, 255, 0.62);
+}
+
+.share-review-head,
+.share-review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.share-review-head > div {
+  display: grid;
+  gap: 6px;
+}
+
+.share-review-head strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.share-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.share-review-item {
+  min-width: 0;
+  border-radius: 14px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.64);
+}
+
+.share-review-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.share-review-item strong {
+  display: block;
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
