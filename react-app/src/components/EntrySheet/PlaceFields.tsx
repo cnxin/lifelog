@@ -4,7 +4,14 @@ import type { Place, PlaceExternalLink, PlaceLinkPlatform } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { PlaceDraft } from "../../utils/placeShareParser";
 import { emptyPlaceDraft, parsePlaceShare } from "../../utils/placeShareParser";
-import { createPlatformLink, parsePlatformLinksText, platformLinksToText } from "../../utils/placeLinks";
+import {
+  createPlatformLink,
+  inferPlatformFromLink,
+  parsePlatformLinksText,
+  PLACE_LINK_PLATFORM_DEFS,
+  platformLinksToText,
+  type PresetPlaceLinkPlatform
+} from "../../utils/placeLinks";
 import { getPlacePlatformLink } from "../../utils/placeMeta";
 import NumberStepper from "../NumberStepper";
 import SelectPicker from "../SelectPicker";
@@ -14,16 +21,7 @@ const BOOLEAN_OPTIONS = [
   { value: "true", label: "是" },
   { value: "false", label: "否" }
 ];
-const PLATFORM_PRESETS: Array<{
-  platform: Exclude<PlaceLinkPlatform, "custom">;
-  label: string;
-  placeholder: string;
-}> = [
-  { platform: "amap", label: "高德", placeholder: "粘贴高德地点页、分享链接或 amapuri:// 链接" },
-  { platform: "meituan", label: "美团", placeholder: "粘贴美团店铺页、分享链接或 meituan:// 链接" },
-  { platform: "dianping", label: "大众点评", placeholder: "粘贴点评店铺页、dpurl.cn 或 dianping:// 链接" },
-  { platform: "douyin", label: "抖音", placeholder: "粘贴抖音地点页、团购页或搜索结果链接" }
-];
+const PLATFORM_PRESETS = PLACE_LINK_PLATFORM_DEFS;
 
 export function PlaceFields({
   place,
@@ -494,21 +492,29 @@ function PlatformLinksEditor({
     onChange?.(nextPayload);
   }
 
-  function enablePreset(platform: Exclude<PlaceLinkPlatform, "custom">) {
+  function togglePreset(platform: PresetPlaceLinkPlatform) {
     commitRows(
-      rows.map((row) =>
-        row.platform === platform
-          ? {
-              ...row,
-              enabled: true
-            }
-          : row
-      )
+      rows.map((row) => {
+        if (row.platform !== platform) return row;
+        const active = row.enabled || Boolean(row.url.trim());
+        return {
+          ...row,
+          url: active ? "" : row.url,
+          enabled: !active
+        };
+      })
     );
   }
 
   function updateRow(id: string, patch: Partial<PlatformLinkEditorRow>) {
-    commitRows(rows.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+    const patchedRows = rows.map((row) => (row.id === id ? { ...row, ...patch } : row));
+    const changedRow = patchedRows.find((row) => row.id === id);
+    if (!changedRow || patch.url === undefined) {
+      commitRows(patchedRows);
+      return;
+    }
+
+    commitRows(autoAssignPlatformLink(patchedRows, changedRow));
   }
 
   function collapseRow(id: string) {
@@ -544,8 +550,9 @@ function PlatformLinksEditor({
             <button
               type="button"
               className={`platform-link-chip ${active ? "active" : ""}`}
+              aria-pressed={active}
               key={preset.platform}
-              onClick={() => enablePreset(preset.platform)}
+              onClick={() => togglePreset(preset.platform)}
             >
               {preset.label}
             </button>
@@ -564,9 +571,13 @@ function PlatformLinksEditor({
               <div className="platform-link-row" key={row.id}>
                 <div className="platform-link-row-head">
                   <strong>{preset?.label || row.label || "自定义链接"}</strong>
-                  <button type="button" className="mini-action danger" onClick={() => collapseRow(row.id)}>
-                    移除
-                  </button>
+                  {row.platform === "custom" ? (
+                    <button type="button" className="mini-action danger" onClick={() => collapseRow(row.id)}>
+                      移除
+                    </button>
+                  ) : (
+                    <span>再次点击上方平台可取消</span>
+                  )}
                 </div>
                 {row.platform === "custom" && (
                   <input
@@ -587,7 +598,7 @@ function PlatformLinksEditor({
           })}
         </div>
       )}
-      <p className="form-hint">先选择高德、美团、点评、抖音等平台，再填写对应店铺链接；未填写链接的平台不会保存。</p>
+      <p className="form-hint">点击平台选择，再次点击取消；选中后填写对应店铺链接，未填写链接的平台不会保存。</p>
     </div>
   );
 }
@@ -639,8 +650,46 @@ function extractPlatformLinksTextFromDraft(draft: PlaceDraft) {
     draft.sourceUrl,
     draft.sourceType === "meituan" ? "美团" : draft.sourceType === "dianping" ? "点评" : ""
   );
-  if (!link || (link.platform !== "meituan" && link.platform !== "dianping")) return "";
+  if (!link || link.platform === "custom") return "";
   return `${link.label} | ${link.url}`;
+}
+
+function autoAssignPlatformLink(rows: PlatformLinkEditorRow[], changedRow: PlatformLinkEditorRow) {
+  const url = changedRow.url.trim();
+  if (!url) return rows;
+
+  const inferredPlatform = inferPlatformFromLink(url, changedRow.label);
+  if (inferredPlatform === "custom" || inferredPlatform === changedRow.platform) {
+    return rows.map((row) => (row.id === changedRow.id ? { ...row, enabled: true } : row));
+  }
+
+  const target = rows.find((row) => row.platform === inferredPlatform);
+  if (!target || target.platform === "custom") return rows;
+
+  const targetHasDifferentUrl = target.url.trim() && target.url.trim() !== url;
+  if (targetHasDifferentUrl) {
+    return rows.map((row) => (row.id === changedRow.id ? { ...row, enabled: true } : row));
+  }
+
+  return rows
+    .map((row) => {
+      if (row.id === target.id) {
+        return {
+          ...row,
+          url,
+          enabled: true
+        };
+      }
+      if (row.id === changedRow.id) {
+        return {
+          ...row,
+          url: "",
+          enabled: row.platform === "custom"
+        };
+      }
+      return row;
+    })
+    .filter((row) => row.platform !== "custom" || row.id !== changedRow.id || row.label.trim() || row.url.trim());
 }
 
 function buildPlaceDisclosureSummary(items: Array<string | false | undefined>, fallback: string) {

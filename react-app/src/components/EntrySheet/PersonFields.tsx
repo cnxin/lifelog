@@ -322,7 +322,6 @@ function PreferenceGroupEditor({
               <div className="pref-item-input-row">
                 <input
                   aria-label="新增项目"
-                  placeholder="输入后点添加；多个可用 、 或 ； 分隔"
                   value={row.draftItem}
                   onBlur={() => addDraftItems(index)}
                   onChange={(event) => updateRow(index, { draftItem: event.target.value })}

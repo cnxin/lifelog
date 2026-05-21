@@ -84,7 +84,7 @@ const chinaDistrictAliasMap = Object.fromEntries(
 const provincePattern =
   /((?:内蒙古|广西|宁夏|新疆|西藏)[^省市区]{0,4}自治区|(?:北京|上海|天津|重庆)市|(?:香港|澳门)特别行政区|[\u4e00-\u9fff]{2,8}(?:省|自治区|特别行政区))/;
 const mallPattern =
-  /([\u4e00-\u9fffA-Za-z0-9·\s-]{2,40}(?:广场|商场|商城|天地|中心|银泰|万象城|万象汇|万达|印象城|大悦城|吾悦广场|天街|奥特莱斯|生活广场|国际广场|国金中心|写字楼|园区|大厦|SKP|IFS|Mall|mall))/;
+  /([\u4e00-\u9fffA-Za-z0-9·\s-]{2,40}(?:广场|商场|商城|天地|中心|银泰城|银泰|宝龙城|万象城|万象汇|万达|印象城|大悦城|吾悦广场|天街|奥特莱斯|生活广场|国际广场|国金中心|写字楼|园区|大厦|SKP|IFS|Mall|mall))/;
 
 export function normalizePlaceText(value: unknown) {
   return String(value || "").trim();
@@ -205,7 +205,7 @@ export function getPlaceReferenceUrl(place: Pick<Place, "sourceUrl">) {
   if (!sourceUrl) return "";
 
   const platform = inferPlatformFromLink(sourceUrl);
-  if (platform === "amap" || platform === "meituan" || platform === "dianping" || platform === "douyin") {
+  if (platform !== "custom") {
     return "";
   }
 

@@ -77,7 +77,7 @@ const placeCases = [
       rating: 4.5,
       desc: "人均 ¥42/人",
       sourceType: "dianping",
-      platformLinks: "点评 | https://www.dianping.com/shop/abc"
+      platformLinks: "大众点评 | https://www.dianping.com/shop/abc"
     }
   },
   {
@@ -136,7 +136,77 @@ const placeCases = [
       rating: 4.6,
       desc: "人均 ¥42/人",
       sourceType: "dianping",
-      platformLinks: "点评 | https://dpurl.cn/abc123"
+      platformLinks: "大众点评 | https://dpurl.cn/abc123"
+    }
+  },
+  {
+    label: "xiaohongshu note share",
+    input:
+      "小红书推荐店铺：青山咖啡(万象城店)\n地址：杭州市上城区富春路701号杭州万象城B1\n人均：45元\nhttps://www.xiaohongshu.com/explore/65abc123",
+    expected: {
+      name: "青山咖啡",
+      storeName: "万象城店",
+      category: "咖啡厅",
+      city: "杭州",
+      mall: "杭州万象城",
+      desc: "人均 ¥45/人",
+      sourceType: "xiaohongshu",
+      platformLinks: "小红书 | https://www.xiaohongshu.com/explore/65abc123"
+    }
+  },
+  {
+    label: "douyin short link",
+    input:
+      "抖音团购 分享一家店：牛小灶牛肉火锅(湖滨店) 地址：杭州市上城区延安路湖滨银泰in77 评分4.4 https://v.douyin.com/iABC123/",
+    expected: {
+      name: "牛小灶牛肉火锅",
+      storeName: "湖滨店",
+      category: "餐厅",
+      city: "杭州",
+      mall: "湖滨银泰",
+      rating: 4.4,
+      sourceType: "douyin",
+      platformLinks: "抖音 | https://v.douyin.com/iABC123/"
+    }
+  },
+  {
+    label: "baidu map share",
+    input:
+      "百度地图\n地点名称：西湖银泰城\n地址：浙江省杭州市上城区延安路98号\nhttps://map.baidu.com/?newmap=1&s=inf%26uid%3Dabc",
+    expected: {
+      name: "西湖银泰城",
+      city: "杭州",
+      mall: "西湖银泰城",
+      address: "浙江省杭州市上城区延安路98号",
+      sourceType: "baidu",
+      platformLinks: "百度地图 | https://map.baidu.com/?newmap=1&s=inf%26uid%3Dabc"
+    }
+  },
+  {
+    label: "tencent map scheme",
+    input:
+      "腾讯地图分享\n门店名称：盒马鲜生(滨江宝龙店)\n位置：杭州市滨江区滨盛路宝龙城B1\nqqmap://map/marker?marker=coord:30.188,120.200;title:%E7%9B%92%E9%A9%AC%E9%B2%9C%E7%94%9F",
+    expected: {
+      name: "盒马鲜生",
+      storeName: "滨江宝龙店",
+      city: "杭州",
+      mall: "宝龙城",
+      sourceType: "tencent",
+      platformLinks: "腾讯地图 | qqmap://map/marker?marker=coord:30.188,120.200"
+    }
+  },
+  {
+    label: "wechat location share",
+    input:
+      "微信位置\n名称：晓风书屋(湖滨店)\n地址：杭州市上城区湖滨银泰C区2层\nhttps://mp.weixin.qq.com/s/abc123",
+    expected: {
+      name: "晓风书屋",
+      storeName: "湖滨店",
+      category: "书店",
+      city: "杭州",
+      mall: "湖滨银泰",
+      sourceType: "wechat",
+      platformLinks: "微信 | https://mp.weixin.qq.com/s/abc123"
     }
   }
 ];
@@ -172,8 +242,8 @@ const textCases = [
   },
   {
     label: "platform links multiline parsing",
-    actual: platformLinksToText(parsePlatformLinksText("美团 | meituan://shop/1\n抖音 | https://www.douyin.com/search/foo\nhttps://example.test/custom")),
-    expected: "美团 | meituan://shop/1\n抖音 | https://www.douyin.com/search/foo\n链接 | https://example.test/custom"
+    actual: platformLinksToText(parsePlatformLinksText("美团 | meituan://shop/1\n小红书 | https://xhslink.com/a1\n百度地图 | baidumap://map/place/detail?uid=1\nhttps://example.test/custom")),
+    expected: "美团 | meituan://shop/1\n小红书 | https://xhslink.com/a1\n百度地图 | baidumap://map/place/detail?uid=1\n链接 | https://example.test/custom"
   }
 ];
 

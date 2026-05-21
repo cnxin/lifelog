@@ -10,7 +10,17 @@ export interface PreferenceGroup {
   items: string[];
 }
 
-export type PlaceLinkPlatform = "amap" | "meituan" | "dianping" | "douyin" | "custom";
+export type PlaceLinkPlatform =
+  | "amap"
+  | "meituan"
+  | "dianping"
+  | "douyin"
+  | "xiaohongshu"
+  | "baidu"
+  | "tencent"
+  | "wechat"
+  | "official"
+  | "custom";
 
 export interface PlaceExternalLink {
   label: string;

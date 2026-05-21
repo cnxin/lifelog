@@ -11,12 +11,12 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
+import { normalizePlacePlatformLinks } from "../../utils/placeLinks";
 import {
   buildMallKey,
   buildPlaceContextLine,
   buildPlaceDisplayName,
   buildPlaceGeoLine,
-  getPlacePlatformLink,
   getPlaceReferenceUrl
 } from "../../utils/placeMeta";
 
@@ -51,8 +51,7 @@ export default function PlaceDetail() {
   const groupedMemories = groupMemoriesByMonth(relatedMemories);
   const latestMemory = relatedMemories[0];
   const photos = (place.photos || []).slice(0, 3);
-  const meituanLink = getPlacePlatformLink(place, "meituan");
-  const dianpingLink = getPlacePlatformLink(place, "dianping");
+  const platformLinks = normalizePlacePlatformLinks(place.platformLinks);
   const referenceUrl = getPlaceReferenceUrl(place);
   const completionTips: CompletionTip[] = [
     {
@@ -197,16 +196,11 @@ export default function PlaceDetail() {
               <Navigation /> 未设置地图
             </span>
           )}
-          {meituanLink ? (
-            <button className="link-action secondary" type="button" onClick={() => void openNativeStoreUrl(meituanLink.url)}>
-              <Store /> 打开美团
+          {platformLinks.map((link) => (
+            <button className="link-action secondary" type="button" key={`${link.platform}-${link.url}`} onClick={() => void openNativeStoreUrl(link.url)}>
+              <Store /> 打开{link.label}
             </button>
-          ) : null}
-          {dianpingLink ? (
-            <button className="link-action secondary" type="button" onClick={() => void openNativeStoreUrl(dianpingLink.url)}>
-              <Store /> 打开点评
-            </button>
-          ) : null}
+          ))}
           {referenceUrl ? (
             <button className="link-action" type="button" onClick={() => void openExternalUrl(referenceUrl)}>
               <ExternalLink /> 参考链接

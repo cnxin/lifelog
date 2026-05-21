@@ -1,10 +1,20 @@
 import { createPlatformLink, inferPlatformFromLink } from "./placeLinks";
 import { inferAreaFromText, inferCityByDistrict, inferMallName, inferProvince, normalizeCityName } from "./placeMeta";
 
-export type PlaceSourceType = "amap" | "meituan" | "dianping" | "generic";
+export type PlaceSourceType =
+  | "amap"
+  | "meituan"
+  | "dianping"
+  | "douyin"
+  | "xiaohongshu"
+  | "baidu"
+  | "tencent"
+  | "wechat"
+  | "official"
+  | "generic";
 
 const shareUrlPattern =
-  /(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/|imeituan:\/\/|meituan:\/\/|meituanwaimai:\/\/|dianping:\/\/|dianpingapp:\/\/|dper:\/\/)[^\s"'<>，。；;]+/gi;
+  /(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/|imeituan:\/\/|meituan:\/\/|meituanwaimai:\/\/|dianping:\/\/|dianpingapp:\/\/|dper:\/\/|snssdk1128:\/\/|xhsdiscover:\/\/|xiaohongshu:\/\/|baidumap:\/\/|bdmap:\/\/|bdapp:\/\/|qqmap:\/\/|tencentmap:\/\/|weixin:\/\/)[^\s"'<>，。；;]+/gi;
 const inlineFieldLabels = [
   "地点名称",
   "店铺名称",
@@ -119,7 +129,7 @@ export function parsePlaceShare(input: string): PlaceDraft {
   });
   const name = textDraft.name || urlDraft.name || fallbackName(cleanText);
   const platformLinks = buildPlatformLinks(url, sourceType);
-  const sourceUrl = sourceType === "meituan" || sourceType === "dianping" ? "" : url;
+  const sourceUrl = isPlatformSource(sourceType) ? "" : url;
   const lines = normalizeShareLines(cleanText);
   const rating = textDraft.rating || extractRating(lines);
   const price = extractPrice(lines);
@@ -324,7 +334,7 @@ function inferCategoryFromLines(lines: string[]) {
 }
 
 function isUrlLine(line: string) {
-  return /^(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/|imeituan:\/\/|meituan:\/\/|meituanwaimai:\/\/|dianping:\/\/|dianpingapp:\/\/|dper:\/\/)/i.test(line) || extractUrls(line).length > 0;
+  return /^(?:https?:\/\/|amapuri:\/\/|androidamap:\/\/|imeituan:\/\/|meituan:\/\/|meituanwaimai:\/\/|dianping:\/\/|dianpingapp:\/\/|dper:\/\/|snssdk1128:\/\/|xhsdiscover:\/\/|xiaohongshu:\/\/|baidumap:\/\/|bdmap:\/\/|bdapp:\/\/|qqmap:\/\/|tencentmap:\/\/|weixin:\/\/)/i.test(line) || extractUrls(line).length > 0;
 }
 
 function isMetaLine(line: string) {
@@ -332,7 +342,7 @@ function isMetaLine(line: string) {
 }
 
 function isPlatformHeaderLine(line: string) {
-  return /^(?:高德地图|高德|美团|大众点评|点评|地图|导航)$/.test(line.trim());
+  return /^(?:高德地图|高德|美团|大众点评|点评|抖音|小红书|百度地图|百度|腾讯地图|腾讯|微信|地图|导航)$/.test(line.trim());
 }
 
 function isNonCategoryFieldLine(line: string) {
@@ -397,8 +407,19 @@ function detectSourceType(text: string, url: string): PlaceSourceType {
   if (linkPlatform === "amap") return "amap";
   if (linkPlatform === "meituan") return "meituan";
   if (linkPlatform === "dianping") return "dianping";
+  if (linkPlatform === "douyin") return "douyin";
+  if (linkPlatform === "xiaohongshu") return "xiaohongshu";
+  if (linkPlatform === "baidu") return "baidu";
+  if (linkPlatform === "tencent") return "tencent";
+  if (linkPlatform === "wechat") return "wechat";
+  if (linkPlatform === "official") return "official";
 
   const value = `${text} ${url}`.toLowerCase();
+  if (value.includes("xiaohongshu") || value.includes("xhslink") || value.includes("小红书")) return "xiaohongshu";
+  if (value.includes("douyin") || value.includes("抖音")) return "douyin";
+  if (value.includes("baidumap") || value.includes("map.baidu") || value.includes("百度地图")) return "baidu";
+  if (value.includes("qqmap") || value.includes("map.qq") || value.includes("腾讯地图")) return "tencent";
+  if (value.includes("weixin") || value.includes("wechat") || value.includes("微信位置") || value.includes("微信")) return "wechat";
   if (value.includes("dianping") || value.includes("dper://") || value.includes("dpurl.cn") || value.includes("大众点评") || value.includes("点评")) return "dianping";
   if (value.includes("meituan") || value.includes("imeituan://") || value.includes("美团")) return "meituan";
   if (value.includes("amap") || value.includes("高德")) return "amap";
@@ -426,12 +447,13 @@ function inferCity(value = "") {
 
 function inferCategory(value = "") {
   if (/%\s*Arabica|Arabica|咖啡|咖啡厅|咖啡馆|Coffee|coffee|奶茶|茶饮|甜品|蛋糕|面包|烘焙|酒吧/.test(value)) return "咖啡厅";
-  if (/西餐|中餐|火锅|烧烤|烤肉|日料|日本料理|韩餐|韩国料理|餐厅|料理|面馆|小吃|饭店|美食|店/.test(value)) return "餐厅";
+  if (/书店|书城|书屋/.test(value)) return "书店";
+  if (/西餐|中餐|火锅|烧烤|烤肉|日料|日本料理|韩餐|韩国料理|餐厅|料理|面馆|小吃|饭店|美食/.test(value)) return "餐厅";
   if (/商场|商城|购物中心|百货|Mall|mall|广场/.test(value)) return "商场";
   if (/酒店|宾馆|民宿/.test(value)) return "酒店";
   if (/影院|影城|电影/.test(value)) return "电影院";
   if (/公园/.test(value)) return "公园";
-  if (/书店|书城/.test(value)) return "书店";
+  if (/书店|书城|书屋/.test(value)) return "书店";
   if (/医院|诊所|卫生院/.test(value)) return "医院";
   if (/学校|大学|学院|校区/.test(value)) return "学校";
   if (/公司|写字楼|办公室|园区/.test(value)) return "公司";
@@ -454,7 +476,7 @@ function cleanName(value = "") {
     .replace(/[【】「」『』“”"]/g, " ")
     .replace(/^(?:我在)?(?:高德地图|高德|美团|大众点评|点评)(?:地图|App|APP)?(?:上)?(?:发现|找到|推荐|分享)(?:了)?(?:一家|一个)?(?:不错的|好吃的)?(?:地点|店铺|商家|餐厅)?[:：，,\s]*/i, "")
     .replace(/^(?:来自|打开|分享自)?(?:高德地图|高德|美团|大众点评|点评)(?:地图|App|APP)?[:：，,\s]*/i, "")
-    .replace(/^(?:我分享了?一个地点给你|分享地点|推荐店铺|推荐一家|发现一家|一家|推荐的|好吃的)[:：，,\s]*/, "")
+    .replace(/^(?:我分享了?一个地点给你|分享地点|分享一家店|推荐店铺|推荐一家店|推荐一家|发现一家店|发现一家|一家店|一家|推荐的|好吃的)[:：，,\s]*/, "")
     .replace(/(?:地址|位置|链接|电话|营业时间|营业|评分|星级|人均|价格|路线|导航|详情)[:：]?.*$/, "")
     .replace(/\s*(?:\d(?:\.\d+)?\s*(?:分|星)|[★☆]{2,}|[¥￥]\s*\d+.*|人均.*)$/, "")
     .replace(/(?:快来看看吧?|点击.*|复制.*|打开.*|查看更多.*)$/, "")
@@ -490,9 +512,9 @@ function extractSharedName(rawText: string, sourceType: PlaceSourceType) {
   const bracketed = pickBracketedName(rawText);
   if (bracketed) return bracketed;
 
-  const platform = sourceType === "generic" ? "(?:高德地图|高德|美团|大众点评|点评)" : sourceLabel(sourceType);
+  const platform = sourceType === "generic" ? "(?:高德地图|高德|美团|大众点评|点评|抖音|小红书|百度地图|腾讯地图|微信)" : sourceLabel(sourceType);
   const patterns = [
-    new RegExp(`(?:我在|来自|打开)?${platform}[^，。；\\n]*?(?:发现|找到|推荐|分享)(?:了)?(?:一家|一个)?(?:不错的)?(?:地点|店铺|商家|餐厅)?[:：\\s]*([^，。；\\n]{2,80})`),
+    new RegExp(`(?:我在|来自|打开)?${platform}[^，。；\\n]*?(?:发现|找到|推荐|分享)(?:了)?(?:一家|一个)?(?:不错的)?(?:地点|店铺|店|商家|餐厅)?[:：\\s]*([^，。；\\n]{2,80})`),
     new RegExp(`${platform}[^，。；\\n]*?(?:商家|门店|地点)[:：\\s]*([^，。；\\n]{2,80})`),
     /(?:分享|推荐)(?:给你)?(?:一个|一家)?(?:地点|店铺|商家|餐厅)?[:：\s]*([^，。；\n]{2,80})/,
     /(?:我分享了?一个地点给你)[:：\s]*([^，。；\n]{2,80})/
@@ -516,7 +538,7 @@ function pickBracketedName(rawText: string) {
 
 function isLikelyPlaceName(value: string) {
   if (!value || value.length < 2 || value.length > 80) return false;
-  if (/(?:高德地图|高德|美团|大众点评|点评|App|APP|复制|打开|点击|查看|地址|位置|电话|营业|导航|路线|人均|评分|星级)/.test(value)) return false;
+  if (/(?:高德地图|高德|美团|大众点评|点评|抖音|小红书|百度地图|腾讯地图|微信|App|APP|复制|打开|点击|查看|地址|位置|电话|营业|导航|路线|人均|评分|星级)/.test(value)) return false;
   return true;
 }
 
@@ -593,7 +615,7 @@ function isInstructionLine(line: string) {
 }
 
 function isShareIntroLine(line: string) {
-  return /(?:高德地图|高德|美团|大众点评|点评).{0,18}(?:发现|找到|推荐|分享)/.test(line);
+  return /(?:高德地图|高德|美团|大众点评|点评|抖音|小红书|百度地图|腾讯地图|微信).{0,18}(?:发现|找到|推荐|分享)/.test(line);
 }
 
 function escapeRegExp(value: string) {
@@ -604,17 +626,27 @@ function sourceLabel(sourceType: PlaceSourceType) {
   if (sourceType === "amap") return "高德";
   if (sourceType === "meituan") return "美团";
   if (sourceType === "dianping") return "大众点评";
+  if (sourceType === "douyin") return "抖音";
+  if (sourceType === "xiaohongshu") return "小红书";
+  if (sourceType === "baidu") return "百度地图";
+  if (sourceType === "tencent") return "腾讯地图";
+  if (sourceType === "wechat") return "微信";
+  if (sourceType === "official") return "官网";
   return "";
 }
 
 function buildPlatformLinks(url: string, sourceType: PlaceSourceType) {
   if (!url) return "";
-  if (sourceType !== "meituan" && sourceType !== "dianping") return "";
+  if (!isPlatformSource(sourceType) || sourceType === "amap") return "";
 
-  const label = sourceType === "meituan" ? "美团" : "点评";
+  const label = sourceLabel(sourceType);
   const link = createPlatformLink(url, label);
   if (!link) return "";
   return `${link.label} | ${link.url}`;
+}
+
+function isPlatformSource(sourceType: PlaceSourceType) {
+  return sourceType !== "generic";
 }
 
 function extractRating(lines: string[]) {
