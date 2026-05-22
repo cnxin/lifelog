@@ -501,6 +501,27 @@
   word-break: break-word;
 }
 
+.content-template-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.content-template-chip {
+  border: 0;
+  border-radius: 999px;
+  min-height: 30px;
+  padding: 0 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.content-template-chip:active {
+  transform: scale(0.97);
+}
+
 .merge-preview {
   display: grid;
   gap: 14px;

@@ -4,7 +4,7 @@ import type { MemoryEvent, Photo } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { inferQuickMemory } from "../../utils/memoryInference";
 import { deriveMemorySummary } from "../../utils/memoryDisplay";
-import { buildDefaultQuickMemoryTitle, buildQuickMemoryTemplates } from "../../utils/quickMemoryContext";
+import { buildDefaultQuickMemoryTitle, buildMemoryContentTemplates, buildQuickMemoryTemplates } from "../../utils/quickMemoryContext";
 import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
 import { PhotoUploader } from "../PhotoUploader";
@@ -66,6 +66,7 @@ export function MemoryFields({
   const previewPlace = places.find((place) => place.id === quickPreview.placeId)?.name || "";
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
   const quickTemplates = buildQuickMemoryTemplates(previewPeople, previewPlace);
+  const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlace);
   const previewTitle =
     deriveMemorySummary(
       {
@@ -183,6 +184,20 @@ export function MemoryFields({
             </div>
             <label>
               正文
+              {quickContentTemplates.length > 0 && (
+                <div className="content-template-grid">
+                  {quickContentTemplates.map((template) => (
+                    <button
+                      type="button"
+                      className="content-template-chip"
+                      key={template}
+                      onClick={() => setQuickDetailsContent((current) => appendTemplate(current, template))}
+                    >
+                      {template.split("\n")[0]}
+                    </button>
+                  ))}
+                </div>
+              )}
               <textarea
                 name="content"
                 value={quickDetailsContent}
@@ -289,10 +304,25 @@ export function MemoryFields({
       </label>
       <label>
         内容
+        <div className="content-template-grid">
+          {buildMemoryContentTemplates(
+            resolvePersonNames(selectedPersonIds, people),
+            resolvePlaceName(memory?.placeId || initialPlaceId, places)
+          ).map((template) => (
+            <button
+              type="button"
+              className="content-template-chip"
+              key={template}
+              onClick={(event) => insertTemplateIntoSiblingTextarea(event.currentTarget, template)}
+            >
+              {template.split("\n")[0]}
+            </button>
+          ))}
+        </div>
         <textarea
           name="content"
           defaultValue={memory?.content || ""}
-          placeholder="记录今天发生的事，以及下次要注意什么。"
+          placeholder="可按“发生了什么 / 当时感受 / 下次注意”三段记录。"
         />
       </label>
       <div>
@@ -336,4 +366,19 @@ function resolvePersonNames(personIds: string[] = [], people: Array<{ id: string
 function resolvePlaceName(placeId: string | undefined, places: Array<{ id: string; name: string }>) {
   if (!placeId) return "";
   return places.find((place) => place.id === placeId)?.name || "";
+}
+
+function appendTemplate(current: string, template: string) {
+  const trimmed = current.trim();
+  if (!trimmed) return template;
+  return `${current.replace(/\s*$/, "")}\n${template}`;
+}
+
+function insertTemplateIntoSiblingTextarea(button: HTMLButtonElement, template: string) {
+  const label = button.closest("label");
+  const textarea = label?.querySelector("textarea");
+  if (!textarea) return;
+  textarea.value = appendTemplate(textarea.value, template);
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  textarea.focus();
 }

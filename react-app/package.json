@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.61",
+  "version": "0.1.0-test.62",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,9 @@
     "test:quick-memory": "node scripts/test-quick-memory-context.cjs",
     "test:release-notes": "node scripts/test-release-notes.cjs",
     "test:update-checker": "node scripts/test-update-checker.cjs",
+    "test:diagnostics": "node scripts/test-diagnostics.cjs",
+    "test:release-ready": "node scripts/verify-release-ready.cjs",
+    "test:reminders": "node scripts/test-reminder-preview.cjs",
     "test:memory": "node scripts/test-memory-inference.cjs",
     "test:display": "node scripts/test-memory-display.cjs",
     "test:location": "node scripts/test-place-location-filter.cjs",

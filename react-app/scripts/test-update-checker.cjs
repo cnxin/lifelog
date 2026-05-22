@@ -22,7 +22,7 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { compareVersions } = loadTs("src/utils/updateChecker.ts");
+const { compareVersions, formatFileSize, parseGitHubReleasePayload } = loadTs("src/utils/updateChecker.ts");
 
 const cases = [
   ["0.1.0-test.61", "0.1.0-test.60", 1],
@@ -41,9 +41,36 @@ for (const [left, right, expectedSign] of cases) {
   console.error(`[compareVersions ${left} vs ${right}] expected ${expectedSign}, actual ${actual}`);
 }
 
+const parsed = parseGitHubReleasePayload(
+  {
+    tag_name: "v0.1.0-test.61",
+    html_url: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.61",
+    body: "- 更新中心增强",
+    published_at: "2026-05-21T09:32:17Z",
+    assets: [
+      {
+        name: "lifelog-v0.1.0-test.61.apk",
+        size: 3587759,
+        browser_download_url: "https://example.invalid/lifelog.apk"
+      }
+    ]
+  },
+  "0.1.0-test.60"
+);
+
+if (!parsed.hasUpdate || parsed.apkSize !== 3587759 || parsed.apkName !== "lifelog-v0.1.0-test.61.apk") {
+  failures += 1;
+  console.error(`[parseGitHubReleasePayload] unexpected payload: ${JSON.stringify(parsed)}`);
+}
+
+if (formatFileSize(3587759) !== "3.4 MB") {
+  failures += 1;
+  console.error(`[formatFileSize] expected 3.4 MB, actual ${formatFileSize(3587759)}`);
+}
+
 if (failures) {
   console.error(`Update checker regression failed: ${failures} mismatch(es).`);
   process.exit(1);
 }
 
-console.log(`Update checker regression passed: ${cases.length} cases.`);
+console.log(`Update checker regression passed: ${cases.length} version cases plus release metadata.`);

@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import GlassCard from "../../components/GlassCard";
 import AccountAbout from "./AccountAbout";
 import AccountDataManagement from "./AccountDataManagement";
+import AccountFeedback from "./AccountFeedback";
 
 export default function Account() {
   return (
@@ -17,6 +18,7 @@ export default function Account() {
         </GlassCard>
       </section>
       <AccountDataManagement />
+      <AccountFeedback />
       <AccountAbout />
     </>
   );

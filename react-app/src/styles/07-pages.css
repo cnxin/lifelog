@@ -92,7 +92,79 @@
 
 .update-check-head .mini-action {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 34px;
+}
+
+.update-check-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.update-check-meta span {
+  min-width: 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  color: var(--text-sub);
+  background: var(--soft-purple);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.update-check-meta strong {
+  min-width: 0;
+  color: var(--primary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-release-body {
+  display: grid;
+  gap: 6px;
+  border-radius: 16px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.update-release-body span {
+  position: relative;
+  padding-left: 13px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.update-release-body span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.update-check-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.update-check-actions .mini-action {
+  min-height: 42px;
+  padding-inline: 14px;
+  color: var(--primary);
+  background: var(--soft-purple);
 }
 
 .release-note-head {
@@ -284,6 +356,81 @@
 
 .data-action-card.danger strong {
   color: var(--danger);
+}
+
+.feedback-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.feedback-card-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.feedback-card-head svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+}
+
+.feedback-card-head strong,
+.feedback-card-head span {
+  display: block;
+}
+
+.feedback-card-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.feedback-card-head span {
+  margin-top: 4px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.feedback-diagnostics-preview {
+  border-radius: 16px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: var(--soft-purple);
+}
+
+.feedback-diagnostics-preview span,
+.feedback-diagnostics-preview small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.feedback-diagnostics-preview strong {
+  color: var(--primary);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.feedback-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.feedback-actions .mini-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.feedback-actions .mini-action:not(.add) {
+  color: var(--text-main);
+  background: var(--card-bg);
 }
 
 .backup-health-card {
@@ -560,6 +707,12 @@
 
 @media (max-width: 360px) {
   .settings-control-demo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .update-check-meta,
+  .update-check-actions,
+  .feedback-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -1581,6 +1734,56 @@
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.reminder-upcoming-list {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.reminder-upcoming-list > strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.reminder-upcoming-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--soft-purple);
+}
+
+.reminder-upcoming-item > span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: var(--primary);
+  background: var(--card-bg);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.reminder-upcoming-item div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.reminder-upcoming-item strong {
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.reminder-upcoming-item small {
+  color: var(--text-sub);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .reminder-schedule-summary.blocked .reminder-schedule-summary-head svg,

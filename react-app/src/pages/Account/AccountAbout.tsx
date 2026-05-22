@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { openExternalUrl } from "../../utils/externalLinks";
-import { checkLatestAppUpdate, type AppUpdateInfo } from "../../utils/updateChecker";
+import { checkLatestAppUpdate, formatFileSize, type AppUpdateInfo } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
   const notify = useToast();
@@ -69,10 +69,43 @@ export default function AccountAbout() {
               {isChecking ? "检查中" : "检查"}
             </button>
           </div>
+          {latestUpdate && (
+            <div className="update-check-meta">
+              <span>
+                <strong>{latestUpdate.apkName || "APK 文件"}</strong>
+                {formatFileSize(latestUpdate.apkSize)}
+              </span>
+              <span>
+                <strong>发布时间</strong>
+                {formatReleaseDate(latestUpdate.publishedAt)}
+              </span>
+              <span>
+                <strong>检查时间</strong>
+                {formatReleaseDate(latestUpdate.checkedAt)}
+              </span>
+            </div>
+          )}
+          {latestUpdate?.body && (
+            <div className="update-release-body">
+              {latestUpdate.body
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .slice(0, 4)
+                .map((line) => (
+                  <span key={line}>{line.replace(/^[-*]\s*/, "")}</span>
+                ))}
+            </div>
+          )}
           {latestUpdate?.hasUpdate && (
-            <button className="link-action detail-link-button" type="button" onClick={() => void openExternalUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
-              <Download /> 下载新版本 APK
-            </button>
+            <div className="update-check-actions">
+              <button className="link-action detail-link-button" type="button" onClick={() => void openExternalUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
+                <Download /> 下载新版本 APK
+              </button>
+              <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
+                查看 Release
+              </button>
+            </div>
           )}
         </GlassCard>
         <GlassCard className="release-note-card">
@@ -139,4 +172,16 @@ export default function AccountAbout() {
       </div>
     </section>
   );
+}
+
+function formatReleaseDate(value: string) {
+  if (!value) return "未知";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }

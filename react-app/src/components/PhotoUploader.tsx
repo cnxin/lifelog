@@ -1,8 +1,8 @@
 import { Upload, X, Image as ImageIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Photo } from "../types";
-import { compressImage, validateImageFile, blobToDataURL } from "../utils/imageCompression";
+import { compressImage, validateImageFile, blobToObjectURL } from "../utils/imageCompression";
 
 interface PhotoUploaderProps {
   photos: Photo[];
@@ -193,12 +193,31 @@ interface PhotoPreviewProps {
 }
 
 function PhotoPreview({ photo, index, onRemove, disabled }: PhotoPreviewProps) {
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState("");
 
-  // 加载缩略图
-  useState(() => {
-    blobToDataURL(photo.thumbnailBlob).then(setPreviewUrl);
-  });
+  useEffect(() => {
+    let mounted = true;
+    let objectUrl = "";
+
+    setPreviewUrl("");
+    blobToObjectURL(photo.thumbnailBlob)
+      .then((url) => {
+        objectUrl = url;
+        if (mounted) {
+          setPreviewUrl(url);
+        } else {
+          URL.revokeObjectURL(url);
+        }
+      })
+      .catch((error) => {
+        console.error("加载照片预览失败:", error);
+      });
+
+    return () => {
+      mounted = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [photo.thumbnailBlob]);
 
   return (
     <div className="photo-preview">

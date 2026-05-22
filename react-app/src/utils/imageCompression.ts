@@ -133,3 +133,10 @@ export function blobToDataURL(blob: Blob): Promise<string> {
     reader.readAsDataURL(blob);
   });
 }
+
+/**
+ * 将 Blob 转换为对象 URL。调用方必须在不再使用时 URL.revokeObjectURL。
+ */
+export function blobToObjectURL(blob: Blob): Promise<string> {
+  return Promise.resolve(URL.createObjectURL(blob));
+}

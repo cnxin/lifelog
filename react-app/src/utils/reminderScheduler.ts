@@ -15,6 +15,21 @@ export interface ReminderScheduleSummary {
   error?: string;
 }
 
+export type ReminderPreviewType = "生日" | "纪念日" | "联系" | "回忆";
+
+export interface ReminderPreviewItem {
+  id: number;
+  type: ReminderPreviewType;
+  title: string;
+  body: string;
+  at: Date;
+}
+
+interface ReminderEntry {
+  type: ReminderPreviewType;
+  notification: LocalNotificationSchema;
+}
+
 /**
  * 调度所有提醒
  */
@@ -56,7 +71,7 @@ export function previewReminderSchedule(
   memories: MemoryEvent[],
   settings: ReminderSettings
 ): ReminderScheduleSummary {
-  const notifications = generateReminderNotifications(people, memories, settings);
+  const notifications = generateReminderEntries(people, memories, settings).map((entry) => entry.notification);
   const scheduled = notifications.slice(0, MAX_PENDING_REMINDERS);
   return {
     totalGenerated: notifications.length,
@@ -67,34 +82,68 @@ export function previewReminderSchedule(
   };
 }
 
+export function previewUpcomingReminders(
+  people: Person[],
+  memories: MemoryEvent[],
+  settings: ReminderSettings,
+  options: { days?: number; limit?: number } = {}
+): ReminderPreviewItem[] {
+  const days = options.days ?? 7;
+  const limit = options.limit ?? 6;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  end.setHours(23, 59, 59, 999);
+
+  return generateReminderEntries(people, memories, settings)
+    .map(({ type, notification }) => ({
+      id: notification.id,
+      type,
+      title: notification.title,
+      body: notification.body || "",
+      at: notification.schedule?.at || new Date(0)
+    }))
+    .filter((item) => item.at >= start && item.at <= end)
+    .slice(0, limit);
+}
+
 function generateReminderNotifications(
   people: Person[],
   memories: MemoryEvent[],
   settings: ReminderSettings
 ): LocalNotificationSchema[] {
-  const notifications: LocalNotificationSchema[] = [];
+  return generateReminderEntries(people, memories, settings).map((entry) => entry.notification);
+}
+
+function generateReminderEntries(
+  people: Person[],
+  memories: MemoryEvent[],
+  settings: ReminderSettings
+): ReminderEntry[] {
+  const entries: ReminderEntry[] = [];
 
   if (settings.birthdayEnabled) {
-    notifications.push(...generateBirthdayReminders(people, settings));
+    entries.push(...generateBirthdayReminders(people, settings));
   }
 
   if (settings.anniversaryEnabled) {
-    notifications.push(...generateAnniversaryReminders(people, settings));
+    entries.push(...generateAnniversaryReminders(people, settings));
   }
 
   if (settings.contactEnabled) {
-    notifications.push(...generateContactReminders(people, memories, settings));
+    entries.push(...generateContactReminders(people, memories, settings));
   }
 
   if (settings.memoryEnabled) {
-    notifications.push(...generateMemoryReminders(memories, settings));
+    entries.push(...generateMemoryReminders(memories, settings));
   }
 
-  return notifications.sort((a, b) => getNotificationTime(a) - getNotificationTime(b));
+  return entries.sort((a, b) => getNotificationTime(a.notification) - getNotificationTime(b.notification));
 }
 
-function generateBirthdayReminders(people: Person[], settings: ReminderSettings): LocalNotificationSchema[] {
-  const notifications: LocalNotificationSchema[] = [];
+function generateBirthdayReminders(people: Person[], settings: ReminderSettings): ReminderEntry[] {
+  const entries: ReminderEntry[] = [];
 
   for (const person of people) {
     if (!person.birthday) continue;
@@ -102,30 +151,36 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
     const days = daysUntil(person.birthday);
     const advanceOffset = days - settings.birthdayAdvanceDays;
 
-    if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
-      notifications.push({
-        id: generateId('birthday-advance', person.id),
-        title: `${person.name}的生日快到了`,
-        body: `还有 ${settings.birthdayAdvanceDays} 天就是 ${person.name} 的生日了，记得准备礼物哦`,
-        schedule: { at: getScheduleDate(advanceOffset, settings.birthdayTime) }
+      if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+      entries.push({
+        type: "生日",
+        notification: {
+          id: generateId('birthday-advance', person.id),
+          title: `${person.name}的生日快到了`,
+          body: `还有 ${settings.birthdayAdvanceDays} 天就是 ${person.name} 的生日了，记得准备礼物哦`,
+          schedule: { at: getScheduleDate(advanceOffset, settings.birthdayTime) }
+        }
       });
     }
 
     if (days >= 0 && days <= REMINDER_WINDOW_DAYS) {
-      notifications.push({
-        id: generateId('birthday-today', person.id),
-        title: `今天是${person.name}的生日 🎂`,
-        body: `${birthdayAgeLabel(person.birthday)}，记得送上祝福`,
-        schedule: { at: getScheduleDate(days, settings.birthdayTime) }
+      entries.push({
+        type: "生日",
+        notification: {
+          id: generateId('birthday-today', person.id),
+          title: `今天是${person.name}的生日 🎂`,
+          body: `${birthdayAgeLabel(person.birthday)}，记得送上祝福`,
+          schedule: { at: getScheduleDate(days, settings.birthdayTime) }
+        }
       });
     }
   }
 
-  return notifications;
+  return entries;
 }
 
-function generateAnniversaryReminders(people: Person[], settings: ReminderSettings): LocalNotificationSchema[] {
-  const notifications: LocalNotificationSchema[] = [];
+function generateAnniversaryReminders(people: Person[], settings: ReminderSettings): ReminderEntry[] {
+  const entries: ReminderEntry[] = [];
 
   for (const person of people) {
     for (const anniversary of person.anniversaries) {
@@ -134,27 +189,33 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
       const days = daysUntil(anniversary.date);
       const advanceOffset = days - settings.anniversaryAdvanceDays;
 
-      if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
-        notifications.push({
-          id: generateId('anniversary-advance', person.id, anniversary.title),
-          title: `${person.name}的${anniversary.title}快到了`,
-          body: `还有 ${settings.anniversaryAdvanceDays} 天`,
-          schedule: { at: getScheduleDate(advanceOffset, settings.anniversaryTime) }
+    if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+        entries.push({
+          type: "纪念日",
+          notification: {
+            id: generateId('anniversary-advance', person.id, anniversary.title),
+            title: `${person.name}的${anniversary.title}快到了`,
+            body: `还有 ${settings.anniversaryAdvanceDays} 天`,
+            schedule: { at: getScheduleDate(advanceOffset, settings.anniversaryTime) }
+          }
         });
       }
 
       if (days >= 0 && days <= REMINDER_WINDOW_DAYS) {
-        notifications.push({
-          id: generateId('anniversary-today', person.id, anniversary.title),
-          title: `今天是${person.name}的${anniversary.title}`,
-          body: anniversaryYearLabel(anniversary.date),
-          schedule: { at: getScheduleDate(days, settings.anniversaryTime) }
+        entries.push({
+          type: "纪念日",
+          notification: {
+            id: generateId('anniversary-today', person.id, anniversary.title),
+            title: `今天是${person.name}的${anniversary.title}`,
+            body: anniversaryYearLabel(anniversary.date),
+            schedule: { at: getScheduleDate(days, settings.anniversaryTime) }
+          }
         });
       }
     }
   }
 
-  return notifications;
+  return entries;
 }
 
 function generateContactReminders(
@@ -162,7 +223,7 @@ function generateContactReminders(
   memories: MemoryEvent[],
   settings: ReminderSettings
 ) {
-  const notifications: LocalNotificationSchema[] = [];
+  const entries: ReminderEntry[] = [];
   const now = new Date();
 
   for (const person of people) {
@@ -176,20 +237,23 @@ function generateContactReminders(
     const daysSinceContact = Math.floor((now.getTime() - lastContactDate.getTime()) / 86400000);
 
     if (daysSinceContact >= settings.contactIntervalDays) {
-      notifications.push({
-        id: generateId('contact', person.id),
-        title: `好久没联系${person.name}了`,
-        body: `已经 ${daysSinceContact} 天没有互动记录了，找个时间聊聊吧`,
-        schedule: { at: getScheduleDate(0, settings.contactTime) }
+      entries.push({
+        type: "联系",
+        notification: {
+          id: generateId('contact', person.id),
+          title: `好久没联系${person.name}了`,
+          body: `已经 ${daysSinceContact} 天没有互动记录了，找个时间聊聊吧`,
+          schedule: { at: getScheduleDate(0, settings.contactTime) }
+        }
       });
     }
   }
 
-  return notifications;
+  return entries;
 }
 
-function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSettings): LocalNotificationSchema[] {
-  const notifications: LocalNotificationSchema[] = [];
+function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSettings): ReminderEntry[] {
+  const entries: ReminderEntry[] = [];
   const today = new Date();
   const month = today.getMonth() + 1;
   const day = today.getDate();
@@ -205,15 +269,18 @@ function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSett
 
   if (lastYearMemories.length > 0) {
     const yearsAgo = today.getFullYear() - new Date(`${lastYearMemories[0].date}T00:00:00`).getFullYear();
-    notifications.push({
-      id: generateId('memory', today.toISOString().slice(0, 10)),
-      title: `${yearsAgo}年前的今天`,
-      body: `你有 ${lastYearMemories.length} 条回忆，点击查看`,
-      schedule: { at: getScheduleDate(0, settings.memoryTime) }
+    entries.push({
+      type: "回忆",
+      notification: {
+        id: generateId('memory', today.toISOString().slice(0, 10)),
+        title: `${yearsAgo}年前的今天`,
+        body: `你有 ${lastYearMemories.length} 条回忆，点击查看`,
+        schedule: { at: getScheduleDate(0, settings.memoryTime) }
+      }
     });
   }
 
-  return notifications;
+  return entries;
 }
 
 function generateId(type: string, ...parts: string[]): number {

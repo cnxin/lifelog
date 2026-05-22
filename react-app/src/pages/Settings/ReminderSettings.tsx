@@ -6,7 +6,7 @@ import TimePicker from "../../components/TimePicker";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { notifyReminderPermissionChanged } from "../../hooks/useReminderScheduling";
 import { checkNotificationPermission, requestNotificationPermission } from "../../utils/notificationPermissions";
-import { previewReminderSchedule, sendTestNotification } from "../../utils/reminderScheduler";
+import { previewReminderSchedule, previewUpcomingReminders, sendTestNotification } from "../../utils/reminderScheduler";
 
 export default function ReminderSettings() {
   const { state, reminderSettings, updateReminderSettings } = useLifeLog();
@@ -15,6 +15,7 @@ export default function ReminderSettings() {
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const schedulePreview = previewReminderSchedule(state.people, state.memories, reminderSettings);
+  const upcomingReminders = previewUpcomingReminders(state.people, state.memories, reminderSettings);
 
   useEffect(() => {
     checkNotificationPermission()
@@ -116,6 +117,22 @@ export default function ReminderSettings() {
               : "保存设置后会自动重新调度本地通知。"
             : "请先启用通知权限，否则这些提醒只会保存在设置中，不会触发系统通知。"}
         </p>
+        <div className="reminder-upcoming-list">
+          <strong>未来 7 天预览</strong>
+          {upcomingReminders.length ? (
+            upcomingReminders.map((item) => (
+              <div className="reminder-upcoming-item" key={`${item.type}-${item.id}`}>
+                <span>{item.type}</span>
+                <div>
+                  <strong>{item.title}</strong>
+                  <small>{formatReminderDate(item.at)} · {item.body}</small>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>未来 7 天没有会触发的提醒。</p>
+          )}
+        </div>
       </GlassCard>
 
       <GlassCard className="reminder-config-block">

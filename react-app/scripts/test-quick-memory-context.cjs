@@ -31,6 +31,7 @@ function loadTs(relativeFile) {
 
 const {
   buildDefaultQuickMemoryTitle,
+  buildMemoryContentTemplates,
   buildQuickMemoryTemplates,
   formatPeopleLabel
 } = loadTs("src/utils/quickMemoryContext.ts");
@@ -70,6 +71,17 @@ const cases = [
     label: "empty templates",
     actual: buildQuickMemoryTemplates([], ""),
     expected: []
+  },
+  {
+    label: "content templates with person and place",
+    actual: buildMemoryContentTemplates(["小林"], "湖滨银泰"),
+    expected: [
+      "和小林在湖滨银泰：",
+      "和小林聊到：",
+      "湖滨银泰这次体验：",
+      "今天发生了：\n下次可以：",
+      "值得记住的是：\n当时的感受："
+    ]
   }
 ];
 

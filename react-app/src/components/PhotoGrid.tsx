@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import type { Photo } from "../types";
-import { blobToDataURL } from "../utils/imageCompression";
+import { blobToObjectURL } from "../utils/imageCompression";
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -33,19 +33,26 @@ interface PhotoGridItemProps {
 }
 
 function PhotoGridItem({ photo, index, onClick }: PhotoGridItemProps) {
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
+    let objectUrl = "";
 
-    // 加载缩略图
-    blobToDataURL(photo.thumbnailBlob)
+    setLoading(true);
+    setError(false);
+    setImageUrl("");
+
+    blobToObjectURL(photo.thumbnailBlob)
       .then((url) => {
+        objectUrl = url;
         if (mounted) {
           setImageUrl(url);
           setLoading(false);
+        } else {
+          URL.revokeObjectURL(url);
         }
       })
       .catch((err) => {
@@ -58,9 +65,7 @@ function PhotoGridItem({ photo, index, onClick }: PhotoGridItemProps) {
 
     return () => {
       mounted = false;
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [photo.thumbnailBlob]);
 

@@ -41,6 +41,17 @@ export function buildQuickMemoryTemplates(personNames: string[], placeName: stri
   return [];
 }
 
+export function buildMemoryContentTemplates(personNames: string[], placeName: string) {
+  const peopleLabel = formatPeopleLabel(personNames);
+  return uniqueTemplates([
+    peopleLabel && placeName ? `和${peopleLabel}在${placeName}：` : "",
+    peopleLabel ? `和${peopleLabel}聊到：` : "",
+    placeName ? `${placeName}这次体验：` : "",
+    "今天发生了：\n下次可以：",
+    "值得记住的是：\n当时的感受："
+  ]);
+}
+
 export function formatPeopleLabel(personNames: string[]) {
   const names = personNames.map((name) => name.trim()).filter(Boolean);
   if (!names.length) return "";
