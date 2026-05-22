@@ -97,6 +97,7 @@
   justify-content: center;
   gap: 6px;
   min-height: 34px;
+  line-height: 1;
 }
 
 .update-check-meta {
@@ -155,16 +156,49 @@
 
 .update-check-actions {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 10px;
   align-items: center;
 }
 
+.update-check-actions .link-action,
 .update-check-actions .mini-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 42px;
+  margin-top: 0;
+  padding-block: 0;
+  font-size: 13px;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.update-check-actions .link-action {
+  padding-inline: 14px;
+}
+
+.update-check-actions .mini-action {
   padding-inline: 14px;
   color: var(--primary);
   background: var(--soft-purple);
+}
+
+.update-check-actions svg {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.update-download-hint {
+  grid-column: 1 / -1;
+  margin: -2px 0 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .release-note-head {
@@ -714,6 +748,11 @@
   .update-check-actions,
   .feedback-actions {
     grid-template-columns: 1fr;
+  }
+
+  .update-check-actions .link-action,
+  .update-check-actions .mini-action {
+    width: 100%;
   }
 }
 
@@ -1981,6 +2020,9 @@
 
 .anniversary-scroll-wrapper {
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .anniversary-scroll-wrapper::after {
@@ -1992,6 +2034,22 @@
   height: 100%;
   pointer-events: none;
   background: linear-gradient(to right, transparent, var(--bg-color));
+}
+
+.anniversary-scroll-wrapper .anniversary-scroll {
+  margin: 0;
+  padding: 0 0 8px;
+  scroll-padding-inline: 0;
+}
+
+.anniversary-scroll-wrapper .anniversary-card {
+  flex: 0 0 min(82vw, 320px);
+  min-width: 0;
+  max-width: min(82vw, 320px);
+}
+
+.anniversary-scroll-wrapper .anniversary-card:last-child {
+  margin-right: 24px;
 }
 
 .favorite-toggle {

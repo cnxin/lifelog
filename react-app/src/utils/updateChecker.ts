@@ -1,12 +1,14 @@
 import { APP_VERSION } from "../constants/version";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/cnxin/lifelog/releases/latest";
+const UPDATE_MANIFEST_URL = "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/update-manifest.json";
 
 export interface AppUpdateInfo {
   currentVersion: string;
   latestVersion: string;
   releaseUrl: string;
   apkUrl: string;
+  mirrorApkUrl: string;
   apkName: string;
   apkSize: number;
   body: string;
@@ -21,6 +23,17 @@ interface GitHubReleaseAsset {
   size?: number;
 }
 
+interface UpdateManifestPayload {
+  version?: string;
+  releaseUrl?: string;
+  apkUrl?: string;
+  mirrorApkUrl?: string;
+  apkName?: string;
+  apkSize?: number;
+  body?: string;
+  publishedAt?: string;
+}
+
 interface GitHubReleasePayload {
   tag_name?: string;
   html_url?: string;
@@ -30,6 +43,13 @@ interface GitHubReleasePayload {
 }
 
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
+  try {
+    const manifest = await fetchUpdateManifest();
+    if (manifest) return parseUpdateManifestPayload(manifest, APP_VERSION);
+  } catch (error) {
+    console.warn("更新清单读取失败，回退到 GitHub Release:", error);
+  }
+
   const response = await fetch(LATEST_RELEASE_URL, {
     headers: {
       Accept: "application/vnd.github+json"
@@ -44,6 +64,35 @@ export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
   return parseGitHubReleasePayload(payload, APP_VERSION);
 }
 
+async function fetchUpdateManifest() {
+  const response = await fetch(`${UPDATE_MANIFEST_URL}?t=${Date.now()}`, {
+    cache: "no-store"
+  });
+  if (!response.ok) return null;
+  return (await response.json()) as UpdateManifestPayload;
+}
+
+export function parseUpdateManifestPayload(payload: UpdateManifestPayload, currentVersion = APP_VERSION): AppUpdateInfo {
+  const latestVersion = normalizeVersion(payload.version || "");
+  if (!latestVersion) {
+    throw new Error("更新清单没有版本号");
+  }
+
+  return {
+    currentVersion,
+    latestVersion,
+    releaseUrl: payload.releaseUrl || `https://github.com/cnxin/lifelog/releases/tag/v${latestVersion}`,
+    apkUrl: payload.apkUrl || "",
+    mirrorApkUrl: payload.mirrorApkUrl || "",
+    apkName: payload.apkName || `lifelog-v${latestVersion}.apk`,
+    apkSize: typeof payload.apkSize === "number" ? payload.apkSize : 0,
+    body: payload.body || "",
+    publishedAt: payload.publishedAt || "",
+    checkedAt: new Date().toISOString(),
+    hasUpdate: compareVersions(latestVersion, currentVersion) > 0
+  };
+}
+
 export function parseGitHubReleasePayload(payload: GitHubReleasePayload, currentVersion = APP_VERSION): AppUpdateInfo {
   const latestVersion = normalizeVersion(payload.tag_name || "");
   if (!latestVersion) {
@@ -56,6 +105,7 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
     latestVersion,
     releaseUrl: payload.html_url || `https://github.com/cnxin/lifelog/releases/tag/v${latestVersion}`,
     apkUrl: apkAsset?.browser_download_url || "",
+    mirrorApkUrl: apkAsset?.name ? buildJsDelivrApkUrl(latestVersion, apkAsset.name) : "",
     apkName: apkAsset?.name || "",
     apkSize: typeof apkAsset?.size === "number" ? apkAsset.size : 0,
     body: payload.body || "",
@@ -63,6 +113,10 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
     checkedAt: new Date().toISOString(),
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0
   };
+}
+
+function buildJsDelivrApkUrl(version: string, assetName: string) {
+  return `https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/${assetName || `lifelog-v${version}.apk`}`;
 }
 
 export function compareVersions(left: string, right: string) {

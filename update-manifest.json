@@ -1,0 +1,10 @@
+{
+  "version": "0.1.0-test.64",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.64",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.64/lifelog-v0.1.0-test.64.apk",
+  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/lifelog-v0.1.0-test.64.apk",
+  "apkName": "lifelog-v0.1.0-test.64.apk",
+  "apkSize": 3591383,
+  "publishedAt": "2026-05-22T06:47:58Z",
+  "body": "- 修复首页未来 30 天纪念日横向卡片右侧露出异常边框的问题。\n- 修复日历中点击下个月日期时不显示该日期纪念日的问题。\n- 更新检查优先读取 CDN 更新清单，下载 APK 优先走 jsDelivr，保留 GitHub 备用入口。\n- 统一更新区下载、复制、备用和 Release 按钮的高度、图标和文字水平对齐。"
+}

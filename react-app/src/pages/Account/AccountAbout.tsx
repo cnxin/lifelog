@@ -44,6 +44,9 @@ export default function AccountAbout() {
     });
   }
 
+  const downloadUrl = latestUpdate?.mirrorApkUrl || latestUpdate?.apkUrl || latestUpdate?.releaseUrl || "";
+  const githubDownloadUrl = latestUpdate?.apkUrl || latestUpdate?.releaseUrl || "";
+
   return (
     <section className="section">
       <div className="section-header">
@@ -65,12 +68,12 @@ export default function AccountAbout() {
                   ? latestUpdate.hasUpdate
                     ? `发现 ${latestUpdate.latestVersion}`
                     : "当前已是最新"
-                  : "检查 GitHub 最新版本"}
+                  : "检查最新版本"}
               </strong>
               <small>
                 {latestUpdate
                   ? `当前版本 ${latestUpdate.currentVersion} · 最新版本 ${latestUpdate.latestVersion}`
-                  : "联网检查 Release，并打开 APK 下载页面。"}
+                  : "优先读取 CDN 更新清单，GitHub Release 作为备用。"}
               </small>
             </div>
             <button className="mini-action add" type="button" onClick={() => void handleCheckUpdate()} disabled={isChecking}>
@@ -108,16 +111,22 @@ export default function AccountAbout() {
           )}
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
-              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownloadUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
-                <Download /> 用外部浏览器下载 APK
+              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownloadUrl(downloadUrl)}>
+                <Download /> CDN 下载 APK
               </button>
-              <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
+              <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(downloadUrl)}>
                 <Copy size={14} />
                 复制链接
               </button>
+              {latestUpdate.mirrorApkUrl && (
+                <button className="mini-action" type="button" onClick={() => void openApkDownloadUrl(githubDownloadUrl)}>
+                  GitHub 备用
+                </button>
+              )}
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
+              <p className="update-download-hint">大陆网络优先使用 CDN 下载；如果仍然很慢，请复制链接到浏览器或改用 GitHub 备用入口。</p>
             </div>
           )}
         </GlassCard>

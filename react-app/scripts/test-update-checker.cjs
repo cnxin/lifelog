@@ -22,7 +22,7 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { compareVersions, formatFileSize, parseGitHubReleasePayload } = loadTs("src/utils/updateChecker.ts");
+const { compareVersions, formatFileSize, parseGitHubReleasePayload, parseUpdateManifestPayload } = loadTs("src/utils/updateChecker.ts");
 
 const cases = [
   ["0.1.0-test.61", "0.1.0-test.60", 1],
@@ -66,6 +66,23 @@ if (!parsed.hasUpdate || parsed.apkSize !== 3587759 || parsed.apkName !== "lifel
 if (formatFileSize(3587759) !== "3.4 MB") {
   failures += 1;
   console.error(`[formatFileSize] expected 3.4 MB, actual ${formatFileSize(3587759)}`);
+}
+
+const manifest = parseUpdateManifestPayload(
+  {
+    version: "v0.1.0-test.64",
+    releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.64",
+    apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.64/lifelog-v0.1.0-test.64.apk",
+    mirrorApkUrl: "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/lifelog-v0.1.0-test.64.apk",
+    apkName: "lifelog-v0.1.0-test.64.apk",
+    apkSize: 3591000
+  },
+  "0.1.0-test.63"
+);
+
+if (!manifest.hasUpdate || manifest.latestVersion !== "0.1.0-test.64" || !manifest.mirrorApkUrl.includes("cdn.jsdelivr.net")) {
+  failures += 1;
+  console.error(`[parseUpdateManifestPayload] unexpected payload: ${JSON.stringify(manifest)}`);
 }
 
 if (failures) {

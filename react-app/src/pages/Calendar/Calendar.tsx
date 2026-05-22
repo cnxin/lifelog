@@ -4,20 +4,13 @@ import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { formatCalendarLunarSummary, formatMonthDay, getLunarDateInfo } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
-
-type CalendarItem = {
-  id: string;
-  dateKey: string;
-  title: string;
-  subtitle: string;
-  subtitleLines?: string[];
-  content?: string;
-  tagItems?: string[];
-  type: "person" | "memory";
-  target: string;
-};
+import { formatMonthDay, getLunarDateInfo } from "../../utils/date";
+import {
+  buildCalendarItemsForDateRange,
+  buildCalendarMonthDays,
+  groupCalendarItemsByDate,
+  toCalendarDateKey
+} from "../../utils/calendarItems";
 
 const weekDays = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -26,31 +19,39 @@ export default function Calendar() {
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedDate, setSelectedDate] = useState(toDateKey(today));
+  const [selectedDate, setSelectedDate] = useState(toCalendarDateKey(today));
   const [showLunar, setShowLunar] = useState(true);
-  const todayKey = toDateKey(today);
+  const todayKey = toCalendarDateKey(today);
 
-  const monthDays = useMemo(() => buildMonthDays(cursor), [cursor]);
-  const items = useMemo(() => buildCalendarItems(cursor, state, getPersonName, getPlaceName), [
-    cursor,
+  const monthDays = useMemo(() => buildCalendarMonthDays(cursor), [cursor]);
+  const calendarRange = useMemo(
+    () => ({
+      start: monthDays[0]?.dateKey || toCalendarDateKey(cursor),
+      end: monthDays[monthDays.length - 1]?.dateKey || toCalendarDateKey(cursor)
+    }),
+    [cursor, monthDays]
+  );
+  const items = useMemo(() => buildCalendarItemsForDateRange(calendarRange.start, calendarRange.end, state, getPersonName, getPlaceName), [
+    calendarRange.end,
+    calendarRange.start,
     getPersonName,
     getPlaceName,
     state
   ]);
-  const itemsByDate = useMemo(() => groupByDate(items), [items]);
+  const itemsByDate = useMemo(() => groupCalendarItemsByDate(items), [items]);
   const selectedItems = itemsByDate[selectedDate] || [];
   const selectedLunar = getLunarDateInfo(selectedDate);
 
   function moveMonth(offset: number) {
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
     setCursor(next);
-    setSelectedDate(toDateKey(new Date(next.getFullYear(), next.getMonth(), 1)));
+    setSelectedDate(toCalendarDateKey(new Date(next.getFullYear(), next.getMonth(), 1)));
   }
 
   function backToToday() {
     const now = new Date();
     setCursor(new Date(now.getFullYear(), now.getMonth(), 1));
-    setSelectedDate(toDateKey(now));
+    setSelectedDate(toCalendarDateKey(now));
   }
 
   return (
@@ -153,83 +154,4 @@ export default function Calendar() {
       </section>
     </>
   );
-}
-
-function buildMonthDays(cursor: Date) {
-  const year = cursor.getFullYear();
-  const month = cursor.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const startOffset = (firstDay.getDay() + 6) % 7;
-  const start = new Date(year, month, 1 - startOffset);
-
-  return Array.from({ length: 42 }, (_, index) => {
-    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
-    return {
-      date,
-      dateKey: toDateKey(date),
-      inMonth: date.getMonth() === month
-    };
-  });
-}
-
-function buildCalendarItems(
-  cursor: Date,
-  state: ReturnType<typeof useLifeLog>["state"],
-  getPersonName: (id: string) => string,
-  getPlaceName: (id: string) => string
-): CalendarItem[] {
-  const year = cursor.getFullYear();
-  const month = cursor.getMonth();
-  const peopleItems = state.people.flatMap((person) =>
-    person.anniversaries
-      .map((anniversary) => {
-        const date = new Date(`${anniversary.date}T00:00:00`);
-        const eventDate = new Date(year, date.getMonth(), date.getDate());
-        const dateKey = toDateKey(eventDate);
-        const summary = formatCalendarLunarSummary(dateKey);
-        return {
-          id: `person-${person.id}-${anniversary.title}`,
-          dateKey,
-          title: `${person.name} · ${anniversary.title}`,
-          subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
-          subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
-          type: "person" as const,
-          target: `/people/${person.id}#anniversaries`
-        };
-      })
-      .filter((item) => new Date(`${item.dateKey}T00:00:00`).getMonth() === month)
-  );
-
-  const memoryItems = state.memories
-    .filter((memory) => new Date(`${memory.date}T00:00:00`).getMonth() === month)
-    .map((memory) => {
-      const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-      const content = isManualTitle(memory) ? memory.content.trim() : "";
-      return {
-        id: `memory-${memory.id}`,
-        dateKey: memory.date,
-        title: getMemoryDisplayTitle(memory, ctx),
-        subtitle: [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ") || "未关联",
-        content,
-        tagItems: [memory.mood, ...(memory.tags || [])].filter(Boolean),
-        type: "memory" as const,
-        target: `/memories/${memory.id}`
-      };
-    });
-
-  return [...peopleItems, ...memoryItems].sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-}
-
-function groupByDate(items: CalendarItem[]) {
-  return items.reduce<Record<string, CalendarItem[]>>((acc, item) => {
-    acc[item.dateKey] = [...(acc[item.dateKey] || []), item];
-    return acc;
-  }, {});
-}
-
-function toDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

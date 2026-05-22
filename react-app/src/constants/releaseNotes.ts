@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.64",
+    date: "2026-05-22",
+    title: "日历跨月、首页纪念日和国内下载优化",
+    highlights: [
+      "修复首页未来 30 天纪念日横向卡片右侧露出异常边框的问题。",
+      "修复日历中点击下个月日期时不显示该日期纪念日的问题。",
+      "更新检查优先读取 jsDelivr 更新清单，并提供 CDN 下载 APK 与 GitHub 备用入口。",
+      "统一更新区下载、复制、备用和 Release 按钮的高度、图标和文字水平对齐。"
+    ]
+  },
+  {
     version: "0.1.0-test.63",
     date: "2026-05-22",
     title: "APK 下载入口热修",
