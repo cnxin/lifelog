@@ -2,7 +2,7 @@
     "version":  "0.1.0-test.68",
     "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.68",
     "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.68/lifelog-v0.1.0-test.68.apk",
-    "mirrorApkUrl":  "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.68.apk",
+    "mirrorApkUrl":  "",
     "apkName":  "lifelog-v0.1.0-test.68.apk",
     "apkSize":  3595808,
     "publishedAt":  "2026-05-22T18:55:39Z",

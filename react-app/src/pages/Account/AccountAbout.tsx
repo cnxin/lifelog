@@ -7,7 +7,7 @@ import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openApkDownloadUrl, openExternalUrl } from "../../utils/externalLinks";
-import { checkLatestAppUpdate, formatFileSize, type AppUpdateInfo } from "../../utils/updateChecker";
+import { checkLatestAppUpdate, formatFileSize, getPreferredApkDownloadUrl, type AppUpdateInfo } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
   const notify = useToast();
@@ -44,7 +44,7 @@ export default function AccountAbout() {
     });
   }
 
-  const downloadUrl = latestUpdate?.mirrorApkUrl || latestUpdate?.apkUrl || latestUpdate?.releaseUrl || "";
+  const downloadUrl = getPreferredApkDownloadUrl(latestUpdate);
   return (
     <section className="section">
       <div className="section-header">
@@ -71,7 +71,7 @@ export default function AccountAbout() {
               <small>
                 {latestUpdate
                   ? `当前版本 ${latestUpdate.currentVersion} · 最新版本 ${latestUpdate.latestVersion}`
-                  : "优先读取 CDN 更新清单，GitHub Release 作为备用。"}
+                  : "同时读取 CDN 清单、GitHub raw 清单和 GitHub Release。"}
               </small>
             </div>
             <button className="mini-action add" type="button" onClick={() => void handleCheckUpdate()} disabled={isChecking}>
@@ -110,7 +110,7 @@ export default function AccountAbout() {
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
               <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownloadUrl(downloadUrl)}>
-                <Download /> CDN 下载 APK
+                <Download /> 下载 APK
               </button>
               <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(downloadUrl)}>
                 <Copy size={14} />
@@ -119,7 +119,7 @@ export default function AccountAbout() {
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
-              <p className="update-download-hint">大陆网络优先使用 CDN 下载；如果仍然很慢，请复制链接到浏览器，或进入 Release 页面手动选择 APK。</p>
+              <p className="update-download-hint">优先使用 GitHub Release APK；如果很慢，请复制链接到浏览器，或进入 Release 页面手动选择 APK。</p>
             </div>
           )}
         </GlassCard>
