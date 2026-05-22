@@ -156,9 +156,9 @@
 
 .update-check-actions {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  align-items: center;
+  align-items: stretch;
 }
 
 .update-check-actions .link-action,
@@ -177,6 +177,8 @@
 }
 
 .update-check-actions .link-action {
+  grid-column: 1 / -1;
+  width: 100%;
   padding-inline: 14px;
 }
 
@@ -184,6 +186,7 @@
   padding-inline: 14px;
   color: var(--primary);
   background: var(--soft-purple);
+  width: 100%;
 }
 
 .update-check-actions svg {

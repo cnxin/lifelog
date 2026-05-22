@@ -45,8 +45,6 @@ export default function AccountAbout() {
   }
 
   const downloadUrl = latestUpdate?.mirrorApkUrl || latestUpdate?.apkUrl || latestUpdate?.releaseUrl || "";
-  const githubDownloadUrl = latestUpdate?.apkUrl || latestUpdate?.releaseUrl || "";
-
   return (
     <section className="section">
       <div className="section-header">
@@ -118,15 +116,10 @@ export default function AccountAbout() {
                 <Copy size={14} />
                 复制链接
               </button>
-              {latestUpdate.mirrorApkUrl && (
-                <button className="mini-action" type="button" onClick={() => void openApkDownloadUrl(githubDownloadUrl)}>
-                  GitHub 备用
-                </button>
-              )}
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
-              <p className="update-download-hint">大陆网络优先使用 CDN 下载；如果仍然很慢，请复制链接到浏览器或改用 GitHub 备用入口。</p>
+              <p className="update-download-hint">大陆网络优先使用 CDN 下载；如果仍然很慢，请复制链接到浏览器，或进入 Release 页面手动选择 APK。</p>
             </div>
           )}
         </GlassCard>

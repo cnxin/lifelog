@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.65",
+    date: "2026-05-22",
+    title: "APK 外部下载和更新按钮布局修复",
+    highlights: [
+      "APK 下载改为 Android 原生 ACTION_VIEW 打开外部浏览器，修复点击下载没有反应的问题。",
+      "版本更新区改为下载按钮单独一行，复制链接和查看 Release 等宽并列一行。",
+      "移除挤压布局中的 GitHub 备用按钮，备用下载入口保留在 Release 页面。",
+      "统一更新按钮高度、图标尺寸和文字行高，提升小屏对齐稳定性。"
+    ]
+  },
+  {
     version: "0.1.0-test.64",
     date: "2026-05-22",
     title: "日历跨月、首页纪念日和国内下载优化",

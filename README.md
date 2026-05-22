@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/lifelog-v0.1.0-test.64.apk
+https://github.com/cnxin/lifelog/raw/main/lifelog-v0.1.0-test.65.apk
 ```
 
-当前版本：`0.1.0-test.64`
+当前版本：`0.1.0-test.65`
 
 ### 本地开发
 
@@ -65,10 +65,10 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 修复首页未来 30 天纪念日横向卡片右侧露出异常边框的问题。
-- 修复日历中点击下个月日期时不显示该日期纪念日的问题。
-- 更新检查优先读取 CDN 更新清单，下载 APK 优先走 jsDelivr，保留 GitHub 备用入口。
-- 统一更新区下载、复制、备用和 Release 按钮的高度、图标和文字水平对齐。
+- APK 下载改为 Android 原生外部浏览器打开，修复点击下载没有反应的问题。
+- 版本更新区改为下载按钮单独一行，复制链接和查看 Release 等宽并列一行。
+- 移除挤压布局中的 GitHub 备用按钮，备用下载入口保留在 Release 页面。
+- 统一更新按钮高度、图标尺寸和文字行高，提升小屏对齐稳定性。
 
 ## 📝 更新日志
 

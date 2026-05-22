@@ -1,7 +1,13 @@
 import { Browser } from "@capacitor/browser";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import type { Place } from "../types";
 import { buildAmapWebMarkerUrl } from "./placeLinks";
+
+interface NativeExternalBrowserPlugin {
+  open(options: { url: string }): Promise<void>;
+}
+
+const NativeExternalBrowser = registerPlugin<NativeExternalBrowserPlugin>("NativeExternalBrowser");
 
 export async function openExternalUrl(rawUrl: string) {
   const url = rawUrl.trim();
@@ -25,8 +31,14 @@ export async function openApkDownloadUrl(rawUrl: string) {
   if (!url) return;
 
   if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
-    window.location.href = buildAndroidViewIntentUrl(url);
-    return;
+    try {
+      await NativeExternalBrowser.open({ url });
+      return;
+    } catch (error) {
+      console.warn("原生外部浏览器打开失败，回退到系统链接:", error);
+      window.location.href = buildAndroidViewIntentUrl(url);
+      return;
+    }
   }
 
   await openExternalUrl(url);

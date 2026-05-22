@@ -14,6 +14,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(NativeExternalBrowserPlugin.class);
         captureShareText(getIntent());
         super.onCreate(savedInstanceState);
     }

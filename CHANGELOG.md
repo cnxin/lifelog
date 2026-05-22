@@ -1,5 +1,25 @@
 # 变更日志
 
+## v0.1.0-test.65 (2026-05-22)
+
+### 更新下载修复
+
+- APK 下载改为 Android 原生 `ACTION_VIEW` 打开外部浏览器，修复点击“CDN 下载 APK”没有反应的问题。
+- Web 端仍保留普通外链打开逻辑，Android 原生调用失败时回退到系统 intent URL。
+
+### 更新区 UI
+
+- 版本更新区改为“CDN 下载 APK”单独一行。
+- “复制链接”和“查看 Release”改为等宽并列一行，统一高度、图标尺寸、文字行高和水平对齐。
+- 移除挤压布局中的“GitHub 备用”按钮，备用下载能力保留在 Release 页面。
+
+### 发布
+
+- 生成签名 Android release APK：`lifelog-v0.1.0-test.65.apk`。
+- Android `versionCode` 更新为 `65`，`versionName` 更新为 `0.1.0-test.65`。
+
+---
+
 ## v0.1.0-test.64 (2026-05-22)
 
 ### 界面修复

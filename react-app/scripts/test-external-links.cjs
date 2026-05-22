@@ -17,7 +17,12 @@ function loadTs(relativeFile) {
   const module = { exports: {} };
   const localRequire = (id) => {
     if (id === "@capacitor/browser") return { Browser: { open: async () => undefined } };
-    if (id === "@capacitor/core") return { Capacitor: { isNativePlatform: () => false } };
+    if (id === "@capacitor/core") {
+      return {
+        Capacitor: { isNativePlatform: () => false },
+        registerPlugin: () => ({ open: async () => undefined })
+      };
+    }
     if (!id.startsWith(".")) return require(id);
     return loadTs(path.relative(projectRoot, path.resolve(path.dirname(filePath), `${id}.ts`)));
   };
