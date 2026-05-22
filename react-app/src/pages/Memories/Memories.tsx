@@ -1,17 +1,16 @@
-import { Heart, Image as ImageIcon, Plus, RotateCcw } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import MemoryCard from "../../components/MemoryCard";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
-import Tags from "../../components/Tags";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { MemoryEvent } from "../../types";
-import { formatMonthDay } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 
 export default function Memories() {
@@ -122,37 +121,15 @@ export default function Memories() {
         <div className="list">
           {memories.map((memory) => {
             const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-            const displayTitle = getMemoryDisplayTitle(memory, ctx);
-            const meta = [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ");
-            const showContentLine = isManualTitle(memory) && memory.content.trim();
             return (
-              <GlassCard className="memory-card" key={memory.id}>
-                <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
-                  <div className="memory-badge">
-                    <Heart />
-                  </div>
-                </button>
-                <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                  <div className="memory-title">
-                    <span>{displayTitle}</span>
-                    <span className="place-rating">{formatMonthDay(memory.date)}</span>
-                  </div>
-                  {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
-                  {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                  <div className="memory-tags-line">
-                    <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
-                    {(memory.photos || []).length > 0 && (
-                      <span className="memory-photo-count">
-                        <ImageIcon size={12} />
-                        {(memory.photos || []).length}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="person-side-actions">
-                  <CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />
-                </div>
-              </GlassCard>
+              <MemoryCard
+                key={memory.id}
+                memory={memory}
+                ctx={ctx}
+                onOpen={() => navigate(`/memories/${memory.id}`)}
+                showPhotoCount
+                actions={<CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />}
+              />
             );
           })}
           {!memories.length &&

@@ -41,12 +41,13 @@ export function buildQuickMemoryTemplates(personNames: string[], placeName: stri
   return [];
 }
 
-export function buildMemoryContentTemplates(personNames: string[], placeName: string) {
+export function buildMemoryContentTemplates(personNames: string[], placeNameOrNames: string | string[]) {
   const peopleLabel = formatPeopleLabel(personNames);
+  const placeNames = normalizePlaceNames(placeNameOrNames);
   return uniqueTemplates([
-    peopleLabel && placeName ? `和${peopleLabel}在${placeName}：` : "",
+    ...placeNames.map((placeName) => (peopleLabel ? `和${peopleLabel}在${placeName}：` : "")),
     peopleLabel ? `和${peopleLabel}聊到：` : "",
-    placeName ? `${placeName}这次体验：` : "",
+    ...placeNames.map((placeName) => `${placeName}这次体验：`),
     "今天发生了：\n下次可以：",
     "值得记住的是：\n当时的感受："
   ]);
@@ -62,4 +63,9 @@ export function formatPeopleLabel(personNames: string[]) {
 
 function uniqueTemplates(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+}
+
+function normalizePlaceNames(value: string | string[]) {
+  const rawNames = Array.isArray(value) ? value : value.split(/[、,，]/);
+  return rawNames.map((name) => name.trim()).filter(Boolean);
 }

@@ -255,6 +255,55 @@
   color: var(--primary);
 }
 
+.place-picker .person-picker-results {
+  padding: 6px;
+  display: grid;
+  max-height: 220px;
+}
+
+.place-picker .person-picker-results li {
+  display: block;
+}
+
+.place-picker .person-picker-results button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.place-option-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.place-option-title svg {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.place-option-title strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.place-option-subtitle {
+  display: -webkit-box;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .share-review-card {
   display: grid;
   gap: 12px;

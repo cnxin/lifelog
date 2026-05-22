@@ -14,7 +14,7 @@ import type {
 import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 import { removeMemoryPlaceId, getMemoryPlaceIds } from "../utils/memoryPlaces";
-import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
+import { inferProvince, normalizeCityName, normalizeStoredMall } from "../utils/placeMeta";
 
 const LEGACY_STORAGE_KEY = "lifelog-react-state-v1";
 
@@ -403,7 +403,7 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
       }),
       city: normalizeCityName(place.city || "杭州"),
       area: place.area || "未分组",
-      mall: (place as Place).mall || inferMallName(place.address || "") || place.area || "",
+      mall: normalizeStoredMall(place as Partial<Place>),
       storeName: place.storeName || "",
       address: place.address || "",
       latitude: place.latitude,

@@ -168,6 +168,16 @@ export function getPlaceMallName(fields: Pick<Place, "mall"> & Partial<Pick<Plac
   return isMallRecord(fields) ? normalizePlaceText(fields.name) : "";
 }
 
+export function normalizeStoredMall(
+  fields: Partial<Pick<Place, "mall" | "address" | "area">>
+) {
+  if (Object.prototype.hasOwnProperty.call(fields, "mall")) {
+    return normalizePlaceText(fields.mall);
+  }
+
+  return inferMallName(fields.address || "") || normalizePlaceText(fields.area);
+}
+
 export function isMallRecord(fields: Partial<Pick<Place, "name" | "category" | "storeName">>) {
   const category = normalizePlaceText(fields.category);
   const name = normalizePlaceText(fields.name);

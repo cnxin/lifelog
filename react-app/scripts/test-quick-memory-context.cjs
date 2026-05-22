@@ -82,6 +82,19 @@ const cases = [
       "今天发生了：\n下次可以：",
       "值得记住的是：\n当时的感受："
     ]
+  },
+  {
+    label: "content templates keep multiple places separate",
+    actual: buildMemoryContentTemplates(["小林"], ["蓝蛙", "Seesaw Coffee"]),
+    expected: [
+      "和小林在蓝蛙：",
+      "和小林在Seesaw Coffee：",
+      "和小林聊到：",
+      "蓝蛙这次体验：",
+      "Seesaw Coffee这次体验：",
+      "今天发生了：\n下次可以：",
+      "值得记住的是：\n当时的感受："
+    ]
   }
 ];
 

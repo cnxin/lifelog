@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.67",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.67",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.67/lifelog-v0.1.0-test.67.apk",
-  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.67.apk",
-  "apkName": "lifelog-v0.1.0-test.67.apk",
-  "apkSize": 3594695,
-  "publishedAt": "2026-05-22T09:54:55Z",
-  "body": "- 回忆关联地点支持多选，适配一次行程关联多家店铺。\n- 地点类型新增杂货店和服装店，分享解析同步增强。\n- 地点评分改为未获取状态，不再默认填入 4 分。\n- 修复美团链接被点评文本噪声误识别为大众点评的问题。\n- 地点照片支持本地上传，压缩后保存，也继续兼容图片 URL 输入。"
+    "version":  "0.1.0-test.68",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.68",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.68/lifelog-v0.1.0-test.68.apk",
+    "mirrorApkUrl":  "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.68.apk",
+    "apkName":  "lifelog-v0.1.0-test.68.apk",
+    "apkSize":  3595808,
+    "publishedAt":  "2026-05-22T18:55:39Z",
+    "body":  "- 修复地点清空商场 / 园区后重启又恢复的问题。\n- 回忆正文预制模板会按多个地点分开生成。\n- 回忆详情关联地点改为标题和地址两行展示。\n- 地点选择器支持搜索商场、分店、区域、城市和地址。\n- 首页、回忆列表和详情页统一回忆卡片，多地点显示自动压缩。"
 }

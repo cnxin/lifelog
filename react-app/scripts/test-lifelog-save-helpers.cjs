@@ -31,6 +31,7 @@ function loadTs(relativeFile) {
 }
 
 const { buildMemoryFromFormData, buildPlaceFromFormData } = loadTs("src/utils/lifelogHelpers.ts");
+const { normalizeStoredMall } = loadTs("src/utils/placeMeta.ts");
 
 const settings = {
   defaultCity: "杭州",
@@ -89,6 +90,9 @@ assertEqual("edited place keeps empty province", editedPlace.province, "");
 assertEqual("edited place keeps empty city", editedPlace.city, "");
 assertEqual("edited place keeps empty mall", editedPlace.mall, "");
 assertEqual("zero rating remains zero", editedPlace.rating, 0);
+
+assertEqual("normalization keeps explicitly empty mall", normalizeStoredMall({ address: "浙江省杭州市上城区延安路湖滨银泰", area: "", mall: "" }), "");
+assertEqual("normalization infers mall only for legacy missing field", normalizeStoredMall({ address: "浙江省杭州市上城区延安路湖滨银泰", area: "" }), "湖滨银泰");
 
 const people = [
   { id: "p1", name: "\u5c0f\u6797", nickname: "\u6797\u6797" },
@@ -192,4 +196,4 @@ if (failures) {
   process.exit(1);
 }
 
-console.log("LifeLog save helper regression passed: 23 cases.");
+console.log("LifeLog save helper regression passed: 25 cases.");

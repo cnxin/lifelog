@@ -30,7 +30,12 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { buildMemoryDisplayContext, getMemoryDisplayTitle } = loadTs("src/utils/memoryDisplay.ts");
+const {
+  buildMemoryDisplayContext,
+  buildMemoryMetaLine,
+  compactPlaceNames,
+  getMemoryDisplayTitle
+} = loadTs("src/utils/memoryDisplay.ts");
 
 let failures = 0;
 
@@ -89,6 +94,13 @@ const multiPlaceContext = buildMemoryDisplayContext(
   (id) => (id === "l1" ? "蓝蛙" : "Seesaw Coffee")
 );
 assertEqual("multi-place context joins place names", multiPlaceContext.placeName, "蓝蛙、Seesaw Coffee");
+assertEqual("two places stay expanded", compactPlaceNames(["蓝蛙", "Seesaw Coffee"]), "蓝蛙、Seesaw Coffee");
+assertEqual("many places are compacted", compactPlaceNames(["蓝蛙", "Seesaw Coffee", "茑屋书店", "电影院"]), "蓝蛙、Seesaw Coffee 等 4 个地点");
+assertEqual("meta line uses compact place list", buildMemoryMetaLine({
+  personNames: ["小林"],
+  placeName: "蓝蛙、Seesaw Coffee、茑屋书店",
+  placeNames: ["蓝蛙", "Seesaw Coffee", "茑屋书店"]
+}), "小林 · 蓝蛙、Seesaw Coffee 等 3 个地点");
 assertEqual(
   "valid context still builds person-place title",
   getMemoryDisplayTitle(makeMemory({ personIds: ["p1"], placeId: "l1" }), validContext),
@@ -100,4 +112,4 @@ if (failures) {
   process.exit(1);
 }
 
-console.log("Memory display regression passed: 6 cases.");
+console.log("Memory display regression passed: 9 cases.");

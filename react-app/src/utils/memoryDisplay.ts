@@ -58,3 +58,15 @@ export function buildMemoryDisplayContext(
     placeNames
   };
 }
+
+export function compactPlaceNames(placeNames: string[], visibleCount = 2): string {
+  const names = placeNames.map((name) => name.trim()).filter(Boolean);
+  if (names.length <= visibleCount) return names.join("、");
+  return `${names.slice(0, visibleCount).join("、")} 等 ${names.length} 个地点`;
+}
+
+export function buildMemoryMetaLine(ctx: MemoryDisplayContext) {
+  return [ctx.personNames.join("、"), compactPlaceNames(ctx.placeNames)]
+    .filter(Boolean)
+    .join(" · ");
+}

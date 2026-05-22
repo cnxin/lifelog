@@ -1,14 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import GlassCard from "./GlassCard";
-import Tags from "./Tags";
+import MemoryCard from "./MemoryCard";
 import type { MemoryDisplayContext, MemoryEvent } from "../types";
-import { formatMonthDay } from "../utils/date";
-import {
-  buildMemoryDisplayContext,
-  getMemoryDisplayTitle,
-  isManualTitle,
-} from "../utils/memoryDisplay";
+import { buildMemoryDisplayContext, compactPlaceNames } from "../utils/memoryDisplay";
 
 interface MemoryTimelineSectionProps {
   title: string;
@@ -52,32 +47,21 @@ export default function MemoryTimelineSection({
               <div className="list">
                 {group.memories.map((memory) => {
                   const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-                  const displayTitle = getMemoryDisplayTitle(memory, ctx);
-                  const showContentLine = isManualTitle(memory) && Boolean(memory.content.trim());
+                  const defaultRenderMeta = (item: MemoryEvent, itemCtx: MemoryDisplayContext, showContentLine: boolean) => (
+                    <>
+                      <p className="memory-desc memory-meta-line">{compactPlaceNames(itemCtx.placeNames) || "未关联地点"}</p>
+                      {showContentLine && <p className="memory-desc">{item.content}</p>}
+                    </>
+                  );
                   return (
-                    <GlassCard className="memory-card" key={memory.id}>
-                      <div className="memory-badge">♡</div>
-                      <div
-                        className="memory-info"
-                        onClick={() => navigate(`/memories/${memory.id}`)}
-                      >
-                        <div className="memory-title">
-                          <span>{displayTitle}</span>
-                          <span className="place-rating">{formatMonthDay(memory.date)}</span>
-                        </div>
-                        {renderMeta ? (
-                          renderMeta(memory, ctx, showContentLine)
-                        ) : (
-                          <>
-                            <p className="memory-desc memory-meta-line">{ctx.placeName || "未关联地点"}</p>
-                            {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                          </>
-                        )}
-                        <div className="memory-tags-line">
-                          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
-                        </div>
-                      </div>
-                    </GlassCard>
+                    <MemoryCard
+                      key={memory.id}
+                      memory={memory}
+                      ctx={ctx}
+                      icon="♡"
+                      onOpen={() => navigate(`/memories/${memory.id}`)}
+                      renderMeta={renderMeta || defaultRenderMeta}
+                    />
                   );
                 })}
               </div>

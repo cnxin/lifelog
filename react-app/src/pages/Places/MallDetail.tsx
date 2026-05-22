@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import MemoryCard from "../../components/MemoryCard";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
@@ -15,7 +16,7 @@ import {
   isSameMall,
   parseMallKey,
 } from "../../utils/placeMeta";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 
 export default function MallDetail() {
@@ -173,18 +174,13 @@ export default function MallDetail() {
             .map((memory) => {
               const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
               return (
-                <button
-                  className="vertical-detail-card detail-button glass-card"
+                <MemoryCard
                   key={memory.id}
-                  onClick={() => navigate(`/memories/${memory.id}`)}
-                >
-                  <strong className="truncate-text" style={{ width: "100%" }}>
-                    {getMemoryDisplayTitle(memory, ctx)}
-                  </strong>
-                  <span className="truncate-lines-2">
-                    {memory.content || "查看回忆详情"}
-                  </span>
-                </button>
+                  memory={memory}
+                  ctx={ctx}
+                  icon="♡"
+                  onOpen={() => navigate(`/memories/${memory.id}`)}
+                />
               );
             })}
         </div>

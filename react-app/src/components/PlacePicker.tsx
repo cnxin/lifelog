@@ -2,7 +2,15 @@ import { MapPin, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface PlacePickerProps {
-  places: Array<{ id: string; name: string }>;
+  places: Array<{
+    id: string;
+    name: string;
+    storeName?: string;
+    mall?: string;
+    area?: string;
+    city?: string;
+    address?: string;
+  }>;
   defaultSelected?: string[];
   value?: string[];
   onChange?: (ids: string[]) => void;
@@ -32,7 +40,8 @@ export default function PlacePicker({
     const q = query.trim().toLowerCase();
     return places
       .filter((place) => !selected.includes(place.id))
-      .filter((place) => (q ? place.name.toLowerCase().includes(q) : true))
+      .filter((place) => (q ? getPlaceSearchText(place).includes(q) : true))
+      .sort((left, right) => scorePlaceOption(right, q) - scorePlaceOption(left, q) || left.name.localeCompare(right.name, "zh-CN"))
       .slice(0, 12);
   }, [places, selected, query]);
 
@@ -84,7 +93,7 @@ export default function PlacePicker({
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={selected.length ? "继续添加地点" : "搜索地点名称"}
+              placeholder={selected.length ? "继续添加地点" : "搜索地点、商场、地址"}
               aria-label="搜索地点"
             />
           </div>
@@ -94,7 +103,11 @@ export default function PlacePicker({
               {filtered.map((place) => (
                 <li key={place.id}>
                   <button type="button" onClick={() => add(place.id)}>
-                    {place.name}
+                    <span className="place-option-title">
+                      <MapPin size={14} />
+                      <strong>{formatPlaceOptionTitle(place)}</strong>
+                    </span>
+                    <span className="place-option-subtitle">{formatPlaceOptionSubtitle(place)}</span>
                   </button>
                 </li>
               ))}
@@ -108,4 +121,61 @@ export default function PlacePicker({
       )}
     </div>
   );
+}
+
+type PickerPlace = PlacePickerProps["places"][number];
+
+function getPlaceSearchText(place: PickerPlace) {
+  return [
+    place.name,
+    place.storeName,
+    place.mall,
+    place.area,
+    place.city,
+    place.address
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function scorePlaceOption(place: PickerPlace, query: string) {
+  if (!query) return 0;
+
+  const fields = [
+    { value: place.name, score: 80 },
+    { value: place.storeName, score: 60 },
+    { value: place.mall, score: 45 },
+    { value: place.city, score: 30 },
+    { value: place.area, score: 25 },
+    { value: place.address, score: 20 }
+  ];
+
+  return fields.reduce((score, field) => {
+    const value = field.value?.toLowerCase() || "";
+    if (!value.includes(query)) return score;
+    return score + field.score + (value.startsWith(query) ? 10 : 0);
+  }, 0);
+}
+
+function formatPlaceOptionTitle(place: PickerPlace) {
+  return [place.name, place.storeName].filter(Boolean).join(" · ");
+}
+
+function formatPlaceOptionSubtitle(place: PickerPlace) {
+  const subtitle = uniqueParts([place.mall, place.area, place.city, place.address]).join(" · ");
+  return subtitle || "未设置地址";
+}
+
+function uniqueParts(parts: Array<string | undefined>) {
+  const seen = new Set<string>();
+
+  return parts
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .filter((part) => {
+      if (seen.has(part)) return false;
+      seen.add(part);
+      return true;
+    });
 }

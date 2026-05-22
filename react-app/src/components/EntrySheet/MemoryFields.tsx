@@ -72,7 +72,7 @@ export function MemoryFields({
   const previewPlace = previewPlaces.join("、");
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
   const quickTemplates = buildQuickMemoryTemplates(previewPeople, previewPlace);
-  const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlace);
+  const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlaces);
   const previewTitle =
     deriveMemorySummary(
       {
@@ -299,7 +299,7 @@ export function MemoryFields({
         <div className="content-template-grid">
           {buildMemoryContentTemplates(
             resolvePersonNames(selectedPersonIds, people),
-            resolvePlaceNames(fullPlaceIds, places).join("、")
+            resolvePlaceNames(fullPlaceIds, places)
           ).map((template) => (
             <button
               type="button"

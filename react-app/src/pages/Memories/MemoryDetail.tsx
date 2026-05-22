@@ -204,9 +204,9 @@ export default function MemoryDetail() {
         {places.length ? (
           <>
             {places.map((place) => (
-              <button className="detail-row detail-button glass-card" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
-                <strong>{getPlaceName(place.id)}</strong>
-                <span>{place.city} · {buildPlaceContextLine(place)}</span>
+              <button className="memory-place-row detail-button glass-card" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
+                <strong className="truncate-text">{getPlaceName(place.id)}</strong>
+                <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
               </button>
             ))}
           </>
@@ -233,4 +233,15 @@ export default function MemoryDetail() {
       />
     </>
   );
+}
+
+function formatPlaceAddressLine(place: {
+  country: string;
+  province: string;
+  city: string;
+  address: string;
+  area: string;
+  mall: string;
+}) {
+  return place.address || [place.province, place.city, buildPlaceContextLine(place)].filter(Boolean).join(" · ");
 }

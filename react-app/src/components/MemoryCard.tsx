@@ -1,0 +1,68 @@
+import { Heart, Image as ImageIcon } from "lucide-react";
+import type { ReactNode } from "react";
+import GlassCard from "./GlassCard";
+import Tags from "./Tags";
+import type { MemoryDisplayContext, MemoryEvent } from "../types";
+import { formatMonthDay } from "../utils/date";
+import {
+  buildMemoryMetaLine,
+  getMemoryDisplayTitle,
+  isManualTitle
+} from "../utils/memoryDisplay";
+
+interface MemoryCardProps {
+  memory: MemoryEvent;
+  ctx: MemoryDisplayContext;
+  onOpen: () => void;
+  actions?: ReactNode;
+  renderMeta?: (memory: MemoryEvent, ctx: MemoryDisplayContext, showContentLine: boolean) => ReactNode;
+  showPhotoCount?: boolean;
+  icon?: ReactNode;
+}
+
+export default function MemoryCard({
+  memory,
+  ctx,
+  onOpen,
+  actions,
+  renderMeta,
+  showPhotoCount = false,
+  icon
+}: MemoryCardProps) {
+  const displayTitle = getMemoryDisplayTitle(memory, ctx);
+  const showContentLine = isManualTitle(memory) && Boolean(memory.content.trim());
+  const meta = buildMemoryMetaLine(ctx);
+  const photoCount = (memory.photos || []).length;
+
+  return (
+    <GlassCard className="memory-card">
+      <button className="place-tap" onClick={onOpen} type="button">
+        <div className="memory-badge">{icon || <Heart />}</div>
+      </button>
+      <div className="memory-info" onClick={onOpen}>
+        <div className="memory-title">
+          <span>{displayTitle}</span>
+          <span className="place-rating">{formatMonthDay(memory.date)}</span>
+        </div>
+        {renderMeta ? (
+          renderMeta(memory, ctx, showContentLine)
+        ) : (
+          <>
+            {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
+            {showContentLine && <p className="memory-desc">{memory.content}</p>}
+          </>
+        )}
+        <div className="memory-tags-line">
+          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+          {showPhotoCount && photoCount > 0 && (
+            <span className="memory-photo-count">
+              <ImageIcon size={12} />
+              {photoCount}
+            </span>
+          )}
+        </div>
+      </div>
+      {actions && <div className="person-side-actions">{actions}</div>}
+    </GlassCard>
+  );
+}

@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
-import Tags from "../../components/Tags";
+import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { EntryType, MemoryEvent } from "../../types";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { initials } from "../../utils/text";
 
 export default function Home() {
@@ -192,24 +192,14 @@ export default function Home() {
           <div className="list">
             {recent.map((memory) => {
               const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-              const displayTitle = getMemoryDisplayTitle(memory, ctx);
-              const meta = [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ");
-              const showContentLine = isManualTitle(memory) && memory.content.trim();
               return (
-                <GlassCard className="memory-card" key={memory.id}>
-                  <button className="place-tap" onClick={() => navigate(`/memories/${memory.id}`)}>
-                    <div className="memory-badge">♡</div>
-                  </button>
-                  <div className="memory-info" onClick={() => navigate(`/memories/${memory.id}`)}>
-                    <div className="memory-title">
-                      <span>{displayTitle}</span>
-                      <span className="place-rating">{formatMonthDay(memory.date)}</span>
-                    </div>
-                    {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
-                    {showContentLine && <p className="memory-desc">{memory.content}</p>}
-                    <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
-                  </div>
-                </GlassCard>
+                <MemoryCard
+                  key={memory.id}
+                  memory={memory}
+                  ctx={ctx}
+                  icon="♡"
+                  onOpen={() => navigate(`/memories/${memory.id}`)}
+                />
               );
             })}
           </div>
