@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.63",
+    date: "2026-05-22",
+    title: "APK 下载入口热修",
+    highlights: [
+      "修复应用内打开 Chrome 更新时 APK 下载可能一直卡住的问题。",
+      "下载新版本 APK 改为调用 Android 外部浏览器 Intent，避免停留在应用内 Chrome Custom Tab。",
+      "新增复制下载链接按钮，可直接到 Chrome 或系统浏览器粘贴打开作为兜底。",
+      "新增外部链接回归测试，覆盖 APK 下载 Intent URL 生成。"
+    ]
+  },
+  {
     version: "0.1.0-test.62",
     date: "2026-05-22",
     title: "反馈诊断、提醒预览和更新中心增强",

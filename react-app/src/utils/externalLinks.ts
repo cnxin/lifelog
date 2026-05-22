@@ -20,6 +20,18 @@ export async function openExternalUrl(rawUrl: string) {
   window.location.href = url;
 }
 
+export async function openApkDownloadUrl(rawUrl: string) {
+  const url = rawUrl.trim();
+  if (!url) return;
+
+  if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
+    window.location.href = buildAndroidViewIntentUrl(url);
+    return;
+  }
+
+  await openExternalUrl(url);
+}
+
 export async function openNativeStoreUrl(rawUrl: string) {
   const url = rawUrl.trim();
   if (!url) return;
@@ -66,6 +78,10 @@ export async function openPlaceMap(place: Place) {
 
 function openSchemeUrl(url: string) {
   window.location.href = url;
+}
+
+export function buildAndroidViewIntentUrl(url: string) {
+  return `intent://${url.replace(/^https?:\/\//i, "")}#Intent;scheme=${url.startsWith("https://") ? "https" : "http"};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
 }
 
 function buildAmapUrl(place: Place) {

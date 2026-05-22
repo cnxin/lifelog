@@ -1,11 +1,12 @@
-import { Download, Info, RefreshCw } from "lucide-react";
+import { Copy, Download, Info, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import Tags from "../../components/Tags";
 import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
-import { openExternalUrl } from "../../utils/externalLinks";
+import { copyTextToClipboard } from "../../utils/diagnostics";
+import { openApkDownloadUrl, openExternalUrl } from "../../utils/externalLinks";
 import { checkLatestAppUpdate, formatFileSize, type AppUpdateInfo } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
@@ -33,6 +34,14 @@ export default function AccountAbout() {
     } finally {
       setIsChecking(false);
     }
+  }
+
+  async function handleCopyDownloadUrl(url: string) {
+    const copied = await copyTextToClipboard(url);
+    notify({
+      message: copied ? "下载链接已复制，可到 Chrome 粘贴打开" : "复制失败，请手动长按链接复制",
+      tone: copied ? "success" : "error"
+    });
   }
 
   return (
@@ -99,8 +108,12 @@ export default function AccountAbout() {
           )}
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
-              <button className="link-action detail-link-button" type="button" onClick={() => void openExternalUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
-                <Download /> 下载新版本 APK
+              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownloadUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
+                <Download /> 用外部浏览器下载 APK
+              </button>
+              <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(latestUpdate.apkUrl || latestUpdate.releaseUrl)}>
+                <Copy size={14} />
+                复制链接
               </button>
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release

@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/lifelog-v0.1.0-test.62.apk
+https://github.com/cnxin/lifelog/raw/main/lifelog-v0.1.0-test.63.apk
 ```
 
-当前版本：`0.1.0-test.62`
+当前版本：`0.1.0-test.63`
 
 ### 本地开发
 
@@ -65,10 +65,10 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 账号页更新中心增强，新增 APK 信息、发布时间、检查时间和 Release 摘要展示。
-- 新增反馈诊断入口，可复制测试诊断信息并打开 GitHub 反馈。
-- 提醒设置页新增未来 7 天提醒预览，提前看到会触发的生日、纪念日、联系和回忆提醒。
-- 回忆编辑新增正文结构化模板，照片预览加载生命周期也做了内存风险修复。
+- 修复应用内打开 Chrome 更新时 APK 下载可能一直卡住的问题。
+- 下载新版本 APK 改为调用 Android 外部浏览器，并新增复制下载链接兜底。
+- 保留 Release 页面查看入口，便于手动选择下载方式。
+- 新增外部链接回归测试，覆盖 APK 下载 Intent URL 生成。
 
 ## 📝 更新日志
 

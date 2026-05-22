@@ -1,5 +1,22 @@
 # 变更日志
 
+## v0.1.0-test.63 (2026-05-22)
+
+### APK 下载热修
+
+- 修复应用内打开 Chrome 更新时 APK 下载可能一直卡住的问题。
+- “下载新版本 APK”改为调用 Android 外部浏览器 Intent，避免继续停留在应用内 Chrome Custom Tab。
+- 新增“复制链接”按钮，可把 APK 下载链接复制到 Chrome 或系统浏览器手动打开。
+- 保留 Release 页面查看入口，方便用户切换下载方式。
+
+### 发布
+
+- 新增外部链接回归测试，覆盖 APK 下载 Intent URL 生成。
+- 生成签名 Android release APK：`lifelog-v0.1.0-test.63.apk`。
+- Android `versionCode` 更新为 `63`，`versionName` 更新为 `0.1.0-test.63`。
+
+---
+
 ## v0.1.0-test.62 (2026-05-22)
 
 ### 更新中心
