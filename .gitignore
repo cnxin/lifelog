@@ -10,6 +10,8 @@ react-app/android/.gradle/
 react-app/.gradle/
 react-app/.gradle-build-home/
 react-app/.tmp-chrome-webtest/
+*.apk
+!downloads/*.apk
 
 # IDE
 .vscode/

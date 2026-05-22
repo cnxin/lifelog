@@ -159,10 +159,10 @@ export default function AccountAbout() {
           <strong>技术栈</strong>
           <span>React 18 + TypeScript + Capacitor 8</span>
         </GlassCard>
-        <GlassCard className="detail-row">
+        <button className="glass-card detail-row github-project-row" type="button" onClick={() => void openExternalUrl("https://github.com/cnxin/lifelog")}>
           <strong>GitHub</strong>
           <span>github.com/cnxin/lifelog</span>
-        </GlassCard>
+        </button>
         <GlassCard className="settings-capability-overview">
           <div className="settings-capability-overview-head">
             <strong>当前能力</strong>

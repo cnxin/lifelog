@@ -204,6 +204,19 @@
   line-height: 1.5;
 }
 
+.github-project-row {
+  width: 100%;
+  border: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.github-project-row span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .release-note-head {
   display: flex;
   align-items: flex-start;

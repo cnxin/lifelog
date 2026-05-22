@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.65",
+  "version": "0.1.0-test.66",
   "type": "module",
   "scripts": {
     "dev": "vite",

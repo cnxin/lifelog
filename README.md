@@ -20,10 +20,12 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/lifelog-v0.1.0-test.65.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.66.apk
 ```
 
-当前版本：`0.1.0-test.65`
+当前版本：`0.1.0-test.66`
+
+如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
 ### 本地开发
 
@@ -65,10 +67,22 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- APK 下载改为 Android 原生外部浏览器打开，修复点击下载没有反应的问题。
-- 版本更新区改为下载按钮单独一行，复制链接和查看 Release 等宽并列一行。
-- 移除挤压布局中的 GitHub 备用按钮，备用下载入口保留在 Release 页面。
-- 统一更新按钮高度、图标尺寸和文字行高，提升小屏对齐稳定性。
+- 版本检查改为同时读取 CDN 清单、GitHub raw 清单和 GitHub latest Release，并选择最高版本。
+- 修复 jsDelivr 缓存停留在旧清单时，App 会把旧版本误判为最新版本的问题。
+- 仓库根目录移除历史 APK 和浏览器临时文件，历史安装包统一保留在 GitHub Release。
+- 账号关于页的 GitHub 项目行支持点击跳转到项目主页。
+
+## 仓库结构
+
+```text
+.
+├── react-app/             # React + Capacitor Android 应用源码
+├── downloads/             # 当前最新 APK 镜像文件，历史版本在 GitHub Releases
+├── docs/                  # 规划、迁移和产品说明文档
+├── update-manifest.json   # App 内更新清单
+├── CHANGELOG.md           # 版本变更记录
+└── README.md              # 项目说明
+```
 
 ## 📝 更新日志
 

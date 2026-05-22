@@ -1,5 +1,27 @@
 # 变更日志
 
+## v0.1.0-test.66 (2026-05-22)
+
+### 更新检查
+
+- 版本检查改为同时读取 CDN 清单、GitHub raw 清单和 GitHub latest Release，并选择最高版本。
+- 修复 jsDelivr `@main/update-manifest.json` 缓存停留在旧版本时，App 会把旧版本误判为最新版本的问题。
+- GitHub Release fallback 生成的 CDN APK 镜像路径改为 `downloads/` 下的最新 APK 文件。
+
+### 仓库整理
+
+- 仓库根目录移除历史 APK，历史安装包统一保留在 GitHub Release。
+- 移除已提交的 Chrome Web 测试临时目录，避免 main 分支包含大量缓存文件。
+- 新增 `downloads/` 目录保留当前最新 APK 镜像，README 补充下载、更新和仓库结构说明。
+- 账号关于页的 GitHub 项目行支持点击跳转到项目主页。
+
+### 发布
+
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.66.apk`。
+- Android `versionCode` 更新为 `66`，`versionName` 更新为 `0.1.0-test.66`。
+
+---
+
 ## v0.1.0-test.65 (2026-05-22)
 
 ### 更新下载修复

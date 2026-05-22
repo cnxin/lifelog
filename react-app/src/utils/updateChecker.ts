@@ -2,6 +2,7 @@ import { APP_VERSION } from "../constants/version";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/cnxin/lifelog/releases/latest";
 const UPDATE_MANIFEST_URL = "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/update-manifest.json";
+const RAW_UPDATE_MANIFEST_URL = "https://raw.githubusercontent.com/cnxin/lifelog/main/update-manifest.json";
 
 export interface AppUpdateInfo {
   currentVersion: string;
@@ -43,33 +44,65 @@ interface GitHubReleasePayload {
 }
 
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
-  try {
-    const manifest = await fetchUpdateManifest();
-    if (manifest) return parseUpdateManifestPayload(manifest, APP_VERSION);
-  } catch (error) {
-    console.warn("更新清单读取失败，回退到 GitHub Release:", error);
+  const candidates = await Promise.allSettled([fetchUpdateManifest(UPDATE_MANIFEST_URL), fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL), fetchLatestRelease()]);
+  const updates = candidates
+    .flatMap((candidate) => (candidate.status === "fulfilled" && candidate.value ? [candidate.value] : []))
+    .flatMap((payload) => parseUpdateCandidate(payload, APP_VERSION));
+
+  if (updates.length > 0) {
+    return chooseBestAppUpdate(updates, APP_VERSION);
   }
 
-  const response = await fetch(LATEST_RELEASE_URL, {
-    headers: {
-      Accept: "application/vnd.github+json"
-    }
-  });
+  throw new Error("没有读取到可用的更新信息");
+}
 
+function parseUpdateCandidate(payload: UpdateManifestPayload | GitHubReleasePayload, currentVersion = APP_VERSION) {
+  try {
+    return [isGitHubReleasePayload(payload) ? parseGitHubReleasePayload(payload, currentVersion) : parseUpdateManifestPayload(payload, currentVersion)];
+  } catch (error) {
+    console.warn("更新来源解析失败，跳过该来源:", error);
+    return [];
+  }
+}
+
+export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = APP_VERSION) {
+  const best = updates.sort((left, right) => compareVersions(right.latestVersion, left.latestVersion))[0];
+  if (compareVersions(best.latestVersion, currentVersion) >= 0) return best;
+
+  return {
+    ...best,
+    currentVersion,
+    latestVersion: currentVersion,
+    apkUrl: "",
+    mirrorApkUrl: "",
+    apkName: "",
+    apkSize: 0,
+    body: "",
+    hasUpdate: false
+  };
+}
+
+async function fetchLatestRelease() {
+  const response = await fetch(LATEST_RELEASE_URL, {
+    headers: { Accept: "application/vnd.github+json" },
+    cache: "no-store"
+  });
   if (!response.ok) {
     throw new Error(`GitHub 返回 ${response.status}`);
   }
-
-  const payload = (await response.json()) as GitHubReleasePayload;
-  return parseGitHubReleasePayload(payload, APP_VERSION);
+  return (await response.json()) as GitHubReleasePayload;
 }
 
-async function fetchUpdateManifest() {
-  const response = await fetch(`${UPDATE_MANIFEST_URL}?t=${Date.now()}`, {
+async function fetchUpdateManifest(url: string) {
+  const response = await fetch(`${url}?t=${Date.now()}`, {
     cache: "no-store"
   });
   if (!response.ok) return null;
   return (await response.json()) as UpdateManifestPayload;
+}
+
+function isGitHubReleasePayload(payload: UpdateManifestPayload | GitHubReleasePayload): payload is GitHubReleasePayload {
+  return "tag_name" in payload || "assets" in payload;
 }
 
 export function parseUpdateManifestPayload(payload: UpdateManifestPayload, currentVersion = APP_VERSION): AppUpdateInfo {
@@ -116,7 +149,7 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
 }
 
 function buildJsDelivrApkUrl(version: string, assetName: string) {
-  return `https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/${assetName || `lifelog-v${version}.apk`}`;
+  return `https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/${assetName || `lifelog-v${version}.apk`}`;
 }
 
 export function compareVersions(left: string, right: string) {

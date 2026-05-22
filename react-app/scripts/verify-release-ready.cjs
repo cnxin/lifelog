@@ -35,7 +35,7 @@ const version = String(packageJson.version || "");
 const versionCodeMatch = version.match(/test\.(\d+)$/);
 const versionCode = versionCodeMatch ? Number(versionCodeMatch[1]) : NaN;
 const apkName = `lifelog-v${version}.apk`;
-const apkPath = path.join(repoRoot, apkName);
+const apkPath = path.join(repoRoot, "downloads", apkName);
 
 expect(Boolean(version), "package.json is missing version");
 expect(Number.isFinite(versionCode), `Cannot derive versionCode from package version: ${version}`);
@@ -50,7 +50,7 @@ const releaseNotes = readText(releaseNotesPath);
 expect(releaseNotes.includes(`version: "${version}"`), `releaseNotes.ts is missing current version ${version}`);
 
 const readme = readText(readmePath);
-expect(readme.includes(apkName), `README.md is missing APK link ${apkName}`);
+expect(readme.includes(`downloads/${apkName}`), `README.md is missing APK link downloads/${apkName}`);
 expect(readme.includes(`当前版本：\`${version}\``), `README.md current version should be ${version}`);
 
 const changelog = readText(changelogPath);
@@ -70,6 +70,6 @@ const apk = fs.statSync(apkPath);
 const sha256 = getSha256(apkPath);
 
 console.log(`Release readiness check passed: ${version}`);
-console.log(`APK: ${apkName}`);
+console.log(`APK: downloads/${apkName}`);
 console.log(`Size: ${apk.size} bytes`);
 console.log(`SHA256: ${sha256}`);

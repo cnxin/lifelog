@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.66",
+    date: "2026-05-22",
+    title: "更新检查兜底和仓库文件整理",
+    highlights: [
+      "版本检查改为同时读取 CDN 清单、GitHub raw 清单和 GitHub latest Release，并选择最高版本。",
+      "修复 jsDelivr 缓存停留在旧清单时，App 会把旧版本误判为最新版本的问题。",
+      "仓库根目录移除历史 APK 和浏览器临时文件，历史安装包统一保留在 GitHub Release。",
+      "新增 downloads 目录保留当前最新 APK，README 补充下载、更新和仓库结构说明。"
+    ]
+  },
+  {
     version: "0.1.0-test.65",
     date: "2026-05-22",
     title: "APK 外部下载和更新按钮布局修复",

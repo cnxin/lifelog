@@ -22,7 +22,13 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { compareVersions, formatFileSize, parseGitHubReleasePayload, parseUpdateManifestPayload } = loadTs("src/utils/updateChecker.ts");
+const {
+  chooseBestAppUpdate,
+  compareVersions,
+  formatFileSize,
+  parseGitHubReleasePayload,
+  parseUpdateManifestPayload
+} = loadTs("src/utils/updateChecker.ts");
 
 const cases = [
   ["0.1.0-test.61", "0.1.0-test.60", 1],
@@ -83,6 +89,38 @@ const manifest = parseUpdateManifestPayload(
 if (!manifest.hasUpdate || manifest.latestVersion !== "0.1.0-test.64" || !manifest.mirrorApkUrl.includes("cdn.jsdelivr.net")) {
   failures += 1;
   console.error(`[parseUpdateManifestPayload] unexpected payload: ${JSON.stringify(manifest)}`);
+}
+
+const newerRelease = parseGitHubReleasePayload(
+  {
+    tag_name: "v0.1.0-test.65",
+    html_url: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65",
+    assets: [
+      {
+        name: "lifelog-v0.1.0-test.65.apk",
+        size: 3592347,
+        browser_download_url: "https://example.invalid/lifelog-65.apk"
+      }
+    ]
+  },
+  "0.1.0-test.64"
+);
+
+if (!newerRelease.hasUpdate || newerRelease.latestVersion !== "0.1.0-test.65" || !newerRelease.mirrorApkUrl.includes("/downloads/")) {
+  failures += 1;
+  console.error(`[parseGitHubReleasePayload latest fallback] unexpected payload: ${JSON.stringify(newerRelease)}`);
+}
+
+const staleOnly = chooseBestAppUpdate([manifest], "0.1.0-test.65");
+if (staleOnly.latestVersion !== "0.1.0-test.65" || staleOnly.hasUpdate || staleOnly.apkUrl || staleOnly.mirrorApkUrl) {
+  failures += 1;
+  console.error(`[chooseBestAppUpdate stale source] unexpected payload: ${JSON.stringify(staleOnly)}`);
+}
+
+const mixedSources = chooseBestAppUpdate([manifest, newerRelease], "0.1.0-test.64");
+if (!mixedSources.hasUpdate || mixedSources.latestVersion !== "0.1.0-test.65") {
+  failures += 1;
+  console.error(`[chooseBestAppUpdate mixed sources] unexpected payload: ${JSON.stringify(mixedSources)}`);
 }
 
 if (failures) {

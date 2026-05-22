@@ -1,6 +1,0 @@
-2026/05/12-16:39:36.432 6578 Creating DB D:\projects\lifelog-demo\react-app\.tmp-chrome-webtest\Default\IndexedDB\http_127.0.0.1_5173.indexeddb.leveldb since it was missing.
-2026/05/12-16:39:36.456 6578 Reusing MANIFEST D:\projects\lifelog-demo\react-app\.tmp-chrome-webtest\Default\IndexedDB\http_127.0.0.1_5173.indexeddb.leveldb/MANIFEST-000001
-2026/05/12-18:33:24.125 8e18 Level-0 table #5: started
-2026/05/12-18:33:24.150 8e18 Level-0 table #5: 21026 bytes OK
-2026/05/12-18:33:24.154 8e18 Delete type=0 #3
-2026/05/12-18:33:24.155 8e18 Manual compaction at level-0 from (begin) .. (end); will stop at (end)
