@@ -1,11 +1,11 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.66",
+  "version": "0.1.0-test.67",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --configLoader runner",
     "test:parser": "node scripts/test-place-share-parser.cjs",
     "test:helpers": "node scripts/test-lifelog-save-helpers.cjs",
     "test:quick-memory": "node scripts/test-quick-memory-context.cjs",

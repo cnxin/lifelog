@@ -11,6 +11,7 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
+import { hasMemoryPlace } from "../../utils/memoryPlaces";
 import { normalizePlacePlatformLinks } from "../../utils/placeLinks";
 import {
   buildMallKey,
@@ -38,7 +39,7 @@ export default function PlaceDetail() {
   }
 
   const relatedMemories = state.memories
-    .filter((memory) => memory.placeId === place.id)
+    .filter((memory) => hasMemoryPlace(memory, place.id))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const relatedPeople = Array.from(
@@ -65,7 +66,7 @@ export default function PlaceDetail() {
       id: "photos",
       icon: <Camera />,
       title: "补充照片",
-      desc: "添加图片链接后详情页会展示前三张照片。",
+      desc: "上传本地图片或添加图片链接后，详情页会展示前三张照片。",
       visible: !place.photos.length
     },
     {
@@ -180,7 +181,7 @@ export default function PlaceDetail() {
           </GlassCard>
           <GlassCard className="detail-row">
             <strong>评分</strong>
-            <span>{place.rating}</span>
+            <span>{place.rating ? place.rating : "未获取"}</span>
           </GlassCard>
         </div>
       </section>
@@ -236,7 +237,7 @@ export default function PlaceDetail() {
             ))}
           </div>
         ) : (
-          <GlassCard className="empty">还没有照片，可以编辑地点添加图片链接</GlassCard>
+          <GlassCard className="empty">还没有照片，可以编辑地点上传本地图片或添加图片链接</GlassCard>
         )}
       </section>
 

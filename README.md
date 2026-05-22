@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.66.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.67.apk
 ```
 
-当前版本：`0.1.0-test.66`
+当前版本：`0.1.0-test.67`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -67,10 +67,11 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 版本检查改为同时读取 CDN 清单、GitHub raw 清单和 GitHub latest Release，并选择最高版本。
-- 修复 jsDelivr 缓存停留在旧清单时，App 会把旧版本误判为最新版本的问题。
-- 仓库根目录移除历史 APK 和浏览器临时文件，历史安装包统一保留在 GitHub Release。
-- 账号关于页的 GitHub 项目行支持点击跳转到项目主页。
+- 回忆关联地点支持多选，适配一次行程去多个店铺的记录方式。
+- 地点类型新增杂货店和服装店，分享解析会识别便利店、超市和服饰类文本。
+- 地点评分改为“未获取”状态，不再给高德、美团或点评分享默认填入 4 分。
+- 修复美团链接被点评文本噪声误识别的问题，平台判断优先读取 URL。
+- 地点照片支持本地上传，压缩后保存，也继续兼容图片 URL 输入。
 
 ## 仓库结构
 

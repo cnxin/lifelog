@@ -13,6 +13,7 @@ import type {
 } from "../types";
 import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
+import { removeMemoryPlaceId, getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { inferMallName, inferProvince, normalizeCityName } from "../utils/placeMeta";
 
 const LEGACY_STORAGE_KEY = "lifelog-react-state-v1";
@@ -86,6 +87,24 @@ class LifeLogDatabase extends Dexie {
       photos: "id, memoryId, uploadedAt, order",
       reminderSettings: "key"
     });
+    this.version(8)
+      .stores({
+        people: "id, name, birthday, relationship, favorite",
+        places: "id, name, country, province, city, mall, area, category, favorite",
+        memories: "id, date, placeId, *placeIds, *personIds",
+        placeMergeHistory: "id, happenedAt",
+        appSettings: "key",
+        photos: "id, memoryId, uploadedAt, order",
+        reminderSettings: "key"
+      })
+      .upgrade((trans) => {
+        return trans
+          .table("memories")
+          .toCollection()
+          .modify((memory) => {
+            memory.placeIds = getMemoryPlaceIds(memory);
+          });
+      });
   }
 }
 
@@ -188,11 +207,11 @@ export async function deletePersonRecord(id: string) {
 export async function deletePlaceRecord(id: string) {
   await db.transaction("rw", db.places, db.memories, async () => {
     await db.places.delete(id);
-    const affected = await db.memories.where("placeId").equals(id).toArray();
+    const affected = await db.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id)).toArray();
     if (affected.length) {
       await Promise.all(
         affected.map((memory) =>
-          db.memories.put({ ...memory, placeId: "" })
+          db.memories.put(removeMemoryPlaceId(memory, id))
         )
       );
     }
@@ -397,6 +416,8 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
     memories: (input.memories || seedData.memories).map((memory) => ({
       ...memory,
       personIds: Array.isArray(memory.personIds) ? memory.personIds.filter(Boolean).map(String) : [],
+      placeId: typeof memory.placeId === "string" ? memory.placeId : "",
+      placeIds: getMemoryPlaceIds(memory as MemoryEvent),
       mood: memory.mood || "日常",
       tags: Array.isArray(memory.tags) ? memory.tags.filter(Boolean).map(String) : [],
       photos: Array.isArray(memory.photos) ? memory.photos.filter(Boolean).map(String) : []

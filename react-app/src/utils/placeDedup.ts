@@ -6,6 +6,7 @@ import type {
   PlaceMergePreview
 } from "../types";
 import { mergePlacePlatformLinks, normalizePlacePlatformLinks } from "./placeLinks";
+import { replaceMemoryPlaceId } from "./memoryPlaces";
 import { normalizePlaceText } from "./placeMeta";
 
 interface SignatureRule {
@@ -110,7 +111,7 @@ export function mergePlaceRecords(target: Place, source: Place) {
     mall: pickLongerName(target.mall, source.mall),
     storeName: pickLongerName(target.storeName, source.storeName),
     category: target.category !== "其他" ? target.category : source.category,
-    rating: Math.max(target.rating || 0, source.rating || 0) || 4,
+    rating: Math.max(target.rating || 0, source.rating || 0),
     address: pickLongerName(target.address, source.address),
     latitude: target.latitude ?? source.latitude,
     longitude: target.longitude ?? source.longitude,
@@ -125,10 +126,7 @@ export function mergePlaceRecords(target: Place, source: Place) {
 }
 
 export function mergeMemoryPlaceReferences(memories: MemoryEvent[], fromId: string, toId: string) {
-  return memories.map((memory) => ({
-    ...memory,
-    placeId: memory.placeId === fromId ? toId : memory.placeId
-  }));
+  return memories.map((memory) => replaceMemoryPlaceId(memory, fromId, toId));
 }
 
 function buildPlaceSignatures(place: Place) {

@@ -14,9 +14,10 @@ import {
 } from "../../utils/placeLinks";
 import { getPlacePlatformLink } from "../../utils/placeMeta";
 import NumberStepper from "../NumberStepper";
+import PlacePhotoInput from "../PlacePhotoInput";
 import SelectPicker from "../SelectPicker";
 
-const PLACE_CATEGORY_OPTIONS = ["餐厅", "咖啡厅", "电影院", "景点", "商场", "酒店", "公园", "书店", "医院", "学校", "公司", "其他"].map((item) => ({ value: item, label: item }));
+const PLACE_CATEGORY_OPTIONS = ["餐厅", "咖啡厅", "电影院", "景点", "商场", "酒店", "公园", "书店", "杂货店", "服装店", "医院", "学校", "公司", "其他"].map((item) => ({ value: item, label: item }));
 const BOOLEAN_OPTIONS = [
   { value: "true", label: "是" },
   { value: "false", label: "否" }
@@ -96,7 +97,7 @@ export function PlaceFields({
             min={0}
             max={5}
             step={0.1}
-            defaultValue={place?.rating ?? 4.5}
+            defaultValue={place?.rating ?? 0}
             label="地点评分"
           />
         </label>
@@ -132,14 +133,10 @@ export function PlaceFields({
       </div>
       <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
       <PlatformLinksEditor initialText={extractPlatformLinksText(place)} />
-      <label>
-        照片链接
-        <textarea
-          name="photos"
-          defaultValue={(place?.photos || []).join("\n")}
-          placeholder="每行一个图片链接，可以先粘贴高德或其他来源的图片 URL"
-        />
-      </label>
+      <div>
+        <span className="field-title">照片</span>
+        <PlacePhotoInput defaultValue={(place?.photos || []).join("\n")} />
+      </div>
       <p className="form-hint">详情页会展示前 3 张照片；链接失效时会自动隐藏。</p>
       <label>
         描述
@@ -164,7 +161,7 @@ function placeToDraft(place?: Partial<Place>): Partial<PlaceDraft> {
     mall: place.mall || "",
     storeName: place.storeName || "",
     category: place.category || "其他",
-    rating: place.rating || 4,
+    rating: place.rating || 0,
     address: place.address || "",
     latitude: place.latitude ? String(place.latitude) : "",
     longitude: place.longitude ? String(place.longitude) : "",
@@ -450,15 +447,10 @@ function QuickPlaceFields({
             placeholder="官网、攻略、笔记或其他参考链接"
           />
         </label>
-        <label>
-          照片链接
-          <textarea
-            name="photos"
-            value={draft.photos}
-            onChange={(event) => updateDraft({ photos: event.target.value })}
-            placeholder="每行一个图片链接"
-          />
-        </label>
+        <div>
+          <span className="field-title">照片</span>
+          <PlacePhotoInput value={draft.photos} onChange={(photos) => updateDraft({ photos })} />
+        </div>
         <PlatformLinksEditor
           initialText={draft.platformLinks}
           includeHiddenInput={false}
@@ -476,7 +468,7 @@ function QuickPlaceFields({
       </div>
 
       <input type="hidden" name="country" value={draft.country || "中国"} />
-      <input type="hidden" name="rating" value={draft.rating || 4} />
+      <input type="hidden" name="rating" value={draft.rating || 0} />
       <input type="hidden" name="favorite" value="false" />
       <input type="hidden" name="platformLinks" value={extractPlatformLinksTextFromDraft(draft)} />
       <p className="form-hint">如果是第一次录入，先保存核心信息即可；地点详情页里随时可以继续完善。</p>

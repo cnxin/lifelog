@@ -24,6 +24,7 @@ interface EntrySheetProps {
   initialPersonId?: string;
   initialPersonIds?: string[];
   initialPlaceId?: string;
+  initialPlaceIds?: string[];
   initialPlaceDraft?: Partial<Place>;
   initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
@@ -42,6 +43,7 @@ export default function EntrySheet({
   initialPersonId,
   initialPersonIds,
   initialPlaceId,
+  initialPlaceIds,
   initialPlaceDraft,
   initialPlaceShareReview,
   memoryMode = "full",
@@ -164,6 +166,7 @@ export default function EntrySheet({
               places={state.places}
               initialPersonIds={initialPersonIds || [initialPersonId || ""].filter(Boolean)}
               initialPlaceId={initialPlaceId}
+              initialPlaceIds={initialPlaceIds}
               mode={memoryMode}
               photos={photos}
               onPhotosChange={setPhotos}

@@ -79,8 +79,9 @@ export function normalizePlacePlatformLinks(value: unknown): PlaceExternalLink[]
       const label = String(link.label || "").trim();
 
       const platform = normalizePlatform(link.platform, label, url);
+      const labelConflictsWithUrl = doesLabelConflictWithUrl(label, url);
       return {
-        label: label || defaultPlatformLabel(platform),
+        label: labelConflictsWithUrl ? defaultPlatformLabel(platform) : label || defaultPlatformLabel(platform),
         platform,
         url
       };
@@ -104,8 +105,10 @@ export function createPlatformLink(url: string, label = ""): PlaceExternalLink |
   if (!trimmedUrl) return null;
 
   const platform = normalizePlatform(undefined, label, trimmedUrl);
+  const rawLabel = label.trim();
+  const labelConflictsWithUrl = doesLabelConflictWithUrl(rawLabel, trimmedUrl);
   return {
-    label: label.trim() || defaultPlatformLabel(platform),
+    label: labelConflictsWithUrl ? defaultPlatformLabel(platform) : rawLabel || defaultPlatformLabel(platform),
     platform,
     url: trimmedUrl
   };
@@ -128,12 +131,22 @@ export function inferPlatformFromLink(url: string, label = "", platform?: PlaceL
 
 function normalizePlatform(platform: unknown, label: unknown, url: string): PlaceLinkPlatform {
   const value = String(platform || "").trim();
+  const lowerLabel = String(label || "").trim().toLowerCase();
+  const lowerUrl = url.toLowerCase();
+  const urlPlatform = detectPlatformFromUrl(lowerUrl);
+  if (urlPlatform !== "custom") return urlPlatform;
+
   if (presetPlatformValues.has(value as PlaceLinkPlatform)) {
     return value as PlaceLinkPlatform;
   }
 
-  const lowerLabel = String(label || "").trim().toLowerCase();
-  const lowerUrl = url.toLowerCase();
+  const labelPlatform = detectPlatformFromLabel(lowerLabel);
+  if (labelPlatform !== "custom") return labelPlatform;
+
+  return "custom";
+}
+
+function detectPlatformFromLabel(lowerLabel: string): PlaceLinkPlatform {
   if (lowerLabel.includes("高德") || lowerLabel.includes("amap")) return "amap";
   if (lowerLabel.includes("美团") || lowerLabel.includes("meituan")) return "meituan";
   if (lowerLabel.includes("点评") || lowerLabel.includes("dianping")) return "dianping";
@@ -143,6 +156,10 @@ function normalizePlatform(platform: unknown, label: unknown, url: string): Plac
   if (lowerLabel.includes("腾讯") || lowerLabel.includes("qqmap") || lowerLabel.includes("tencent")) return "tencent";
   if (lowerLabel.includes("微信") || lowerLabel.includes("wechat") || lowerLabel.includes("weixin")) return "wechat";
   if (lowerLabel.includes("官网") || lowerLabel.includes("官方网站") || lowerLabel.includes("官方") || lowerLabel.includes("公众号") || lowerLabel.includes("official")) return "official";
+  return "custom";
+}
+
+function detectPlatformFromUrl(lowerUrl: string): PlaceLinkPlatform {
   if (lowerUrl.includes("amap.com") || lowerUrl.startsWith("amapuri://") || lowerUrl.startsWith("androidamap://")) return "amap";
   if (
     lowerUrl.includes("meituan.com") ||
@@ -186,6 +203,12 @@ function normalizePlatform(platform: unknown, label: unknown, url: string): Plac
     lowerUrl.startsWith("weixin://")
   ) return "wechat";
   return "custom";
+}
+
+function doesLabelConflictWithUrl(label: string, url: string) {
+  const labelPlatform = detectPlatformFromLabel(label.toLowerCase());
+  const urlPlatform = detectPlatformFromUrl(url.toLowerCase());
+  return Boolean(label && urlPlatform !== "custom" && labelPlatform !== "custom" && labelPlatform !== urlPlatform);
 }
 
 export function defaultPlatformLabel(platform: PlaceLinkPlatform) {

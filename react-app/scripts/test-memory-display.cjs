@@ -49,6 +49,7 @@ function makeMemory(patch) {
     date: "2026-05-20",
     personIds: [],
     placeId: "",
+    placeIds: [],
     mood: "",
     content: "",
     tags: [],
@@ -81,7 +82,13 @@ const validContext = buildMemoryDisplayContext(
   () => "小林",
   () => "蓝蛙"
 );
-assertEqual("valid context keeps person and place", validContext, { personNames: ["小林"], placeName: "蓝蛙" });
+assertEqual("valid context keeps person and place", validContext, { personNames: ["小林"], placeName: "蓝蛙", placeNames: ["蓝蛙"] });
+const multiPlaceContext = buildMemoryDisplayContext(
+  makeMemory({ placeId: "l1", placeIds: ["l1", "l2"] }),
+  () => "未关联人物",
+  (id) => (id === "l1" ? "蓝蛙" : "Seesaw Coffee")
+);
+assertEqual("multi-place context joins place names", multiPlaceContext.placeName, "蓝蛙、Seesaw Coffee");
 assertEqual(
   "valid context still builds person-place title",
   getMemoryDisplayTitle(makeMemory({ personIds: ["p1"], placeId: "l1" }), validContext),
@@ -93,4 +100,4 @@ if (failures) {
   process.exit(1);
 }
 
-console.log("Memory display regression passed: 5 cases.");
+console.log("Memory display regression passed: 6 cases.");

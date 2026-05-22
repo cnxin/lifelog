@@ -205,6 +205,20 @@ const placeCases = [
     }
   },
   {
+    label: "meituan link with dianping text noise",
+    input:
+      "从大众点评/美团复制的店铺链接\n店名：乐乐茶(湖滨银泰店)\n地址：杭州市上城区延安路湖滨银泰in77B区\nhttps://www.meituan.com/deal/poi/98765?utm=dianping",
+    expected: {
+      name: "乐乐茶",
+      storeName: "湖滨银泰店",
+      category: "咖啡厅",
+      city: "杭州",
+      mall: "湖滨银泰",
+      sourceType: "meituan",
+      platformLinks: "美团 | https://www.meituan.com/deal/poi/98765?utm=dianping"
+    }
+  },
+  {
     label: "dianping taste environment service card",
     input:
       "大众点评\n门店标题：M Stand(嘉里中心店)\n咖啡厅\n口味 4.7 环境 4.8 服务 4.6\n客单价：52\n门店地址：杭州市拱墅区延安路385号杭州嘉里中心1楼\nhttps://www.dianping.com/shop/l6X2",
@@ -290,6 +304,12 @@ const textCases = [
     actual: "platformLinksRoundTrip",
     input: "美团 | meituan://shop/1\n小红书 | https://xhslink.com/a1\n百度地图 | baidumap://map/place/detail?uid=1\nhttps://example.test/custom",
     expected: "美团 | meituan://shop/1\n小红书 | https://xhslink.com/a1\n百度地图 | baidumap://map/place/detail?uid=1\n链接 | https://example.test/custom"
+  },
+  {
+    label: "platform link url beats noisy label",
+    actual: "platformLinksParsed",
+    input: "大众点评 | https://www.meituan.com/deal/poi/98765?utm=dianping",
+    expected: [{ label: "美团", platform: "meituan", url: "https://www.meituan.com/deal/poi/98765?utm=dianping" }]
   }
 ];
 

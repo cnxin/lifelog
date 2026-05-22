@@ -69,5 +69,6 @@ function runTextCase(type, input) {
   if (type === "splitList") return splitList(input);
   if (type === "groupsToText") return groupsToText(input);
   if (type === "platformLinksRoundTrip") return platformLinksToText(parsePlatformLinksText(input));
+  if (type === "platformLinksParsed") return parsePlatformLinksText(input);
   throw new Error(`Unknown text case type: ${type}`);
 }

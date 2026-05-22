@@ -11,6 +11,7 @@ import { mergeMemoryPlaceReferences } from "./placeDedup";
 import { parsePlatformLinksText } from "./placeLinks";
 import { inferMallName, inferProvince, isMallRecord, normalizeCityName, normalizePlaceText } from "./placeMeta";
 import { buildMemoryTitle, inferQuickMemory } from "./memoryInference";
+import { getMemoryPlaceIds, normalizeMemoryPlaceIds } from "./memoryPlaces";
 import { splitLines, splitList } from "./text";
 
 export function uid(prefix: string) {
@@ -132,7 +133,12 @@ export function buildMemoryFromFormData({
   const rawTitle = String(formData.get("title") || "");
   const content = String(formData.get("content") || "");
   const memoryMode = String(formData.get("memoryMode") || "");
-  const selectedPlaceId = String(formData.get("placeId") || "");
+  const hasPlaceFields = formData.has("placeId") || formData.has("placeIds");
+  const selectedPlaceIds = formData
+    .getAll("placeIds")
+    .map((item) => String(item))
+    .filter(Boolean);
+  const selectedPlaceId = String(formData.get("placeId") || selectedPlaceIds[0] || "");
   const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
   const quickInference = inferQuickMemory({
     rawTitle,
@@ -149,6 +155,12 @@ export function buildMemoryFromFormData({
     : existing
       ? [legacyPersonId].filter(Boolean)
       : quickInference.personIds;
+  const inferredPlaceId = !existing ? quickInference.placeId : "";
+  const matchedPlaceIds = hasPlaceFields
+    ? normalizeMemoryPlaceIds(selectedPlaceIds.length ? selectedPlaceIds : inferredPlaceId ? [inferredPlaceId] : [], selectedPlaceId)
+    : existing
+      ? getMemoryPlaceIds(existing)
+      : normalizeMemoryPlaceIds(inferredPlaceId ? [inferredPlaceId] : [], selectedPlaceId);
   const memoryId = existing?.id || String(formData.get("memoryId") || "") || uid("m");
 
   return {
@@ -156,7 +168,8 @@ export function buildMemoryFromFormData({
     title: buildMemoryTitle(rawTitle, content),
     date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
     personIds: matchedPersonIds,
-    placeId: selectedPlaceId || (!existing ? quickInference.placeId : ""),
+    placeId: matchedPlaceIds[0] || "",
+    placeIds: matchedPlaceIds,
     mood: String(formData.get("mood") || (existing ? "" : settings.defaultMood)),
     content,
     tags: splitList(formData.get("tags")),
@@ -165,9 +178,9 @@ export function buildMemoryFromFormData({
 }
 
 function parseRating(value: string) {
-  if (!value) return 4;
+  if (!value) return 0;
   const rating = Number(value);
-  return Number.isFinite(rating) ? rating : 4;
+  return Number.isFinite(rating) ? rating : 0;
 }
 
 function parseOptionalNumber(value: FormDataEntryValue | null) {

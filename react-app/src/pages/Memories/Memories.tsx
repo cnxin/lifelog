@@ -12,6 +12,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import type { MemoryEvent } from "../../types";
 import { formatMonthDay } from "../../utils/date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "../../utils/memoryDisplay";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 
 export default function Memories() {
   const { state, getPersonName, getPlaceName, deleteEntry } = useLifeLog();
@@ -47,7 +48,7 @@ export default function Memories() {
 
         if (normalizedQuery && !content.includes(normalizedQuery)) return false;
         if (personFilter && !(memory.personIds || []).includes(personFilter)) return false;
-        if (placeFilter && memory.placeId !== placeFilter) return false;
+        if (placeFilter && !getMemoryPlaceIds(memory).includes(placeFilter)) return false;
         if (moodFilter && memory.mood !== moodFilter) return false;
         if (tagFilter && !(memory.tags || []).includes(tagFilter)) return false;
         return true;
@@ -189,10 +190,10 @@ function buildFilterOptions(memories: MemoryEvent[], getPersonName: (id: string)
       const name = getPersonName(personId);
       if (name) people.set(personId, name);
     });
-    if (memory.placeId) {
-      const placeName = getPlaceName(memory.placeId);
-      if (placeName) places.set(memory.placeId, placeName);
-    }
+    getMemoryPlaceIds(memory).forEach((placeId) => {
+      const placeName = getPlaceName(placeId);
+      if (placeName) places.set(placeId, placeName);
+    });
     if (memory.mood) moods.add(memory.mood);
     (memory.tags || []).filter(Boolean).forEach((tag) => tags.add(tag));
   });

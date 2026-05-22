@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.66",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.66",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.66/lifelog-v0.1.0-test.66.apk",
-  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.66.apk",
-  "apkName": "lifelog-v0.1.0-test.66.apk",
-  "apkSize": 3592835,
-  "publishedAt": "2026-05-22T08:17:55Z",
-  "body": "- 版本检查改为同时读取 CDN 清单、GitHub raw 清单和 GitHub latest Release，并选择最高版本。\n- 修复 jsDelivr 缓存停留在旧清单时，App 会把旧版本误判为最新版本的问题。\n- 仓库根目录移除历史 APK 和浏览器临时文件，历史安装包统一保留在 GitHub Release。\n- 新增 downloads 目录保留当前最新 APK，README 补充下载、更新和仓库结构说明。"
+  "version": "0.1.0-test.67",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.67",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.67/lifelog-v0.1.0-test.67.apk",
+  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.67.apk",
+  "apkName": "lifelog-v0.1.0-test.67.apk",
+  "apkSize": 3594695,
+  "publishedAt": "2026-05-22T09:54:55Z",
+  "body": "- 回忆关联地点支持多选，适配一次行程关联多家店铺。\n- 地点类型新增杂货店和服装店，分享解析同步增强。\n- 地点评分改为未获取状态，不再默认填入 4 分。\n- 修复美团链接被点评文本噪声误识别为大众点评的问题。\n- 地点照片支持本地上传，压缩后保存，也继续兼容图片 URL 输入。"
 }

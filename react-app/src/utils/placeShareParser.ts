@@ -464,6 +464,9 @@ function detectSourceType(text: string, url: string): PlaceSourceType {
   if (linkPlatform === "official") return "official";
 
   const value = `${text} ${url}`.toLowerCase();
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:meituan\.com|meishi\.meituan\.com|i\.meituan\.com)\b/.test(value) || /(?:imeituan|meituan|meituanwaimai):\/\//.test(value)) return "meituan";
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:dianping\.com|dpurl\.cn)\b/.test(value) || /(?:dianping|dianpingapp|dper):\/\//.test(value)) return "dianping";
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?amap\.com\b/.test(value) || /(?:amapuri|androidamap):\/\//.test(value)) return "amap";
   if (value.includes("xiaohongshu") || value.includes("xhslink") || value.includes("小红书")) return "xiaohongshu";
   if (value.includes("douyin") || value.includes("抖音")) return "douyin";
   if (value.includes("baidumap") || value.includes("map.baidu") || value.includes("百度地图")) return "baidu";
@@ -495,9 +498,11 @@ function inferCity(value = "") {
 }
 
 function inferCategory(value = "") {
-  if (/%\s*Arabica|Arabica|咖啡|咖啡厅|咖啡馆|Coffee|coffee|奶茶|茶饮|甜品|蛋糕|面包|烘焙|酒吧/.test(value)) return "咖啡厅";
+  if (/%\s*Arabica|Arabica|咖啡|咖啡厅|咖啡馆|Coffee|coffee|奶茶|茶饮|饮品|茶室|喜茶|乐乐茶|霸王茶姬|茶百道|甜品|蛋糕|面包|烘焙|酒吧/.test(value)) return "咖啡厅";
   if (/书店|书城|书屋/.test(value)) return "书店";
   if (/西餐|中餐|杭帮菜|川菜|粤菜|湘菜|火锅|烧烤|烤肉|烧鸟|拉面|寿司|牛排|日料|日本料理|韩餐|韩国料理|餐厅|料理|面馆|小吃|饭店|美食/.test(value)) return "餐厅";
+  if (/杂货|便利店|便利|超市|生鲜|盒马|罗森|全家|711|7-?eleven|mini mart|grocery/i.test(value)) return "杂货店";
+  if (/服装|衣服|女装|男装|童装|鞋|包|优衣库|zara|hm|h&m|ur|服饰|穿搭|买手店/i.test(value)) return "服装店";
   if (/商场|商城|购物中心|百货|Mall|mall|广场/.test(value)) return "商场";
   if (/酒店|宾馆|民宿/.test(value)) return "酒店";
   if (/影院|影城|电影/.test(value)) return "电影院";

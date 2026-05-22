@@ -1,5 +1,6 @@
 import type { LifeLogState, MemoryEvent, Person, Place } from "../types";
 import { isRecord } from "./lifelogHelpers";
+import { getMemoryPlaceIds } from "./memoryPlaces";
 
 export interface BackupHealthReport {
   status: "ok" | "warning";
@@ -85,12 +86,15 @@ function collectRawStateIssues(state: {
     const rawPersonIds = Array.isArray(memory.personIds) ? memory.personIds : [];
     missingPeopleRefs += rawPersonIds.filter((id) => typeof id === "string" && !personIds.has(id)).length;
 
-    const placeId = typeof memory.placeId === "string" ? memory.placeId : "";
-    if (placeId && !placeIds.has(placeId)) missingPlaceRefs += 1;
+    const memoryPlaceIds = getMemoryPlaceIds({
+      placeId: typeof memory.placeId === "string" ? memory.placeId : "",
+      placeIds: Array.isArray(memory.placeIds) ? memory.placeIds.filter((id): id is string => typeof id === "string") : []
+    });
+    missingPlaceRefs += memoryPlaceIds.filter((placeId) => !placeIds.has(placeId)).length;
   }
 
   if (missingPeopleRefs) issues.push(`${missingPeopleRefs} 处回忆关联了不存在的人物`);
-  if (missingPlaceRefs) issues.push(`${missingPlaceRefs} 条回忆关联了不存在的地点`);
+  if (missingPlaceRefs) issues.push(`${missingPlaceRefs} 处回忆关联了不存在的地点`);
 
   return issues;
 }

@@ -116,6 +116,7 @@ const quickMemory = buildMemoryFromFormData({
 assertEqual("quick memory infers date from title", quickMemory.date, "2026-05-19");
 assertEqual("quick memory infers person from title", quickMemory.personIds, ["p1"]);
 assertEqual("quick memory infers place from title", quickMemory.placeId, "l2");
+assertEqual("quick memory stores inferred place ids", quickMemory.placeIds, ["l2"]);
 assertEqual("quick memory parses tags", quickMemory.tags, ["日常", "值得记住"]);
 
 const contextualQuickMemory = buildMemoryFromFormData({
@@ -134,7 +135,27 @@ const contextualQuickMemory = buildMemoryFromFormData({
 });
 assertEqual("quick memory keeps contextual person", contextualQuickMemory.personIds, ["p2"]);
 assertEqual("quick memory keeps contextual place", contextualQuickMemory.placeId, "l1");
+assertEqual("quick memory stores contextual place ids", contextualQuickMemory.placeIds, ["l1"]);
 assertEqual("quick memory uses default mood when new mood empty", contextualQuickMemory.mood, "开心");
+
+const multiPlaceFormData = makeFormData({
+  memoryId: "m_multi",
+  title: "商场半日",
+  content: "先吃饭再喝咖啡",
+  date: "2026-05-20",
+  mood: "开心",
+  placeId: "l1"
+});
+multiPlaceFormData.append("placeIds", "l1");
+multiPlaceFormData.append("placeIds", "l2");
+const multiPlaceMemory = buildMemoryFromFormData({
+  formData: multiPlaceFormData,
+  people,
+  places,
+  settings
+});
+assertEqual("memory supports multiple place ids", multiPlaceMemory.placeIds, ["l1", "l2"]);
+assertEqual("memory primary place uses first selected place", multiPlaceMemory.placeId, "l1");
 
 const editedMemory = buildMemoryFromFormData({
   formData: makeFormData({
@@ -150,6 +171,7 @@ const editedMemory = buildMemoryFromFormData({
     date: "2026-05-19",
     personIds: ["p1"],
     placeId: "l1",
+    placeIds: ["l1"],
     mood: "开心",
     content: "\u65e7\u6b63\u6587",
     tags: ["old"],
@@ -161,7 +183,8 @@ const editedMemory = buildMemoryFromFormData({
 });
 assertEqual("edited memory keeps existing id", editedMemory.id, "m_existing");
 assertEqual("edited memory keeps empty mood", editedMemory.mood, "");
-assertEqual("edited memory clears place when form is empty", editedMemory.placeId, "");
+assertEqual("edited memory keeps place when form has no place controls", editedMemory.placeId, "l1");
+assertEqual("edited memory keeps place ids when form has no place controls", editedMemory.placeIds, ["l1"]);
 assertEqual("edited memory keeps existing photos when no photo ids passed", editedMemory.photos, ["photo-1"]);
 
 if (failures) {
@@ -169,4 +192,4 @@ if (failures) {
   process.exit(1);
 }
 
-console.log("LifeLog save helper regression passed: 18 cases.");
+console.log("LifeLog save helper regression passed: 23 cases.");

@@ -1,4 +1,5 @@
 import type { MemoryDisplayContext, MemoryEvent } from "../types";
+import { getMemoryPlaceIds } from "./memoryPlaces";
 
 const SENTENCE_SPLIT = /[。！？!?\n]/;
 const SUMMARY_MAX = 24;
@@ -46,10 +47,14 @@ export function buildMemoryDisplayContext(
     .filter(Boolean)
     .map(getPersonName)
     .filter((name) => Boolean(name) && name !== UNLINKED_PERSON_LABEL);
-  const placeName = memory.placeId ? getPlaceName(memory.placeId) : "";
+  const placeNames = getMemoryPlaceIds(memory)
+    .map(getPlaceName)
+    .filter((name) => Boolean(name) && name !== UNLINKED_PLACE_LABEL);
+  const placeName = placeNames.join("、");
 
   return {
     personNames,
-    placeName: placeName && placeName !== UNLINKED_PLACE_LABEL ? placeName : ""
+    placeName: placeName && placeName !== UNLINKED_PLACE_LABEL ? placeName : "",
+    placeNames
   };
 }

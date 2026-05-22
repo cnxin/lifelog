@@ -8,6 +8,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
 
@@ -44,10 +45,10 @@ export default function PersonDetail() {
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const relatedPlaces = Array.from(
-    new Set(relatedMemories.map((memory) => memory.placeId).filter(Boolean))
+    new Set(relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean))
   );
   const topPlaces = getTopRelatedItems(
-    relatedMemories.map((memory) => memory.placeId).filter(Boolean),
+    relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean),
     getPlaceName
   );
   const groupedMemories = groupMemoriesByMonth(relatedMemories);
@@ -279,4 +280,3 @@ function PreferenceBlocks({
     </div>
   );
 }
-

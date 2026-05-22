@@ -16,6 +16,7 @@ import {
   parseMallKey,
 } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 
 export default function MallDetail() {
   const navigate = useNavigate();
@@ -163,10 +164,10 @@ export default function MallDetail() {
           </h2>
         </div>
         <div className="list">
-          {state.memories
-            .filter((memory) =>
-              places.some((place) => place.id === memory.placeId),
-            )
+            {state.memories
+              .filter((memory) =>
+                getMemoryPlaceIds(memory).some((placeId) => places.some((place) => place.id === placeId)),
+              )
             .sort((a, b) => b.date.localeCompare(a.date))
             .slice(0, 8)
             .map((memory) => {

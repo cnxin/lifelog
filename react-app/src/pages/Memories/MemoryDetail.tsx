@@ -11,6 +11,7 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import { formatMonthDay } from "../../utils/date";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import type { Photo } from "../../types";
 
 export default function MemoryDetail() {
@@ -27,7 +28,8 @@ export default function MemoryDetail() {
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
   const photoIds = memory?.photos || [];
-  const place = state.places.find((item) => item.id === memory?.placeId);
+  const placeIds = memory ? getMemoryPlaceIds(memory) : [];
+  const places = state.places.filter((item) => placeIds.includes(item.id));
 
   // 加载照片
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function MemoryDetail() {
       icon: <MapPin />,
       title: "关联地点",
       desc: "关联后地点详情会自动串起去过的人和回忆。",
-      visible: !memory.placeId
+      visible: !placeIds.length
     },
     {
       id: "tags",
@@ -199,15 +201,14 @@ export default function MemoryDetail() {
             <MapPin /> 关联地点
           </h2>
         </div>
-        {place ? (
+        {places.length ? (
           <>
-            <button className="detail-row detail-button glass-card" onClick={() => navigate(`/places/${place.id}`)}>
-              <strong>{getPlaceName(memory.placeId)}</strong>
-              <span>{place.city} · {buildPlaceContextLine(place)}</span>
-            </button>
-            <button className="category-pill active detail-link-button" onClick={() => navigate(`/places/${place.id}`)}>
-              查看地点详情
-            </button>
+            {places.map((place) => (
+              <button className="detail-row detail-button glass-card" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
+                <strong>{getPlaceName(place.id)}</strong>
+                <span>{place.city} · {buildPlaceContextLine(place)}</span>
+              </button>
+            ))}
           </>
         ) : (
           <GlassCard className="empty">未关联地点，点击“编辑回忆”可以补充。</GlassCard>
@@ -226,7 +227,7 @@ export default function MemoryDetail() {
       <EntrySheet
         type={addingRelated ? "memory" : null}
         initialPersonIds={personIds}
-        initialPlaceId={memory.placeId}
+        initialPlaceIds={placeIds}
         memoryMode="quick"
         onClose={() => setAddingRelated(false)}
       />

@@ -420,7 +420,7 @@ export default function Places() {
                       <Star size={18} fill={place.favorite ? "currentColor" : "none"} />
                     </button>
                     <span className="place-rating">
-                      <Star /> {place.rating}
+                      <Star /> {place.rating ? place.rating : "未评分"}
                     </span>
                   </span>
                 </div>

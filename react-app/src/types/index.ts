@@ -85,6 +85,7 @@ export interface MemoryEvent {
   date: string;
   personIds: ID[];
   placeId: ID;
+  placeIds: ID[];
   mood: string;
   content: string;
   tags: string[];
@@ -94,6 +95,7 @@ export interface MemoryEvent {
 export interface MemoryDisplayContext {
   personNames: string[];
   placeName: string;
+  placeNames: string[];
 }
 
 export interface LifeLogState {

@@ -7,8 +7,8 @@ import { deriveMemorySummary } from "../../utils/memoryDisplay";
 import { buildDefaultQuickMemoryTitle, buildMemoryContentTemplates, buildQuickMemoryTemplates } from "../../utils/quickMemoryContext";
 import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
+import PlacePicker from "../PlacePicker";
 import { PhotoUploader } from "../PhotoUploader";
-import SelectPicker from "../SelectPicker";
 
 const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
 
@@ -18,6 +18,7 @@ export function MemoryFields({
   places,
   initialPersonIds = [],
   initialPlaceId,
+  initialPlaceIds = [],
   mode,
   photos,
   onPhotosChange,
@@ -28,6 +29,7 @@ export function MemoryFields({
   places: Array<{ id: string; name: string }>;
   initialPersonIds?: string[];
   initialPlaceId?: string;
+  initialPlaceIds?: string[];
   mode: "quick" | "full";
   photos: Photo[];
   onPhotosChange: (photos: Photo[]) => void;
@@ -35,20 +37,22 @@ export function MemoryFields({
 }) {
   const { settings } = useLifeLog();
   const selectedPersonIds = memory?.personIds?.length ? memory.personIds : initialPersonIds.filter(Boolean);
+  const selectedPlaceIds = getInitialPlaceIds(memory, initialPlaceId, initialPlaceIds);
   const todayValue = new Date().toISOString().slice(0, 10);
   const [quickDate, setQuickDate] = useState(todayValue);
   const [quickContent, setQuickContent] = useState(() =>
     !memory && mode === "quick"
       ? buildDefaultQuickMemoryTitle({
           personNames: resolvePersonNames(initialPersonIds, people),
-          placeName: resolvePlaceName(initialPlaceId, places)
+          placeName: resolvePlaceNames(getInitialPlaceIds(undefined, initialPlaceId, initialPlaceIds), places).join("、")
         })
       : ""
   );
   const [quickDetailsContent, setQuickDetailsContent] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => initialPersonIds.filter(Boolean));
-  const [quickPlaceId, setQuickPlaceId] = useState(initialPlaceId || "");
+  const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
+  const [fullPlaceIds, setFullPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [mood, setMood] = useState<string>(memory ? memory.mood : settings.defaultMood);
   const quickInferenceContent = detailsOpen ? quickDetailsContent : quickContent;
   const quickPreview = inferQuickMemory({
@@ -58,12 +62,14 @@ export function MemoryFields({
     places,
     fallbackDate: quickDate,
     selectedPersonIds: quickPersonIds,
-    selectedPlaceId: quickPlaceId
+    selectedPlaceId: quickPlaceIds[0] || ""
   });
   const previewPeople = quickPreview.personIds
     .map((personId) => people.find((person) => person.id === personId)?.name)
     .filter((name): name is string => Boolean(name));
-  const previewPlace = places.find((place) => place.id === quickPreview.placeId)?.name || "";
+  const previewPlaceIds = quickPlaceIds.length ? quickPlaceIds : [quickPreview.placeId].filter(Boolean);
+  const previewPlaces = resolvePlaceNames(previewPlaceIds, places);
+  const previewPlace = previewPlaces.join("、");
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
   const quickTemplates = buildQuickMemoryTemplates(previewPeople, previewPlace);
   const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlace);
@@ -74,13 +80,14 @@ export function MemoryFields({
         title: "",
         date: quickPreview.date,
         personIds: quickPreview.personIds,
-        placeId: quickPreview.placeId,
+        placeId: previewPlaceIds[0] || "",
+        placeIds: previewPlaceIds,
         mood: "",
         content: quickInferenceContent,
         tags: [],
         photos: []
       },
-      { personNames: previewPeople, placeName: previewPlace }
+      { personNames: previewPeople, placeName: previewPlace, placeNames: previewPlaces }
     );
 
   if (!memory && mode === "quick") {
@@ -167,20 +174,11 @@ export function MemoryFields({
                 <span className="field-title">人物</span>
                 <PersonPicker people={people} value={quickPersonIds} onChange={setQuickPersonIds} />
               </div>
-              <label>
-                地点
-                <SelectPicker
-                  name="placeId"
-                  label="关联地点"
-                  value={quickPlaceId}
-                  onChange={setQuickPlaceId}
-                  placeholder="暂不选择"
-                  options={[
-                    { value: "", label: "暂不选择" },
-                    ...places.map((place) => ({ value: place.id, label: place.name }))
-                  ]}
-                />
-              </label>
+              <div>
+                <span className="field-title">地点</span>
+                <PlacePicker places={places} value={quickPlaceIds} onChange={setQuickPlaceIds} />
+                <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
+              </div>
             </div>
             <label>
               正文
@@ -242,7 +240,8 @@ export function MemoryFields({
         </div>
         {!detailsOpen && <input type="hidden" name="content" value={quickContent} />}
         {!detailsOpen && quickPersonIds.map((personId) => <input key={personId} type="hidden" name="personIds" value={personId} />)}
-        {!detailsOpen && <input type="hidden" name="placeId" value={quickPlaceId} />}
+        {!detailsOpen && <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />}
+        {!detailsOpen && quickPlaceIds.map((placeId) => <input key={placeId} type="hidden" name="placeIds" value={placeId} />)}
         {!detailsOpen && <input type="hidden" name="tags" value="" />}
         <input type="hidden" name="memoryMode" value="quick" />
         <p className="form-hint">人物、地点和照片都可以先不填，保存后再从回忆详情里慢慢补。</p>
@@ -289,25 +288,18 @@ export function MemoryFields({
         <span className="field-title">关联人物</span>
         <PersonPicker people={people} defaultSelected={selectedPersonIds} />
       </div>
-      <label>
-        关联地点
-        <SelectPicker
-          name="placeId"
-          label="关联地点"
-          defaultValue={memory?.placeId || initialPlaceId || ""}
-          placeholder="无地点"
-          options={[
-            { value: "", label: "无" },
-            ...places.map((place) => ({ value: place.id, label: place.name }))
-          ]}
-        />
-      </label>
+      <div>
+        <span className="field-title">关联地点</span>
+        <PlacePicker places={places} value={fullPlaceIds} onChange={setFullPlaceIds} />
+        <input type="hidden" name="placeId" value={fullPlaceIds[0] || ""} />
+        <p className="form-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
+      </div>
       <label>
         内容
         <div className="content-template-grid">
           {buildMemoryContentTemplates(
             resolvePersonNames(selectedPersonIds, people),
-            resolvePlaceName(memory?.placeId || initialPlaceId, places)
+            resolvePlaceNames(fullPlaceIds, places).join("、")
           ).map((template) => (
             <button
               type="button"
@@ -366,6 +358,20 @@ function resolvePersonNames(personIds: string[] = [], people: Array<{ id: string
 function resolvePlaceName(placeId: string | undefined, places: Array<{ id: string; name: string }>) {
   if (!placeId) return "";
   return places.find((place) => place.id === placeId)?.name || "";
+}
+
+function resolvePlaceNames(placeIds: string[], places: Array<{ id: string; name: string }>) {
+  return placeIds
+    .filter(Boolean)
+    .map((placeId) => resolvePlaceName(placeId, places))
+    .filter(Boolean);
+}
+
+function getInitialPlaceIds(memory: MemoryEvent | undefined, initialPlaceId: string | undefined, initialPlaceIds: string[] = []) {
+  const ids = [...(memory?.placeIds || []), memory?.placeId || "", ...initialPlaceIds, initialPlaceId || ""]
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return Array.from(new Set(ids));
 }
 
 function appendTemplate(current: string, template: string) {

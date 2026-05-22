@@ -66,6 +66,7 @@ import {
   serializeBackupPhoto,
   type FullBackupPayload
 } from "../utils/lifelogBackup";
+import { removeMemoryPlaceId } from "../utils/memoryPlaces";
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -323,10 +324,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         setState((current) => ({
           ...current,
           places: current.places.filter((place) => place.id !== id),
-          memories: current.memories.map((memory) => ({
-            ...memory,
-            placeId: memory.placeId === id ? "" : memory.placeId
-          }))
+          memories: current.memories.map((memory) => removeMemoryPlaceId(memory, id))
         }));
         return;
       }
