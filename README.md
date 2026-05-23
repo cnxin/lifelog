@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.68.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.69.apk
 ```
 
-当前版本：`0.1.0-test.68`
+当前版本：`0.1.0-test.69`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -67,11 +67,11 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 修复地点清空商场 / 园区后重启又恢复的问题。
-- 回忆正文预制模板会按多个地点分开生成。
-- 回忆详情关联地点改为标题和地址两行展示。
-- 地点选择器支持搜索商场、分店、区域、城市和地址，并显示位置辅助信息。
-- 首页、回忆列表和详情页统一回忆卡片，多地点显示自动压缩。
+- 地点页的具体店铺 / 场所现在会显示所有非商场记录。
+- 回忆关联人物和地点改为点击输入框后展开候选，支持搜索筛选。
+- 回忆心情和标签拆开展示，心情不再混在标签列表里。
+- Android 外部链接优先打开高德、美团、点评、抖音、小红书等对应 App。
+- 商场导航和地点平台入口统一使用原生外链逻辑。
 
 ## 仓库结构
 

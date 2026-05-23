@@ -207,7 +207,7 @@ export default function Places() {
     setWeakQueueIndex(null);
   }
 
-  const storePlaces = places.filter((place) => !isMallRecord(place) && !getPlaceMallName(place));
+  const storePlaces = places.filter((place) => !isMallRecord(place));
 
   return (
     <>

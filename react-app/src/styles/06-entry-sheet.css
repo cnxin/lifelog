@@ -162,8 +162,14 @@
 }
 
 .person-picker {
+  position: relative;
   display: grid;
   gap: 10px;
+  z-index: 1;
+}
+
+.person-picker.open {
+  z-index: 20;
 }
 
 .person-picker-selected {
@@ -228,7 +234,9 @@
   max-height: 168px;
   overflow-y: auto;
   border-radius: 14px;
-  background: rgba(99, 110, 114, 0.05);
+  background: color-mix(in srgb, var(--card-solid, #fff) 96%, var(--primary) 4%);
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 34px rgba(31, 34, 54, 0.16);
 }
 
 .person-picker-results li {

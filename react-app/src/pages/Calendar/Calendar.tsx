@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
-import Tags from "../../components/Tags";
+import MemoryTags from "../../components/MemoryTags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import {
@@ -140,9 +140,9 @@ export default function Calendar() {
                 <>
                   {item.subtitle && <span className="memory-meta-line">{item.subtitle}</span>}
                   {item.content && <p className="memory-desc calendar-memory-content">{item.content}</p>}
-                  {item.tagItems?.length ? (
+                  {item.mood || item.tagItems?.length ? (
                     <div className="memory-tags-line calendar-memory-tags">
-                      <Tags items={item.tagItems} />
+                      <MemoryTags mood={item.mood} tags={item.tagItems || []} />
                     </div>
                   ) : null}
                 </>

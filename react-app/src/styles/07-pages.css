@@ -2210,6 +2210,10 @@
   margin-top: 0;
 }
 
+.memory-tags-line .memory-tag-set {
+  min-width: 0;
+}
+
 .memory-photo-count {
   display: inline-flex;
   align-items: center;

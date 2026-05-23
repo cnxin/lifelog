@@ -198,7 +198,7 @@ export default function PlaceDetail() {
             </span>
           )}
           {platformLinks.map((link) => (
-            <button className="link-action secondary" type="button" key={`${link.platform}-${link.url}`} onClick={() => void openNativeStoreUrl(link.url)}>
+            <button className="link-action secondary" type="button" key={`${link.platform}-${link.url}`} onClick={() => void openNativeStoreUrl(link.url, link.platform)}>
               <Store /> 打开{link.label}
             </button>
           ))}

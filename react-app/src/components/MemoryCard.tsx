@@ -1,7 +1,7 @@
 import { Heart, Image as ImageIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import GlassCard from "./GlassCard";
-import Tags from "./Tags";
+import MemoryTags from "./MemoryTags";
 import type { MemoryDisplayContext, MemoryEvent } from "../types";
 import { formatMonthDay } from "../utils/date";
 import {
@@ -53,7 +53,7 @@ export default function MemoryCard({
           </>
         )}
         <div className="memory-tags-line">
-          <Tags items={[memory.mood, ...(memory.tags || [])].filter(Boolean)} />
+          <MemoryTags mood={memory.mood} tags={memory.tags || []} />
           {showPhotoCount && photoCount > 0 && (
             <span className="memory-photo-count">
               <ImageIcon size={12} />

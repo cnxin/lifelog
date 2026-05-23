@@ -21,6 +21,7 @@ export default function PersonPicker({
     defaultSelected.filter((id) => people.some((person) => person.id === id))
   );
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const selected = isControlled ? value : internalSelected;
 
   const selectedPeople = useMemo(
@@ -44,14 +45,19 @@ export default function PersonPicker({
   function add(id: string) {
     setSelected(selected.includes(id) ? selected : [...selected, id]);
     setQuery("");
+    setIsOpen(false);
   }
 
   function remove(id: string) {
     setSelected(selected.filter((item) => item !== id));
   }
 
+  function handleBlur() {
+    window.setTimeout(() => setIsOpen(false), 120);
+  }
+
   return (
-    <div className="person-picker">
+    <div className={isOpen ? "person-picker open" : "person-picker"}>
       {selected.map((id) => (
         <input key={id} type="hidden" name={name} value={id} />
       ))}
@@ -82,17 +88,25 @@ export default function PersonPicker({
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onFocus={() => setIsOpen(true)}
+              onBlur={handleBlur}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setIsOpen(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setIsOpen(false);
+              }}
               placeholder={selected.length ? "继续添加人物" : "搜索人物名字"}
               aria-label="搜索人物"
             />
           </div>
 
-          {filtered.length > 0 && (
-            <ul className="person-picker-results">
+          {isOpen && filtered.length > 0 && (
+            <ul className="person-picker-results" role="listbox">
               {filtered.map((person) => (
                 <li key={person.id}>
-                  <button type="button" onClick={() => add(person.id)}>
+                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
                     {person.name}
                   </button>
                 </li>
@@ -100,7 +114,7 @@ export default function PersonPicker({
             </ul>
           )}
 
-          {!filtered.length && query.trim() && (
+          {isOpen && !filtered.length && query.trim() && (
             <p className="form-hint">没有匹配的人物，去“人物”页可以新增。</p>
           )}
         </>

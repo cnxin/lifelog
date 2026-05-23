@@ -29,6 +29,7 @@ export default function PlacePicker({
     defaultSelected.filter((id) => places.some((place) => place.id === id))
   );
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const selected = isControlled ? value : internalSelected;
 
   const selectedPlaces = useMemo(
@@ -53,14 +54,19 @@ export default function PlacePicker({
   function add(id: string) {
     setSelected(selected.includes(id) ? selected : [...selected, id]);
     setQuery("");
+    setIsOpen(false);
   }
 
   function remove(id: string) {
     setSelected(selected.filter((item) => item !== id));
   }
 
+  function handleBlur() {
+    window.setTimeout(() => setIsOpen(false), 120);
+  }
+
   return (
-    <div className="person-picker place-picker">
+    <div className={isOpen ? "person-picker place-picker open" : "person-picker place-picker"}>
       {selected.map((id) => (
         <input key={id} type="hidden" name={name} value={id} />
       ))}
@@ -92,17 +98,25 @@ export default function PlacePicker({
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onFocus={() => setIsOpen(true)}
+              onBlur={handleBlur}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setIsOpen(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setIsOpen(false);
+              }}
               placeholder={selected.length ? "继续添加地点" : "搜索地点、商场、地址"}
               aria-label="搜索地点"
             />
           </div>
 
-          {filtered.length > 0 && (
-            <ul className="person-picker-results">
+          {isOpen && filtered.length > 0 && (
+            <ul className="person-picker-results" role="listbox">
               {filtered.map((place) => (
                 <li key={place.id}>
-                  <button type="button" onClick={() => add(place.id)}>
+                  <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>
                     <span className="place-option-title">
                       <MapPin size={14} />
                       <strong>{formatPlaceOptionTitle(place)}</strong>
@@ -114,7 +128,7 @@ export default function PlacePicker({
             </ul>
           )}
 
-          {!filtered.length && query.trim() && (
+          {isOpen && !filtered.length && query.trim() && (
             <p className="form-hint">没有匹配的地点，去“地点”页可以新增。</p>
           )}
         </>

@@ -18,6 +18,7 @@ import {
 } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
+import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
 
 export default function MallDetail() {
   const navigate = useNavigate();
@@ -115,9 +116,9 @@ export default function MallDetail() {
             onClick={() => {
               const source = mallRecord || summary;
               if (source.latitude && source.longitude) {
-                window.open(`https://uri.amap.com/marker?position=${source.longitude},${source.latitude}&name=${encodeURIComponent(mallInfo.mall)}`, "_blank");
+                void openPlaceMap(source);
               } else {
-                window.open(`https://uri.amap.com/search?keyword=${encodeURIComponent(displayAddress || mallInfo.mall)}`, "_blank");
+                void openExternalUrl(`https://uri.amap.com/search?keyword=${encodeURIComponent(displayAddress || mallInfo.mall)}`);
               }
             }}
           >

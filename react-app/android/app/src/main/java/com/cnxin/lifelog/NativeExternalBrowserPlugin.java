@@ -18,10 +18,14 @@ public class NativeExternalBrowserPlugin extends Plugin {
             call.reject("Missing url");
             return;
         }
+        String packageName = call.getString("packageName", "").trim();
 
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         intent.addCategory(Intent.CATEGORY_BROWSABLE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (!packageName.isEmpty()) {
+            intent.setPackage(packageName);
+        }
 
         try {
             getContext().startActivity(intent);

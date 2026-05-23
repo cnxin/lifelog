@@ -9,6 +9,7 @@ export type CalendarItem = {
   subtitle: string;
   subtitleLines?: string[];
   content?: string;
+  mood?: string;
   tagItems?: string[];
   type: "person" | "memory";
   target: string;
@@ -79,7 +80,8 @@ export function buildCalendarItemsForDateRange(
         title: getMemoryDisplayTitle(memory, ctx),
         subtitle: [ctx.personNames.join("、"), ctx.placeName].filter(Boolean).join(" · ") || "未关联",
         content,
-        tagItems: [memory.mood, ...(memory.tags || [])].filter(Boolean),
+        mood: memory.mood,
+        tagItems: (memory.tags || []).filter(Boolean),
         type: "memory" as const,
         target: `/memories/${memory.id}`
       };

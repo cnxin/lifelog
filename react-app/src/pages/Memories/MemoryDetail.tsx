@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
-import Tags from "../../components/Tags";
+import MemoryTags from "../../components/MemoryTags";
 import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -151,11 +151,11 @@ export default function MemoryDetail() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <Tag /> 标签
+            <Tag /> 心情和标签
           </h2>
         </div>
         <GlassCard className="pref-block memory-tag-block">
-          <Tags items={[memory.mood, ...tags]} />
+          <MemoryTags mood={memory.mood} tags={tags} />
         </GlassCard>
       </section>
 
