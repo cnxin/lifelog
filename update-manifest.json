@@ -5,6 +5,6 @@
   "mirrorApkUrl": "",
   "apkName": "lifelog-v0.1.0-test.70.apk",
   "apkSize": 3597701,
-  "publishedAt": "2026-05-24T14:15:31Z",
+  "publishedAt": "2026-05-24T14:19:02Z",
   "body": "- 地点平台链接会优先把高德、美团、点评、抖音和小红书网页入口转换为对应 App scheme。\n- 高德搜索和坐标链接优先使用 amapuri 打开，减少先进入 Chrome 再跳转的情况。\n- 美团、点评、抖音和小红书的自动搜索入口优先打开对应 App 搜索页。\n- 如果目标 App 未安装或 scheme 不可用，会自动回退到原网页链接，避免点击后无响应。"
 }
