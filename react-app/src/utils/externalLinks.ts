@@ -6,6 +6,12 @@ interface NativeExternalBrowserPlugin {
   open(options: { url: string; packageName?: string }): Promise<void>;
 }
 
+interface NativeLaunchTarget {
+  url: string;
+  fallbackUrl: string;
+  packageName: string;
+}
+
 const NativeExternalBrowser = registerPlugin<NativeExternalBrowserPlugin>("NativeExternalBrowser");
 
 export async function openExternalUrl(rawUrl: string) {
@@ -13,7 +19,8 @@ export async function openExternalUrl(rawUrl: string) {
   if (!url) return;
 
   if (Capacitor.isNativePlatform()) {
-    await openNativeViewUrl(url, getNativePackageName(inferPlatformFromLink(url)));
+    const target = getNativeLaunchTarget(url);
+    await openNativeViewUrl(target.url, target.packageName, target.fallbackUrl);
     return;
   }
 
@@ -42,7 +49,8 @@ export async function openNativeStoreUrl(rawUrl: string, platform?: PlaceLinkPla
   if (!url) return;
 
   if (Capacitor.isNativePlatform()) {
-    await openNativeViewUrl(url, getNativePackageName(platform || inferPlatformFromLink(url)));
+    const target = getNativeLaunchTarget(url, platform);
+    await openNativeViewUrl(target.url, target.packageName, target.fallbackUrl);
     return;
   }
 
@@ -85,22 +93,98 @@ function openSchemeUrl(url: string) {
   window.location.href = url;
 }
 
-async function openNativeViewUrl(url: string, packageName = "") {
-  try {
-    await NativeExternalBrowser.open({ url, packageName });
-  } catch (error) {
-    if (packageName) {
-      try {
-        await NativeExternalBrowser.open({ url });
-        return;
-      } catch (fallbackError) {
-        console.warn("原生外部链接打开失败，回退到系统链接:", fallbackError);
-      }
-    } else {
-      console.warn("原生外部链接打开失败，回退到系统链接:", error);
+async function openNativeViewUrl(url: string, packageName = "", fallbackUrl = "") {
+  let lastError: unknown;
+  for (const attempt of buildNativeOpenAttempts(url, packageName, fallbackUrl)) {
+    try {
+      await NativeExternalBrowser.open(attempt);
+      return;
+    } catch (error) {
+      lastError = error;
     }
-    window.location.href = /^https?:\/\//i.test(url) ? buildAndroidViewIntentUrl(url) : url;
   }
+
+  console.warn("原生外部链接打开失败，回退到系统链接:", lastError);
+  const fallback = fallbackUrl || url;
+  window.location.href = /^https?:\/\//i.test(fallback) ? buildAndroidViewIntentUrl(fallback) : fallback;
+}
+
+function buildNativeOpenAttempts(url: string, packageName = "", fallbackUrl = "") {
+  const attempts: Array<{ url: string; packageName?: string }> = [];
+  const add = (nextUrl: string, nextPackageName = "") => {
+    if (!nextUrl) return;
+    const key = `${nextUrl}|${nextPackageName}`;
+    if (attempts.some((attempt) => `${attempt.url}|${attempt.packageName || ""}` === key)) return;
+    attempts.push(nextPackageName ? { url: nextUrl, packageName: nextPackageName } : { url: nextUrl });
+  };
+
+  add(url, packageName);
+  add(fallbackUrl, packageName);
+  add(url);
+  add(fallbackUrl);
+  return attempts;
+}
+
+function getNativeLaunchTarget(rawUrl: string, platform?: PlaceLinkPlatform | string): NativeLaunchTarget {
+  const detectedPlatform = platform || inferPlatformFromLink(rawUrl);
+  const nativeUrl = buildNativeAppDeepLink(rawUrl, detectedPlatform);
+  return {
+    url: nativeUrl || rawUrl,
+    fallbackUrl: rawUrl,
+    packageName: getNativePackageName(detectedPlatform)
+  };
+}
+
+export function buildNativeAppDeepLink(rawUrl: string, platform?: PlaceLinkPlatform | string) {
+  const url = rawUrl.trim();
+  if (!url || !/^https?:\/\//i.test(url)) return url;
+
+  const detectedPlatform = platform || inferPlatformFromLink(url);
+  const keyword = getPlatformSearchKeyword(url, detectedPlatform);
+  const encodedKeyword = keyword ? encodeURIComponent(keyword) : "";
+
+  switch (detectedPlatform) {
+    case "amap":
+      return buildAmapDeepLinkFromWebUrl(url) || url;
+    case "meituan":
+      return encodedKeyword
+        ? `imeituan://www.meituan.com/search?q=${encodedKeyword}`
+        : `imeituan://www.meituan.com/web?url=${encodeURIComponent(url)}`;
+    case "dianping":
+      return encodedKeyword ? `dianping://searchshoplist?keyword=${encodedKeyword}` : url;
+    case "douyin":
+      return encodedKeyword
+        ? `snssdk1128://search/tabs?keyword=${encodedKeyword}`
+        : `snssdk1128://webview?url=${encodeURIComponent(url)}&from=webview&refer=web`;
+    case "xiaohongshu":
+      return encodedKeyword ? `xhsdiscover://search/result?keyword=${encodedKeyword}` : url;
+    default:
+      return url;
+  }
+}
+
+function buildAmapDeepLinkFromWebUrl(rawUrl: string) {
+  try {
+    const webUrl = new URL(rawUrl);
+    const hostname = webUrl.hostname.toLowerCase();
+    if (!hostname.endsWith("amap.com")) return "";
+
+    const keyword = webUrl.searchParams.get("keyword") || webUrl.searchParams.get("query") || "";
+    if (keyword.trim()) {
+      return `amapuri://poi/around?sourceApplication=LifeLog&keywords=${encodeURIComponent(keyword.trim())}&dev=0`;
+    }
+
+    const position = webUrl.searchParams.get("position") || "";
+    const [lon, lat] = position.split(",").map((item) => item.trim());
+    if (lon && lat) {
+      const name = webUrl.searchParams.get("name") || "地点";
+      return `amapuri://poi/detail?sourceApplication=LifeLog&poiname=${encodeURIComponent(name)}&lat=${lat}&lon=${lon}&dev=0`;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
 }
 
 export function buildAndroidViewIntentUrl(url: string) {
@@ -141,6 +225,46 @@ function getNativePackageName(platform?: PlaceLinkPlatform | string) {
       return "com.tencent.mm";
     default:
       return "";
+  }
+}
+
+function getPlatformSearchKeyword(rawUrl: string, platform?: PlaceLinkPlatform | string) {
+  try {
+    const url = new URL(rawUrl);
+    const queryKeyword =
+      url.searchParams.get("q") ||
+      url.searchParams.get("query") ||
+      url.searchParams.get("keyword") ||
+      url.searchParams.get("search_key");
+    if (queryKeyword?.trim()) return queryKeyword.trim();
+
+    const pathParts = url.pathname.split("/").filter(Boolean).map(decodeUrlPart);
+    if (platform === "meituan") {
+      const searchIndex = pathParts.findIndex((part) => part === "s" || part === "search");
+      return searchIndex >= 0 ? pathParts[searchIndex + 1] || "" : "";
+    }
+
+    if (platform === "dianping") {
+      const lastPart = pathParts[pathParts.length - 1] || "";
+      return lastPart.replace(/^0_/, "").trim();
+    }
+
+    if (platform === "douyin") {
+      const searchIndex = pathParts.findIndex((part) => part === "search");
+      return searchIndex >= 0 ? pathParts[searchIndex + 1] || "" : "";
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+}
+
+function decodeUrlPart(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
   }
 }
 

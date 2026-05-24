@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.69",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.69",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.69/lifelog-v0.1.0-test.69.apk",
+  "version": "0.1.0-test.70",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.70",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.70/lifelog-v0.1.0-test.70.apk",
   "mirrorApkUrl": "",
-  "apkName": "lifelog-v0.1.0-test.69.apk",
-  "apkSize": 3596945,
-  "publishedAt": "2026-05-23T17:07:11Z",
-  "body": "- 地点页的具体店铺 / 场所现在会显示所有非商场记录。\n- 回忆关联人物和地点改为点击输入框后展开候选，支持搜索筛选。\n- 回忆心情和标签拆开展示，心情不再混在标签列表里。\n- Android 外部链接优先打开高德、美团、点评、抖音、小红书等对应 App。\n- 商场导航和地点平台入口统一使用原生外链逻辑。"
+  "apkName": "lifelog-v0.1.0-test.70.apk",
+  "apkSize": 3597701,
+  "publishedAt": "2026-05-24T14:15:31Z",
+  "body": "- 地点平台链接会优先把高德、美团、点评、抖音和小红书网页入口转换为对应 App scheme。\n- 高德搜索和坐标链接优先使用 amapuri 打开，减少先进入 Chrome 再跳转的情况。\n- 美团、点评、抖音和小红书的自动搜索入口优先打开对应 App 搜索页。\n- 如果目标 App 未安装或 scheme 不可用，会自动回退到原网页链接，避免点击后无响应。"
 }

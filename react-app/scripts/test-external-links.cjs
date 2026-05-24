@@ -30,7 +30,7 @@ function loadTs(relativeFile) {
   return module.exports;
 }
 
-const { buildAndroidViewIntentUrl } = loadTs("src/utils/externalLinks.ts");
+const { buildAndroidViewIntentUrl, buildNativeAppDeepLink } = loadTs("src/utils/externalLinks.ts");
 
 const cases = [
   {
@@ -52,9 +52,44 @@ for (const item of cases) {
   console.error(`[buildAndroidViewIntentUrl] expected ${item.expected}, actual ${actual}`);
 }
 
+const nativeCases = [
+  {
+    input: "https://uri.amap.com/search?keyword=%E8%A5%BF%E6%B9%96",
+    platform: "amap",
+    expected: "amapuri://poi/around?sourceApplication=LifeLog&keywords=%E8%A5%BF%E6%B9%96&dev=0"
+  },
+  {
+    input: "https://www.meituan.com/s/%E7%83%A4%E8%82%89/",
+    platform: "meituan",
+    expected: "imeituan://www.meituan.com/search?q=%E7%83%A4%E8%82%89"
+  },
+  {
+    input: "https://www.dianping.com/search/keyword/9/0_%E5%92%96%E5%95%A1",
+    platform: "dianping",
+    expected: "dianping://searchshoplist?keyword=%E5%92%96%E5%95%A1"
+  },
+  {
+    input: "https://www.douyin.com/search/%E7%81%AB%E9%94%85?type=general",
+    platform: "douyin",
+    expected: "snssdk1128://search/tabs?keyword=%E7%81%AB%E9%94%85"
+  },
+  {
+    input: "https://www.xiaohongshu.com/search_result?keyword=%E7%94%9C%E5%93%81",
+    platform: "xiaohongshu",
+    expected: "xhsdiscover://search/result?keyword=%E7%94%9C%E5%93%81"
+  }
+];
+
+for (const item of nativeCases) {
+  const actual = buildNativeAppDeepLink(item.input, item.platform);
+  if (actual === item.expected) continue;
+  failures += 1;
+  console.error(`[buildNativeAppDeepLink] expected ${item.expected}, actual ${actual}`);
+}
+
 if (failures) {
   console.error(`External links regression failed: ${failures} mismatch(es).`);
   process.exit(1);
 }
 
-console.log(`External links regression passed: ${cases.length} cases.`);
+console.log(`External links regression passed: ${cases.length + nativeCases.length} cases.`);

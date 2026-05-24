@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.70",
+    date: "2026-05-24",
+    title: "平台链接直达 App 优化",
+    highlights: [
+      "地点平台链接会优先把高德、美团、点评、抖音和小红书网页入口转换为对应 App scheme。",
+      "高德搜索和坐标链接优先使用 amapuri 打开，减少先进入 Chrome 再跳转的情况。",
+      "美团、点评、抖音和小红书的自动搜索入口优先打开对应 App 搜索页。",
+      "如果目标 App 未安装或 scheme 不可用，会自动回退到原网页链接，避免点击后无响应。"
+    ]
+  },
+  {
     version: "0.1.0-test.69",
     date: "2026-05-23",
     title: "地点显示、回忆选择和原生 App 跳转优化",
