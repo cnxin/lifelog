@@ -271,6 +271,54 @@
   margin-top: 6px;
 }
 
+.relationship-health-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.relationship-health-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.relationship-health-pill.inline {
+  margin-right: 4px;
+}
+
+.relationship-health-pill.active {
+  color: #2f7d54;
+  background: rgba(232, 248, 237, 0.94);
+}
+
+.relationship-health-pill.warm {
+  color: #8a6519;
+  background: #fff2c2;
+}
+
+.relationship-health-pill.cool {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.relationship-health-pill.new {
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+}
+
 .person-pref-line {
   display: flex;
   align-items: baseline;

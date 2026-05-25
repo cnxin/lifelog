@@ -1036,6 +1036,7 @@
 .calendar-day:active,
 .calendar-item:active,
 .task-card:active,
+.today-action-card:active,
 .completion-card:active,
 .quick-memory-card:active,
 .fab:active,
@@ -1117,6 +1118,7 @@ button:disabled,
   .link-action,
   .tap-chip,
   .task-card,
+  .today-action-card,
   .completion-card,
   .quick-memory-card,
   .category-pill,
@@ -1187,6 +1189,7 @@ button:disabled,
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   padding: 12px 16px;
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.92);
@@ -1198,6 +1201,34 @@ button:disabled,
   pointer-events: none;
   transform: translateX(-50%);
   animation: toast-slide-up 0.22s ease;
+}
+
+.toast-message span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast-message button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  min-height: 30px;
+  padding: 0 12px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.62);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  pointer-events: auto;
+}
+
+.toast-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  pointer-events: auto;
 }
 
 .toast-message.success {

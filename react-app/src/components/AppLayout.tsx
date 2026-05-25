@@ -4,9 +4,10 @@ import type { EntryType, Place } from "../types";
 import { todayLabel } from "../utils/date";
 import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
-import FloatingActionButton from "./FloatingActionButton";
+import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
 import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
+import { Camera, CalendarPlus, ClipboardPaste, MapPinPlus, PenLine, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -43,9 +44,15 @@ function isUtilityPage(pathname: string) {
   return pathname === "/settings" || pathname === "/account";
 }
 
+type SheetMode = "quick" | "full";
+
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
+  const [sheetMode, setSheetMode] = useState<SheetMode>("full");
+  const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
+  const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
+  const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
   const [initialPlaceDraft, setInitialPlaceDraft] = useState<Partial<Place> | undefined>();
   const [initialPlaceShareReview, setInitialPlaceShareReview] = useState<PlaceDraft | undefined>();
   const [placeDraftKey, setPlaceDraftKey] = useState(0);
@@ -84,6 +91,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       setInitialPlaceDraft(undefined);
       setInitialPlaceShareReview(parsed);
+      setSheetMode("full");
       setPlaceDraftKey((current) => current + 1);
       setSheetType("place");
       notify({
@@ -97,6 +105,67 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [notify]);
   useReminderScheduling();
   useStatusBar(settings.themeStyle);
+
+  function openSheet(type: EntryType, mode: SheetMode = "full", options: { personIds?: string[]; placeIds?: string[]; date?: string } = {}) {
+    setInitialPlaceDraft(undefined);
+    setInitialPlaceShareReview(undefined);
+    setInitialMemoryPersonIds(options.personIds || []);
+    setInitialMemoryPlaceIds(options.placeIds || []);
+    setInitialMemoryDate(options.date);
+    setSheetMode(mode);
+    setSheetType(type);
+  }
+
+  async function openPlaceShareFromClipboard() {
+    setInitialPlaceDraft(undefined);
+    setInitialPlaceShareReview(undefined);
+    setInitialMemoryPersonIds([]);
+    setInitialMemoryPlaceIds([]);
+    setInitialMemoryDate(undefined);
+    setSheetMode("full");
+
+    if (!navigator.clipboard?.readText) {
+      setSheetType("place");
+      notify({ message: "当前环境无法读取剪贴板，可以手动粘贴分享内容", tone: "info" });
+      return;
+    }
+
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (!text) {
+        setSheetType("place");
+        notify({ message: "剪贴板为空，可以手动粘贴地点分享", tone: "info" });
+        return;
+      }
+
+      const parsed = parsePlaceShare(text);
+      if (!parsed.name && !parsed.address && !parsed.mapUrl && !parsed.sourceUrl && !parsed.platformLinks) {
+        setSheetType("place");
+        notify({ message: "剪贴板里没有识别到明确地点，可在表单里手动粘贴", tone: "info" });
+        return;
+      }
+
+      setInitialPlaceShareReview(parsed);
+      setPlaceDraftKey((current) => current + 1);
+      setSheetType("place");
+      notify({ message: parsed.name ? `已识别地点：${parsed.name}` : "已读取剪贴板地点分享", tone: "success" });
+    } catch {
+      setSheetType("place");
+      notify({ message: "无法读取剪贴板，可以手动粘贴地点分享", tone: "info" });
+    }
+  }
+
+  const floatingActions = buildFloatingActions({
+    pathname: location.pathname,
+    onQuickMemory: () => openSheet("memory", "quick"),
+    onPhotoMemory: () => openSheet("memory", "full"),
+    onPerson: () => openSheet("person"),
+    onPlace: () => openSheet("place"),
+    onPastePlaceShare: () => void openPlaceShareFromClipboard(),
+    onMemoryForPerson: (personId) => openSheet("memory", "quick", { personIds: [personId] }),
+    onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
+    onMemoryForDate: (date) => openSheet("memory", "quick", { date })
+  });
 
   return (
     <div className={`app-container theme-${settings.themeStyle}`}>
@@ -113,26 +182,221 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         )}
       </main>
       {!isUtilityPage(location.pathname) && (
-        <FloatingActionButton
-          onClick={() => {
-            setInitialPlaceDraft(undefined);
-            setInitialPlaceShareReview(undefined);
-            setSheetType(entryTypeForPath(location.pathname));
-          }}
-        />
+        <FloatingActionButton actions={floatingActions} />
       )}
       <BottomNav />
       <EntrySheet
-        key={`entry-sheet-${sheetType || "closed"}-${placeDraftKey}`}
+        key={`entry-sheet-${sheetType || "closed"}-${sheetMode}-${placeDraftKey}`}
         type={sheetType}
         initialPlaceDraft={sheetType === "place" ? initialPlaceDraft : undefined}
         initialPlaceShareReview={sheetType === "place" ? initialPlaceShareReview : undefined}
+        initialPersonIds={sheetType === "memory" ? initialMemoryPersonIds : []}
+        initialPlaceIds={sheetType === "memory" ? initialMemoryPlaceIds : []}
+        initialDate={sheetType === "memory" ? initialMemoryDate : undefined}
+        memoryMode={sheetType === "memory" ? sheetMode : entryTypeForPath(location.pathname) === "memory" ? "quick" : "full"}
         onClose={() => {
           setSheetType(null);
+          setInitialMemoryPersonIds([]);
+          setInitialMemoryPlaceIds([]);
+          setInitialMemoryDate(undefined);
           setInitialPlaceDraft(undefined);
           setInitialPlaceShareReview(undefined);
+          setSheetMode("full");
         }}
       />
     </div>
   );
+}
+
+function buildFloatingActions({
+  pathname,
+  onQuickMemory,
+  onPhotoMemory,
+  onPerson,
+  onPlace,
+  onPastePlaceShare,
+  onMemoryForPerson,
+  onMemoryForPlace,
+  onMemoryForDate
+}: {
+  pathname: string;
+  onQuickMemory: () => void;
+  onPhotoMemory: () => void;
+  onPerson: () => void;
+  onPlace: () => void;
+  onPastePlaceShare: () => void;
+  onMemoryForPerson: (personId: string) => void;
+  onMemoryForPlace: (placeId: string) => void;
+  onMemoryForDate: (date: string) => void;
+}): FloatingAction[] {
+  const personId = matchRouteId(pathname, /^\/people\/([^/]+)$/);
+  if (personId) {
+    return [
+      {
+        id: "memory-for-person",
+        label: "记录和 TA 的回忆",
+        desc: "自动关联当前人物",
+        icon: <CalendarPlus />,
+        primary: true,
+        onClick: () => onMemoryForPerson(personId)
+      },
+      {
+        id: "edit-person-new",
+        label: "新增人物",
+        desc: "继续补充重要的人",
+        icon: <UserPlus />,
+        onClick: onPerson
+      },
+      quickMemoryAction(onQuickMemory)
+    ];
+  }
+
+  const placeId = matchRouteId(pathname, /^\/places\/([^/]+)$/);
+  if (placeId) {
+    return [
+      {
+        id: "memory-for-place",
+        label: "记录在这里发生的事",
+        desc: "自动关联当前地点",
+        icon: <CalendarPlus />,
+        primary: true,
+        onClick: () => onMemoryForPlace(placeId)
+      },
+      {
+        id: "new-place",
+        label: "新增地点",
+        desc: "保存另一个店铺或场所",
+        icon: <MapPinPlus />,
+        onClick: onPlace
+      },
+      placeShareAction(onPastePlaceShare)
+    ];
+  }
+
+  if (pathname.startsWith("/people")) {
+    return [
+      {
+        id: "new-person",
+        label: "新增人物",
+        desc: "先记姓名和关系",
+        icon: <UserPlus />,
+        primary: true,
+        onClick: onPerson
+      },
+      {
+        id: "memory",
+        label: "记录一次互动",
+        desc: "从一句话开始",
+        icon: <PenLine />,
+        onClick: onQuickMemory
+      }
+    ];
+  }
+
+  if (pathname.startsWith("/places")) {
+    return [
+      {
+        id: "new-place",
+        label: "新增地点",
+        desc: "手动填写或粘贴分享",
+        icon: <MapPinPlus />,
+        primary: true,
+        onClick: onPlace
+      },
+      placeShareAction(onPastePlaceShare),
+      {
+        id: "memory-for-place-list",
+        label: "记录到访",
+        desc: "先记一条回忆",
+        icon: <PenLine />,
+        onClick: onQuickMemory
+      }
+    ];
+  }
+
+  if (pathname.startsWith("/memories")) {
+    return [
+      quickMemoryAction(onQuickMemory, true),
+      {
+        id: "photo-memory",
+        label: "带照片记录",
+        desc: "打开完整表单和照片上传",
+        icon: <Camera />,
+        onClick: onPhotoMemory
+      }
+    ];
+  }
+
+  if (pathname.startsWith("/calendar")) {
+    const selectedDate = new URLSearchParams(window.location.search).get("date") || new Date().toISOString().slice(0, 10);
+    return [
+      {
+        id: "memory-for-date",
+        label: "补记选中日期",
+        desc: selectedDate,
+        icon: <CalendarPlus />,
+        primary: true,
+        onClick: () => onMemoryForDate(selectedDate)
+      },
+      {
+        id: "new-person",
+        label: "新增人物",
+        desc: "让生日和纪念日进入日历",
+        icon: <UserPlus />,
+        onClick: onPerson
+      }
+    ];
+  }
+
+  return [
+    quickMemoryAction(onQuickMemory, true),
+    {
+      id: "photo-memory",
+      label: "带照片记录",
+      desc: "打开完整表单和照片上传",
+      icon: <Camera />,
+      onClick: onPhotoMemory
+    },
+    {
+      id: "new-person",
+      label: "新增人物",
+      desc: "先记姓名和关系",
+      icon: <UserPlus />,
+      onClick: onPerson
+    },
+    {
+      id: "new-place",
+      label: "新增地点",
+      desc: "手动填写或粘贴分享",
+      icon: <MapPinPlus />,
+      onClick: onPlace
+    },
+    placeShareAction(onPastePlaceShare)
+  ];
+}
+
+function quickMemoryAction(onClick: () => void, primary = false): FloatingAction {
+  return {
+    id: "quick-memory",
+    label: "快速记回忆",
+    desc: "一句话先保存下来",
+    icon: <PenLine />,
+    primary,
+    onClick
+  };
+}
+
+function placeShareAction(onClick: () => void): FloatingAction {
+  return {
+    id: "paste-place-share",
+    label: "粘贴地点分享",
+    desc: "读取剪贴板并预填地点",
+    icon: <ClipboardPaste />,
+    onClick
+  };
+}
+
+function matchRouteId(pathname: string, pattern: RegExp) {
+  const match = pathname.match(pattern);
+  return match?.[1] ? decodeURIComponent(match[1]) : "";
 }

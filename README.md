@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.70.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.71.apk
 ```
 
-当前版本：`0.1.0-test.70`
+当前版本：`0.1.0-test.71`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -67,10 +67,10 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 地点平台链接优先把高德、美团、点评、抖音和小红书网页入口转换为对应 App scheme。
-- 高德搜索和坐标链接优先使用 `amapuri` 打开。
-- 美团、点评、抖音和小红书的自动搜索入口优先打开对应 App 搜索页。
-- 目标 App 未安装或 scheme 不可用时，会自动回退到原网页链接。
+- 全局 FAB 会按当前页面展示快捷操作，人物和地点详情可自动带入上下文记录回忆。
+- 首页新增今日行动，整合未来提醒、长期未互动人物和往年今日回忆。
+- 日历页支持按选中日期补记，保存回忆后可直接查看、补照片或再记一条。
+- 人物列表和详情新增关系温度，帮助发现需要联系的人。
 
 ## 仓库结构
 

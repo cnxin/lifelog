@@ -2461,6 +2461,29 @@
   color: var(--text-sub);
 }
 
+.photo-upload-errors {
+  display: grid;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--danger) 18%, transparent);
+  border-radius: 16px;
+  padding: 12px;
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.photo-upload-errors strong {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.photo-upload-errors span,
+.photo-upload-errors small {
+  color: color-mix(in srgb, var(--danger) 76%, var(--text-sub));
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .photo-preview {
   position: relative;
   aspect-ratio: 1;

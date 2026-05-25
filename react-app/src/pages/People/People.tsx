@@ -8,6 +8,7 @@ import SearchBar from "../../components/SearchBar";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel } from "../../utils/date";
+import { buildRelationshipHealth } from "../../utils/relationshipHealth";
 import { initials } from "../../utils/text";
 
 export default function People() {
@@ -49,6 +50,7 @@ export default function People() {
         <div className="list">
           {people.map((person) => {
             const anniversary = person.anniversaries[0];
+            const health = buildRelationshipHealth(person.id, state.memories);
             return (
               <GlassCard className="person-card" key={person.id}>
                 <button className="person-open" onClick={() => navigate(`/people/${person.id}`)}>
@@ -79,6 +81,11 @@ export default function People() {
                       ? `${anniversary.title}${anniversaryRelativeLabel(anniversary.date)} · ${anniversary.title === "生日" ? birthdayAgeLabel(anniversary.date) : anniversaryYearLabel(anniversary.date)}`
                       : "暂无纪念日"}
                   </p>
+                  <div className="relationship-health-line">
+                    <span className={`relationship-health-pill ${health.temperature}`}>{health.label}</span>
+                    <span>{health.detail}</span>
+                    {health.memoryCount > 0 && <span>{health.memoryCount} 条回忆</span>}
+                  </div>
                   <PreferenceLines preferences={person.preferences} dislikes={person.dislikes} />
                 </div>
                 <div className="person-side-actions">

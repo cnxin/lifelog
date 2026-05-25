@@ -28,6 +28,7 @@ interface EntrySheetProps {
   initialPlaceDraft?: Partial<Place>;
   initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
+  initialDate?: string;
   onClose: () => void;
 }
 
@@ -47,6 +48,7 @@ export default function EntrySheet({
   initialPlaceDraft,
   initialPlaceShareReview,
   memoryMode = "full",
+  initialDate,
   onClose
 }: EntrySheetProps) {
   const navigate = useNavigate();
@@ -112,19 +114,14 @@ export default function EntrySheet({
       }
 
       onClose();
-      notify({ message: getSaveFeedback(entryType, Boolean(itemId)), tone: "success" });
-      if (itemId) return;
-      if (entryType === "person" && savedPersonId) {
-        navigate(`/people/${savedPersonId}`);
-        return;
-      }
-      if (entryType === "place" && savedPlaceId) {
-        navigate(`/places/${savedPlaceId}`);
-        return;
-      }
-      if (entryType === "memory" && savedMemoryId) {
-        navigate(`/memories/${savedMemoryId}`);
-      }
+      notify(buildSaveToast({
+        type: entryType,
+        isEditing: Boolean(itemId),
+        savedPersonId,
+        savedPlaceId,
+        savedMemoryId,
+        navigate
+      }));
     } finally {
       submitLockRef.current = false;
       setIsSubmitting(false);
@@ -167,6 +164,7 @@ export default function EntrySheet({
               initialPersonIds={initialPersonIds || [initialPersonId || ""].filter(Boolean)}
               initialPlaceId={initialPlaceId}
               initialPlaceIds={initialPlaceIds}
+              initialDate={initialDate}
               mode={memoryMode}
               photos={photos}
               onPhotosChange={setPhotos}
@@ -219,6 +217,55 @@ export default function EntrySheet({
       </section>
     </div>
   );
+}
+
+function buildSaveToast({
+  type,
+  isEditing,
+  savedPersonId,
+  savedPlaceId,
+  savedMemoryId,
+  navigate
+}: {
+  type: EntryType;
+  isEditing: boolean;
+  savedPersonId: string;
+  savedPlaceId: string;
+  savedMemoryId: string;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  const message = getSaveFeedback(type, isEditing);
+  if (type === "person" && savedPersonId) {
+    return {
+      message,
+      tone: "success" as const,
+      actionLabel: "查看",
+      onAction: () => navigate(`/people/${savedPersonId}`)
+    };
+  }
+  if (type === "place" && savedPlaceId) {
+    return {
+      message,
+      tone: "success" as const,
+      actionLabel: "查看",
+      onAction: () => navigate(`/places/${savedPlaceId}`)
+    };
+  }
+  if (type === "memory" && savedMemoryId) {
+    return {
+      message,
+      tone: "success" as const,
+      actions: [
+        { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) },
+        { label: "补照片", onClick: () => navigate(`/memories/${savedMemoryId}?edit=photos`) },
+        { label: "再记", onClick: () => navigate(`/memories/${savedMemoryId}?add=related`) }
+      ]
+    };
+  }
+  return {
+    message,
+    tone: "success" as const
+  };
 }
 
 function getSaveFeedback(type: EntryType, isEditing: boolean) {

@@ -19,6 +19,7 @@ export function MemoryFields({
   initialPersonIds = [],
   initialPlaceId,
   initialPlaceIds = [],
+  initialDate,
   mode,
   photos,
   onPhotosChange,
@@ -30,6 +31,7 @@ export function MemoryFields({
   initialPersonIds?: string[];
   initialPlaceId?: string;
   initialPlaceIds?: string[];
+  initialDate?: string;
   mode: "quick" | "full";
   photos: Photo[];
   onPhotosChange: (photos: Photo[]) => void;
@@ -39,7 +41,7 @@ export function MemoryFields({
   const selectedPersonIds = memory?.personIds?.length ? memory.personIds : initialPersonIds.filter(Boolean);
   const selectedPlaceIds = getInitialPlaceIds(memory, initialPlaceId, initialPlaceIds);
   const todayValue = new Date().toISOString().slice(0, 10);
-  const [quickDate, setQuickDate] = useState(todayValue);
+  const [quickDate, setQuickDate] = useState(initialDate || todayValue);
   const [quickContent, setQuickContent] = useState(() =>
     !memory && mode === "quick"
       ? buildDefaultQuickMemoryTitle({
@@ -261,7 +263,7 @@ export function MemoryFields({
       </label>
       <label className="inline-field">
         <span className="inline-field-label">日期</span>
-        <DateInput name="date" label="回忆日期" defaultValue={memory?.date || todayValue} required />
+        <DateInput name="date" label="回忆日期" defaultValue={memory?.date || initialDate || todayValue} required />
       </label>
       <label>
         心情

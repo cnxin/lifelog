@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Photo } from "../types";
 import { compressImage, validateImageFile, blobToObjectURL } from "../utils/imageCompression";
+import { useToast } from "../context/ToastContext";
 
 interface PhotoUploaderProps {
   photos: Photo[];
@@ -19,22 +20,32 @@ export function PhotoUploader({
   onPhotosChange,
   disabled = false
 }: PhotoUploaderProps) {
+  const notify = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [dragActive, setDragActive] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     if (disabled) return;
+    setErrors([]);
 
     const remainingSlots = maxPhotos - photos.length;
     if (remainingSlots <= 0) {
-      alert(`最多只能上传 ${maxPhotos} 张照片`);
+      const message = `最多只能上传 ${maxPhotos} 张照片`;
+      setErrors([message]);
+      notify({ message, tone: "error" });
       return;
     }
 
-    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+    const selectedFiles = Array.from(files);
+    const filesToProcess = selectedFiles.slice(0, remainingSlots);
+    const nextErrors: string[] = [];
+    if (selectedFiles.length > remainingSlots) {
+      nextErrors.push(`已达到上限，只处理前 ${remainingSlots} 张照片。`);
+    }
     setUploading(true);
     setUploadProgress(`正在处理 0/${filesToProcess.length} 张照片...`);
 
@@ -46,7 +57,7 @@ export function PhotoUploader({
       // 验证文件
       const validation = validateImageFile(file);
       if (!validation.valid) {
-        alert(`${file.name}: ${validation.error}`);
+        nextErrors.push(`${file.name}: ${validation.error}`);
         continue;
       }
 
@@ -74,15 +85,22 @@ export function PhotoUploader({
         newPhotos.push(photo);
       } catch (error) {
         console.error(`处理 ${file.name} 失败:`, error);
-        alert(`${file.name} 处理失败，请重试`);
+        nextErrors.push(`${file.name}: 处理失败，请重试`);
       }
     }
 
     setUploading(false);
     setUploadProgress("");
+    setErrors(nextErrors);
 
     if (newPhotos.length > 0) {
       onPhotosChange([...photos, ...newPhotos]);
+      notify({
+        message: nextErrors.length ? `已添加 ${newPhotos.length} 张照片，${nextErrors.length} 项未处理` : `已添加 ${newPhotos.length} 张照片`,
+        tone: nextErrors.length ? "info" : "success"
+      });
+    } else if (nextErrors.length) {
+      notify({ message: nextErrors[0], tone: "error" });
     }
   };
 
@@ -178,6 +196,16 @@ export function PhotoUploader({
         <div className="photo-upload-progress">
           <div className="spinner"></div>
           <p>{uploadProgress}</p>
+        </div>
+      )}
+
+      {errors.length > 0 && (
+        <div className="photo-upload-errors" role="status" aria-live="polite">
+          <strong>{errors.length === 1 ? "有一项未处理" : `${errors.length} 项未处理`}</strong>
+          {errors.slice(0, 3).map((error) => (
+            <span key={error}>{error}</span>
+          ))}
+          {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { ArrowLeft, Calendar, Heart, MapPin, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTags from "../../components/MemoryTags";
@@ -16,6 +16,7 @@ import type { Photo } from "../../types";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
@@ -39,6 +40,19 @@ export default function MemoryDetail() {
       setPhotos([]);
     }
   }, [memory?.id, photoIds.length, loadMemoryPhotos]);
+
+  useEffect(() => {
+    if (!memory) return;
+    if (searchParams.get("edit") === "photos") {
+      setEditing(true);
+      setSearchParams({}, { replace: true });
+      return;
+    }
+    if (searchParams.get("add") === "related") {
+      setAddingRelated(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [memory, searchParams, setSearchParams]);
 
   if (!memory) {
     return (

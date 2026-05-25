@@ -1,6 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, PenLine } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTags from "../../components/MemoryTags";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -16,10 +17,12 @@ const weekDays = ["一", "二", "三", "四", "五", "六", "日"];
 
 export default function Calendar() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedDate, setSelectedDate] = useState(toCalendarDateKey(today));
+  const [selectedDate, setSelectedDateState] = useState(searchParams.get("date") || toCalendarDateKey(today));
+  const [addingMemory, setAddingMemory] = useState(false);
   const [showLunar, setShowLunar] = useState(true);
   const todayKey = toCalendarDateKey(today);
 
@@ -41,6 +44,11 @@ export default function Calendar() {
   const itemsByDate = useMemo(() => groupCalendarItemsByDate(items), [items]);
   const selectedItems = itemsByDate[selectedDate] || [];
   const selectedLunar = getLunarDateInfo(selectedDate);
+
+  function setSelectedDate(dateKey: string) {
+    setSelectedDateState(dateKey);
+    setSearchParams({ date: dateKey }, { replace: true });
+  }
 
   function moveMonth(offset: number) {
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
@@ -125,6 +133,9 @@ export default function Calendar() {
       <section className="section">
         <div className="section-header">
           <h2>{formatMonthDay(selectedDate)} 的记录</h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            补记
+          </button>
         </div>
         <div className="list">
           {selectedItems.map((item) => (
@@ -149,9 +160,22 @@ export default function Calendar() {
               )}
             </button>
           ))}
-          {!selectedItems.length && <GlassCard className="empty">这一天还没有记录</GlassCard>}
+          {!selectedItems.length && (
+            <GlassCard className="empty empty-cta">
+              <p>这一天还没有记录</p>
+              <button className="primary-btn" onClick={() => setAddingMemory(true)}>
+                <PenLine size={16} /> 补记这一天
+              </button>
+            </GlassCard>
+          )}
         </div>
       </section>
+      <EntrySheet
+        type={addingMemory ? "memory" : null}
+        memoryMode="quick"
+        initialDate={selectedDate}
+        onClose={() => setAddingMemory(false)}
+      />
     </>
   );
 }

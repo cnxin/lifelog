@@ -9,6 +9,7 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
+import { buildRelationshipHealth } from "../../utils/relationshipHealth";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
 
@@ -47,6 +48,7 @@ export default function PersonDetail() {
   const relatedPlaces = Array.from(
     new Set(relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean))
   );
+  const relationshipHealth = buildRelationshipHealth(person.id, state.memories);
   const topPlaces = getTopRelatedItems(
     relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean),
     getPlaceName
@@ -140,6 +142,13 @@ export default function PersonDetail() {
           <div className="summary-line">
             <strong>关系</strong>
             <span>{person.relationship || "未设置"}</span>
+          </div>
+          <div className="summary-line">
+            <strong>关系温度</strong>
+            <span>
+              <span className={`relationship-health-pill inline ${relationshipHealth.temperature}`}>{relationshipHealth.label}</span>
+              {" "}{relationshipHealth.detail}
+            </span>
           </div>
           <div className="summary-line">
             <strong>常出现地点</strong>

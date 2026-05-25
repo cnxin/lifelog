@@ -180,7 +180,101 @@
   z-index: 101;
 }
 
+.fab-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  border: 0;
+  background: rgba(45, 52, 54, 0.18);
+}
+
+.fab-menu {
+  position: absolute;
+  right: 0;
+  bottom: 68px;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  width: min(306px, calc(100vw - 48px));
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 10px;
+  background: var(--card-solid);
+  box-shadow: 0 18px 46px rgba(31, 34, 54, 0.18);
+  transform-origin: bottom right;
+  animation: fab-menu-in 0.18s ease;
+}
+
+.fab-menu button {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  color: var(--text-main);
+  background: transparent;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    filter 0.16s ease;
+}
+
+.fab-menu button:active {
+  transform: scale(0.98);
+  background: var(--soft-purple);
+}
+
+.fab-menu button.primary {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 68%),
+    var(--soft-purple);
+}
+
+.fab-menu button.primary .fab-menu-icon {
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.fab-menu-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.fab-menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fab-menu strong,
+.fab-menu small {
+  display: block;
+  min-width: 0;
+}
+
+.fab-menu strong {
+  margin-bottom: 2px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.fab-menu small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .fab {
+  position: relative;
+  z-index: 2;
   width: 56px;
   height: 56px;
   border: 0;
@@ -203,3 +297,18 @@
   stroke-width: 2.4;
 }
 
+.fab.open {
+  filter: saturate(0.92) brightness(0.98);
+}
+
+@keyframes fab-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
