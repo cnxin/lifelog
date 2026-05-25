@@ -20,7 +20,7 @@ export default function Home() {
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const upcoming = getUpcomingAnniversaries(state.people)
-    .filter((item) => item.deltaDays >= 0 && item.deltaDays <= 30)
+    .filter((item) => item.days >= 0 && item.days <= 30)
     .slice(0, 4);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);

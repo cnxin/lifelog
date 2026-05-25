@@ -689,6 +689,77 @@
   white-space: nowrap;
 }
 
+.mall-list-card {
+  width: 100%;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  color: var(--text-main);
+  text-align: left;
+}
+
+.mall-list-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.mall-list-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  flex: 0 0 auto;
+}
+
+.mall-list-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.mall-list-copy strong,
+.mall-list-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mall-list-copy strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.mall-list-copy small {
+  color: var(--text-sub);
+  font-size: 12px;
+}
+
+.mall-visit-line,
+.mall-store-visit-line {
+  width: 100%;
+  margin: 2px 0 0;
+}
+
+.vertical-detail-card .mall-store-visit-line {
+  display: flex;
+}
+
+.vertical-detail-card .mall-store-visit-line span {
+  width: auto;
+  color: color-mix(in srgb, var(--primary) 82%, var(--text-sub));
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
+}
+
 .pref-grid {
   display: grid;
   gap: 10px;

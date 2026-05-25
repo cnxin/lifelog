@@ -4,15 +4,17 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTags from "../../components/MemoryTags";
+import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import { formatMonthDay } from "../../utils/date";
+import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
-import type { Photo } from "../../types";
+import type { MemoryEvent, Photo } from "../../types";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
@@ -92,6 +94,9 @@ export default function MemoryDetail() {
       visible: memory.mood === "日常" || !tags.length
     }
   ].filter((tip) => tip.visible);
+  const relatedMemoryMatches = buildRelatedMemoryMatches(memory, state.memories);
+  const relatedReasonById = new Map(relatedMemoryMatches.map((item) => [item.memory.id, item.reason]));
+  const groupedRelatedMemories = groupMemoriesByMonth(relatedMemoryMatches.map((item) => item.memory));
 
   return (
     <>
@@ -229,6 +234,25 @@ export default function MemoryDetail() {
         )}
       </section>
 
+      <MemoryTimelineSection
+        title="相关回忆"
+        groupedMemories={groupedRelatedMemories}
+        getPersonName={getPersonName}
+        getPlaceName={getPlaceName}
+        onAddMemory={() => setAddingRelated(true)}
+        emptyTitle="还没有找到相关回忆"
+        emptyDesc="同人物、同地点或同标签的记录会自动出现在这里。"
+        emptyAction="再记一条相关回忆"
+        renderMeta={(relatedMemory, ctx, showContentLine) => (
+          <>
+            <p className="memory-desc memory-meta-line">
+              {[relatedReasonById.get(relatedMemory.id), buildMemoryMetaLine(ctx)].filter(Boolean).join(" · ")}
+            </p>
+            {showContentLine && <p className="memory-desc">{relatedMemory.content}</p>}
+          </>
+        )}
+      />
+
       {viewerOpen && photos.length > 0 && (
         <PhotoViewer
           photos={photos}
@@ -258,4 +282,90 @@ function formatPlaceAddressLine(place: {
   mall: string;
 }) {
   return place.address || [place.province, place.city, buildPlaceContextLine(place)].filter(Boolean).join(" · ");
+}
+
+function buildRelatedMemoryMatches(source: MemoryEvent, memories: MemoryEvent[]) {
+  return memories
+    .filter((candidate) => candidate.id !== source.id)
+    .map((candidate) => {
+      const match = scoreRelatedMemory(source, candidate);
+      return {
+        memory: candidate,
+        ...match
+      };
+    })
+    .filter((item) => item.score >= 2)
+    .sort((left, right) => (
+      right.score - left.score ||
+      left.dateDistance - right.dateDistance ||
+      right.memory.date.localeCompare(left.memory.date)
+    ))
+    .slice(0, 8);
+}
+
+function scoreRelatedMemory(source: MemoryEvent, candidate: MemoryEvent) {
+  const reasons: string[] = [];
+  let score = 0;
+
+  const personMatches = countIntersection(source.personIds || [], candidate.personIds || []);
+  if (personMatches) {
+    score += personMatches * 5;
+    reasons.push(personMatches > 1 ? `同人物 ${personMatches} 位` : "同人物");
+  }
+
+  const placeMatches = countIntersection(getMemoryPlaceIds(source), getMemoryPlaceIds(candidate));
+  if (placeMatches) {
+    score += placeMatches * 5;
+    reasons.push(placeMatches > 1 ? `同地点 ${placeMatches} 个` : "同地点");
+  }
+
+  const tagMatches = countIntersection(normalizeTags(source.tags), normalizeTags(candidate.tags));
+  if (tagMatches) {
+    score += tagMatches * 3;
+    reasons.push(tagMatches > 1 ? `同标签 ${tagMatches} 个` : "同标签");
+  }
+
+  const dateDistance = getDateDistance(source.date, candidate.date);
+  if (dateDistance <= 7) {
+    score += 2;
+    reasons.push(dateDistance === 0 ? "同一天" : "相近日期");
+  } else if (isSameMonth(source.date, candidate.date)) {
+    score += 1;
+    reasons.push("同月");
+  }
+
+  if (source.mood && source.mood !== "日常" && source.mood === candidate.mood) {
+    score += 1;
+    reasons.push("同心情");
+  }
+
+  return {
+    score,
+    dateDistance,
+    reason: uniqueLabels(reasons).slice(0, 3).join(" · ")
+  };
+}
+
+function countIntersection(left: string[] = [], right: string[] = []) {
+  const rightSet = new Set(right.map((item) => item.trim()).filter(Boolean));
+  return uniqueLabels(left).filter((item) => rightSet.has(item)).length;
+}
+
+function normalizeTags(tags: string[] = []) {
+  return tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+}
+
+function uniqueLabels(items: string[]) {
+  return Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
+}
+
+function getDateDistance(left: string, right: string) {
+  const leftTime = Date.parse(`${left}T00:00:00`);
+  const rightTime = Date.parse(`${right}T00:00:00`);
+  if (!Number.isFinite(leftTime) || !Number.isFinite(rightTime)) return Number.POSITIVE_INFINITY;
+  return Math.abs(Math.round((leftTime - rightTime) / 86400000));
+}
+
+function isSameMonth(left: string, right: string) {
+  return /^\d{4}-\d{2}/.test(left) && left.slice(0, 7) === right.slice(0, 7);
 }

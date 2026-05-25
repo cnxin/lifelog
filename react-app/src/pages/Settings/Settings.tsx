@@ -1,12 +1,15 @@
-import { BarChart3, Bell, ChevronDown, GitMerge, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bell, ChevronDown, GitMerge, HeartPulse, SlidersHorizontal } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DateInput from "../../components/DateInput";
 import GlassCard from "../../components/GlassCard";
 import NumberStepper from "../../components/NumberStepper";
 import TimePicker from "../../components/TimePicker";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { ThemeStyle } from "../../types";
+import type { LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
+import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import ReminderSettings from "./ReminderSettings";
 
 const themeOptions: Array<{
@@ -37,6 +40,7 @@ const themeOptions: Array<{
 ];
 
 export default function Settings() {
+  const navigate = useNavigate();
   const {
     state,
     settings,
@@ -74,6 +78,7 @@ export default function Settings() {
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong").length,
     [duplicatePlaceGroups]
   );
+  const healthReport = useMemo(() => buildDataHealthReport(state), [state]);
 
   async function handleMergeAll() {
     if (mergeLockRef.current) return;
@@ -206,6 +211,43 @@ export default function Settings() {
             <span>去过的城市</span>
           </div>
         </GlassCard>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <HeartPulse /> 资料体检
+          </h2>
+          <button className="see-all" onClick={() => navigate(healthReport.nextPath || "/people")}>
+            去补全
+          </button>
+        </div>
+        <GlassCard className="data-health-card">
+          <div className="data-health-score">
+            <strong>{healthReport.score}</strong>
+            <span>完整度</span>
+          </div>
+          <div className="data-health-summary">
+            <strong>{healthReport.title}</strong>
+            <span>{healthReport.desc}</span>
+          </div>
+        </GlassCard>
+        {healthReport.items.length > 0 ? (
+          <div className="data-health-list">
+            {healthReport.items.slice(0, 6).map((item) => (
+              <button className="data-health-item glass-card" type="button" key={item.id} onClick={() => navigate(item.path)}>
+                <span className={`data-health-icon ${item.tone}`}>{item.count}</span>
+                <span className="data-health-copy">
+                  <strong>{item.title}</strong>
+                  <small>{item.desc}</small>
+                </span>
+                <em>{item.kind}</em>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="empty">人物、地点和回忆的核心字段都已经比较完整。</GlassCard>
+        )}
       </section>
 
       <section className="section">
@@ -378,4 +420,207 @@ export default function Settings() {
       )}
     </>
   );
+}
+
+interface HealthItem {
+  id: string;
+  kind: string;
+  title: string;
+  desc: string;
+  count: number;
+  path: string;
+  tone: "person" | "place" | "memory";
+  severity: number;
+}
+
+function buildDataHealthReport(state: LifeLogState) {
+  const items: HealthItem[] = [
+    buildPeopleBirthdayHealth(state.people),
+    buildPeoplePreferenceHealth(state.people),
+    buildPlaceMapHealth(state.places),
+    buildPlaceAddressHealth(state.places),
+    buildPlacePhotoHealth(state.places),
+    buildMemoryContentHealth(state.memories),
+    buildMemoryPeopleHealth(state.memories),
+    buildMemoryPlaceHealth(state.memories),
+    buildMemoryTagHealth(state.memories)
+  ].filter((item): item is HealthItem => Boolean(item && item.count > 0));
+
+  const totalChecks =
+    state.people.length * 2 +
+    state.places.length * 3 +
+    state.memories.length * 4;
+  const missingChecks = items.reduce((sum, item) => sum + item.count, 0);
+  const score = totalChecks ? Math.max(0, Math.round(((totalChecks - missingChecks) / totalChecks) * 100)) : 100;
+  const sortedItems = items.sort((left, right) => right.severity - left.severity || right.count - left.count);
+  const nextItem = sortedItems[0];
+
+  return {
+    score,
+    title: nextItem ? `还有 ${missingChecks} 项资料可补全` : "资料状态良好",
+    desc: nextItem ? `优先处理：${nextItem.title}` : "继续记录新的回忆即可。",
+    nextPath: nextItem?.path || "",
+    items: sortedItems
+  };
+}
+
+function buildPeopleBirthdayHealth(people: Person[]): HealthItem | null {
+  const missing = people.filter((person) => !person.birthday);
+  const first = missing[0];
+  return first
+    ? {
+        id: "people-birthday",
+        kind: "人物",
+        title: `${missing.length} 位人物缺生日`,
+        desc: `${first.name} 等人物补充后会进入日历和提醒。`,
+        count: missing.length,
+        path: `/people/${first.id}`,
+        tone: "person",
+        severity: 8
+      }
+    : null;
+}
+
+function buildPeoplePreferenceHealth(people: Person[]): HealthItem | null {
+  const missing = people.filter((person) => !safeArray(person.preferences).length && !safeArray(person.dislikes).length);
+  const first = missing[0];
+  return first
+    ? {
+        id: "people-preferences",
+        kind: "人物",
+        title: `${missing.length} 位人物缺喜好`,
+        desc: `${first.name} 等人物还没有偏好或禁忌记录。`,
+        count: missing.length,
+        path: `/people/${first.id}`,
+        tone: "person",
+        severity: 6
+      }
+    : null;
+}
+
+function buildPlaceMapHealth(places: Place[]): HealthItem | null {
+  const missing = places.filter((place) => !place.mapUrl && !(place.latitude && place.longitude));
+  const first = missing[0];
+  return first
+    ? {
+        id: "place-map",
+        kind: "地点",
+        title: `${missing.length} 个地点缺地图入口`,
+        desc: `${buildPlaceDisplayName(first)} 还不能直接打开高德。`,
+        count: missing.length,
+        path: `/places/${first.id}`,
+        tone: "place",
+        severity: 9
+      }
+    : null;
+}
+
+function buildPlaceAddressHealth(places: Place[]): HealthItem | null {
+  const missing = places.filter((place) => !place.address && !place.mall && !place.area);
+  const first = missing[0];
+  return first
+    ? {
+        id: "place-address",
+        kind: "地点",
+        title: `${missing.length} 个地点缺位置层级`,
+        desc: `${buildPlaceDisplayName(first)} 还没有地址、区域或商场信息。`,
+        count: missing.length,
+        path: `/places/${first.id}`,
+        tone: "place",
+        severity: 7
+      }
+    : null;
+}
+
+function buildPlacePhotoHealth(places: Place[]): HealthItem | null {
+  const missing = places.filter((place) => !safeArray(place.photos).length);
+  const first = missing[0];
+  return first
+    ? {
+        id: "place-photos",
+        kind: "地点",
+        title: `${missing.length} 个地点缺照片`,
+        desc: `${buildPlaceDisplayName(first)} 的详情页还没有照片。`,
+        count: missing.length,
+        path: `/places/${first.id}`,
+        tone: "place",
+        severity: 4
+      }
+    : null;
+}
+
+function buildMemoryContentHealth(memories: MemoryEvent[]): HealthItem | null {
+  const missing = memories.filter((memory) => !safeText(memory.content).trim());
+  const first = missing[0];
+  return first
+    ? {
+        id: "memory-content",
+        kind: "回忆",
+        title: `${missing.length} 条回忆缺正文`,
+        desc: `${first.title || "未命名回忆"} 还没有记录发生了什么。`,
+        count: missing.length,
+        path: `/memories/${first.id}`,
+        tone: "memory",
+        severity: 8
+      }
+    : null;
+}
+
+function buildMemoryPeopleHealth(memories: MemoryEvent[]): HealthItem | null {
+  const missing = memories.filter((memory) => !safeArray(memory.personIds).length);
+  const first = missing[0];
+  return first
+    ? {
+        id: "memory-people",
+        kind: "回忆",
+        title: `${missing.length} 条回忆缺人物`,
+        desc: `${first.title || "未命名回忆"} 还没有关联人物。`,
+        count: missing.length,
+        path: `/memories/${first.id}`,
+        tone: "memory",
+        severity: 7
+      }
+    : null;
+}
+
+function buildMemoryPlaceHealth(memories: MemoryEvent[]): HealthItem | null {
+  const missing = memories.filter((memory) => !getMemoryPlaceIds(memory).length);
+  const first = missing[0];
+  return first
+    ? {
+        id: "memory-place",
+        kind: "回忆",
+        title: `${missing.length} 条回忆缺地点`,
+        desc: `${first.title || "未命名回忆"} 还没有关联地点。`,
+        count: missing.length,
+        path: `/memories/${first.id}`,
+        tone: "memory",
+        severity: 7
+      }
+    : null;
+}
+
+function buildMemoryTagHealth(memories: MemoryEvent[]): HealthItem | null {
+  const missing = memories.filter((memory) => memory.mood === "日常" && !safeArray(memory.tags).length);
+  const first = missing[0];
+  return first
+    ? {
+        id: "memory-tags",
+        kind: "回忆",
+        title: `${missing.length} 条回忆缺心情标签`,
+        desc: `${first.title || "未命名回忆"} 还没有能帮助搜索的标签。`,
+        count: missing.length,
+        path: `/memories/${first.id}`,
+        tone: "memory",
+        severity: 5
+      }
+    : null;
+}
+
+function safeArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function safeText(value: unknown) {
+  return String(value || "");
 }

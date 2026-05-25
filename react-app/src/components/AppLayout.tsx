@@ -5,6 +5,7 @@ import { todayLabel } from "../utils/date";
 import BottomNav from "./BottomNav";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
+import GlobalSearchPanel from "./GlobalSearchPanel";
 import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
 import { Camera, CalendarPlus, ClipboardPaste, MapPinPlus, PenLine, UserPlus } from "lucide-react";
@@ -56,6 +57,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [initialPlaceDraft, setInitialPlaceDraft] = useState<Partial<Place> | undefined>();
   const [initialPlaceShareReview, setInitialPlaceShareReview] = useState<PlaceDraft | undefined>();
   const [placeDraftKey, setPlaceDraftKey] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
   const seenShareTextsRef = useRef(new Set<string>());
   const meta = getPageMeta(location.pathname);
   const { isLoading, settings } = useLifeLog();
@@ -65,6 +67,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname]);
   useAndroidBackButton(() => {
+    if (searchOpen) {
+      setSearchOpen(false);
+      return true;
+    }
     if (!sheetType) return false;
     setSheetType(null);
     return true;
@@ -170,7 +176,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`app-container theme-${settings.themeStyle}`}>
       <NetworkBanner />
-      <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} />
+      <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} onSearch={() => setSearchOpen(true)} />
       <main className="main-content">
         {isLoading ? (
           <div className="app-loading" role="status" aria-live="polite">
@@ -204,6 +210,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           setSheetMode("full");
         }}
       />
+      <GlobalSearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

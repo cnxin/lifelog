@@ -15,7 +15,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
-import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
+import { buildMallVisitStats, buildPlaceVisitStats, type MallVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import {
   buildMallKey,
   buildPlaceContextLine,
@@ -121,6 +121,8 @@ export default function Places() {
         city: string;
         count: number;
         categories: Set<string>;
+        storePlaceIds: string[];
+        visitStats: MallVisitStats;
       }
     >();
 
@@ -137,18 +139,22 @@ export default function Places() {
         city: place.city,
         count: 0,
         categories: new Set<string>(),
+        storePlaceIds: [],
+        visitStats: buildMallVisitStats([], state.memories, getPersonName),
       };
       if (!isMallRecord(place)) {
         current.count += 1;
         current.categories.add(place.category);
+        current.storePlaceIds.push(place.id);
       }
+      current.visitStats = buildMallVisitStats(current.storePlaceIds, state.memories, getPersonName);
       groups.set(key, current);
     }
 
     return Array.from(groups.values()).sort((a, b) =>
       a.mall.localeCompare(b.mall, "zh-CN"),
     );
-  }, [places]);
+  }, [getPersonName, places, state.memories]);
 
   const placeRows = useMemo(() => {
     return places
@@ -431,34 +437,27 @@ export default function Places() {
           <div className="list">
             {mallGroups.map((mall) => (
               <button
-                className="detail-row detail-button glass-card"
+                className="mall-list-card detail-button glass-card"
                 key={mall.key}
                 onClick={() =>
                   navigate(`/places/malls/${encodeURIComponent(mall.key)}`)
                 }
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                  <div
-                    style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "10px",
-                      background: "linear-gradient(135deg, var(--primary), var(--secondary))",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0
-                    }}
-                  >
+                <span className="mall-list-main">
+                  <span className="mall-list-icon">
                     <Building2 size={18} />
-                  </div>
-                  <strong className="truncate-text">{mall.mall}</strong>
-                </div>
-                <span>
-                  {[mall.province, mall.city].filter(Boolean).join(" · ")}
-                  {mall.count > 0 && ` · ${mall.count} 家店`}
+                  </span>
+                  <span className="mall-list-copy">
+                    <strong>{mall.mall}</strong>
+                    <small>{[mall.province, mall.city].filter(Boolean).join(" · ") || "未设置城市"}</small>
+                  </span>
                 </span>
+                <div className="place-visit-line mall-visit-line">
+                  <span>{mall.visitStats.storeCount} 家店</span>
+                  <span>{mall.visitStats.visitCount ? `总到访 ${mall.visitStats.visitCount} 次` : "还没有到访"}</span>
+                  <span>{mall.visitStats.latestLabel}</span>
+                  {mall.visitStats.topPeople.length > 0 && <span>常一起：{mall.visitStats.topPeople.map((item) => item.label).join("、")}</span>}
+                </div>
               </button>
             ))}
           </div>

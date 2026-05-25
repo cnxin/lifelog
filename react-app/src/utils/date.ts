@@ -90,13 +90,14 @@ export function daysUntil(date: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const source = new Date(`${date}T00:00:00`);
-  let next = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  if (next < today) {
-    next = new Date(today.getFullYear() + 1, source.getMonth(), source.getDate());
-  }
+  const next = getNextAnnualOccurrence(date, today);
+  return diffDays(today, next);
+}
 
-  return Math.round((next.getTime() - today.getTime()) / 86400000);
+export function formatDaysUntilLabel(days: number) {
+  if (days <= 0) return "今天";
+  if (days === 1) return "明天";
+  return `还有 ${days} 天`;
 }
 
 export function anniversaryDeltaDays(date: string) {
@@ -115,27 +116,35 @@ export function anniversaryRelativeLabel(date: string) {
   return `已过 ${Math.abs(delta)} 天`;
 }
 
-export function anniversaryYearLabel(date: string) {
-  const source = new Date(`${date}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+export function anniversaryYearLabel(date: string, occurrenceDate = new Date()) {
+  const source = parseLocalDate(date);
+  const target = startOfLocalDay(occurrenceDate);
+  const years = completedYearsAt(source, target);
 
-  let years = today.getFullYear() - source.getFullYear();
-  const thisYearDate = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  if (thisYearDate > today) years -= 1;
+  if (years > 0) return `${years} 周年`;
+  return sameLocalDate(source, target) ? "首次纪念日" : "未满 1 周年";
+}
 
-  if (years <= 0) return "第 1 年";
+export function anniversaryOccurrenceLabel(date: string, occurrenceDate: Date) {
+  const source = parseLocalDate(date);
+  const target = startOfLocalDay(occurrenceDate);
+  const years = target.getFullYear() - source.getFullYear();
+
+  if (years <= 0) return "首次纪念日";
   return `${years} 周年`;
 }
 
-export function birthdayAgeLabel(date: string) {
-  const source = new Date(`${date}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+export function birthdayAgeLabel(date: string, occurrenceDate = new Date()) {
+  const age = completedYearsAt(parseLocalDate(date), startOfLocalDay(occurrenceDate));
 
-  let age = today.getFullYear() - source.getFullYear();
-  const thisYearBirthday = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  if (thisYearBirthday > today) age -= 1;
+  if (age <= 0) return "出生第一年";
+  return `${age} 岁`;
+}
+
+export function birthdayOccurrenceAgeLabel(date: string, occurrenceDate: Date) {
+  const source = parseLocalDate(date);
+  const target = startOfLocalDay(occurrenceDate);
+  const age = target.getFullYear() - source.getFullYear();
 
   if (age <= 0) return "出生第一年";
   return `${age} 岁`;
@@ -146,14 +155,16 @@ export function getUpcomingAnniversaries(people: Person[]) {
     .flatMap((person) =>
       person.anniversaries.map((anniversary: Anniversary) => {
         const deltaDays = anniversaryDeltaDays(anniversary.date);
+        const nextOccurrence = getNextAnnualOccurrence(anniversary.date);
+        const days = diffDays(startOfLocalDay(new Date()), nextOccurrence);
         return {
           ...anniversary,
           personId: person.id,
           personName: person.name,
-          days: Math.abs(deltaDays),
+          days,
           deltaDays,
-          label: anniversaryRelativeLabel(anniversary.date),
-          yearLabel: anniversary.title === "生日" ? birthdayAgeLabel(anniversary.date) : anniversaryYearLabel(anniversary.date)
+          label: formatDaysUntilLabel(days),
+          yearLabel: anniversary.title === "生日" ? birthdayOccurrenceAgeLabel(anniversary.date, nextOccurrence) : anniversaryOccurrenceLabel(anniversary.date, nextOccurrence)
         };
       })
     )
@@ -166,4 +177,44 @@ export function todayLabel() {
     month: "long",
     day: "numeric"
   });
+}
+
+function getNextAnnualOccurrence(date: string, referenceDate = new Date()) {
+  const reference = startOfLocalDay(referenceDate);
+  const source = parseLocalDate(date);
+  let next = new Date(reference.getFullYear(), source.getMonth(), source.getDate());
+  if (next < reference) {
+    next = new Date(reference.getFullYear() + 1, source.getMonth(), source.getDate());
+  }
+  return next;
+}
+
+function parseLocalDate(date: string) {
+  return new Date(`${date}T00:00:00`);
+}
+
+function startOfLocalDay(date: Date) {
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  return target;
+}
+
+function diffDays(from: Date, to: Date) {
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+function completedYearsAt(source: Date, target: Date) {
+  let years = target.getFullYear() - source.getFullYear();
+  const targetMonthDay = target.getMonth() * 100 + target.getDate();
+  const sourceMonthDay = source.getMonth() * 100 + source.getDate();
+  if (targetMonthDay < sourceMonthDay) years -= 1;
+  return years;
+}
+
+function sameLocalDate(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
 }

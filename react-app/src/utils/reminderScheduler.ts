@@ -1,7 +1,7 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import type { Person, MemoryEvent, ReminderSettings } from '../types';
-import { daysUntil, anniversaryYearLabel, birthdayAgeLabel } from './date';
+import { daysUntil, anniversaryOccurrenceLabel, birthdayOccurrenceAgeLabel, formatDaysUntilLabel } from './date';
 
 const REMINDER_WINDOW_DAYS = 30;
 const MAX_PENDING_REMINDERS = 64;
@@ -23,11 +23,18 @@ export interface ReminderPreviewItem {
   title: string;
   body: string;
   at: Date;
+  targetAt?: Date;
+  targetLabel?: string;
+  leadLabel?: string;
 }
 
 interface ReminderEntry {
   type: ReminderPreviewType;
   notification: LocalNotificationSchema;
+  targetAt?: Date;
+  targetLabel?: string;
+  leadLabel?: string;
+  previewBody?: string;
 }
 
 /**
@@ -97,12 +104,15 @@ export function previewUpcomingReminders(
   end.setHours(23, 59, 59, 999);
 
   return generateReminderEntries(people, memories, settings)
-    .map(({ type, notification }) => ({
+    .map(({ type, notification, targetAt, targetLabel, leadLabel, previewBody }) => ({
       id: notification.id,
       type,
       title: notification.title,
-      body: notification.body || "",
-      at: notification.schedule?.at || new Date(0)
+      body: previewBody || notification.body || "",
+      at: notification.schedule?.at || new Date(0),
+      targetAt,
+      targetLabel,
+      leadLabel
     }))
     .filter((item) => item.at >= start && item.at <= end)
     .slice(0, limit);
@@ -151,25 +161,34 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
     const days = daysUntil(person.birthday);
     const advanceOffset = days - settings.birthdayAdvanceDays;
 
-      if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+    if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+      const targetAt = getScheduleDate(days, settings.birthdayTime);
       entries.push({
         type: "生日",
+        targetAt,
+        targetLabel: formatDaysUntilLabel(days),
+        leadLabel: `提前 ${settings.birthdayAdvanceDays} 天提醒`,
+        previewBody: `${formatDaysUntilLabel(days)}就是 ${person.name} 的生日了，记得准备礼物哦 · 提前 ${settings.birthdayAdvanceDays} 天提醒`,
         notification: {
           id: generateId('birthday-advance', person.id),
           title: `${person.name}的生日快到了`,
-          body: `还有 ${settings.birthdayAdvanceDays} 天就是 ${person.name} 的生日了，记得准备礼物哦`,
+          body: `${formatDaysUntilLabel(settings.birthdayAdvanceDays)}就是 ${person.name} 的生日了，记得准备礼物哦`,
           schedule: { at: getScheduleDate(advanceOffset, settings.birthdayTime) }
         }
       });
     }
 
     if (days >= 0 && days <= REMINDER_WINDOW_DAYS) {
+      const targetAt = getScheduleDate(days, settings.birthdayTime);
       entries.push({
         type: "生日",
+        targetAt,
+        targetLabel: "今天",
+        leadLabel: "",
         notification: {
           id: generateId('birthday-today', person.id),
           title: `今天是${person.name}的生日 🎂`,
-          body: `${birthdayAgeLabel(person.birthday)}，记得送上祝福`,
+          body: `${birthdayOccurrenceAgeLabel(person.birthday, targetAt)}，记得送上祝福`,
           schedule: { at: getScheduleDate(days, settings.birthdayTime) }
         }
       });
@@ -189,25 +208,36 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
       const days = daysUntil(anniversary.date);
       const advanceOffset = days - settings.anniversaryAdvanceDays;
 
-    if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+      if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+        const targetAt = getScheduleDate(days, settings.anniversaryTime);
+        const targetYearLabel = anniversaryOccurrenceLabel(anniversary.date, targetAt);
         entries.push({
           type: "纪念日",
+          targetAt,
+          targetLabel: formatDaysUntilLabel(days),
+          leadLabel: `提前 ${settings.anniversaryAdvanceDays} 天提醒`,
+          previewBody: `${formatDaysUntilLabel(days)} · ${targetYearLabel} · 提前 ${settings.anniversaryAdvanceDays} 天提醒`,
           notification: {
             id: generateId('anniversary-advance', person.id, anniversary.title),
             title: `${person.name}的${anniversary.title}快到了`,
-            body: `还有 ${settings.anniversaryAdvanceDays} 天`,
+            body: `${formatDaysUntilLabel(settings.anniversaryAdvanceDays)} · ${targetYearLabel}`,
             schedule: { at: getScheduleDate(advanceOffset, settings.anniversaryTime) }
           }
         });
       }
 
       if (days >= 0 && days <= REMINDER_WINDOW_DAYS) {
+        const targetAt = getScheduleDate(days, settings.anniversaryTime);
+        const targetYearLabel = anniversaryOccurrenceLabel(anniversary.date, targetAt);
         entries.push({
           type: "纪念日",
+          targetAt,
+          targetLabel: "今天",
+          leadLabel: "",
           notification: {
             id: generateId('anniversary-today', person.id, anniversary.title),
             title: `今天是${person.name}的${anniversary.title}`,
-            body: anniversaryYearLabel(anniversary.date),
+            body: targetYearLabel,
             schedule: { at: getScheduleDate(days, settings.anniversaryTime) }
           }
         });
@@ -239,6 +269,7 @@ function generateContactReminders(
     if (daysSinceContact >= settings.contactIntervalDays) {
       entries.push({
         type: "联系",
+        targetAt: getScheduleDate(0, settings.contactTime),
         notification: {
           id: generateId('contact', person.id),
           title: `好久没联系${person.name}了`,
@@ -271,6 +302,7 @@ function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSett
     const yearsAgo = today.getFullYear() - new Date(`${lastYearMemories[0].date}T00:00:00`).getFullYear();
     entries.push({
       type: "回忆",
+      targetAt: getScheduleDate(0, settings.memoryTime),
       notification: {
         id: generateId('memory', today.toISOString().slice(0, 10)),
         title: `${yearsAgo}年前的今天`,

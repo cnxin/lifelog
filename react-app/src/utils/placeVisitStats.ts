@@ -8,13 +8,26 @@ export interface PlaceVisitStats {
   topPeople: Array<{ id: string; label: string; count: number }>;
 }
 
+export interface MallVisitStats extends PlaceVisitStats {
+  storeCount: number;
+}
+
 export function buildPlaceVisitStats(
   placeId: string,
   memories: MemoryEvent[],
   getPersonName: (id: string) => string
 ): PlaceVisitStats {
+  return buildPlaceGroupVisitStats([placeId], memories, getPersonName);
+}
+
+export function buildPlaceGroupVisitStats(
+  placeIds: string[],
+  memories: MemoryEvent[],
+  getPersonName: (id: string) => string
+): PlaceVisitStats {
+  const placeIdSet = new Set(placeIds.filter(Boolean));
   const relatedMemories = memories
-    .filter((memory) => getMemoryPlaceIds(memory).includes(placeId))
+    .filter((memory) => getMemoryPlaceIds(memory).some((placeId) => placeIdSet.has(placeId)))
     .sort((a, b) => b.date.localeCompare(a.date));
   const latestDate = relatedMemories[0]?.date || "";
 
@@ -23,6 +36,25 @@ export function buildPlaceVisitStats(
     latestDate,
     latestLabel: latestDate ? formatRelativeDate(latestDate) : "还没有到访记录",
     topPeople: getTopPeople(relatedMemories, getPersonName)
+  };
+}
+
+export function buildMallVisitStats(
+  storePlaceIds: string[],
+  memories: MemoryEvent[],
+  getPersonName: (id: string) => string
+): MallVisitStats {
+  const uniqueStoreIds = Array.from(new Set(storePlaceIds.filter(Boolean)));
+  const storeIdSet = new Set(uniqueStoreIds);
+  const groupStats = buildPlaceGroupVisitStats(uniqueStoreIds, memories, getPersonName);
+  const storeVisitCount = memories.reduce((sum, memory) => {
+    return sum + getMemoryPlaceIds(memory).filter((placeId) => storeIdSet.has(placeId)).length;
+  }, 0);
+
+  return {
+    ...groupStats,
+    visitCount: storeVisitCount,
+    storeCount: uniqueStoreIds.length
   };
 }
 

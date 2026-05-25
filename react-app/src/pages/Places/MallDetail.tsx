@@ -19,6 +19,7 @@ import {
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
+import { buildMallVisitStats, buildPlaceVisitStats } from "../../utils/placeVisitStats";
 
 export default function MallDetail() {
   const navigate = useNavigate();
@@ -39,7 +40,12 @@ export default function MallDetail() {
 
   const summary = places[0];
   const mallRecord = places.find((place) => isMallRecord(place));
+  const storePlaces = places.filter((place) => !isMallRecord(place));
   const categories = Array.from(new Set(places.filter((p) => !isMallRecord(p)).map((place) => place.category)));
+  const mallVisitStats = buildMallVisitStats(storePlaces.map((place) => place.id), state.memories, getPersonName);
+  const storeVisitStats = new Map(
+    storePlaces.map((place) => [place.id, buildPlaceVisitStats(place.id, state.memories, getPersonName)])
+  );
   const displayAddress = mallRecord?.address || summary?.address || "";
   const initialMallDraft = useMemo<Partial<Place> | undefined>(() => {
     if (!summary) return undefined;
@@ -134,13 +140,42 @@ export default function MallDetail() {
       <section className="section">
         <div className="section-header">
           <h2>
+            <MapPin /> 到访摘要
+          </h2>
+        </div>
+        <GlassCard className="detail-summary-card">
+          <div className="summary-grid">
+            <div className="summary-metric">
+              <strong>{mallVisitStats.storeCount}</strong>
+              <span>里面的地点</span>
+            </div>
+            <div className="summary-metric">
+              <strong>{mallVisitStats.visitCount}</strong>
+              <span>总到访</span>
+            </div>
+          </div>
+          <div className="summary-line">
+            <strong>最近到访</strong>
+            <span>{mallVisitStats.latestDate ? mallVisitStats.latestLabel : "还没有到访记录"}</span>
+          </div>
+          <div className="summary-line">
+            <strong>常关联人物</strong>
+            <span>{mallVisitStats.topPeople.length ? mallVisitStats.topPeople.map((item) => item.label).join("、") : "还没有关联人物"}</span>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
             <Store /> 里面的地点
           </h2>
         </div>
         <div className="list">
-          {places
-            .filter((place) => !isMallRecord(place))
-            .map((place) => (
+          {storePlaces
+            .map((place) => {
+              const visitStats = storeVisitStats.get(place.id);
+              return (
               <button
                 className="vertical-detail-card detail-button glass-card"
                 key={place.id}
@@ -154,8 +189,16 @@ export default function MallDetail() {
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
+                {visitStats && (
+                  <span className="place-visit-line mall-store-visit-line">
+                    <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
+                    <span>{visitStats.latestLabel}</span>
+                    {visitStats.topPeople.length > 0 && <span>常一起：{visitStats.topPeople.map((item) => item.label).join("、")}</span>}
+                  </span>
+                )}
               </button>
-            ))}
+            );
+          })}
         </div>
       </section>
 

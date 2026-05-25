@@ -33,9 +33,12 @@ function loadTs(relativeFile) {
 }
 
 const { previewReminderSchedule, previewUpcomingReminders } = loadTs("src/utils/reminderScheduler.ts");
+const { anniversaryOccurrenceLabel, anniversaryYearLabel } = loadTs("src/utils/date.ts");
 
 const today = new Date();
-const todayIso = today.toISOString().slice(0, 10);
+const todayIso = formatDateValue(today);
+const futureAnniversary = formatDateValue(addDays(today, 6));
+const firstAnniversary = formatDateValue(today);
 const people = [
   {
     id: "p1",
@@ -45,7 +48,21 @@ const people = [
     favorite: false,
     preferences: [],
     dislikes: [],
-    anniversaries: [{ title: "生日", date: todayIso }],
+    anniversaries: [
+      { title: "生日", date: todayIso },
+      { title: "相识日", date: futureAnniversary }
+    ],
+    notes: ""
+  },
+  {
+    id: "p2",
+    name: "小周",
+    relationship: "朋友",
+    birthday: "",
+    favorite: false,
+    preferences: [],
+    dislikes: [],
+    anniversaries: [{ title: "第一次见面", date: firstAnniversary }],
     notes: ""
   }
 ];
@@ -92,9 +109,37 @@ if (!upcoming.some((item) => item.type === "回忆" && item.title.includes("年�
   failures.push(`Missing memory preview: ${JSON.stringify(upcoming)}`);
 }
 
+const futureAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("相识日"));
+if (!futureAnniversaryPreview?.body.includes("还有 6 天") || !futureAnniversaryPreview.body.includes("提前 3 天提醒")) {
+  failures.push(`Anniversary preview should use target-day distance, got: ${JSON.stringify(futureAnniversaryPreview)}`);
+}
+
+const firstAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("第一次见面"));
+if (!firstAnniversaryPreview?.body.includes("首次纪念日")) {
+  failures.push(`First anniversary should use explicit label, got: ${JSON.stringify(firstAnniversaryPreview)}`);
+}
+
+if (anniversaryYearLabel(futureAnniversary) !== "未满 1 周年") {
+  failures.push(`Current anniversary label should describe elapsed years, got: ${anniversaryYearLabel(futureAnniversary)}`);
+}
+
+if (anniversaryOccurrenceLabel(futureAnniversary, addDays(today, 6)) !== "首次纪念日") {
+  failures.push(`Occurrence anniversary label should describe target occurrence, got: ${anniversaryOccurrenceLabel(futureAnniversary, addDays(today, 6))}`);
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
 
 console.log(`Reminder preview regression passed: ${upcoming.length} upcoming item(s).`);
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function formatDateValue(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
