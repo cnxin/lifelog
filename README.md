@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.71.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.72.apk
 ```
 
-当前版本：`0.1.0-test.71`
+当前版本：`0.1.0-test.72`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -67,10 +67,10 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 全局 FAB 会按当前页面展示快捷操作，人物和地点详情可自动带入上下文记录回忆。
-- 首页新增今日行动，整合未来提醒、长期未互动人物和往年今日回忆。
-- 日历页支持按选中日期补记，保存回忆后可直接查看、补照片或再记一条。
-- 人物列表和详情新增关系温度，帮助发现需要联系的人。
+- 删除人物、地点和回忆后提供撤销入口，误删时可立即恢复。
+- 回忆列表改为按月份时间线分组，跨年份时提供年份跳转。
+- 人物和地点列表新增命中统计、筛选状态和排序切换。
+- 首页新增常去地点，可直接进入详情或带入地点快速再记一条。
 
 ## 仓库结构
 

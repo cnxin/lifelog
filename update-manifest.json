@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.71",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.71",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.71/lifelog-v0.1.0-test.71.apk",
+  "version": "0.1.0-test.72",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.72",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.72/lifelog-v0.1.0-test.72.apk",
   "mirrorApkUrl": "",
-  "apkName": "lifelog-v0.1.0-test.71.apk",
-  "apkSize": 3602894,
-  "publishedAt": "2026-05-25T12:13:15Z",
-  "body": "- 全局 FAB 会按当前页面展示快捷操作，人物和地点详情可自动带入上下文记录回忆。\n- 首页新增今日行动，整合未来提醒、长期未互动人物和往年今日回忆。\n- 日历页支持按选中日期补记，保存回忆后可直接查看、补照片或再记一条。\n- 照片上传错误改为 toast 和组件内摘要，不再用连续弹窗打断批量上传。\n- 人物列表和详情新增关系温度，帮助发现需要联系的人。"
+  "apkName": "lifelog-v0.1.0-test.72.apk",
+  "apkSize": 3607596,
+  "publishedAt": "2026-05-25T15:16:12Z",
+  "body": "- 人物、地点和回忆删除后提供撤销入口，误删时可立即恢复记录和相关关联。\n- 回忆列表改为按月份时间线分组，并在跨年份时提供年份跳转。\n- 人物和地点列表新增命中统计、筛选状态和排序切换，收藏、最近互动和常去地点更容易找到。\n- 地点列表和详情新增到访次数、最近到访和常关联人物，地点信息更有上下文。\n- 首页新增常去地点区块，可直接进入地点详情或带入地点快速再记一条回忆。"
 }

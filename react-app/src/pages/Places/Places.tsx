@@ -1,4 +1,4 @@
-import { Building2, GitMerge, MapPin, Plus, Star, Store } from "lucide-react";
+import { Building2, GitMerge, MapPin, Plus, RotateCcw, Star, Store } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,11 +9,13 @@ import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
 import Tags from "../../components/Tags";
-import type { PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
+import type { Place, PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useToast } from "../../context/ToastContext";
 import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
+import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import {
   buildMallKey,
   buildPlaceContextLine,
@@ -23,10 +25,14 @@ import {
   isMallRecord,
 } from "../../utils/placeMeta";
 
+type PlaceSortMode = "smart" | "recent" | "rating" | "name";
+
 export default function Places() {
   const {
     state,
     deleteEntry,
+    getDeleteSnapshot,
+    restoreDeletedEntry,
     duplicatePlaceGroups,
     placeMergeHistory,
     latestPlaceMerge,
@@ -35,8 +41,10 @@ export default function Places() {
     mergeAllDuplicatePlaces,
     undoLatestPlaceMerge,
     togglePlaceFavorite,
+    getPersonName,
   } = useLifeLog();
   const confirm = useConfirm();
+  const notify = useToast();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const locationFilter = usePlaceLocationFilter(state.places);
@@ -58,6 +66,7 @@ export default function Places() {
   const [category, setCategory] = useState("全部");
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
+  const [sortMode, setSortMode] = useState<PlaceSortMode>("smart");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [weakQueueIndex, setWeakQueueIndex] = useState<number | null>(null);
   const strongDuplicateGroups = useMemo(
@@ -67,6 +76,10 @@ export default function Places() {
   const weakDuplicateGroups = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "weak"),
     [duplicatePlaceGroups],
+  );
+  const normalizedQuery = query.trim().toLowerCase();
+  const hasActiveFilters = Boolean(
+    normalizedQuery || country !== "全部" || province !== "全部" || city !== "全部" || area !== "全部" || category !== "全部"
   );
 
   const categories = useMemo(() => {
@@ -92,10 +105,10 @@ export default function Places() {
       return (
         matchesLocation(place) &&
         inCategory &&
-        content.toLowerCase().includes(query.toLowerCase())
+        content.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [category, matchesLocation, query, state.places]);
+  }, [category, matchesLocation, normalizedQuery, state.places]);
 
   const mallGroups = useMemo(() => {
     const groups = new Map<
@@ -137,6 +150,15 @@ export default function Places() {
     );
   }, [places]);
 
+  const placeRows = useMemo(() => {
+    return places
+      .map((place) => ({
+        place,
+        visitStats: buildPlaceVisitStats(place.id, state.memories, getPersonName)
+      }))
+      .sort((left, right) => comparePlaceRows(left, right, sortMode));
+  }, [getPersonName, places, sortMode, state.memories]);
+
   async function handleDelete(id: string) {
     const accepted = await confirm({
       title: "删除地点",
@@ -144,7 +166,23 @@ export default function Places() {
       confirmText: "删除",
     });
     if (!accepted) return;
+    const snapshot = await getDeleteSnapshot("place", id);
     await deleteEntry("place", id);
+    if (snapshot) {
+      notify({
+        message: "地点已删除",
+        tone: "info",
+        actions: [
+          {
+            label: "撤销",
+            onClick: async () => {
+              await restoreDeletedEntry(snapshot);
+              notify({ message: "地点已恢复", tone: "success" });
+            }
+          }
+        ]
+      });
+    }
   }
 
   function handleMergeGroup(group: PlaceDuplicateGroup) {
@@ -207,7 +245,24 @@ export default function Places() {
     setWeakQueueIndex(null);
   }
 
-  const storePlaces = places.filter((place) => !isMallRecord(place));
+  function clearFilters() {
+    setQuery("");
+    setCountry("全部");
+    setProvince("全部");
+    setCity("全部");
+    setArea("全部");
+    setCategory("全部");
+  }
+
+  const storePlaceRows = placeRows.filter(({ place }) => !isMallRecord(place));
+  const activeFilterLabels = buildActiveFilterLabels({
+    query: query.trim(),
+    country,
+    province,
+    city,
+    area,
+    category
+  });
 
   return (
     <>
@@ -267,6 +322,37 @@ export default function Places() {
           </button>
         ))}
       </div>
+      <section className="section list-filter-section">
+        <div className="list-filter-summary">
+          <span>
+            显示 {places.length} / {state.places.length} 个地点
+          </span>
+          {hasActiveFilters && (
+            <button type="button" onClick={clearFilters}>
+              <RotateCcw /> 清除筛选
+            </button>
+          )}
+        </div>
+        {activeFilterLabels.length > 0 && (
+          <div className="list-filter-chips">
+            {activeFilterLabels.map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+        )}
+        <div className="list-sort-control" role="group" aria-label="地点排序">
+          {placeSortOptions.map((option) => (
+            <button
+              type="button"
+              className={option.value === sortMode ? "active" : ""}
+              key={option.value}
+              onClick={() => setSortMode(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </section>
       {duplicatePlaceGroups.length > 0 && (
         <section className="section">
           <div className="section-header">
@@ -390,59 +476,66 @@ export default function Places() {
           )}
         </div>
         <div className="list">
-          {storePlaces.map((place) => (
-            <GlassCard className="place-card" key={place.id}>
-              <button
-                className="place-tap"
-                onClick={() => navigate(`/places/${place.id}`)}
-              >
-                <div className="place-img">
-                  <MapPin />
-                </div>
-              </button>
-              <div
-                className="place-info"
-                onClick={() => navigate(`/places/${place.id}`)}
-              >
-                <div className="place-name">
-                  <span>{buildPlaceDisplayName(place)}</span>
-                  <span className="place-title-actions">
-                    <button
-                      type="button"
-                      className={`favorite-toggle ${place.favorite ? "active" : ""}`}
-                      aria-pressed={place.favorite}
-                      aria-label={place.favorite ? "取消收藏" : "收藏"}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void togglePlaceFavorite(place.id);
-                      }}
-                    >
-                      <Star size={18} fill={place.favorite ? "currentColor" : "none"} />
-                    </button>
-                    <span className="place-rating">
-                      <Star /> {place.rating ? place.rating : "未评分"}
+          {storePlaceRows.map(({ place, visitStats }) => {
+            return (
+              <GlassCard className="place-card" key={place.id}>
+                <button
+                  className="place-tap"
+                  onClick={() => navigate(`/places/${place.id}`)}
+                >
+                  <div className="place-img">
+                    <MapPin />
+                  </div>
+                </button>
+                <div
+                  className="place-info"
+                  onClick={() => navigate(`/places/${place.id}`)}
+                >
+                  <div className="place-name">
+                    <span>{buildPlaceDisplayName(place)}</span>
+                    <span className="place-title-actions">
+                      <button
+                        type="button"
+                        className={`favorite-toggle ${place.favorite ? "active" : ""}`}
+                        aria-pressed={place.favorite}
+                        aria-label={place.favorite ? "取消收藏" : "收藏"}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void togglePlaceFavorite(place.id);
+                        }}
+                      >
+                        <Star size={18} fill={place.favorite ? "currentColor" : "none"} />
+                      </button>
+                      <span className="place-rating">
+                        <Star /> {place.rating ? place.rating : "未评分"}
+                      </span>
                     </span>
-                  </span>
+                  </div>
+                  <p className="place-desc truncate-text">
+                    {buildPlaceGeoLine(place)}
+                  </p>
+                  <p className="place-desc truncate-text">
+                    {place.category} · {buildPlaceContextLine(place)}
+                  </p>
+                  <div className="place-visit-line">
+                    <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
+                    <span>{visitStats.latestLabel}</span>
+                    {visitStats.topPeople.length > 0 && <span>常一起：{visitStats.topPeople.map((item) => item.label).join("、")}</span>}
+                  </div>
+                  <p className="place-desc truncate-lines-2">
+                    {place.address || place.desc}
+                  </p>
+                  <Tags items={place.tags} />
                 </div>
-                <p className="place-desc truncate-text">
-                  {buildPlaceGeoLine(place)}
-                </p>
-                <p className="place-desc truncate-text">
-                  {place.category} · {buildPlaceContextLine(place)}
-                </p>
-                <p className="place-desc truncate-lines-2">
-                  {place.address || place.desc}
-                </p>
-                <Tags items={place.tags} />
-              </div>
-              <div className="person-side-actions">
-                <CardActions
-                  onEdit={() => setEditingId(place.id)}
-                  onDelete={() => handleDelete(place.id)}
-                />
-              </div>
-            </GlassCard>
-          ))}
+                <div className="person-side-actions">
+                  <CardActions
+                    onEdit={() => setEditingId(place.id)}
+                    onDelete={() => handleDelete(place.id)}
+                  />
+                </div>
+              </GlassCard>
+            );
+          })}
           {!places.length &&
             (state.places.length === 0 ? (
               <GlassCard className="empty empty-cta">
@@ -452,7 +545,12 @@ export default function Places() {
                 </button>
               </GlassCard>
             ) : (
-              <GlassCard className="empty">没有找到匹配的地点</GlassCard>
+              <GlassCard className="empty empty-cta">
+                <p>没有找到匹配的地点</p>
+                <button className="primary-btn" onClick={clearFilters}>
+                  <RotateCcw size={16} /> 清除筛选
+                </button>
+              </GlassCard>
             ))}
         </div>
       </section>
@@ -496,6 +594,85 @@ export default function Places() {
       )}
     </>
   );
+}
+
+const placeSortOptions: Array<{ value: PlaceSortMode; label: string }> = [
+  { value: "smart", label: "智能" },
+  { value: "recent", label: "最近" },
+  { value: "rating", label: "评分" },
+  { value: "name", label: "名称" }
+];
+
+function comparePlaceRows(
+  left: { place: Place; visitStats: PlaceVisitStats },
+  right: { place: Place; visitStats: PlaceVisitStats },
+  mode: PlaceSortMode
+) {
+  if (mode === "name") return comparePlaceName(left.place, right.place);
+
+  if (mode === "recent") {
+    return (
+      compareDateDesc(left.visitStats.latestDate, right.visitStats.latestDate) ||
+      compareFavorite(left.place.favorite, right.place.favorite) ||
+      comparePlaceName(left.place, right.place)
+    );
+  }
+
+  if (mode === "rating") {
+    return (
+      compareRatingDesc(left.place.rating, right.place.rating) ||
+      compareFavorite(left.place.favorite, right.place.favorite) ||
+      compareDateDesc(left.visitStats.latestDate, right.visitStats.latestDate) ||
+      comparePlaceName(left.place, right.place)
+    );
+  }
+
+  return (
+    compareFavorite(left.place.favorite, right.place.favorite) ||
+    compareDateDesc(left.visitStats.latestDate, right.visitStats.latestDate) ||
+    compareRatingDesc(left.place.rating, right.place.rating) ||
+    right.visitStats.visitCount - left.visitStats.visitCount ||
+    comparePlaceName(left.place, right.place)
+  );
+}
+
+function compareFavorite(left: boolean, right: boolean) {
+  return Number(right) - Number(left);
+}
+
+function compareDateDesc(left: string, right: string) {
+  if (!left && !right) return 0;
+  if (!left) return 1;
+  if (!right) return -1;
+  return right.localeCompare(left);
+}
+
+function compareRatingDesc(left: number, right: number) {
+  const normalizedLeft = left || 0;
+  const normalizedRight = right || 0;
+  return normalizedRight - normalizedLeft;
+}
+
+function comparePlaceName(left: Place, right: Place) {
+  return buildPlaceDisplayName(left).localeCompare(buildPlaceDisplayName(right), "zh-CN");
+}
+
+function buildActiveFilterLabels(filters: {
+  query: string;
+  country: string;
+  province: string;
+  city: string;
+  area: string;
+  category: string;
+}) {
+  return [
+    filters.query ? `搜索：${filters.query}` : "",
+    filters.country !== "全部" ? `国家：${filters.country}` : "",
+    filters.province !== "全部" ? `省州：${filters.province}` : "",
+    filters.city !== "全部" ? `城市：${filters.city}` : "",
+    filters.area !== "全部" ? `区域：${filters.area}` : "",
+    filters.category !== "全部" ? `分类：${filters.category}` : ""
+  ].filter(Boolean);
 }
 
 function DuplicateGroupList({

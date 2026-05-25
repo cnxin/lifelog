@@ -9,13 +9,16 @@ import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useToast } from "../../context/ToastContext";
 import type { MemoryEvent } from "../../types";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
+import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 
 export default function Memories() {
-  const { state, getPersonName, getPlaceName, deleteEntry } = useLifeLog();
+  const { state, getPersonName, getPlaceName, deleteEntry, getDeleteSnapshot, restoreDeletedEntry } = useLifeLog();
   const confirm = useConfirm();
+  const notify = useToast();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [personFilter, setPersonFilter] = useState("");
@@ -27,6 +30,13 @@ export default function Memories() {
 
   const filterOptions = useMemo(() => buildFilterOptions(state.memories, getPersonName, getPlaceName), [state.memories, getPersonName, getPlaceName]);
   const hasActiveFilters = Boolean(query.trim() || personFilter || placeFilter || moodFilter || tagFilter);
+  const activeFilterLabels = buildActiveFilterLabels({
+    query: query.trim(),
+    person: personFilter ? getPersonName(personFilter) : "",
+    place: placeFilter ? getPlaceName(placeFilter) : "",
+    mood: moodFilter,
+    tag: tagFilter
+  });
 
   const memories = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -53,6 +63,8 @@ export default function Memories() {
         return true;
       });
   }, [getPersonName, getPlaceName, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter]);
+  const groupedMemories = useMemo(() => groupMemoriesByMonth(memories), [memories]);
+  const yearAnchors = useMemo(() => buildYearAnchors(groupedMemories), [groupedMemories]);
 
   async function handleDelete(id: string) {
     const accepted = await confirm({
@@ -61,7 +73,23 @@ export default function Memories() {
       confirmText: "删除"
     });
     if (!accepted) return;
+    const snapshot = await getDeleteSnapshot("memory", id);
     await deleteEntry("memory", id);
+    if (snapshot) {
+      notify({
+        message: "回忆已删除",
+        tone: "info",
+        actions: [
+          {
+            label: "撤销",
+            onClick: async () => {
+              await restoreDeletedEntry(snapshot);
+              notify({ message: "回忆已恢复", tone: "success" });
+            }
+          }
+        ]
+      });
+    }
   }
 
   function clearFilters() {
@@ -116,20 +144,49 @@ export default function Memories() {
             </button>
           )}
         </div>
+        {activeFilterLabels.length > 0 && (
+          <div className="list-filter-chips">
+            {activeFilterLabels.map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+        )}
       </section>
       <section className="section">
-        <div className="list">
-          {memories.map((memory) => {
-            const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+        {yearAnchors.length > 1 && (
+          <div className="memory-year-jump">
+            {yearAnchors.map((anchor) => (
+              <a href={`#memory-year-${anchor}`} key={anchor}>
+                {anchor}
+              </a>
+            ))}
+          </div>
+        )}
+        <div className="memory-timeline-list">
+          {groupedMemories.map((group) => {
+            const year = extractYear(group.month);
             return (
-              <MemoryCard
-                key={memory.id}
-                memory={memory}
-                ctx={ctx}
-                onOpen={() => navigate(`/memories/${memory.id}`)}
-                showPhotoCount
-                actions={<CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />}
-              />
+              <div className="memory-timeline-month" id={isFirstYearGroup(groupedMemories, group.month) ? `memory-year-${year}` : undefined} key={group.month}>
+                <div className="memory-timeline-title">
+                  <strong>{group.month}</strong>
+                  <span>{group.memories.length} 条</span>
+                </div>
+                <div className="list">
+                  {group.memories.map((memory) => {
+                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+                    return (
+                      <MemoryCard
+                        key={memory.id}
+                        memory={memory}
+                        ctx={ctx}
+                        onOpen={() => navigate(`/memories/${memory.id}`)}
+                        showPhotoCount
+                        actions={<CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
           {!memories.length &&
@@ -154,6 +211,36 @@ export default function Memories() {
       <EntrySheet type={creatingNew ? "memory" : null} memoryMode="quick" onClose={() => setCreatingNew(false)} />
     </>
   );
+}
+
+function buildYearAnchors(groups: Array<{ month: string; memories: MemoryEvent[] }>) {
+  return Array.from(new Set(groups.map((group) => extractYear(group.month)).filter(Boolean)));
+}
+
+function extractYear(monthLabel: string) {
+  const match = monthLabel.match(/\d{4}/);
+  return match?.[0] || monthLabel;
+}
+
+function isFirstYearGroup(groups: Array<{ month: string; memories: MemoryEvent[] }>, month: string) {
+  const year = extractYear(month);
+  return groups.find((group) => extractYear(group.month) === year)?.month === month;
+}
+
+function buildActiveFilterLabels(filters: {
+  query: string;
+  person: string;
+  place: string;
+  mood: string;
+  tag: string;
+}) {
+  return [
+    filters.query ? `搜索：${filters.query}` : "",
+    filters.person ? `人物：${filters.person}` : "",
+    filters.place ? `地点：${filters.place}` : "",
+    filters.mood ? `心情：${filters.mood}` : "",
+    filters.tag ? `标签：${filters.tag}` : ""
+  ].filter(Boolean);
 }
 
 function buildFilterOptions(memories: MemoryEvent[], getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {

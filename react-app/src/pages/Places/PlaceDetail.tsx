@@ -13,6 +13,7 @@ import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelp
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
 import { hasMemoryPlace } from "../../utils/memoryPlaces";
 import { normalizePlacePlatformLinks } from "../../utils/placeLinks";
+import { buildPlaceVisitStats } from "../../utils/placeVisitStats";
 import {
   buildMallKey,
   buildPlaceContextLine,
@@ -49,6 +50,7 @@ export default function PlaceDetail() {
     relatedMemories.flatMap((memory) => memory.personIds || []).filter(Boolean),
     getPersonName
   );
+  const visitStats = buildPlaceVisitStats(place.id, state.memories, getPersonName);
   const groupedMemories = groupMemoriesByMonth(relatedMemories);
   const latestMemory = relatedMemories[0];
   const photos = (place.photos || []).slice(0, 3);
@@ -132,6 +134,12 @@ export default function PlaceDetail() {
           <div className="summary-line">
             <strong>类型</strong>
             <span>{place.category || "未设置"}</span>
+          </div>
+          <div className="summary-line">
+            <strong>到访状态</strong>
+            <span>
+              {visitStats.visitCount ? `去过 ${visitStats.visitCount} 次 · ${visitStats.latestLabel}` : "还没有到访记录"}
+            </span>
           </div>
           <div className="summary-line">
             <strong>常关联人物</strong>

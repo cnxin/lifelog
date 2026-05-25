@@ -5,7 +5,7 @@ type ToastTone = "success" | "info" | "error";
 
 interface ToastAction {
   label: string;
-  onClick: () => void;
+  onClick: () => void | Promise<void>;
 }
 
 interface ToastOptions {
@@ -62,8 +62,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   type="button"
                   key={action.label}
                   onClick={() => {
-                    action.onClick();
                     setToast(null);
+                    action.onClick();
                   }}
                 >
                   {action.label}

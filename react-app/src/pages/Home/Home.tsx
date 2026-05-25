@@ -1,13 +1,15 @@
-import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Users } from "lucide-react";
-import { useState } from "react";
+import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { EntryType, MemoryEvent } from "../../types";
+import type { EntryType, MemoryEvent, Place } from "../../types";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
+import { buildPlaceDisplayName } from "../../utils/placeMeta";
+import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
 import { initials } from "../../utils/text";
 
@@ -16,12 +18,28 @@ export default function Home() {
   const { state, reminderSettings, getPersonName, getPlaceName } = useLifeLog();
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
+  const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const upcoming = getUpcomingAnniversaries(state.people)
     .filter((item) => item.deltaDays >= 0 && item.deltaDays <= 30)
     .slice(0, 4);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+  const featuredPlaces = useMemo(
+    () =>
+      state.places
+        .map((place) => ({ place, visitStats: buildPlaceVisitStats(place.id, state.memories, getPersonName) }))
+        .sort(compareHomePlaceRows)
+        .slice(0, 3),
+    [getPersonName, state.memories, state.places]
+  );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(state.memories);
+
+  function openQuickMemory(personIds: string[] = [], placeIds: string[] = []) {
+    setInitialMemoryPersonIds(personIds);
+    setInitialMemoryPlaceIds(placeIds);
+    setEntrySheetType("memory");
+  }
+
   const tasks = [
     {
       id: "people-birthday",
@@ -57,12 +75,10 @@ export default function Home() {
     onOpenPerson: (personId) => navigate(`/people/${personId}`),
     onOpenCalendar: () => navigate("/calendar"),
     onAddMemoryForPerson: (personId) => {
-      setInitialMemoryPersonIds([personId]);
-      setEntrySheetType("memory");
+      openQuickMemory([personId]);
     },
     onQuickMemory: () => {
-      setInitialMemoryPersonIds([]);
-      setEntrySheetType("memory");
+      openQuickMemory();
     }
   });
 
@@ -98,8 +114,7 @@ export default function Home() {
         <button
           className="quick-memory-card"
           onClick={() => {
-            setInitialMemoryPersonIds([]);
-            setEntrySheetType("memory");
+            openQuickMemory();
           }}
         >
           <div className="quick-memory-icon">
@@ -230,6 +245,48 @@ export default function Home() {
       <section className="section">
         <div className="section-header">
           <h2>
+            <MapPin /> 常去地点
+          </h2>
+          <button className="see-all" onClick={() => navigate("/places")}>
+            全部
+          </button>
+        </div>
+        {featuredPlaces.length > 0 ? (
+          <div className="home-place-list">
+            {featuredPlaces.map(({ place, visitStats }) => (
+              <GlassCard className="home-place-card" key={place.id}>
+                <button className="home-place-main" type="button" onClick={() => navigate(`/places/${place.id}`)}>
+                  <span className="home-place-icon">
+                    <MapPin />
+                  </span>
+                  <span className="home-place-copy">
+                    <strong>{buildPlaceDisplayName(place)}</strong>
+                    <small>{buildHomePlaceSubtitle(place)}</small>
+                  </span>
+                  {place.favorite && <Star className="home-place-favorite" />}
+                </button>
+                <div className="home-place-meta">
+                  <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
+                  <span>{visitStats.latestLabel}</span>
+                </div>
+                <button className="home-place-action" type="button" onClick={() => openQuickMemory([], [place.id])}>
+                  再记一次
+                </button>
+              </GlassCard>
+            ))}
+          </div>
+        ) : (
+          <GlassCard className="home-empty-card compact">
+            <strong>还没有地点</strong>
+            <span>添加餐厅、景点或常去的地方后，首页会显示最近到访。</span>
+            <button onClick={() => setEntrySheetType("place")}>添加地点</button>
+          </GlassCard>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
             <Clock /> 最近回忆
           </h2>
           <button className="see-all" onClick={() => navigate("/memories")}>
@@ -258,8 +315,7 @@ export default function Home() {
             <div className="home-empty-actions">
               <button
                 onClick={() => {
-                  setInitialMemoryPersonIds([]);
-                  setEntrySheetType("memory");
+                  openQuickMemory();
                 }}
               >
                 记录一条回忆
@@ -273,9 +329,11 @@ export default function Home() {
         type={entrySheetType}
         memoryMode={entrySheetType === "memory" ? "quick" : "full"}
         initialPersonIds={entrySheetType === "memory" ? initialMemoryPersonIds : []}
+        initialPlaceIds={entrySheetType === "memory" ? initialMemoryPlaceIds : []}
         onClose={() => {
           setEntrySheetType(null);
           setInitialMemoryPersonIds([]);
+          setInitialMemoryPlaceIds([]);
         }}
       />
     </>
@@ -398,6 +456,29 @@ function findOnThisDayMemory(memories: MemoryEvent[]) {
       return date.getFullYear() < today.getFullYear() && date.getMonth() === month && date.getDate() === day;
     })
     .sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+function compareHomePlaceRows(
+  left: { place: Place; visitStats: PlaceVisitStats },
+  right: { place: Place; visitStats: PlaceVisitStats }
+) {
+  return (
+    Number(right.place.favorite) - Number(left.place.favorite) ||
+    compareDateDesc(left.visitStats.latestDate, right.visitStats.latestDate) ||
+    right.visitStats.visitCount - left.visitStats.visitCount ||
+    buildPlaceDisplayName(left.place).localeCompare(buildPlaceDisplayName(right.place), "zh-CN")
+  );
+}
+
+function compareDateDesc(left: string, right: string) {
+  if (!left && !right) return 0;
+  if (!left) return 1;
+  if (!right) return -1;
+  return right.localeCompare(left);
+}
+
+function buildHomePlaceSubtitle(place: Place) {
+  return [place.category, place.city, place.area].filter(Boolean).join(" · ") || "未设置分类";
 }
 
 function daysBetweenToday(date: string) {

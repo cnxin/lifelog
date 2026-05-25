@@ -919,3 +919,103 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 .app-container.theme-mist .favorite-item:nth-child(3) .fav-avatar {
   background: linear-gradient(135deg, #c5ccd5 0%, #98a2ae 100%);
 }
+
+.home-place-list {
+  display: grid;
+  gap: 10px;
+}
+
+.home-place-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+}
+
+.home-place-main {
+  min-width: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--text-main);
+  background: transparent;
+  text-align: left;
+}
+
+.home-place-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+}
+
+.home-place-icon svg,
+.home-place-favorite {
+  width: 18px;
+  height: 18px;
+}
+
+.home-place-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.home-place-copy strong,
+.home-place-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-place-copy strong {
+  font-size: 14px;
+}
+
+.home-place-copy small {
+  color: var(--text-sub);
+  font-size: 12px;
+}
+
+.home-place-favorite {
+  color: #fdcb6e;
+  fill: currentColor;
+}
+
+.home-place-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.home-place-meta span {
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.home-place-action {
+  grid-row: 1;
+  grid-column: 2;
+  min-height: 36px;
+  border: 0;
+  border-radius: 13px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}

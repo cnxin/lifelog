@@ -66,7 +66,12 @@ import {
   serializeBackupPhoto,
   type FullBackupPayload
 } from "../utils/lifelogBackup";
-import { removeMemoryPlaceId } from "../utils/memoryPlaces";
+import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
+
+type DeletedEntrySnapshot =
+  | { type: "person"; person: Person; affectedMemories: MemoryEvent[] }
+  | { type: "place"; place: Place; affectedMemories: MemoryEvent[] }
+  | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -80,6 +85,8 @@ interface LifeLogContextValue {
   togglePlaceFavorite: (id: string) => Promise<void>;
   saveMemory: (formData: FormData, id?: string, photos?: Photo[]) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
+  restoreDeletedEntry: (snapshot: DeletedEntrySnapshot) => Promise<void>;
+  getDeleteSnapshot: (type: EntryType, id: string) => Promise<DeletedEntrySnapshot | null>;
   importData: (file: File) => Promise<void>;
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
@@ -336,6 +343,73 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }));
     }
 
+    async function getDeleteSnapshot(type: EntryType, id: string): Promise<DeletedEntrySnapshot | null> {
+      if (type === "person") {
+        const person = state.people.find((item) => item.id === id);
+        if (!person) return null;
+        return {
+          type: "person",
+          person,
+          affectedMemories: state.memories.filter((memory) => (memory.personIds || []).includes(id))
+        };
+      }
+
+      if (type === "place") {
+        const place = state.places.find((item) => item.id === id);
+        if (!place) return null;
+        return {
+          type: "place",
+          place,
+          affectedMemories: state.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id))
+        };
+      }
+
+      const memory = state.memories.find((item) => item.id === id);
+      if (!memory) return null;
+      return {
+        type: "memory",
+        memory,
+        photos: await loadMemoryPhotos(memory.id, memory.photos || [])
+      };
+    }
+
+    async function restoreDeletedEntry(snapshot: DeletedEntrySnapshot) {
+      if (snapshot.type === "person") {
+        await savePersonRecord(snapshot.person);
+        await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+        setState((current) => ({
+          ...current,
+          people: current.people.some((person) => person.id === snapshot.person.id)
+            ? current.people.map((person) => (person.id === snapshot.person.id ? snapshot.person : person))
+            : [...current.people, snapshot.person],
+          memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
+        }));
+        return;
+      }
+
+      if (snapshot.type === "place") {
+        await savePlaceRecord(snapshot.place);
+        await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+        setState((current) => ({
+          ...current,
+          places: current.places.some((place) => place.id === snapshot.place.id)
+            ? current.places.map((place) => (place.id === snapshot.place.id ? snapshot.place : place))
+            : [...current.places, snapshot.place],
+          memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
+        }));
+        return;
+      }
+
+      await saveMemoryRecord(snapshot.memory);
+      if (snapshot.photos.length) await savePhotoRecords(snapshot.photos);
+      setState((current) => ({
+        ...current,
+        memories: current.memories.some((memory) => memory.id === snapshot.memory.id)
+          ? current.memories.map((memory) => (memory.id === snapshot.memory.id ? snapshot.memory : memory))
+          : [...current.memories, snapshot.memory]
+      }));
+    }
+
     async function importData(file: File) {
       const text = await file.text();
       let parsed: unknown;
@@ -541,6 +615,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       togglePlaceFavorite,
       saveMemory,
       deleteEntry,
+      restoreDeletedEntry,
+      getDeleteSnapshot,
       importData,
       getPersonName,
       getPlaceName,
@@ -560,6 +636,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
+}
+
+function restoreMemoryList(current: MemoryEvent[], snapshots: MemoryEvent[]) {
+  if (!snapshots.length) return current;
+  const snapshotIds = new Set(snapshots.map((memory) => memory.id));
+  const snapshotById = new Map(snapshots.map((memory) => [memory.id, memory]));
+  const restored = current.map((memory) => snapshotById.get(memory.id) || memory);
+  const missing = snapshots.filter((memory) => !current.some((item) => item.id === memory.id));
+  return [...restored.filter((memory) => !snapshotIds.has(memory.id) || snapshotById.has(memory.id)), ...missing];
 }
 
 export function useLifeLog() {

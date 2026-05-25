@@ -143,6 +143,24 @@
   overflow-wrap: anywhere;
 }
 
+.place-visit-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.place-visit-line span {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: color-mix(in srgb, var(--primary) 82%, var(--text-sub));
+  font-weight: 700;
+}
+
 .memory-meta-line {
   color: color-mix(in srgb, var(--text-sub) 86%, var(--text-main));
   font-size: 12px;
