@@ -88,7 +88,12 @@ export async function normalizeBackupPayload(input: Record<string, unknown>) {
     ...nextState,
     memories: nextState.memories.map((memory) => ({
       ...memory,
-      photos: memory.photos.filter((photoId) => validPhotoIds.has(photoId))
+      photos: Array.from(
+        new Set([
+          ...memory.photos.filter((photoId) => validPhotoIds.has(photoId)),
+          ...photos.filter((photo) => photo.memoryId === memory.id).map((photo) => photo.id)
+        ])
+      )
     }))
   };
 
@@ -148,16 +153,23 @@ async function normalizeBackupPhotos(value: unknown, state: LifeLogState): Promi
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw new Error("备份中的照片结构不正确。请检查文件是否完整。");
   const memoryIds = new Set(state.memories.map((memory) => memory.id));
+  const photoOwnerById = new Map<string, string>();
+  state.memories.forEach((memory) => {
+    memory.photos.forEach((photoId) => {
+      if (!photoOwnerById.has(photoId)) photoOwnerById.set(photoId, memory.id);
+    });
+  });
   const result: Photo[] = [];
 
   for (const item of value) {
     if (!isBackupPhotoRecord(item)) {
       throw new Error("备份中的照片字段不完整，导入已取消。");
     }
-    if (!memoryIds.has(item.memoryId)) continue;
+    const memoryId = memoryIds.has(item.memoryId) ? item.memoryId : photoOwnerById.get(item.id);
+    if (!memoryId) continue;
     result.push({
       id: item.id,
-      memoryId: item.memoryId,
+      memoryId,
       originalBlob: await dataUrlToBlob(item.originalDataUrl),
       thumbnailBlob: await dataUrlToBlob(item.thumbnailDataUrl),
       width: Number(item.width) || 0,

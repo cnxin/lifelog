@@ -600,7 +600,33 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function exportData(): Promise<BackupExportResult> {
       const photos = await loadAllPhotos();
-      const backupPhotos = await Promise.all(photos.map(serializeBackupPhoto));
+      const photoOwnerById = new Map<string, string>();
+      state.memories.forEach((memory) => {
+        (memory.photos || []).forEach((photoId) => {
+          if (!photoOwnerById.has(photoId)) photoOwnerById.set(photoId, memory.id);
+        });
+      });
+      const stateMemoryIds = new Set(state.memories.map((memory) => memory.id));
+      const normalizedPhotos = photos
+        .map((photo) => {
+          const memoryId = stateMemoryIds.has(photo.memoryId) ? photo.memoryId : photoOwnerById.get(photo.id);
+          return memoryId ? { ...photo, memoryId } : null;
+        })
+        .filter((photo): photo is Photo => Boolean(photo));
+      const validPhotoIds = new Set(normalizedPhotos.map((photo) => photo.id));
+      const exportState: LifeLogState = {
+        ...state,
+        memories: state.memories.map((memory) => ({
+          ...memory,
+          photos: Array.from(
+            new Set([
+              ...(memory.photos || []).filter((photoId) => validPhotoIds.has(photoId)),
+              ...normalizedPhotos.filter((photo) => photo.memoryId === memory.id).map((photo) => photo.id)
+            ])
+          )
+        }))
+      };
+      const backupPhotos = await Promise.all(normalizedPhotos.map(serializeBackupPhoto));
       const fileName = `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
       const payload: FullBackupPayload = {
         schemaVersion: 3,
@@ -608,16 +634,16 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         storage: "indexeddb",
         exportedAt: new Date().toISOString(),
         appVersion: APP_VERSION,
-        data: state,
+        data: exportState,
         settings,
         reminderSettings,
         placeMergeHistory,
         photos: backupPhotos,
         integrity: {
-          people: state.people.length,
-          places: state.places.length,
-          memories: state.memories.length,
-          anniversaryPlans: state.anniversaryPlans.length,
+          people: exportState.people.length,
+          places: exportState.places.length,
+          memories: exportState.memories.length,
+          anniversaryPlans: exportState.anniversaryPlans.length,
           photos: backupPhotos.length
         }
       };
