@@ -788,6 +788,44 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   opacity: 0.76;
 }
 
+.a-plan-status {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.a-plan-status.missing {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.a-plan-status.urgent {
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+
+.a-plan-status.doing,
+.a-plan-status.todo {
+  background: rgba(255, 242, 194, 0.24);
+}
+
+.a-plan-status.done {
+  background: rgba(232, 248, 237, 0.24);
+}
+
+.a-plan-status.muted {
+  opacity: 0.78;
+}
+
 .home-hero-section {
   display: grid;
   gap: 14px;

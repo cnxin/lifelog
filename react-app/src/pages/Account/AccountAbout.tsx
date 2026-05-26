@@ -93,6 +93,10 @@ export default function AccountAbout() {
                 <strong>检查时间</strong>
                 {formatReleaseDate(latestUpdate.checkedAt)}
               </span>
+              <span>
+                <strong>检查来源</strong>
+                {latestUpdate.source || "未知"}
+              </span>
             </div>
           )}
           {latestUpdate?.body && (

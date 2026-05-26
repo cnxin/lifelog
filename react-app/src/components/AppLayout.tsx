@@ -54,6 +54,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
+  const [editingItemId, setEditingItemId] = useState<string | undefined>();
   const [initialPlaceDraft, setInitialPlaceDraft] = useState<Partial<Place> | undefined>();
   const [initialPlaceShareReview, setInitialPlaceShareReview] = useState<PlaceDraft | undefined>();
   const [placeDraftKey, setPlaceDraftKey] = useState(0);
@@ -112,12 +113,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   useReminderScheduling();
   useStatusBar(settings.themeStyle);
 
-  function openSheet(type: EntryType, mode: SheetMode = "full", options: { personIds?: string[]; placeIds?: string[]; date?: string } = {}) {
+  function openSheet(type: EntryType, mode: SheetMode = "full", options: { personIds?: string[]; placeIds?: string[]; date?: string; itemId?: string } = {}) {
     setInitialPlaceDraft(undefined);
     setInitialPlaceShareReview(undefined);
     setInitialMemoryPersonIds(options.personIds || []);
     setInitialMemoryPlaceIds(options.placeIds || []);
     setInitialMemoryDate(options.date);
+    setEditingItemId(options.itemId);
     setSheetMode(mode);
     setSheetType(type);
   }
@@ -169,6 +171,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     onPlace: () => openSheet("place"),
     onPastePlaceShare: () => void openPlaceShareFromClipboard(),
     onMemoryForPerson: (personId) => openSheet("memory", "quick", { personIds: [personId] }),
+    onEditPerson: (personId) => openSheet("person", "full", { itemId: personId }),
     onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
     onMemoryForDate: (date) => openSheet("memory", "quick", { date })
   });
@@ -194,6 +197,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <EntrySheet
         key={`entry-sheet-${sheetType || "closed"}-${sheetMode}-${placeDraftKey}`}
         type={sheetType}
+        itemId={editingItemId}
         initialPlaceDraft={sheetType === "place" ? initialPlaceDraft : undefined}
         initialPlaceShareReview={sheetType === "place" ? initialPlaceShareReview : undefined}
         initialPersonIds={sheetType === "memory" ? initialMemoryPersonIds : []}
@@ -205,6 +209,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           setInitialMemoryPersonIds([]);
           setInitialMemoryPlaceIds([]);
           setInitialMemoryDate(undefined);
+          setEditingItemId(undefined);
           setInitialPlaceDraft(undefined);
           setInitialPlaceShareReview(undefined);
           setSheetMode("full");
@@ -223,6 +228,7 @@ function buildFloatingActions({
   onPlace,
   onPastePlaceShare,
   onMemoryForPerson,
+  onEditPerson,
   onMemoryForPlace,
   onMemoryForDate
 }: {
@@ -233,6 +239,7 @@ function buildFloatingActions({
   onPlace: () => void;
   onPastePlaceShare: () => void;
   onMemoryForPerson: (personId: string) => void;
+  onEditPerson: (personId: string) => void;
   onMemoryForPlace: (placeId: string) => void;
   onMemoryForDate: (date: string) => void;
 }): FloatingAction[] {
@@ -248,13 +255,12 @@ function buildFloatingActions({
         onClick: () => onMemoryForPerson(personId)
       },
       {
-        id: "edit-person-new",
-        label: "新增人物",
-        desc: "继续补充重要的人",
+        id: "edit-person",
+        label: "编辑 TA 的资料",
+        desc: "补充生日、喜好、雷区和纪念日",
         icon: <UserPlus />,
-        onClick: onPerson
-      },
-      quickMemoryAction(onQuickMemory)
+        onClick: () => onEditPerson(personId)
+      }
     ];
   }
 

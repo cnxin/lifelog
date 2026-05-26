@@ -153,6 +153,43 @@
   resize: vertical;
 }
 
+.sheet-panel .form input:not([type="hidden"]),
+.sheet-panel .form select,
+.sheet-panel .form .select-picker-trigger,
+.sheet-panel .form .date-input-trigger,
+.sheet-panel .form .number-stepper {
+  min-height: 40px;
+  border-radius: 13px;
+  font-size: 13px;
+}
+
+.sheet-panel .form input:not([type="hidden"]),
+.sheet-panel .form select {
+  padding: 9px 12px;
+}
+
+.sheet-panel .form textarea {
+  min-height: 94px;
+  border-radius: 16px;
+  padding: 13px 14px;
+  font-size: 13px;
+}
+
+.sheet-panel .form .select-picker-trigger,
+.sheet-panel .form .date-input-trigger {
+  padding: 0 12px;
+}
+
+.sheet-panel .form .number-stepper {
+  padding: 4px;
+}
+
+.sheet-panel .form .number-stepper button {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+}
+
 .field-title {
   display: block;
   margin-bottom: 8px;
@@ -331,7 +368,7 @@
   gap: 10px;
 }
 
-.share-review-head > div {
+.share-review-head>div {
   display: grid;
   gap: 6px;
 }
@@ -376,28 +413,17 @@
   gap: 12px;
 }
 
-.form-row > label {
+.form-row>label {
   min-width: 0;
 }
 
 .birthday-date-field {
-  border: 1px solid var(--soft-purple);
-  border-radius: 18px;
-  padding: 12px 14px;
-  background: rgba(99, 110, 114, 0.05);
-}
-
-.birthday-date-field > span {
-  color: var(--text-main);
-  font-size: 13px;
-  font-weight: 800;
+  display: grid;
+  gap: 7px;
 }
 
 .birthday-date-field .date-input-trigger {
-  min-height: 48px;
-  border-radius: 18px;
-  margin-top: 2px;
-  text-align: center;
+  min-height: 40px;
 }
 
 .birthday-editor {
@@ -523,11 +549,9 @@
   gap: 8px;
   border-radius: 18px;
   padding: 14px;
-  background: linear-gradient(
-    135deg,
-    var(--soft-purple),
-    color-mix(in srgb, var(--secondary) 18%, transparent)
-  );
+  background: linear-gradient(135deg,
+      var(--soft-purple),
+      color-mix(in srgb, var(--secondary) 18%, transparent));
   border: 1px solid var(--soft-purple);
 }
 
@@ -743,44 +767,115 @@
 
 .pref-editor {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin-top: -6px;
 }
 
 .pref-editor-row {
-  display: grid;
-  grid-template-columns: minmax(104px, 0.78fr) minmax(0, 1.6fr) auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 16px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--card-solid) 72%, transparent);
+  box-shadow: 0 8px 22px rgba(55, 65, 110, 0.04);
+}
+
+.pref-editor-row:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.pref-editor.danger .pref-editor-row {
+  border-color: color-mix(in srgb, var(--danger) 22%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--danger) 5%, transparent), transparent 48%),
+    color-mix(in srgb, var(--card-solid) 76%, transparent);
+}
+
+.pref-editor.danger .pref-editor-row:hover {
+  border-color: color-mix(in srgb, var(--danger) 38%, transparent);
+}
+
+.pref-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.pref-category-field {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  align-items: start;
+  flex: 1;
+  min-width: 0;
+}
+
+.pref-field-label {
+  flex: 0 0 auto;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .pref-editor-row input {
   min-width: 0;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-solid) 86%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 16%, transparent);
+  font-size: 13px;
 }
 
-.pref-items-editor {
-  display: grid;
-  min-width: 0;
-  gap: 8px;
+.pref-category-field input {
+  flex: 1;
+  max-width: 240px;
+  font-weight: 700;
+}
+
+.pref-editor-row input:focus {
+  background: var(--card-solid);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.pref-editor.danger .pref-editor-row input {
+  border-color: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.pref-editor.danger .pref-editor-row input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px var(--danger-soft);
 }
 
 .pref-chip-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
+  padding: 2px 0;
 }
 
 .pref-chip {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   max-width: 100%;
   border-radius: 999px;
-  padding: 6px 8px 6px 10px;
+  padding: 5px 6px 5px 10px;
   color: var(--primary);
-  background: var(--soft-purple);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.pref-chip:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 .pref-chip-text {
@@ -793,26 +888,87 @@
 
 .pref-chip.danger {
   color: var(--danger);
-  background: var(--danger-soft);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.pref-chip.danger:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
 }
 
 .pref-chip button {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border: 0;
   border-radius: 999px;
   color: inherit;
   background: rgba(255, 255, 255, 0.58);
   line-height: 1;
-  font-size: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
   font-weight: 800;
 }
 
 .pref-item-input-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.pref-item-input-row input {
+  flex: 1;
+}
+
+.pref-item-input-row .mini-action.add {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.pref-row-remove {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  display: grid;
+  place-items: center;
+}
+
+.pref-row-remove:hover {
+  color: #fff;
+  background: var(--danger);
+}
+
+.pref-editor>.mini-action.add {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.pref-editor.danger>.mini-action.add {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
 }
 
 .field-title {
@@ -886,22 +1042,71 @@
 
 .anniversary-editor {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin-top: -6px;
 }
 
 .anniversary-editor-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.9fr) auto;
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 16px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--card-solid) 72%, transparent);
+  box-shadow: 0 8px 22px rgba(55, 65, 110, 0.04);
+}
+
+.anniversary-field,
+.anniversary-date-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
 }
 
 .anniversary-editor-row input {
   min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-solid) 86%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 16%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.anniversary-editor-row .date-input-trigger {
+  min-height: 40px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.anniversary-editor-row .date-input-trigger span {
+  text-align: left;
+}
+
+.anniversary-row-remove {
+  margin-bottom: 2px;
+}
+
+.anniversary-editor>.mini-action.add {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 .anniversary-editor-row.incomplete input,
+.anniversary-editor-row.incomplete .date-input-trigger,
 .pref-editor-row.incomplete input {
   border-color: var(--accent-danger, #e74c3c);
 }
@@ -1043,7 +1248,7 @@
   align-items: center;
 }
 
-.plan-check-item > button:first-child {
+.plan-check-item>button:first-child {
   width: 32px;
   height: 32px;
   border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
@@ -1054,11 +1259,11 @@
   background: var(--card-solid);
 }
 
-.plan-check-item > button:first-child.done {
+.plan-check-item>button:first-child.done {
   background: var(--primary);
 }
 
-.plan-check-item > button:first-child svg,
+.plan-check-item>button:first-child svg,
 .plan-remove-todo svg,
 .plan-add-todo button svg {
   width: 15px;
@@ -1287,6 +1492,7 @@ button:disabled,
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .glass-card,
   .see-all,
   .person-open,
@@ -1312,6 +1518,7 @@ button:disabled,
   .nav-item {
     transition: none;
   }
+
   .toast-message {
     animation: none;
   }
@@ -1344,12 +1551,22 @@ button:disabled,
     grid-template-columns: 1fr;
   }
 
+  .pref-row-remove {
+    justify-self: end;
+  }
+
   .pref-item-input-row {
-    grid-template-columns: 1fr;
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .anniversary-editor-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .anniversary-row-remove {
+    justify-self: end;
   }
 
   .birthday-editor {

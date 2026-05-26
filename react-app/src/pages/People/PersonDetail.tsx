@@ -504,9 +504,9 @@ function PreferenceBlocks({
   if (!groups.length) return <GlassCard className="empty">{emptyText}，可以点击“编辑资料”补充。</GlassCard>;
 
   return (
-    <div className="pref-grid">
+    <div className={`pref-grid ${danger ? "danger" : ""}`}>
       {groups.map((group) => (
-        <GlassCard className="pref-block" key={group.category}>
+        <GlassCard className={`pref-block ${danger ? "danger" : ""}`} key={group.category}>
           <strong>{group.category}</strong>
           <div className="tags">
             {group.items.map((item) => (

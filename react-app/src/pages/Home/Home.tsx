@@ -1,4 +1,4 @@
-import { Calendar, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -21,7 +21,11 @@ export default function Home() {
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const upcoming = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
-    .slice(0, 4);
+    .slice(0, 4)
+    .map((item) => ({
+      ...item,
+      planStatus: buildUpcomingPlanStatus(state.anniversaryPlans, item)
+    }));
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
   const featuredPlaces = useMemo(
@@ -132,8 +136,8 @@ export default function Home() {
           <h2>
             <Sparkles /> 今日行动
           </h2>
-          <button className="see-all" onClick={() => navigate("/settings")}>
-            提醒
+          <button className="see-all" onClick={() => openQuickMemory()}>
+            记录
           </button>
         </div>
         <div className="today-action-list">
@@ -153,7 +157,7 @@ export default function Home() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <Calendar /> 未来 30 天
+            <Calendar /> 纪念日与安排
           </h2>
           <button className="see-all" onClick={() => navigate("/calendar")}>
             查看
@@ -177,6 +181,7 @@ export default function Home() {
                   </div>
                   <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
                   <div className="a-date">{item.yearLabel}</div>
+                  <div className={`a-plan-status ${item.planStatus.tone}`}>{item.planStatus.label}</div>
                   <div className="a-date">{formatMonthDay(item.date)}</div>
                   <div className="a-date">{formatLunarDate(item.date)}</div>
                 </button>
@@ -186,7 +191,7 @@ export default function Home() {
         ) : (
           <GlassCard className="home-empty-card">
             <strong>未来 30 天暂无纪念日</strong>
-            <span>补充人物生日或纪念日后，这里会自动提醒。</span>
+            <span>补充人物生日或纪念日后，这里会显示即将到来的安排。</span>
             <button onClick={() => setEntrySheetType("person")}>添加人物</button>
           </GlassCard>
         )}
@@ -372,8 +377,9 @@ function buildTodayActions({
   onQuickMemory: () => void;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
-  const reminders = previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 7, limit: 2 });
-  const anniversaryPlanAction = findAnniversaryPlanAction(state);
+  const reminders = previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 7, limit: 4 })
+    .filter((reminder) => reminder.type !== "生日" && reminder.type !== "纪念日")
+    .slice(0, 2);
 
   reminders.forEach((reminder) => {
     actions.push({
@@ -391,18 +397,6 @@ function buildTodayActions({
       }
     });
   });
-
-  if (anniversaryPlanAction) {
-    actions.push({
-      id: anniversaryPlanAction.id,
-      icon: <Gift />,
-      title: anniversaryPlanAction.title,
-      desc: anniversaryPlanAction.desc,
-      meta: "安排",
-      tone: "warm",
-      onClick: () => onOpenPerson(anniversaryPlanAction.personId, "#anniversaries")
-    });
-  }
 
   const personToContact = findPersonToContact(state.people, state.memories);
   if (personToContact) {
@@ -464,40 +458,28 @@ function findPersonToContact(people: Array<{ id: string; name: string; favorite:
     .sort((a, b) => b.score - a.score)[0];
 }
 
-function findAnniversaryPlanAction(state: ReturnType<typeof useLifeLog>["state"]) {
-  const upcoming = getUpcomingAnniversaries(state.people)
-    .filter((item) => item.days >= 0 && item.days <= 30)
-    .slice(0, 8);
+function buildUpcomingPlanStatus(
+  plans: ReturnType<typeof useLifeLog>["state"]["anniversaryPlans"],
+  item: ReturnType<typeof getUpcomingAnniversaries>[number]
+) {
+  const plan = plans.find((candidate) =>
+    candidate.personId === item.personId &&
+    candidate.anniversaryTitle === item.title &&
+    candidate.anniversaryDate === item.date &&
+    candidate.occurrenceYear === buildOccurrenceYear(item.date)
+  );
 
-  for (const item of upcoming) {
-    const plan = state.anniversaryPlans.find((candidate) =>
-      candidate.personId === item.personId &&
-      candidate.anniversaryTitle === item.title &&
-      candidate.anniversaryDate === item.date &&
-      candidate.occurrenceYear === buildOccurrenceYear(item.date)
-    );
+  if (!plan) return { label: item.days <= 3 ? "临近未安排" : "未安排", tone: item.days <= 3 ? "urgent" : "missing" };
+  if (plan.status === "done") return { label: "已完成", tone: "done" };
+  if (plan.status === "skipped") return { label: "已跳过", tone: "muted" };
 
-    if (!plan) {
-      return {
-        id: `anniversary-plan-missing-${item.personId}-${item.title}`,
-        personId: item.personId,
-        title: `${item.personName}的${item.title}还没安排`,
-        desc: `${item.label} · 先列待办、地点和礼物线索`
-      };
-    }
-
-    if (plan.status !== "done" && plan.status !== "skipped") {
-      const done = plan.checklist.filter((todo) => todo.done).length;
-      return {
-        id: `anniversary-plan-active-${plan.id}`,
-        personId: plan.personId,
-        title: `继续准备：${plan.title}`,
-        desc: `${item.label} · ${done}/${plan.checklist.length} 项完成`
-      };
-    }
-  }
-
-  return null;
+  const total = plan.checklist.length;
+  const done = plan.checklist.filter((todo) => todo.done).length;
+  const prefix = plan.status === "doing" ? "准备中" : "待准备";
+  return {
+    label: total ? `${prefix} ${done}/${total}` : prefix,
+    tone: plan.status === "doing" ? "doing" : "todo"
+  };
 }
 
 function buildOccurrenceYear(date: string) {

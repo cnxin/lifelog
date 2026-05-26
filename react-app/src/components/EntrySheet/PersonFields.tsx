@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import type { Anniversary, Person, PreferenceGroup } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { groupsToText, splitPreferenceItems } from "../../utils/text";
@@ -88,7 +89,7 @@ function BirthdayDateFields({ birthday }: { birthday?: string }) {
 
   return (
     <label className="birthday-date-field">
-      <span>生日</span>
+      生日
       <DateInput label="生日" value={birthdayValue} onChange={setBirthdayValue} />
       <input type="hidden" name="birthdayYear" value={year} />
       <input type="hidden" name="birthdayMonth" value={month} />
@@ -143,9 +144,9 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
   const [rows, setRows] = useState<AnniversaryRow[]>(
     anniversaries?.length
       ? anniversaries.map((item) => ({
-          title: item.title,
-          date: item.date
-        }))
+        title: item.title,
+        date: item.date
+      }))
       : []
   );
 
@@ -177,19 +178,31 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
         const incomplete = (row.title.trim() && !row.date) || (!row.title.trim() && row.date);
         return (
           <div className={`anniversary-editor-row ${incomplete ? "incomplete" : ""}`} key={`anniversary-${index}`}>
-            <input
-              aria-label="纪念日名称"
-              placeholder="纪念日名称"
-              value={row.title}
-              onChange={(event) => updateRow(index, { title: event.target.value })}
-            />
-            <DateInput
-              label="纪念日日期"
-              value={row.date}
-              onChange={(value) => updateRow(index, { date: value })}
-            />
-            <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
-              删除
+            <div className="anniversary-field">
+              <span className="pref-field-label">名称</span>
+              <input
+                aria-label="纪念日名称"
+                placeholder="纪念日名称"
+                value={row.title}
+                onChange={(event) => updateRow(index, { title: event.target.value })}
+              />
+            </div>
+            <div className="anniversary-date-field">
+              <span className="pref-field-label">日期</span>
+              <DateInput
+                label="纪念日日期"
+                value={row.date}
+                onChange={(value) => updateRow(index, { date: value })}
+              />
+            </div>
+            <button
+              type="button"
+              className="pref-row-remove anniversary-row-remove"
+              aria-label="删除此纪念日"
+              title="删除此纪念日"
+              onClick={() => removeRow(index)}
+            >
+              <Trash2 size={16} />
             </button>
           </div>
         );
@@ -198,6 +211,7 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
         <p className="form-hint danger">有 {incompleteCount} 条纪念日信息不完整，保存时会被忽略。</p>
       )}
       <button type="button" className="mini-action add" onClick={addRow}>
+        <Plus size={16} />
         添加纪念日
       </button>
       <p className="form-hint">纪念日同样只输入公历日期，详情页会自动显示农历日期。</p>
@@ -229,9 +243,9 @@ function PreferenceGroupEditor({
       current.map((row, rowIndex) =>
         rowIndex === index
           ? {
-              ...row,
-              ...patch
-            }
+            ...row,
+            ...patch
+          }
           : row
       )
     );
@@ -250,10 +264,10 @@ function PreferenceGroupEditor({
       current.map((row, rowIndex) =>
         rowIndex === index
           ? {
-              ...row,
-              items: mergePreferenceItems(row.items, splitPreferenceItems(row.draftItem)),
-              draftItem: ""
-            }
+            ...row,
+            items: mergePreferenceItems(row.items, splitPreferenceItems(row.draftItem)),
+            draftItem: ""
+          }
           : row
       )
     );
@@ -264,9 +278,9 @@ function PreferenceGroupEditor({
       current.map((row, index) =>
         index === rowIndex
           ? {
-              ...row,
-              items: row.items.filter((_, currentItemIndex) => currentItemIndex !== itemIndex)
-            }
+            ...row,
+            items: row.items.filter((_, currentItemIndex) => currentItemIndex !== itemIndex)
+          }
           : row
       )
     );
@@ -300,41 +314,52 @@ function PreferenceGroupEditor({
         const incomplete = (hasCategory && !hasItems) || (!hasCategory && hasItems);
         return (
           <div className={`pref-editor-row ${incomplete ? "incomplete" : ""}`} key={`${name}-${index}`}>
-            <input
-              aria-label="分类"
-              placeholder="分类"
-              value={row.category}
-              onChange={(event) => updateRow(index, { category: event.target.value })}
-            />
-            <div className="pref-items-editor">
-              {row.items.length > 0 && (
-                <div className="pref-chip-list" aria-label={`${danger ? "禁忌" : "喜好"}项目`}>
-                  {row.items.map((item, itemIndex) => (
-                    <span className={`pref-chip ${danger ? "danger" : ""}`} key={`${name}-${index}-${item}`}>
-                      <span className="pref-chip-text">{item}</span>
-                      <button type="button" aria-label={`删除${item}`} onClick={() => removeItem(index, itemIndex)}>
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="pref-item-input-row">
+            <div className="pref-row-header">
+              <div className="pref-category-field">
+                <span className="pref-field-label">分类</span>
                 <input
-                  aria-label="新增项目"
-                  value={row.draftItem}
-                  onBlur={() => addDraftItems(index)}
-                  onChange={(event) => updateRow(index, { draftItem: event.target.value })}
-                  onKeyDown={(event) => handleItemKeyDown(event, index)}
+                  aria-label="分类"
+                  placeholder={danger ? "过敏" : "颜色"}
+                  value={row.category}
+                  onChange={(event) => updateRow(index, { category: event.target.value })}
                 />
-                <button type="button" className="mini-action add" onClick={() => addDraftItems(index)}>
-                  添加项目
-                </button>
               </div>
+              <button
+                type="button"
+                className="pref-row-remove"
+                aria-label="删除此分类"
+                title="删除此分类"
+                onClick={() => removeRow(index)}
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
-            <button type="button" className="mini-action danger" onClick={() => removeRow(index)}>
-              删除
-            </button>
+            {row.items.length > 0 && (
+              <div className="pref-chip-list" aria-label={`${danger ? "禁忌" : "喜好"}项目`}>
+                {row.items.map((item, itemIndex) => (
+                  <span className={`pref-chip ${danger ? "danger" : ""}`} key={`${name}-${index}-${item}`}>
+                    <span className="pref-chip-text">{item}</span>
+                    <button type="button" aria-label={`删除${item}`} onClick={() => removeItem(index, itemIndex)}>
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="pref-item-input-row">
+              <input
+                aria-label="新增项目"
+                placeholder={danger ? "新增雷区，如：花生、不吃辣" : "新增喜好，如：蓝色、火锅"}
+                value={row.draftItem}
+                onBlur={() => addDraftItems(index)}
+                onChange={(event) => updateRow(index, { draftItem: event.target.value })}
+                onKeyDown={(event) => handleItemKeyDown(event, index)}
+              />
+              <button type="button" className="mini-action add" onClick={() => addDraftItems(index)}>
+                <Plus size={14} />
+                添加项目
+              </button>
+            </div>
           </div>
         );
       })}
@@ -342,6 +367,7 @@ function PreferenceGroupEditor({
         <p className="form-hint danger">有 {incompleteCount} 条记录缺少{danger ? "禁忌" : "喜好"}分类或项目，保存时会被忽略。</p>
       )}
       <button type="button" className="mini-action add" onClick={addRow}>
+        <Plus size={16} />
         添加分类
       </button>
       <p className="form-hint">

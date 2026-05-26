@@ -15,6 +15,7 @@ export interface AppUpdateInfo {
   body: string;
   publishedAt: string;
   checkedAt: string;
+  source: string;
   hasUpdate: boolean;
 }
 
@@ -78,6 +79,7 @@ export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = A
     apkName: "",
     apkSize: 0,
     body: "",
+    source: best.source,
     hasUpdate: false
   };
 }
@@ -98,14 +100,17 @@ async function fetchUpdateManifest(url: string) {
     cache: "no-store"
   });
   if (!response.ok) return null;
-  return (await response.json()) as UpdateManifestPayload;
+  return {
+    ...((await response.json()) as UpdateManifestPayload),
+    source: url.includes("cdn.jsdelivr") ? "CDN 清单" : "GitHub raw 清单"
+  } as UpdateManifestPayload & { source: string };
 }
 
 function isGitHubReleasePayload(payload: UpdateManifestPayload | GitHubReleasePayload): payload is GitHubReleasePayload {
   return "tag_name" in payload || "assets" in payload;
 }
 
-export function parseUpdateManifestPayload(payload: UpdateManifestPayload, currentVersion = APP_VERSION): AppUpdateInfo {
+export function parseUpdateManifestPayload(payload: UpdateManifestPayload & { source?: string }, currentVersion = APP_VERSION): AppUpdateInfo {
   const latestVersion = normalizeVersion(payload.version || "");
   if (!latestVersion) {
     throw new Error("更新清单没有版本号");
@@ -122,6 +127,7 @@ export function parseUpdateManifestPayload(payload: UpdateManifestPayload, curre
     body: payload.body || "",
     publishedAt: payload.publishedAt || "",
     checkedAt: new Date().toISOString(),
+    source: payload.source || "更新清单",
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0
   };
 }
@@ -144,6 +150,7 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
     body: payload.body || "",
     publishedAt: payload.published_at || "",
     checkedAt: new Date().toISOString(),
+    source: "GitHub Release",
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0
   };
 }

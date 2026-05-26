@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.73",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.73",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.73/lifelog-v0.1.0-test.73.apk",
-  "mirrorApkUrl": "",
-  "apkName": "lifelog-v0.1.0-test.73.apk",
-  "apkSize": 3613920,
-  "publishedAt": "2026-05-25T17:54:20Z",
-  "body": "- 顶部新增全局搜索面板，可跨人物、地点、回忆、标签、地址、喜好和平台链接快速查找。\n- 回忆详情新增相关回忆推荐，按人物、地点、标签、相近日期和心情给出关联回看入口。\n- 设置页新增资料体检，集中提示缺失生日、地点入口、照片和回忆关联等可补全项。\n- 商场列表和详情新增店铺到访总数，商场内地点也会显示各自到访次数和最近到访。\n- 修复提前提醒预览把提醒触发日当成目标日的问题，周年标签会按目标纪念日计算。"
+  "version": "0.1.0-test.75",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.75",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.75/lifelog-v0.1.0-test.75.apk",
+  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.75.apk",
+  "apkName": "lifelog-v0.1.0-test.75.apk",
+  "apkSize": 3620468,
+  "publishedAt": "2026-05-26T07:16:44Z",
+  "body": "- 编辑人物的生日、纪念日、喜好档案和禁忌区域统一字段标题、控件高度和删除按钮对齐。\n- 地点、回忆和人物新增 / 编辑弹层统一普通输入、下拉、日期和数字步进控件高度。\n- 人物详情页快捷新增面板保留记录回忆，并新增编辑资料入口。\n- 首页今日行动和纪念日安排减少重复提示。\n- 更新检查会显示来源，并继续同时比较 CDN 清单、GitHub raw 清单和 GitHub Release。"
 }
