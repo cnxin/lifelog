@@ -72,7 +72,7 @@ export default function Home() {
     getPersonName,
     getPlaceName,
     onOpenMemory: (memoryId) => navigate(`/memories/${memoryId}`),
-    onOpenPerson: (personId) => navigate(`/people/${personId}`),
+    onOpenPerson: (personId, hash = "") => navigate(`/people/${personId}${hash}`),
     onOpenCalendar: () => navigate("/calendar"),
     onAddMemoryForPerson: (personId) => {
       openQuickMemory([personId]);
@@ -366,7 +366,7 @@ function buildTodayActions({
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
   onOpenMemory: (memoryId: string) => void;
-  onOpenPerson: (personId: string) => void;
+  onOpenPerson: (personId: string, hash?: string) => void;
   onOpenCalendar: () => void;
   onAddMemoryForPerson: (personId: string) => void;
   onQuickMemory: () => void;
@@ -379,9 +379,15 @@ function buildTodayActions({
       id: `reminder-${reminder.id}`,
       icon: <Calendar />,
       title: reminder.title,
-      desc: reminder.body || "未来 7 天内需要留意",
+      desc: [formatMonthDay(toDateKey(reminder.at)), reminder.body || "未来 7 天内需要留意"].filter(Boolean).join(" · "),
       meta: reminder.type,
-      onClick: onOpenCalendar
+      onClick: () => {
+        if (reminder.sourcePath) {
+          navigateToReminderSource(reminder.sourcePath, onOpenPerson, onOpenCalendar);
+          return;
+        }
+        onOpenCalendar();
+      }
     });
   });
 
@@ -445,6 +451,19 @@ function findPersonToContact(people: Array<{ id: string; name: string; favorite:
     .sort((a, b) => b.score - a.score)[0];
 }
 
+function navigateToReminderSource(
+  path: string,
+  onOpenPerson: (personId: string, hash?: string) => void,
+  onOpenCalendar: () => void
+) {
+  const personMatch = path.match(/^\/people\/([^#/?]+)(?:#anniversaries)?$/);
+  if (personMatch) {
+    onOpenPerson(personMatch[1], path.includes("#anniversaries") ? "#anniversaries" : "");
+    return;
+  }
+  onOpenCalendar();
+}
+
 function findOnThisDayMemory(memories: MemoryEvent[]) {
   const today = new Date();
   const month = today.getMonth();
@@ -498,4 +517,8 @@ function countMemoriesInCurrentMonth(memories: MemoryEvent[]) {
     const time = new Date(`${memory.date}T00:00:00`).getTime();
     return time >= monthStart && time < nextMonthStart;
   }).length;
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }

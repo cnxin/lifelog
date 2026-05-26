@@ -114,6 +114,10 @@ if (!futureAnniversaryPreview?.body.includes("还有 6 天") || !futureAnniversa
   failures.push(`Anniversary preview should use target-day distance, got: ${JSON.stringify(futureAnniversaryPreview)}`);
 }
 
+if (futureAnniversaryPreview?.sourcePath !== "/people/p1#anniversaries") {
+  failures.push(`Anniversary preview should link to the person's anniversaries, got: ${JSON.stringify(futureAnniversaryPreview)}`);
+}
+
 const firstAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("第一次见面"));
 if (!firstAnniversaryPreview?.body.includes("首次纪念日")) {
   failures.push(`First anniversary should use explicit label, got: ${JSON.stringify(firstAnniversaryPreview)}`);

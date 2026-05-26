@@ -554,6 +554,13 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   text-align: left;
 }
 
+.global-search-result.active {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 9%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
 .global-search-icon {
   width: 42px;
   height: 42px;
@@ -602,6 +609,12 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.global-search-result-main .global-search-match {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .global-search-result-meta {

@@ -8,6 +8,12 @@ import { getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { buildPlaceContextLine, buildPlaceDisplayName } from "../utils/placeMeta";
 
 type SearchKind = "memory" | "person" | "place";
+type SearchField = "标题" | "正文" | "标签" | "人物" | "地点" | "喜好" | "纪念日" | "地址" | "平台" | "备注" | "分类";
+
+interface SearchKeyword {
+  field: SearchField;
+  value: string;
+}
 
 interface SearchResult {
   id: string;
@@ -17,7 +23,7 @@ interface SearchResult {
   meta: string;
   path: string;
   searchText: string;
-  keywords: string[];
+  keywords: SearchKeyword[];
   scoreBase: number;
 }
 
@@ -32,6 +38,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,17 +48,9 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  useEffect(() => {
     if (open) return;
     setQuery("");
+    setSelectedIndex(-1);
   }, [open]);
 
   const index = useMemo<SearchResult[]>(() => {
@@ -59,20 +58,20 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
     const placeById = new Map(state.places.map((place) => [place.id, place]));
 
     const peopleResults = state.people.map<SearchResult>((person) => {
-      const preferenceText = [...safeArray(person.preferences), ...safeArray(person.dislikes)]
+      const preferenceKeywords = [...safeArray(person.preferences), ...safeArray(person.dislikes)]
         .flatMap((group) => [group.category, ...group.items])
         .filter(Boolean)
-        .join(" ");
+        .map((value) => ({ field: "喜好" as const, value }));
       const anniversaries = safeArray(person.anniversaries).map((item) => `${item.title} ${item.date}`).join(" ");
       const keywords = [
-        person.name,
-        person.nickname,
-        person.relationship,
-        person.favorite ? "收藏" : "",
-        preferenceText,
-        anniversaries,
-        person.notes
-      ].filter(Boolean) as string[];
+        keyword("标题", person.name),
+        keyword("标题", person.nickname),
+        keyword("分类", person.relationship),
+        keyword("分类", person.favorite ? "收藏" : ""),
+        ...preferenceKeywords,
+        keyword("纪念日", anniversaries),
+        keyword("备注", person.notes)
+      ].filter(isSearchKeyword);
       return {
         id: person.id,
         kind: "person",
@@ -80,7 +79,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         subtitle: [person.nickname, person.relationship].filter(Boolean).join(" · ") || "人物档案",
         meta: person.favorite ? "已收藏" : safeArray(person.anniversaries).length ? `${safeArray(person.anniversaries).length} 个纪念日` : "人物",
         path: `/people/${person.id}`,
-        searchText: normalizeSearchText(keywords.join(" ")),
+        searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
         keywords,
         scoreBase: person.favorite ? 14 : 10
       };
@@ -90,23 +89,16 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
       const title = buildPlaceDisplayName(place) || "未命名地点";
       const platformText = safeArray(place.platformLinks).map((link) => `${link.label} ${link.platform} ${link.url}`).join(" ");
       const keywords = [
-        title,
-        place.name,
-        place.storeName,
-        place.category,
-        place.country,
-        place.province,
-        place.city,
-        place.area,
-        place.mall,
-        place.address,
-        place.desc,
-        place.mapUrl,
-        place.sourceUrl,
-        platformText,
-        ...safeArray(place.tags),
-        place.favorite ? "收藏" : ""
-      ].filter(Boolean);
+        keyword("标题", title),
+        keyword("标题", place.name),
+        keyword("标题", place.storeName),
+        keyword("分类", place.category),
+        keyword("地址", [place.country, place.province, place.city, place.area, place.mall, place.address].filter(Boolean).join(" ")),
+        keyword("备注", place.desc),
+        keyword("平台", [place.mapUrl, place.sourceUrl, platformText].filter(Boolean).join(" ")),
+        ...safeArray(place.tags).map((tag) => keyword("标签", tag)).filter(isSearchKeyword),
+        keyword("分类", place.favorite ? "收藏" : "")
+      ].filter(isSearchKeyword);
       return {
         id: place.id,
         kind: "place",
@@ -114,7 +106,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         subtitle: buildPlaceContextLine(place),
         meta: [place.category, place.rating ? `${place.rating} 分` : "", place.favorite ? "已收藏" : ""].filter(Boolean).join(" · ") || "地点",
         path: `/places/${place.id}`,
-        searchText: normalizeSearchText(keywords.join(" ")),
+        searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
         keywords,
         scoreBase: place.favorite ? 13 : 9
       };
@@ -126,17 +118,24 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
       const people = (memory.personIds || []).map((id) => personById.get(id)).filter(Boolean);
       const places = getMemoryPlaceIds(memory).map((id) => placeById.get(id)).filter(Boolean);
       const keywords = [
-        title,
-        memory.title,
-        memory.content,
-        memory.mood,
-        memory.date,
-        ...ctx.personNames,
-        ...ctx.placeNames,
-        ...people.flatMap((person) => [person?.nickname, person?.relationship, person?.notes]),
-        ...places.flatMap((place) => [place?.category, place?.city, place?.area, place?.mall, place?.address]),
-        ...(memory.tags || [])
-      ].filter(Boolean) as string[];
+        keyword("标题", title),
+        keyword("标题", memory.title),
+        keyword("正文", memory.content),
+        keyword("分类", memory.mood),
+        keyword("分类", memory.date),
+        ...ctx.personNames.map((name) => keyword("人物", name)).filter(isSearchKeyword),
+        ...ctx.placeNames.map((name) => keyword("地点", name)).filter(isSearchKeyword),
+        ...people.flatMap((person) => [
+          keyword("人物", person?.nickname),
+          keyword("人物", person?.relationship),
+          keyword("备注", person?.notes)
+        ]).filter(isSearchKeyword),
+        ...places.flatMap((place) => [
+          keyword("地点", place?.category),
+          keyword("地址", [place?.city, place?.area, place?.mall, place?.address].filter(Boolean).join(" "))
+        ]).filter(isSearchKeyword),
+        ...(memory.tags || []).map((tag) => keyword("标签", tag)).filter(isSearchKeyword)
+      ].filter(isSearchKeyword);
       return {
         id: memory.id,
         kind: "memory",
@@ -144,7 +143,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         subtitle: buildMemoryMetaLine(ctx) || firstLine(memory.content) || "回忆记录",
         meta: [formatMonthDay(memory.date), memory.mood, safeArray(memory.photos).length ? `${safeArray(memory.photos).length} 张照片` : ""].filter(Boolean).join(" · "),
         path: `/memories/${memory.id}`,
-        searchText: normalizeSearchText(keywords.join(" ")),
+        searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
         keywords,
         scoreBase: 11
       };
@@ -163,6 +162,41 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
       .slice(0, 24)
       .map((entry) => entry.item);
   }, [index, queryTokens]);
+
+  useEffect(() => {
+    setSelectedIndex(results.length ? 0 : -1);
+  }, [results.length, query]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (!results.length) return;
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setSelectedIndex((current) => Math.min(results.length - 1, current + 1));
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setSelectedIndex((current) => Math.max(0, current - 1));
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        openPath(results[Math.max(0, selectedIndex)]?.path || results[0].path);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose, results, selectedIndex]);
 
   function openPath(path: string) {
     navigate(path);
@@ -214,8 +248,14 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         ) : results.length ? (
           <div className="global-search-results">
             <div className="global-search-count">找到 {results.length} 条相关结果</div>
-            {results.map((result) => (
-              <button key={`${result.kind}-${result.id}`} className="global-search-result glass-card" type="button" onClick={() => openPath(result.path)}>
+            {results.map((result, index) => (
+              <button
+                key={`${result.kind}-${result.id}`}
+                className={`global-search-result glass-card ${index === selectedIndex ? "active" : ""}`}
+                type="button"
+                onClick={() => openPath(result.path)}
+                onMouseEnter={() => setSelectedIndex(index)}
+              >
                 <span className={`global-search-icon ${result.kind}`}>
                   {result.kind === "person" && <User />}
                   {result.kind === "place" && <MapPin />}
@@ -224,6 +264,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
                 <span className="global-search-result-main">
                   <strong>{result.title}</strong>
                   <small>{result.subtitle}</small>
+                  <small className="global-search-match">{buildMatchHint(result, queryTokens)}</small>
                 </span>
                 <span className="global-search-result-meta">
                   <em>{kindLabel(result.kind)}</em>
@@ -260,6 +301,39 @@ function scoreSearchResult(result: SearchResult, tokens: string[]) {
   return score + result.scoreBase;
 }
 
+function buildMatchHint(result: SearchResult, tokens: string[]) {
+  const exactFields = new Set<SearchField>();
+  const matchedKeywords: SearchKeyword[] = [];
+
+  for (const keyword of result.keywords) {
+    const normalized = normalizeSearchText(keyword.value);
+    if (!normalized) continue;
+    if (tokens.some((token) => normalized.includes(token))) {
+      exactFields.add(keyword.field);
+      matchedKeywords.push(keyword);
+    }
+  }
+
+  const first = matchedKeywords.find((item) => item.field !== "标题") || matchedKeywords[0];
+  if (!first) return kindLabel(result.kind);
+
+  const fields = Array.from(exactFields).slice(0, 2).join("、");
+  return `命中${fields}：${compactMatchText(first.value, tokens)}`;
+}
+
+function compactMatchText(value: string, tokens: string[]) {
+  const text = value.replace(/\s+/g, " ").trim();
+  if (text.length <= 28) return text;
+
+  const normalized = normalizeSearchText(text);
+  const token = tokens.find((item) => normalized.includes(item));
+  if (!token) return `${text.slice(0, 26)}...`;
+
+  const start = Math.max(0, normalized.indexOf(token) - 8);
+  const end = Math.min(text.length, start + 28);
+  return `${start > 0 ? "..." : ""}${text.slice(start, end)}${end < text.length ? "..." : ""}`;
+}
+
 function normalizeSearchText(value: string) {
   return value
     .toLowerCase()
@@ -276,6 +350,15 @@ function kindLabel(kind: SearchKind) {
   if (kind === "person") return "人物";
   if (kind === "place") return "地点";
   return "回忆";
+}
+
+function keyword(field: SearchField, value?: string | null): SearchKeyword | null {
+  const text = String(value || "").trim();
+  return text ? { field, value: text } : null;
+}
+
+function isSearchKeyword(value: SearchKeyword | null | undefined | false | ""): value is SearchKeyword {
+  return Boolean(value && value.value);
 }
 
 function safeArray<T>(value: T[] | undefined | null): T[] {
