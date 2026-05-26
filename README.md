@@ -17,13 +17,19 @@
 
 ### 下载 APK
 
-直接下载最新版本 APK 安装到 Android 手机：
-
-```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.75.apk
-```
-
 当前版本：`0.1.0-test.75`
+
+最新 Release：
+
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.75
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.75/lifelog-v0.1.0-test.75.apk
+- 仓库镜像：https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.75.apk
+
+APK 信息：
+
+- 文件名：`lifelog-v0.1.0-test.75.apk`
+- 大小：`3620468` bytes
+- SHA256：`ce032da326f802e814e1368ada229cdc9a8f78b96f013d2a92eb690de47a4c23`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
