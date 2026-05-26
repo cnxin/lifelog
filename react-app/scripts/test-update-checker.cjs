@@ -124,6 +124,17 @@ if (!mixedSources.hasUpdate || mixedSources.latestVersion !== "0.1.0-test.65") {
   console.error(`[chooseBestAppUpdate mixed sources] unexpected payload: ${JSON.stringify(mixedSources)}`);
 }
 
+const giteeManifest = {
+  ...newerRelease,
+  source: "Gitee 国内镜像清单",
+  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk"
+};
+const sameVersionSources = chooseBestAppUpdate([newerRelease, giteeManifest], "0.1.0-test.64");
+if (sameVersionSources.source !== "Gitee 国内镜像清单" || !sameVersionSources.mirrorApkUrl.includes("gitee.com/ysjugg")) {
+  failures += 1;
+  console.error(`[chooseBestAppUpdate same version priority] unexpected payload: ${JSON.stringify(sameVersionSources)}`);
+}
+
 const preferredDownload = getPreferredApkDownloadUrl({
   apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
   mirrorApkUrl: "https://gitee.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",

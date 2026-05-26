@@ -1,6 +1,7 @@
 import { APP_VERSION } from "../constants/version";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/cnxin/lifelog/releases/latest";
+const GITEE_UPDATE_MANIFEST_URL = "https://gitee.com/ysjugg/lifelog/raw/main/update-manifest.json";
 const UPDATE_MANIFEST_URL = "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/update-manifest.json";
 const RAW_UPDATE_MANIFEST_URL = "https://raw.githubusercontent.com/cnxin/lifelog/main/update-manifest.json";
 
@@ -45,7 +46,12 @@ interface GitHubReleasePayload {
 }
 
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
-  const candidates = await Promise.allSettled([fetchUpdateManifest(UPDATE_MANIFEST_URL), fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL), fetchLatestRelease()]);
+  const candidates = await Promise.allSettled([
+    fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL),
+    fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL),
+    fetchUpdateManifest(UPDATE_MANIFEST_URL),
+    fetchLatestRelease()
+  ]);
   const updates = candidates
     .flatMap((candidate) => (candidate.status === "fulfilled" && candidate.value ? [candidate.value] : []))
     .flatMap((payload) => parseUpdateCandidate(payload, APP_VERSION));
@@ -67,7 +73,11 @@ function parseUpdateCandidate(payload: UpdateManifestPayload | GitHubReleasePayl
 }
 
 export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = APP_VERSION) {
-  const best = updates.sort((left, right) => compareVersions(right.latestVersion, left.latestVersion))[0];
+  const best = updates.sort((left, right) => {
+    const versionCompare = compareVersions(right.latestVersion, left.latestVersion);
+    if (versionCompare !== 0) return versionCompare;
+    return updateSourcePriority(left.source) - updateSourcePriority(right.source);
+  })[0];
   if (compareVersions(best.latestVersion, currentVersion) >= 0) return best;
 
   return {
@@ -102,8 +112,23 @@ async function fetchUpdateManifest(url: string) {
   if (!response.ok) return null;
   return {
     ...((await response.json()) as UpdateManifestPayload),
-    source: url.includes("cdn.jsdelivr") ? "CDN 清单" : "GitHub raw 清单"
+    source: formatManifestSource(url)
   } as UpdateManifestPayload & { source: string };
+}
+
+function formatManifestSource(url: string) {
+  if (url.includes("gitee.com")) return "Gitee 国内镜像清单";
+  if (url.includes("cdn.jsdelivr")) return "CDN 清单";
+  if (url.includes("raw.githubusercontent")) return "GitHub raw 清单";
+  return "更新清单";
+}
+
+function updateSourcePriority(source: string) {
+  if (source.includes("Gitee")) return 0;
+  if (source.includes("GitHub raw")) return 1;
+  if (source.includes("CDN")) return 2;
+  if (source.includes("GitHub Release")) return 3;
+  return 4;
 }
 
 function isGitHubReleasePayload(payload: UpdateManifestPayload | GitHubReleasePayload): payload is GitHubReleasePayload {

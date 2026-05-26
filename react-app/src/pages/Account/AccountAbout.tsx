@@ -70,7 +70,7 @@ export default function AccountAbout() {
               <small>
                 {latestUpdate
                   ? `当前版本 ${latestUpdate.currentVersion} · 最新版本 ${latestUpdate.latestVersion}`
-                  : "同时读取 CDN 清单、GitHub raw 清单和 GitHub Release。"}
+                  : "同时读取 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub Release。"}
               </small>
             </div>
             <button className="mini-action add" type="button" onClick={() => void handleCheckUpdate()} disabled={isChecking}>
