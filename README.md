@@ -31,7 +31,7 @@ APK 信息：
 - 大小：`3622804` bytes
 - SHA256：`6335b167b2b2892aee507c4044c5bf2243b4a4fd557fd28d8ed5d5d1a2de5900`
 
-如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
+如果 GitHub 下载慢，可优先使用 Gitee 国内镜像；App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判。
 
 ### 本地开发
 
@@ -59,7 +59,12 @@ npm.cmd run cap:sync
 
 # 构建签名 release APK
 npm.cmd run release:apk
+
+# 复制 APK 并刷新 update-manifest.json 基础字段
+npm.cmd run release:prepare-files
 ```
+
+`release:prepare-files` 会把 Android release APK 复制到 `downloads/`，并自动回填版本号、APK 文件名、大小、GitHub 下载地址和 Gitee 镜像地址。README、CHANGELOG 和发布说明仍需按实际变更人工确认。
 
 ## 🛠️ 技术栈
 
@@ -77,6 +82,11 @@ npm.cmd run release:apk
 - 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。
 - 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。
 - APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。
+
+## 备份排查
+
+- 导入预检会显示人物、地点、回忆、照片数量，并提示照片归属修复、缺失照片引用和会被忽略的孤立照片。
+- Android 导出会调用系统文件保存器；如果第一次导出失败，请记录失败提示和选择的保存位置，再重试同一目录，便于区分系统文件授权失败和备份内容生成失败。
 
 ## 仓库结构
 

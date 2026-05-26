@@ -40,10 +40,17 @@ export default function AccountDataManagement() {
         throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
       }
       const preview = buildBackupImportPreview(parsed);
+      const photoPreview = [
+        preview.repairedPhotos ? `${preview.repairedPhotos} 张照片将自动修复归属` : "",
+        preview.extraPhotoRefs ? `${preview.extraPhotoRefs} 张照片将补回回忆引用` : "",
+        preview.missingPhotoRefs ? `${preview.missingPhotoRefs} 个照片引用缺少文件` : "",
+        preview.ignoredPhotos ? `${preview.ignoredPhotos} 张照片会被忽略` : ""
+      ].filter(Boolean).join("；");
       previewMessage = [
         `将导入：${preview.people} 个人物 · ${preview.places} 个地点 · ${preview.memories} 条回忆 · ${preview.photos} 张照片。`,
         preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
         preview.appVersion ? `备份版本：${preview.appVersion}。` : "",
+        photoPreview ? `照片检查：${photoPreview}。` : "照片检查：未发现明显照片关联问题。",
         preview.issueCount ? `预检发现 ${preview.issueCount} 个关联问题：${preview.issues.slice(0, 2).join("；")}。` : "预检未发现明显关联问题。",
         `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份。`
       ].filter(Boolean).join("\n");
@@ -105,6 +112,7 @@ export default function AccountDataManagement() {
       notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
+      console.error("Backup export failed:", error);
       notify({
         message: /cancel/i.test(message) ? "已取消导出备份" : `导出备份失败：${message || "请稍后重试"}`,
         tone: /cancel/i.test(message) ? "info" : "error"

@@ -184,6 +184,21 @@ export function getPreferredApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" 
   return update?.mirrorApkUrl || update?.apkUrl || update?.releaseUrl || "";
 }
 
+export function getPreferredApkDownloadSource(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
+  if (!update) return "";
+  if (update.mirrorApkUrl) return formatDownloadSource(update.mirrorApkUrl);
+  if (update.apkUrl) return formatDownloadSource(update.apkUrl);
+  if (update.releaseUrl) return "Release 页面";
+  return "";
+}
+
+function formatDownloadSource(url: string) {
+  if (url.includes("gitee.com")) return "Gitee 国内镜像";
+  if (url.includes("github.com")) return "GitHub Release";
+  if (url.includes("cdn.jsdelivr")) return "jsDelivr CDN";
+  return "下载链接";
+}
+
 function buildJsDelivrApkUrl(version: string, assetName: string) {
   return `https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/${assetName || `lifelog-v${version}.apk`}`;
 }

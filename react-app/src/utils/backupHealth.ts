@@ -17,6 +17,10 @@ export interface BackupImportPreview {
   places: number;
   memories: number;
   photos: number;
+  repairedPhotos: number;
+  ignoredPhotos: number;
+  missingPhotoRefs: number;
+  extraPhotoRefs: number;
   exportedAt: string;
   appVersion: string;
   issueCount: number;
@@ -42,6 +46,10 @@ export function buildBackupImportPreview(input: Record<string, unknown>): Backup
   const places = Array.isArray(sourceState.places) ? sourceState.places : [];
   const memories = Array.isArray(sourceState.memories) ? sourceState.memories : [];
   const photos = Array.isArray(input.photos) ? input.photos : [];
+  const photoReport = inspectBackupPhotoLinks(
+    memories.map((item) => (isRecord(item) ? item : {})),
+    photos.map((item) => (isRecord(item) ? item : {}))
+  );
 
   const stateLike = {
     people: people.map((item) => (isRecord(item) ? item : {})),
@@ -55,10 +63,14 @@ export function buildBackupImportPreview(input: Record<string, unknown>): Backup
     places: places.length,
     memories: memories.length,
     photos: photos.length,
+    repairedPhotos: photoReport.repairedPhotos,
+    ignoredPhotos: photoReport.ignoredPhotos,
+    missingPhotoRefs: photoReport.missingPhotoRefs,
+    extraPhotoRefs: photoReport.extraPhotoRefs,
     exportedAt: String(input.exportedAt || ""),
     appVersion: String(input.appVersion || ""),
-    issueCount: issues.length,
-    issues
+    issueCount: issues.length + photoReport.issues.length,
+    issues: [...issues, ...photoReport.issues]
   };
 }
 
@@ -125,4 +137,65 @@ function collectIds(
 
 function countMemoryPhotoRefs(state: LifeLogState) {
   return state.memories.reduce((total, memory) => total + (memory.photos || []).length, 0);
+}
+
+function inspectBackupPhotoLinks(memories: Array<Record<string, unknown>>, photos: Array<Record<string, unknown>>) {
+  const memoryIds = new Set(memories.map((memory) => (typeof memory.id === "string" ? memory.id : "")).filter(Boolean));
+  const photoOwnerById = new Map<string, string>();
+  const photoIdsInMemories = new Set<string>();
+  let duplicatePhotoRefs = 0;
+
+  memories.forEach((memory) => {
+    const memoryId = typeof memory.id === "string" ? memory.id : "";
+    const refs = Array.isArray(memory.photos) ? memory.photos : [];
+    refs.forEach((photoId) => {
+      if (typeof photoId !== "string" || !photoId) return;
+      if (photoOwnerById.has(photoId)) duplicatePhotoRefs += 1;
+      else if (memoryId) photoOwnerById.set(photoId, memoryId);
+      photoIdsInMemories.add(photoId);
+    });
+  });
+
+  const photoRecordIds = new Set<string>();
+  const importablePhotoRecordIds = new Set<string>();
+  let repairedPhotos = 0;
+  let ignoredPhotos = 0;
+
+  photos.forEach((photo) => {
+    const photoId = typeof photo.id === "string" ? photo.id : "";
+    const memoryId = typeof photo.memoryId === "string" ? photo.memoryId : "";
+    if (photoId) photoRecordIds.add(photoId);
+    if (photoId && photoOwnerById.has(photoId)) {
+      importablePhotoRecordIds.add(photoId);
+      return;
+    }
+    if (memoryIds.has(memoryId)) {
+      if (photoId) importablePhotoRecordIds.add(photoId);
+      return;
+    }
+    ignoredPhotos += 1;
+  });
+
+  photos.forEach((photo) => {
+    const photoId = typeof photo.id === "string" ? photo.id : "";
+    const memoryId = typeof photo.memoryId === "string" ? photo.memoryId : "";
+    if (photoId && photoOwnerById.has(photoId) && !memoryIds.has(memoryId)) repairedPhotos += 1;
+  });
+
+  const missingPhotoRefs = Array.from(photoIdsInMemories).filter((photoId) => !photoRecordIds.has(photoId)).length;
+  const extraPhotoRefs = Array.from(importablePhotoRecordIds).filter((photoId) => !photoIdsInMemories.has(photoId)).length;
+  const issues: string[] = [];
+  if (repairedPhotos) issues.push(`${repairedPhotos} 张照片的回忆归属将自动修复`);
+  if (ignoredPhotos) issues.push(`${ignoredPhotos} 张照片没有可用回忆，将在导入时忽略`);
+  if (missingPhotoRefs) issues.push(`${missingPhotoRefs} 个回忆照片引用缺少照片文件`);
+  if (extraPhotoRefs) issues.push(`${extraPhotoRefs} 张照片未出现在回忆引用中，将自动补回关联`);
+  if (duplicatePhotoRefs) issues.push(`${duplicatePhotoRefs} 个照片引用重复出现在多条回忆中`);
+
+  return {
+    repairedPhotos,
+    ignoredPhotos,
+    missingPhotoRefs,
+    extraPhotoRefs,
+    issues
+  };
 }

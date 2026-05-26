@@ -26,6 +26,7 @@ const {
   chooseBestAppUpdate,
   compareVersions,
   formatFileSize,
+  getPreferredApkDownloadSource,
   getPreferredApkDownloadUrl,
   parseGitHubReleasePayload,
   parseUpdateManifestPayload
@@ -143,6 +144,15 @@ const preferredDownload = getPreferredApkDownloadUrl({
 if (!preferredDownload.includes("gitee.com/cnxin/lifelog/releases/download/")) {
   failures += 1;
   console.error(`[getPreferredApkDownloadUrl] expected mirror asset first, actual ${preferredDownload}`);
+}
+const preferredSource = getPreferredApkDownloadSource({
+  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
+  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
+  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
+});
+if (!preferredSource.includes("Gitee")) {
+  failures += 1;
+  console.error(`[getPreferredApkDownloadSource] expected Gitee source, actual ${preferredSource}`);
 }
 
 const fallbackDownload = getPreferredApkDownloadUrl({

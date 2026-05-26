@@ -13,6 +13,7 @@
     "test:update-checker": "node scripts/test-update-checker.cjs",
     "test:calendar-items": "node scripts/test-calendar-items.cjs",
     "test:diagnostics": "node scripts/test-diagnostics.cjs",
+    "test:backup-health": "node scripts/test-backup-health.cjs",
     "test:backup-import": "node scripts/test-backup-import.cjs",
     "test:external-links": "node scripts/test-external-links.cjs",
     "test:release-ready": "node scripts/verify-release-ready.cjs",
@@ -31,6 +32,7 @@
     "android:debug": "powershell -ExecutionPolicy Bypass -File scripts/build-android-debug.ps1",
     "android:release": "powershell -ExecutionPolicy Bypass -File scripts/build-android-release.ps1",
     "release:apk": "powershell -ExecutionPolicy Bypass -File scripts/release-apk.ps1",
+    "release:prepare-files": "powershell -ExecutionPolicy Bypass -File scripts/prepare-release-files.ps1",
     "android:install:release": "powershell -ExecutionPolicy Bypass -File scripts/install-android-release.ps1"
   },
   "dependencies": {

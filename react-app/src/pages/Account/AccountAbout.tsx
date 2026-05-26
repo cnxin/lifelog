@@ -6,7 +6,7 @@ import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openApkDownloadUrl, openExternalUrl } from "../../utils/externalLinks";
-import { checkLatestAppUpdate, formatFileSize, getPreferredApkDownloadUrl, type AppUpdateInfo } from "../../utils/updateChecker";
+import { checkLatestAppUpdate, formatFileSize, getPreferredApkDownloadSource, getPreferredApkDownloadUrl, type AppUpdateInfo } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
   const notify = useToast();
@@ -44,6 +44,7 @@ export default function AccountAbout() {
   }
 
   const downloadUrl = getPreferredApkDownloadUrl(latestUpdate);
+  const downloadSource = getPreferredApkDownloadSource(latestUpdate);
   return (
     <section className="section">
       <div className="section-header">
@@ -95,6 +96,10 @@ export default function AccountAbout() {
               <span>
                 <strong>检查来源</strong>
                 {latestUpdate.source || "未知"}
+              </span>
+              <span>
+                <strong>下载源</strong>
+                {downloadSource || "未知"}
               </span>
             </div>
           )}
