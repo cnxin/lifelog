@@ -17,19 +17,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.75`
+当前版本：`0.1.0-test.76`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.75
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.75/lifelog-v0.1.0-test.75.apk
-- 仓库镜像：https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.75.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.76
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.76/lifelog-v0.1.0-test.76.apk
+- 仓库镜像：https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.76.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.75.apk`
-- 大小：`3620468` bytes
-- SHA256：`ce032da326f802e814e1368ada229cdc9a8f78b96f013d2a92eb690de47a4c23`
+- 文件名：`lifelog-v0.1.0-test.76.apk`
+- 大小：`3621696` bytes
+- SHA256：`f8ddd8ba3d809b1fe07c8bc4ebf12260d8c11e82689ca3e54b620f448ec2c5b0`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -73,11 +73,11 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 编辑人物的生日、纪念日、喜好档案和禁忌区域统一字段标题、控件高度和删除按钮对齐。
-- 地点、回忆和人物新增 / 编辑弹层统一普通输入、下拉、日期和数字步进控件高度。
-- 人物详情页快捷新增面板保留记录回忆，并新增编辑资料入口。
-- 首页今日行动和纪念日安排减少重复提示，行动区更聚焦马上需要处理的事项。
-- 更新检查会显示来源，并继续同时比较 CDN 清单、GitHub raw 清单和 GitHub Release。
+- 底部导航升级为悬浮 Dock 样式，增加当前页小圆点、主题阴影和按压反馈。
+- 人物详情关系摘要新增关系温度波浪背景。
+- 账号管理整合应用能力展示，资料管理、生活记录、提醒备份和使用方式改为独立分隔块。
+- 完整备份导出后会显示文件名和保存位置说明。
+- 纪念日安排不再默认生成待办，并修复关联地点搜索框图标重叠。
 
 ## 仓库结构
 

@@ -145,31 +145,39 @@ export default function PersonDetail() {
             记录
           </button>
         </div>
-        <GlassCard className="detail-summary-card">
-          <div className="summary-grid">
-            <div className="summary-metric">
-              <strong>{relatedMemories.length}</strong>
-              <span>共同回忆</span>
+        <GlassCard className="detail-summary-card relation-card">
+          <div className={`wave-container ${relationshipHealth.temperature}`} aria-hidden="true">
+            <svg viewBox="0 0 120 28">
+              <path className="wave-1" d="M0 15 C 30 15, 30 5, 60 5 C 90 5, 90 15, 120 15 L 120 28 L 0 28 Z" />
+              <path className="wave-2" d="M0 10 C 30 10, 30 20, 60 20 C 90 20, 90 10, 120 10 L 120 28 L 0 28 Z" />
+            </svg>
+          </div>
+          <div className="relation-card-content">
+            <div className="summary-grid">
+              <div className="summary-metric">
+                <strong>{relatedMemories.length}</strong>
+                <span>共同回忆</span>
+              </div>
+              <div className="summary-metric">
+                <strong>{latestMemory ? formatMonthDay(latestMemory.date) : "暂无"}</strong>
+                <span>最近一次</span>
+              </div>
             </div>
-            <div className="summary-metric">
-              <strong>{latestMemory ? formatMonthDay(latestMemory.date) : "暂无"}</strong>
-              <span>最近一次</span>
+            <div className="summary-line">
+              <strong>关系</strong>
+              <span>{person.relationship || "未设置"}</span>
             </div>
-          </div>
-          <div className="summary-line">
-            <strong>关系</strong>
-            <span>{person.relationship || "未设置"}</span>
-          </div>
-          <div className="summary-line">
-            <strong>关系温度</strong>
-            <span>
-              <span className={`relationship-health-pill inline ${relationshipHealth.temperature}`}>{relationshipHealth.label}</span>
-              {" "}{relationshipHealth.detail}
-            </span>
-          </div>
-          <div className="summary-line">
-            <strong>常出现地点</strong>
-            <span>{topPlaces.length ? topPlaces.map((item) => item.label).join("、") : "还没有共同地点"}</span>
+            <div className="summary-line">
+              <strong>关系温度</strong>
+              <span>
+                <span className={`relationship-health-pill inline ${relationshipHealth.temperature}`}>{relationshipHealth.label}</span>
+                {" "}{relationshipHealth.detail}
+              </span>
+            </div>
+            <div className="summary-line">
+              <strong>常出现地点</strong>
+              <span>{topPlaces.length ? topPlaces.map((item) => item.label).join("、") : "还没有共同地点"}</span>
+            </div>
           </div>
         </GlassCard>
       </section>

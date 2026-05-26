@@ -1,7 +1,6 @@
 import { Copy, Download, Info, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import GlassCard from "../../components/GlassCard";
-import Tags from "../../components/Tags";
 import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
@@ -165,14 +164,15 @@ export default function AccountAbout() {
         </button>
         <GlassCard className="settings-capability-overview">
           <div className="settings-capability-overview-head">
-            <strong>当前能力</strong>
+            <strong>应用能力</strong>
             <span>本地优先</span>
           </div>
           <div className="settings-capability-overview-list">
             {[
-              { label: "资料管理", value: "人物、地点、商场" },
-              { label: "生活记录", value: "回忆、照片" },
-              { label: "辅助能力", value: "提醒、本地备份" }
+              { label: "资料管理", value: "人物、地点、商场、关系档案" },
+              { label: "生活记录", value: "回忆、照片、纪念日安排" },
+              { label: "提醒备份", value: "本地提醒、完整备份、恢复导入" },
+              { label: "使用方式", value: "本地优先、离线可用、APK 更新" }
             ].map((item) => (
               <div className="settings-capability-overview-item" key={item.label}>
                 <em>{item.label}</em>
@@ -182,13 +182,6 @@ export default function AccountAbout() {
           </div>
         </GlassCard>
       </div>
-      <GlassCard className="settings-about-tags">
-        <div className="settings-capability-overview-head">
-          <strong>应用能力</strong>
-          <span>当前可用</span>
-        </div>
-        <Tags items={["本地优先", "离线可用", "APK 更新", "备份恢复", "农历纪念日", "照片记录"]} />
-      </GlassCard>
     </section>
   );
 }

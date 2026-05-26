@@ -408,6 +408,41 @@
   color: var(--danger);
 }
 
+.backup-export-result {
+  display: grid;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  padding: 12px 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 58%),
+    var(--card-bg);
+}
+
+.backup-export-result strong,
+.backup-export-result span,
+.backup-export-result p {
+  display: block;
+}
+
+.backup-export-result strong {
+  color: var(--text-main);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.backup-export-result span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.backup-export-result p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .feedback-card {
   display: grid;
   gap: 12px;
@@ -1781,19 +1816,18 @@
 
 .settings-capability-overview-list {
   display: grid;
-  gap: 1px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--soft-purple);
+  gap: 10px;
 }
 
 .settings-capability-overview-item {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: color-mix(in srgb, var(--card-solid) 72%, var(--primary) 6%);
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-radius: 14px;
+  padding: 11px 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 7%, transparent), transparent 62%),
+    color-mix(in srgb, var(--card-solid) 84%, var(--primary) 3%);
 }
 
 .settings-capability-overview-item em {
@@ -1810,10 +1844,8 @@
   font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .settings-about-tags {

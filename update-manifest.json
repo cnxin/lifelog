@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.75",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.75",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.75/lifelog-v0.1.0-test.75.apk",
-  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.75.apk",
-  "apkName": "lifelog-v0.1.0-test.75.apk",
-  "apkSize": 3620468,
-  "publishedAt": "2026-05-26T07:16:44Z",
-  "body": "- 编辑人物的生日、纪念日、喜好档案和禁忌区域统一字段标题、控件高度和删除按钮对齐。\n- 地点、回忆和人物新增 / 编辑弹层统一普通输入、下拉、日期和数字步进控件高度。\n- 人物详情页快捷新增面板保留记录回忆，并新增编辑资料入口。\n- 首页今日行动和纪念日安排减少重复提示。\n- 更新检查会显示来源，并继续同时比较 CDN 清单、GitHub raw 清单和 GitHub Release。"
+  "version": "0.1.0-test.76",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.76",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.76/lifelog-v0.1.0-test.76.apk",
+  "mirrorApkUrl": "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.76.apk",
+  "apkName": "lifelog-v0.1.0-test.76.apk",
+  "apkSize": 3621696,
+  "publishedAt": "2026-05-26T09:12:50Z",
+  "body": "- 底部导航升级为悬浮 Dock 样式，增加当前页小圆点、主题阴影和按压反馈。\n- 人物详情关系摘要新增关系温度波浪背景。\n- 账号管理整合应用能力展示，资料管理、生活记录、提醒备份和使用方式改为独立分隔块。\n- 完整备份导出后会显示文件名和保存位置说明。\n- 纪念日安排不再默认生成待办，并修复关联地点搜索框图标重叠。"
 }

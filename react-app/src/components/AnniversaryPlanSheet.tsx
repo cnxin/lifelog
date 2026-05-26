@@ -46,9 +46,7 @@ export default function AnniversaryPlanSheet({
   const [notes, setNotes] = useState(plan?.notes || "");
   const [placeIds, setPlaceIds] = useState<string[]>(plan?.placeIds || []);
   const [reminderDaysBefore, setReminderDaysBefore] = useState<number[]>(plan?.reminderDaysBefore || [7, 1]);
-  const [checklist, setChecklist] = useState<AnniversaryPlanTodo[]>(() =>
-    plan?.checklist?.length ? plan.checklist : buildDefaultTodos(anniversary.title)
-  );
+  const [checklist, setChecklist] = useState<AnniversaryPlanTodo[]>(() => plan?.checklist || []);
   const [newTodo, setNewTodo] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -242,16 +240,4 @@ export default function AnniversaryPlanSheet({
       </section>
     </div>
   );
-}
-
-function buildDefaultTodos(title: string): AnniversaryPlanTodo[] {
-  const base = title === "生日"
-    ? ["确认当天时间", "准备礼物或心意", "预订吃饭 / 活动地点"]
-    : ["确认纪念日安排", "准备想说的话或小礼物", "记录当天回忆"];
-
-  return base.map((text, index) => ({
-    id: `todo_default_${index}`,
-    text,
-    done: false
-  }));
 }

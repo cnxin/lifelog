@@ -20,8 +20,9 @@ html[data-theme-style="classic"] {
   --danger: #b94040;
   --danger-soft: rgba(217, 87, 87, 0.12);
   --switch-knob: #ffffff;
-  --shadow: 0 8px 22px rgba(55, 65, 110, 0.05);
-  --press-shadow: 0 4px 14px rgba(55, 65, 110, 0.08);
+  --shadow: 0 12px 32px color-mix(in srgb, var(--primary) 8%, transparent);
+  --shadow-hover: 0 20px 40px color-mix(in srgb, var(--primary) 14%, transparent);
+  --press-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
 html[data-theme-style="cream"] {
@@ -43,8 +44,9 @@ html[data-theme-style="cream"] {
   --danger: #9f5f4e;
   --danger-soft: rgba(159, 95, 78, 0.11);
   --switch-knob: #fffaf1;
-  --shadow: 0 10px 24px rgba(117, 88, 58, 0.06);
-  --press-shadow: 0 5px 16px rgba(117, 88, 58, 0.09);
+  --shadow: 0 12px 32px color-mix(in srgb, var(--primary) 10%, transparent);
+  --shadow-hover: 0 20px 40px color-mix(in srgb, var(--primary) 18%, transparent);
+  --press-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
 html[data-theme-style="mint"] {
@@ -66,8 +68,9 @@ html[data-theme-style="mint"] {
   --danger: #c05647;
   --danger-soft: rgba(192, 86, 71, 0.1);
   --switch-knob: #f7fffd;
-  --shadow: 0 12px 26px rgba(18, 184, 134, 0.08);
-  --press-shadow: 0 5px 16px rgba(18, 184, 134, 0.12);
+  --shadow: 0 12px 32px color-mix(in srgb, var(--primary) 8%, transparent);
+  --shadow-hover: 0 20px 40px color-mix(in srgb, var(--primary) 14%, transparent);
+  --press-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
 html[data-theme-style="mist"] {
@@ -89,8 +92,9 @@ html[data-theme-style="mist"] {
   --danger: #9f5f5f;
   --danger-soft: rgba(159, 95, 95, 0.09);
   --switch-knob: #ffffff;
-  --shadow: 0 6px 18px rgba(17, 24, 39, 0.04);
-  --press-shadow: 0 3px 12px rgba(17, 24, 39, 0.07);
+  --shadow: 0 12px 32px color-mix(in srgb, var(--primary) 6%, transparent);
+  --shadow-hover: 0 20px 40px color-mix(in srgb, var(--primary) 12%, transparent);
+  --press-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 4%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -110,6 +114,9 @@ html[data-theme-style="mist"] {
     --danger: #ff9f8c;
     --danger-soft: rgba(255, 159, 140, 0.14);
     --switch-knob: #ffffff;
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.3);
+    --press-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
   }
 }
 
@@ -141,4 +148,3 @@ body {
   font-family: "Inter", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   transition: background-color 0.3s ease;
 }
-

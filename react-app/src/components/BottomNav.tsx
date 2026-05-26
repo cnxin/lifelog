@@ -24,6 +24,7 @@ export default function BottomNav() {
           >
             <Icon />
             <span>{item.label}</span>
+            <div className="nav-dot" />
           </NavLink>
         );
       })}

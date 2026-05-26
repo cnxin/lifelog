@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { Capacitor } from "@capacitor/core";
 import { APP_VERSION } from "../constants/version";
 import {
   clearPlaceMergeHistory,
@@ -76,6 +77,12 @@ type DeletedEntrySnapshot =
   | { type: "place"; place: Place; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
   | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
+interface BackupExportResult {
+  fileName: string;
+  locationLabel: string;
+  locationDetail: string;
+}
+
 interface LifeLogContextValue {
   state: LifeLogState;
   settings: AppSettings;
@@ -104,7 +111,7 @@ interface LifeLogContextValue {
   undoLatestPlaceMerge: () => Promise<boolean>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
-  exportData: () => Promise<void>;
+  exportData: () => Promise<BackupExportResult>;
   resetDemo: () => Promise<void>;
   loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
 }
@@ -595,9 +602,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       setReminderSettings(next);
     }
 
-    async function exportData() {
+    async function exportData(): Promise<BackupExportResult> {
       const photos = await loadAllPhotos();
       const backupPhotos = await Promise.all(photos.map(serializeBackupPhoto));
+      const fileName = `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
       const payload: FullBackupPayload = {
         schemaVersion: 3,
         version: 3,
@@ -621,9 +629,13 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
+      return {
+        fileName,
+        ...getBackupDownloadLocation()
+      };
     }
 
     async function resetDemo() {
@@ -701,4 +713,18 @@ export function useLifeLog() {
     throw new Error("useLifeLog must be used inside LifeLogProvider");
   }
   return context;
+}
+
+function getBackupDownloadLocation() {
+  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
+    return {
+      locationLabel: "手机系统下载目录",
+      locationDetail: "通常在“文件管理/我的文件 > 下载（Download）”中，也可以在系统下载通知里打开。"
+    };
+  }
+
+  return {
+    locationLabel: "浏览器默认下载目录",
+    locationDetail: "具体位置取决于当前浏览器设置，桌面端通常是“下载/Downloads”。"
+  };
 }

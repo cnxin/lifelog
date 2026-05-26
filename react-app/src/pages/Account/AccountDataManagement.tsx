@@ -14,6 +14,7 @@ export default function AccountDataManagement() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [lastExport, setLastExport] = useState<Awaited<ReturnType<typeof exportData>> | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
 
   const dataSummary = useMemo(
@@ -97,6 +98,12 @@ export default function AccountDataManagement() {
     notify({ message: "已重置为示例数据", tone: "success" });
   }
 
+  async function handleExport() {
+    const result = await exportData();
+    setLastExport(result);
+    notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
+  }
+
   return (
     <section className="section">
       <div className="section-header">
@@ -129,9 +136,7 @@ export default function AccountDataManagement() {
         <div className="data-action-grid">
           <button
             className="data-action-card glass-card"
-            onClick={() => {
-              void exportData().then(() => notify({ message: "完整备份文件已生成", tone: "success" }));
-            }}
+            onClick={() => void handleExport()}
             disabled={!hasUserData}
           >
             <div className="data-action-icon">
@@ -165,6 +170,13 @@ export default function AccountDataManagement() {
             </div>
           </button>
         </div>
+        {lastExport && (
+          <GlassCard className="backup-export-result">
+            <strong>{lastExport.fileName}</strong>
+            <span>{lastExport.locationLabel}</span>
+            <p>{lastExport.locationDetail}</p>
+          </GlassCard>
+        )}
       </div>
       <input
         ref={fileInputRef}
