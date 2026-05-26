@@ -7,6 +7,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.77",
+    date: "2026-05-26",
+    title: "Android 备份保存和表单控件稳定性优化",
+    highlights: [
+      "Android 完整备份导出改为调用系统文件保存器，可自行选择保存目录和文件名。",
+      "备份导出完成后会显示文件名、保存位置说明和 Android 返回的文件位置标识。",
+      "取消 Android 保存器时会提示已取消导出，不再表现为无反馈。",
+      "表单内人物 / 地点搜索框进一步隔离内部输入框样式，避免再次被外层表单样式覆盖。",
+      "保留 Web 端浏览器下载逻辑，桌面测试仍会下载 JSON 备份文件。"
+    ]
+  },
+  {
     version: "0.1.0-test.76",
     date: "2026-05-26",
     title: "全局动效、备份提示和纪念日安排体验优化",

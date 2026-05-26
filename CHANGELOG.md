@@ -1,5 +1,24 @@
 # 变更日志
 
+## v0.1.0-test.77 (2026-05-26)
+
+### Android 备份导出
+
+- 完整备份导出在 Android 端改为调用系统文件保存器，可自行选择保存目录和文件名。
+- 导出完成后会显示文件名、保存位置说明和 Android 返回的文件位置标识。
+- 在系统文件保存器中取消保存时，会提示“已取消导出备份”。
+- Web 端继续使用浏览器默认下载逻辑，桌面测试仍可直接下载 JSON 备份文件。
+
+### 表单稳定性
+
+- 表单内人物 / 地点搜索框进一步隔离内部输入框样式，避免被外层表单输入框规则覆盖。
+
+### 验证
+
+- 通过 `npm.cmd run build`、Android `:app:compileDebugJavaWithJavac`、`test:helpers` 和 `git diff --check`。
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.77.apk`。
+- Android `versionCode` 更新为 `77`，`versionName` 更新为 `0.1.0-test.77`。
+
 ## v0.1.0-test.76 (2026-05-26)
 
 ### 全局体验
