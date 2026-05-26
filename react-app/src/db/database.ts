@@ -1,6 +1,7 @@
 import Dexie, { type Table } from "dexie";
 import { seedData } from "../data/seedData";
 import type {
+  AnniversaryPlan,
   AppSettings,
   LifeLogState,
   MemoryEvent,
@@ -22,6 +23,7 @@ class LifeLogDatabase extends Dexie {
   people!: Table<Person, string>;
   places!: Table<Place, string>;
   memories!: Table<MemoryEvent, string>;
+  anniversaryPlans!: Table<AnniversaryPlan, string>;
   placeMergeHistory!: Table<PlaceMergeHistoryEntry, string>;
   appSettings!: Table<{ key: string; value: AppSettings }, string>;
   photos!: Table<Photo, string>;
@@ -105,6 +107,16 @@ class LifeLogDatabase extends Dexie {
             memory.placeIds = getMemoryPlaceIds(memory);
           });
       });
+    this.version(9).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *placeIds, *personIds",
+      anniversaryPlans: "id, personId, targetDate, status, occurrenceYear",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key"
+    });
   }
 }
 
@@ -169,6 +181,14 @@ export async function saveMemoryRecord(memory: MemoryEvent) {
   await db.memories.put(memory);
 }
 
+export async function saveAnniversaryPlanRecord(plan: AnniversaryPlan) {
+  await db.anniversaryPlans.put(plan);
+}
+
+export async function deleteAnniversaryPlanRecord(id: string) {
+  await db.anniversaryPlans.delete(id);
+}
+
 export async function loadPlaceMergeHistory(limit = 10) {
   return await db.placeMergeHistory.orderBy("happenedAt").reverse().limit(limit).toArray();
 }
@@ -188,8 +208,9 @@ export async function clearPlaceMergeHistory() {
 }
 
 export async function deletePersonRecord(id: string) {
-  await db.transaction("rw", db.people, db.memories, async () => {
+  await db.transaction("rw", db.people, db.memories, db.anniversaryPlans, async () => {
     await db.people.delete(id);
+    await db.anniversaryPlans.where("personId").equals(id).delete();
     const affected = await db.memories.where("personIds").equals(id).toArray();
     if (affected.length) {
       await Promise.all(
@@ -205,8 +226,18 @@ export async function deletePersonRecord(id: string) {
 }
 
 export async function deletePlaceRecord(id: string) {
-  await db.transaction("rw", db.places, db.memories, async () => {
+  await db.transaction("rw", db.places, db.memories, db.anniversaryPlans, async () => {
     await db.places.delete(id);
+    const affectedPlans = await db.anniversaryPlans.filter((plan) => (plan.placeIds || []).includes(id)).toArray();
+    if (affectedPlans.length) {
+      await db.anniversaryPlans.bulkPut(
+        affectedPlans.map((plan) => ({
+          ...plan,
+          placeIds: (plan.placeIds || []).filter((placeId) => placeId !== id),
+          updatedAt: new Date().toISOString()
+        }))
+      );
+    }
     const affected = await db.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id)).toArray();
     if (affected.length) {
       await Promise.all(
@@ -219,10 +250,20 @@ export async function deletePlaceRecord(id: string) {
 }
 
 export async function deleteMemoryRecord(id: string) {
-  await db.transaction("rw", db.memories, db.photos, async () => {
+  await db.transaction("rw", db.memories, db.photos, db.anniversaryPlans, async () => {
     await db.memories.delete(id);
     // 删除关联的照片
     await db.photos.where("memoryId").equals(id).delete();
+    const affectedPlans = await db.anniversaryPlans.filter((plan) => plan.memoryId === id).toArray();
+    if (affectedPlans.length) {
+      await db.anniversaryPlans.bulkPut(
+        affectedPlans.map((plan) => ({
+          ...plan,
+          memoryId: undefined,
+          updatedAt: new Date().toISOString()
+        }))
+      );
+    }
   });
 }
 
@@ -261,14 +302,16 @@ export async function deletePhotosByMemoryId(memoryId: string) {
 
 export async function replaceAllData(input: Partial<LifeLogState>) {
   const next = normalizeState(input);
-  await db.transaction("rw", db.people, db.places, db.memories, db.placeMergeHistory, async () => {
+  await db.transaction("rw", [db.people, db.places, db.memories, db.anniversaryPlans, db.placeMergeHistory], async () => {
     await db.people.clear();
     await db.places.clear();
     await db.memories.clear();
+    await db.anniversaryPlans.clear();
     await db.placeMergeHistory.clear();
     await db.people.bulkPut(next.people);
     await db.places.bulkPut(next.places);
     await db.memories.bulkPut(next.memories);
+    if (next.anniversaryPlans.length) await db.anniversaryPlans.bulkPut(next.anniversaryPlans);
   });
 }
 
@@ -288,11 +331,12 @@ export async function replaceAllBackupData({
   const next = normalizeState(state);
   await db.transaction(
     "rw",
-    [db.people, db.places, db.memories, db.placeMergeHistory, db.appSettings, db.reminderSettings, db.photos],
+    [db.people, db.places, db.memories, db.anniversaryPlans, db.placeMergeHistory, db.appSettings, db.reminderSettings, db.photos],
     async () => {
       await db.people.clear();
       await db.places.clear();
       await db.memories.clear();
+      await db.anniversaryPlans.clear();
       await db.placeMergeHistory.clear();
       await db.appSettings.clear();
       await db.reminderSettings.clear();
@@ -300,6 +344,7 @@ export async function replaceAllBackupData({
       await db.people.bulkPut(next.people);
       await db.places.bulkPut(next.places);
       await db.memories.bulkPut(next.memories);
+      if (next.anniversaryPlans.length) await db.anniversaryPlans.bulkPut(next.anniversaryPlans);
       if (photos.length) await db.photos.bulkPut(photos);
       if (placeMergeHistory.length) await db.placeMergeHistory.bulkPut(placeMergeHistory);
       await db.appSettings.put({ key: "app", value: { ...defaultAppSettings, ...settings } });
@@ -327,12 +372,14 @@ export async function estimateStorageUsage() {
 }
 
 export async function runPlaceMergeTransaction(nextState: LifeLogState, removedIds: string[]) {
-  await db.transaction("rw", db.places, db.memories, async () => {
+  await db.transaction("rw", db.places, db.memories, db.anniversaryPlans, async () => {
     if (removedIds.length) {
       await db.places.bulkDelete(removedIds);
     }
     await db.places.bulkPut(nextState.places);
     await db.memories.bulkPut(nextState.memories);
+    await db.anniversaryPlans.clear();
+    if (nextState.anniversaryPlans.length) await db.anniversaryPlans.bulkPut(nextState.anniversaryPlans);
   });
 }
 
@@ -345,13 +392,14 @@ async function initializeDatabase() {
 }
 
 async function readAll(): Promise<LifeLogState> {
-  const [people, places, memories] = await Promise.all([
+  const [people, places, memories, anniversaryPlans] = await Promise.all([
     db.people.toArray(),
     db.places.toArray(),
-    db.memories.toArray()
+    db.memories.toArray(),
+    db.anniversaryPlans.toArray()
   ]);
 
-  return normalizeState({ people, places, memories });
+  return normalizeState({ people, places, memories, anniversaryPlans });
 }
 
 function readLegacyState(): Partial<LifeLogState> | null {
@@ -385,42 +433,112 @@ function normalizeGroups(value: unknown, fallbackCategory: string): PreferenceGr
 }
 
 export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
-  return {
-    people: (input.people || seedData.people).map((person) => ({
-      ...person,
-      birthdayIsLunar: false,
-      preferences: normalizeGroups((person as unknown as { preferences: unknown }).preferences, "喜好"),
-      dislikes: normalizeGroups((person as unknown as { dislikes: unknown }).dislikes, "禁忌")
-    })) as Person[],
-    places: (input.places || seedData.places).map((place) => ({
-      ...place,
+  const people = (input.people || seedData.people).map((person) => ({
+    ...person,
+    birthdayIsLunar: false,
+    preferences: normalizeGroups((person as unknown as { preferences: unknown }).preferences, "喜好"),
+    dislikes: normalizeGroups((person as unknown as { dislikes: unknown }).dislikes, "禁忌")
+  })) as Person[];
+  const places = (input.places || seedData.places).map((place) => ({
+    ...place,
+    country: place.country || "中国",
+    province: inferProvince({
       country: place.country || "中国",
-      province: inferProvince({
-        country: place.country || "中国",
-        province: (place as Place).province || "",
-        city: place.city || "杭州",
-        address: place.address || ""
-      }),
-      city: normalizeCityName(place.city || "杭州"),
-      area: place.area || "未分组",
-      mall: normalizeStoredMall(place as Partial<Place>),
-      storeName: place.storeName || "",
-      address: place.address || "",
-      latitude: place.latitude,
-      longitude: place.longitude,
-      mapUrl: place.mapUrl || "",
-      sourceUrl: place.sourceUrl || "",
-      platformLinks: normalizePlacePlatformLinks(place.platformLinks),
-      photos: Array.isArray(place.photos) ? place.photos.filter(Boolean).map(String) : []
-    })) as Place[],
-    memories: (input.memories || seedData.memories).map((memory) => ({
-      ...memory,
-      personIds: Array.isArray(memory.personIds) ? memory.personIds.filter(Boolean).map(String) : [],
-      placeId: typeof memory.placeId === "string" ? memory.placeId : "",
-      placeIds: getMemoryPlaceIds(memory as MemoryEvent),
-      mood: memory.mood || "日常",
-      tags: Array.isArray(memory.tags) ? memory.tags.filter(Boolean).map(String) : [],
-      photos: Array.isArray(memory.photos) ? memory.photos.filter(Boolean).map(String) : []
-    })) as MemoryEvent[]
+      province: (place as Place).province || "",
+      city: place.city || "杭州",
+      address: place.address || ""
+    }),
+    city: normalizeCityName(place.city || "杭州"),
+    area: place.area || "未分组",
+    mall: normalizeStoredMall(place as Partial<Place>),
+    storeName: place.storeName || "",
+    address: place.address || "",
+    latitude: place.latitude,
+    longitude: place.longitude,
+    mapUrl: place.mapUrl || "",
+    sourceUrl: place.sourceUrl || "",
+    platformLinks: normalizePlacePlatformLinks(place.platformLinks),
+    photos: Array.isArray(place.photos) ? place.photos.filter(Boolean).map(String) : []
+  })) as Place[];
+  const memories = (input.memories || seedData.memories).map((memory) => ({
+    ...memory,
+    personIds: Array.isArray(memory.personIds) ? memory.personIds.filter(Boolean).map(String) : [],
+    placeId: typeof memory.placeId === "string" ? memory.placeId : "",
+    placeIds: getMemoryPlaceIds(memory as MemoryEvent),
+    mood: memory.mood || "日常",
+    tags: Array.isArray(memory.tags) ? memory.tags.filter(Boolean).map(String) : [],
+    photos: Array.isArray(memory.photos) ? memory.photos.filter(Boolean).map(String) : []
+  })) as MemoryEvent[];
+  const peopleIds = new Set(people.map((person) => person.id));
+  const placeIds = new Set(places.map((place) => place.id));
+  const memoryIds = new Set(memories.map((memory) => memory.id));
+
+  return {
+    people,
+    places,
+    memories,
+    anniversaryPlans: normalizeAnniversaryPlans(input.anniversaryPlans, peopleIds, placeIds, memoryIds)
   };
+}
+
+function normalizeAnniversaryPlans(
+  value: unknown,
+  peopleIds: Set<string>,
+  placeIds: Set<string>,
+  memoryIds: Set<string>
+): AnniversaryPlan[] {
+  if (!Array.isArray(value)) return [];
+
+  const result: AnniversaryPlan[] = [];
+
+  value.forEach((item) => {
+    const plan = item as Partial<AnniversaryPlan>;
+    const personId = String(plan.personId || "");
+    if (!personId || !peopleIds.has(personId)) return;
+    const createdAt = String(plan.createdAt || new Date().toISOString());
+    const updatedAt = String(plan.updatedAt || createdAt);
+    const status = ["todo", "doing", "done", "skipped"].includes(String(plan.status))
+      ? (plan.status as AnniversaryPlan["status"])
+      : "todo";
+    result.push({
+      id: String(plan.id || `ap_${Date.now()}_${Math.random().toString(16).slice(2)}`),
+      personId,
+      anniversaryTitle: String(plan.anniversaryTitle || ""),
+      anniversaryDate: String(plan.anniversaryDate || ""),
+      occurrenceYear: Number(plan.occurrenceYear) || new Date().getFullYear(),
+      targetDate: String(plan.targetDate || ""),
+      status,
+      title: String(plan.title || ""),
+      notes: String(plan.notes || ""),
+      budget: String(plan.budget || ""),
+      checklist: normalizePlanTodos(plan.checklist),
+      placeIds: Array.isArray(plan.placeIds)
+        ? Array.from(new Set(plan.placeIds.map(String).filter((id) => placeIds.has(id))))
+        : [],
+      reminderDaysBefore: Array.isArray(plan.reminderDaysBefore)
+        ? Array.from(new Set(plan.reminderDaysBefore.map(Number).filter((days) => Number.isFinite(days) && days >= 0))).sort((a, b) => b - a)
+        : [],
+      memoryId: plan.memoryId && memoryIds.has(String(plan.memoryId)) ? String(plan.memoryId) : undefined,
+      createdAt,
+      updatedAt
+    });
+  });
+
+  return result;
+}
+
+function normalizePlanTodos(value: unknown): AnniversaryPlan["checklist"] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      const todo = item as Partial<AnniversaryPlan["checklist"][number]>;
+      const text = String(todo.text || "").trim();
+      if (!text) return null;
+      return {
+        id: String(todo.id || `todo_${Date.now()}_${Math.random().toString(16).slice(2)}`),
+        text,
+        done: Boolean(todo.done)
+      };
+    })
+    .filter((todo): todo is AnniversaryPlan["checklist"][number] => Boolean(todo));
 }

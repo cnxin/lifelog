@@ -1,4 +1,4 @@
-import { CalendarDays, Heart, MapPin, Search, User, Users, X } from "lucide-react";
+import { Heart, MapPin, Search, User, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -26,13 +26,6 @@ interface SearchResult {
   keywords: SearchKeyword[];
   scoreBase: number;
 }
-
-const quickLinks = [
-  { label: "回忆", desc: "查标题、正文、标签", path: "/memories", icon: Heart },
-  { label: "人物", desc: "查姓名、关系、喜好", path: "/people", icon: Users },
-  { label: "地点", desc: "查店铺、区域、平台", path: "/places", icon: MapPin },
-  { label: "日历", desc: "按日期回看记录", path: "/calendar", icon: CalendarDays }
-];
 
 export default function GlobalSearchPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state, getPersonName, getPlaceName } = useLifeLog();
@@ -231,19 +224,8 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
 
         {!queryTokens.length ? (
           <div className="global-search-empty">
-            <span>快速跳转</span>
-            <div className="global-search-quick-grid">
-              {quickLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <button key={link.path} className="global-search-quick" type="button" onClick={() => openPath(link.path)}>
-                    <Icon />
-                    <strong>{link.label}</strong>
-                    <small>{link.desc}</small>
-                  </button>
-                );
-              })}
-            </div>
+            <strong>输入关键词开始搜索</strong>
+            <span>可以搜索回忆标题、正文、人物、地点、标签、地址、喜好或平台链接。</span>
           </div>
         ) : results.length ? (
           <div className="global-search-results">

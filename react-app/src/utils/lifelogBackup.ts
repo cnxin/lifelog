@@ -38,6 +38,7 @@ export interface FullBackupPayload {
     people: number;
     places: number;
     memories: number;
+    anniversaryPlans?: number;
     photos: number;
   };
 }
@@ -184,10 +185,12 @@ function validateIntegrity(value: unknown, state: LifeLogState, photos: Photo[])
     people: state.people.length,
     places: state.places.length,
     memories: state.memories.length,
+    anniversaryPlans: state.anniversaryPlans.length,
     photos: photos.length
   };
 
   for (const key of Object.keys(expected) as Array<keyof typeof expected>) {
+    if (key === "anniversaryPlans" && value[key] === undefined) continue;
     if (Number(value[key]) !== expected[key]) {
       throw new Error("备份完整性校验失败，导入已取消。请重新导出备份后再试。");
     }

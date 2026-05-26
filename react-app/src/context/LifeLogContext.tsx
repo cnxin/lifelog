@@ -17,6 +17,8 @@ import {
   replaceAllData,
   resetDatabase,
   runPlaceMergeTransaction,
+  deleteAnniversaryPlanRecord,
+  saveAnniversaryPlanRecord,
   saveAppSettings,
   savePlaceMergeHistoryEntry,
   saveMemoryRecord,
@@ -27,6 +29,7 @@ import {
   deletePhotosByMemoryId
 } from "../db/database";
 import type {
+  AnniversaryPlan,
   AppSettings,
   EntryType,
   LifeLogState,
@@ -69,8 +72,8 @@ import {
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
 
 type DeletedEntrySnapshot =
-  | { type: "person"; person: Person; affectedMemories: MemoryEvent[] }
-  | { type: "place"; place: Place; affectedMemories: MemoryEvent[] }
+  | { type: "person"; person: Person; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
+  | { type: "place"; place: Place; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
   | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
 interface LifeLogContextValue {
@@ -80,6 +83,8 @@ interface LifeLogContextValue {
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   togglePersonFavorite: (id: string) => Promise<void>;
+  saveAnniversaryPlan: (plan: AnniversaryPlan) => Promise<string>;
+  deleteAnniversaryPlan: (id: string) => Promise<void>;
   inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
   savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
   togglePlaceFavorite: (id: string) => Promise<void>;
@@ -107,7 +112,8 @@ interface LifeLogContextValue {
 const emptyState: LifeLogState = {
   people: [],
   places: [],
-  memories: []
+  memories: [],
+  anniversaryPlans: []
 };
 
 const LifeLogContext = createContext<LifeLogContextValue | null>(null);
@@ -318,6 +324,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         setState((current) => ({
           ...current,
           people: current.people.filter((person) => person.id !== id),
+          anniversaryPlans: current.anniversaryPlans.filter((plan) => plan.personId !== id),
           memories: current.memories.map((memory) => ({
             ...memory,
             personIds: (memory.personIds || []).filter((personId) => personId !== id)
@@ -331,6 +338,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         setState((current) => ({
           ...current,
           places: current.places.filter((place) => place.id !== id),
+          anniversaryPlans: current.anniversaryPlans.map((plan) => ({
+            ...plan,
+            placeIds: (plan.placeIds || []).filter((placeId) => placeId !== id)
+          })),
           memories: current.memories.map((memory) => removeMemoryPlaceId(memory, id))
         }));
         return;
@@ -339,7 +350,27 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       await deleteMemoryRecord(id);
       setState((current) => ({
         ...current,
-        memories: current.memories.filter((memory) => memory.id !== id)
+        memories: current.memories.filter((memory) => memory.id !== id),
+        anniversaryPlans: current.anniversaryPlans.map((plan) => (plan.memoryId === id ? { ...plan, memoryId: undefined } : plan))
+      }));
+    }
+
+    async function saveAnniversaryPlan(plan: AnniversaryPlan) {
+      await saveAnniversaryPlanRecord(plan);
+      setState((current) => ({
+        ...current,
+        anniversaryPlans: current.anniversaryPlans.some((item) => item.id === plan.id)
+          ? current.anniversaryPlans.map((item) => (item.id === plan.id ? plan : item))
+          : [...current.anniversaryPlans, plan]
+      }));
+      return plan.id;
+    }
+
+    async function deleteAnniversaryPlan(id: string) {
+      await deleteAnniversaryPlanRecord(id);
+      setState((current) => ({
+        ...current,
+        anniversaryPlans: current.anniversaryPlans.filter((plan) => plan.id !== id)
       }));
     }
 
@@ -350,7 +381,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         return {
           type: "person",
           person,
-          affectedMemories: state.memories.filter((memory) => (memory.personIds || []).includes(id))
+          affectedMemories: state.memories.filter((memory) => (memory.personIds || []).includes(id)),
+          affectedPlans: state.anniversaryPlans.filter((plan) => plan.personId === id)
         };
       }
 
@@ -360,7 +392,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         return {
           type: "place",
           place,
-          affectedMemories: state.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id))
+          affectedMemories: state.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id)),
+          affectedPlans: state.anniversaryPlans.filter((plan) => (plan.placeIds || []).includes(id))
         };
       }
 
@@ -377,11 +410,13 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       if (snapshot.type === "person") {
         await savePersonRecord(snapshot.person);
         await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+        await Promise.all(snapshot.affectedPlans.map(saveAnniversaryPlanRecord));
         setState((current) => ({
           ...current,
           people: current.people.some((person) => person.id === snapshot.person.id)
             ? current.people.map((person) => (person.id === snapshot.person.id ? snapshot.person : person))
             : [...current.people, snapshot.person],
+          anniversaryPlans: restorePlanList(current.anniversaryPlans, snapshot.affectedPlans),
           memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
         }));
         return;
@@ -390,11 +425,13 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       if (snapshot.type === "place") {
         await savePlaceRecord(snapshot.place);
         await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+        await Promise.all(snapshot.affectedPlans.map(saveAnniversaryPlanRecord));
         setState((current) => ({
           ...current,
           places: current.places.some((place) => place.id === snapshot.place.id)
             ? current.places.map((place) => (place.id === snapshot.place.id ? snapshot.place : place))
             : [...current.places, snapshot.place],
+          anniversaryPlans: restorePlanList(current.anniversaryPlans, snapshot.affectedPlans),
           memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
         }));
         return;
@@ -576,6 +613,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           people: state.people.length,
           places: state.places.length,
           memories: state.memories.length,
+          anniversaryPlans: state.anniversaryPlans.length,
           photos: backupPhotos.length
         }
       };
@@ -610,6 +648,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       isLoading,
       savePerson,
       togglePersonFavorite,
+      saveAnniversaryPlan,
+      deleteAnniversaryPlan,
       inspectPlaceSave,
       savePlace,
       togglePlaceFavorite,
@@ -645,6 +685,14 @@ function restoreMemoryList(current: MemoryEvent[], snapshots: MemoryEvent[]) {
   const restored = current.map((memory) => snapshotById.get(memory.id) || memory);
   const missing = snapshots.filter((memory) => !current.some((item) => item.id === memory.id));
   return [...restored.filter((memory) => !snapshotIds.has(memory.id) || snapshotById.has(memory.id)), ...missing];
+}
+
+function restorePlanList(current: AnniversaryPlan[], snapshots: AnniversaryPlan[]) {
+  if (!snapshots.length) return current;
+  const snapshotById = new Map(snapshots.map((plan) => [plan.id, plan]));
+  const restored = current.map((plan) => snapshotById.get(plan.id) || plan);
+  const missing = snapshots.filter((plan) => !current.some((item) => item.id === plan.id));
+  return [...restored, ...missing];
 }
 
 export function useLifeLog() {

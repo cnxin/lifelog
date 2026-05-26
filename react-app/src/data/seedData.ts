@@ -150,5 +150,6 @@ export const seedData: LifeLogState = {
       tags: ["电影"],
       photos: []
     }
-  ]
+  ],
+  anniversaryPlans: []
 };

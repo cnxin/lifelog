@@ -92,6 +92,33 @@ export interface MemoryEvent {
   photos: string[];
 }
 
+export type AnniversaryPlanStatus = "todo" | "doing" | "done" | "skipped";
+
+export interface AnniversaryPlanTodo {
+  id: ID;
+  text: string;
+  done: boolean;
+}
+
+export interface AnniversaryPlan {
+  id: ID;
+  personId: ID;
+  anniversaryTitle: string;
+  anniversaryDate: string;
+  occurrenceYear: number;
+  targetDate: string;
+  status: AnniversaryPlanStatus;
+  title: string;
+  notes: string;
+  budget: string;
+  checklist: AnniversaryPlanTodo[];
+  placeIds: ID[];
+  reminderDaysBefore: number[];
+  memoryId?: ID;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MemoryDisplayContext {
   personNames: string[];
   placeName: string;
@@ -102,6 +129,7 @@ export interface LifeLogState {
   people: Person[];
   places: Place[];
   memories: MemoryEvent[];
+  anniversaryPlans: AnniversaryPlan[];
 }
 
 export type ThemeStyle = "classic" | "cream" | "mint" | "mist";

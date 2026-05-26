@@ -153,11 +153,7 @@ export default function AccountAbout() {
         </GlassCard>
         <GlassCard className="detail-row">
           <strong>存储</strong>
-          <span>IndexedDB (Dexie v4)</span>
-        </GlassCard>
-        <GlassCard className="detail-row">
-          <strong>技术栈</strong>
-          <span>React 18 + TypeScript + Capacitor 8</span>
+          <span>本机离线存储，支持备份导出</span>
         </GlassCard>
         <button className="glass-card detail-row github-project-row" type="button" onClick={() => void openExternalUrl("https://github.com/cnxin/lifelog")}>
           <strong>GitHub</strong>
@@ -182,9 +178,13 @@ export default function AccountAbout() {
           </div>
         </GlassCard>
       </div>
-      <div className="settings-about-tags">
-        <Tags items={["React 18", "Vite 8", "Dexie", "Capacitor 8", "TipTap", "农历", "本地优先"]} />
-      </div>
+      <GlassCard className="settings-about-tags">
+        <div className="settings-capability-overview-head">
+          <strong>应用能力</strong>
+          <span>当前可用</span>
+        </div>
+        <Tags items={["本地优先", "离线可用", "APK 更新", "备份恢复", "农历纪念日", "照片记录"]} />
+      </GlassCard>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -373,6 +373,7 @@ function buildTodayActions({
 }): TodayAction[] {
   const actions: TodayAction[] = [];
   const reminders = previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 7, limit: 2 });
+  const anniversaryPlanAction = findAnniversaryPlanAction(state);
 
   reminders.forEach((reminder) => {
     actions.push({
@@ -390,6 +391,18 @@ function buildTodayActions({
       }
     });
   });
+
+  if (anniversaryPlanAction) {
+    actions.push({
+      id: anniversaryPlanAction.id,
+      icon: <Gift />,
+      title: anniversaryPlanAction.title,
+      desc: anniversaryPlanAction.desc,
+      meta: "安排",
+      tone: "warm",
+      onClick: () => onOpenPerson(anniversaryPlanAction.personId, "#anniversaries")
+    });
+  }
 
   const personToContact = findPersonToContact(state.people, state.memories);
   if (personToContact) {
@@ -449,6 +462,51 @@ function findPersonToContact(people: Array<{ id: string; name: string; favorite:
   return candidates
     .filter((item) => item.daysSinceContact === null || item.daysSinceContact >= 21)
     .sort((a, b) => b.score - a.score)[0];
+}
+
+function findAnniversaryPlanAction(state: ReturnType<typeof useLifeLog>["state"]) {
+  const upcoming = getUpcomingAnniversaries(state.people)
+    .filter((item) => item.days >= 0 && item.days <= 30)
+    .slice(0, 8);
+
+  for (const item of upcoming) {
+    const plan = state.anniversaryPlans.find((candidate) =>
+      candidate.personId === item.personId &&
+      candidate.anniversaryTitle === item.title &&
+      candidate.anniversaryDate === item.date &&
+      candidate.occurrenceYear === buildOccurrenceYear(item.date)
+    );
+
+    if (!plan) {
+      return {
+        id: `anniversary-plan-missing-${item.personId}-${item.title}`,
+        personId: item.personId,
+        title: `${item.personName}的${item.title}还没安排`,
+        desc: `${item.label} · 先列待办、地点和礼物线索`
+      };
+    }
+
+    if (plan.status !== "done" && plan.status !== "skipped") {
+      const done = plan.checklist.filter((todo) => todo.done).length;
+      return {
+        id: `anniversary-plan-active-${plan.id}`,
+        personId: plan.personId,
+        title: `继续准备：${plan.title}`,
+        desc: `${item.label} · ${done}/${plan.checklist.length} 项完成`
+      };
+    }
+  }
+
+  return null;
+}
+
+function buildOccurrenceYear(date: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const source = new Date(`${date}T00:00:00`);
+  let target = new Date(today.getFullYear(), source.getMonth(), source.getDate());
+  if (target < today) target = new Date(today.getFullYear() + 1, source.getMonth(), source.getDate());
+  return target.getFullYear();
 }
 
 function navigateToReminderSource(

@@ -29,6 +29,7 @@ interface EntrySheetProps {
   initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
   initialDate?: string;
+  onSaved?: (result: { type: EntryType; id: string }) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -49,6 +50,7 @@ export default function EntrySheet({
   initialPlaceShareReview,
   memoryMode = "full",
   initialDate,
+  onSaved,
   onClose
 }: EntrySheetProps) {
   const navigate = useNavigate();
@@ -113,6 +115,8 @@ export default function EntrySheet({
         savedMemoryId = await saveMemory(formData, itemId, photosToSave);
       }
 
+      const savedId = savedMemoryId || savedPersonId || savedPlaceId;
+      if (savedId) await onSaved?.({ type: entryType, id: savedId });
       onClose();
       notify(buildSaveToast({
         type: entryType,

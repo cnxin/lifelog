@@ -487,53 +487,30 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   padding: 14px;
 }
 
-.global-search-empty > span,
+.global-search-empty {
+  display: grid;
+  gap: 8px;
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.global-search-empty strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.global-search-empty span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .global-search-count {
   display: block;
   margin: 2px 2px 12px;
   color: var(--text-sub);
   font-size: 12px;
   font-weight: 800;
-}
-
-.global-search-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.global-search-quick {
-  min-width: 0;
-  min-height: 96px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  display: grid;
-  justify-items: start;
-  gap: 5px;
-  padding: 13px;
-  color: var(--text-main);
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
-  text-align: left;
-}
-
-.global-search-quick svg {
-  width: 20px;
-  height: 20px;
-  color: var(--primary);
-}
-
-.global-search-quick strong {
-  min-width: 0;
-  font-size: 15px;
-  line-height: 1.2;
-}
-
-.global-search-quick small {
-  min-width: 0;
-  color: var(--text-sub);
-  font-size: 12px;
-  line-height: 1.35;
 }
 
 .global-search-results {

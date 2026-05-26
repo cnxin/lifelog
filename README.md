@@ -20,10 +20,10 @@
 直接下载最新版本 APK 安装到 Android 手机：
 
 ```
-https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.73.apk
+https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.74.apk
 ```
 
-当前版本：`0.1.0-test.73`
+当前版本：`0.1.0-test.74`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -67,11 +67,11 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- 顶部新增全局搜索，可快速查找人物、地点、回忆和标签。
-- 回忆详情新增相关回忆推荐，按人物、地点、标签、日期和心情匹配。
-- 设置页新增资料体检，集中提示缺失生日、地点入口、照片和回忆关联。
-- 商场列表和详情显示店铺到访总数，商场内地点也展示各自计数。
-- 提醒预览修复提前提醒天数显示，周年标签按目标纪念日计算。
+- 纪念日新增年度安排，可记录待办、状态、预算 / 礼物线索、地点、提醒节点和备注。
+- 人物详情纪念日卡片新增“往年安排”入口，可查看历史安排并跳转关联回忆。
+- 首页今日行动会提示即将到来的纪念日安排，已有安排时可继续准备。
+- 全局搜索空状态移除重复快速跳转入口，搜索面板更聚焦。
+- 账号管理底部能力标签改为卡片展示，减少技术栈重复信息。
 
 ## 仓库结构
 

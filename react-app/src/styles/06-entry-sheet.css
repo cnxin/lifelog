@@ -982,6 +982,185 @@
   font-weight: 700;
 }
 
+.anniversary-plan-form {
+  gap: 16px;
+}
+
+.plan-status-row,
+.plan-reminder-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plan-status-row button,
+.plan-reminder-row button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.plan-status-row button.active,
+.plan-reminder-row button.active {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.anniversary-plan-progress {
+  display: grid;
+  gap: 4px;
+  border-radius: 18px;
+  padding: 13px 14px;
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.anniversary-plan-progress strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.anniversary-plan-progress span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.plan-checklist {
+  display: grid;
+  gap: 8px;
+}
+
+.plan-check-item,
+.plan-add-todo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.plan-check-item > button:first-child {
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--card-solid);
+}
+
+.plan-check-item > button:first-child.done {
+  background: var(--primary);
+}
+
+.plan-check-item > button:first-child svg,
+.plan-remove-todo svg,
+.plan-add-todo button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.plan-check-item input,
+.plan-add-todo input {
+  min-height: 42px;
+}
+
+.plan-remove-todo,
+.plan-add-todo button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+}
+
+.plan-add-todo button {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.plan-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.plan-history-list.expanded {
+  gap: 10px;
+}
+
+.plan-history-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 16px;
+  padding: 11px 12px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.plan-history-item.done {
+  border-color: rgba(46, 204, 113, 0.24);
+  background: rgba(46, 204, 113, 0.08);
+}
+
+.plan-history-item.skipped {
+  border-color: rgba(99, 110, 114, 0.16);
+  background: rgba(99, 110, 114, 0.06);
+}
+
+.plan-history-meta,
+.plan-history-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.plan-history-meta strong {
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.plan-history-meta span,
+.plan-history-main span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.plan-history-main strong {
+  color: var(--text-main);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-history-action {
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.danger-text {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
 .confirm-layer {
   position: absolute;
   inset: 0;
@@ -1175,6 +1354,15 @@ button:disabled,
 
   .birthday-editor {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .plan-history-item {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .plan-history-action {
+    width: fit-content;
   }
 }
 

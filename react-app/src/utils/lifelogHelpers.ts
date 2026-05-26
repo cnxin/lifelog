@@ -200,6 +200,10 @@ export function resolvePlaceMerge(state: LifeLogState, preview: PlaceMergePrevie
     (current, sourceId) => mergeMemoryPlaceReferences(current, sourceId, preview.canonical.id),
     state.memories
   );
+  const nextPlans = removedIds.reduce(
+    (current, sourceId) => replacePlanPlaceReferences(current, sourceId, preview.canonical.id),
+    state.anniversaryPlans
+  );
   const nextPlaces = state.places
     .filter((place) => !removedIds.includes(place.id))
     .map((place) => (place.id === preview.canonical.id ? preview.merged : place));
@@ -208,7 +212,8 @@ export function resolvePlaceMerge(state: LifeLogState, preview: PlaceMergePrevie
     nextState: {
       ...state,
       places: nextPlaces,
-      memories: nextMemories
+      memories: nextMemories,
+      anniversaryPlans: nextPlans
     },
     removedIds
   };
@@ -230,10 +235,23 @@ export function buildPlaceMergeHistoryEntry(
       snapshot: {
         people: [...snapshotState.people],
         places: [...snapshotState.places],
-        memories: [...snapshotState.memories]
+        memories: [...snapshotState.memories],
+        anniversaryPlans: [...snapshotState.anniversaryPlans]
       }
     },
     nextState,
     removedIds
   };
+}
+
+function replacePlanPlaceReferences(statePlans: LifeLogState["anniversaryPlans"], fromId: string, toId: string) {
+  return statePlans.map((plan) => {
+    if (!plan.placeIds.includes(fromId)) return plan;
+    const placeIds = Array.from(new Set(plan.placeIds.map((id) => (id === fromId ? toId : id))));
+    return {
+      ...plan,
+      placeIds,
+      updatedAt: new Date().toISOString()
+    };
+  });
 }

@@ -23,7 +23,10 @@ function loadTs(relativeFile) {
 
   const localRequire = (id) => {
     if (!id.startsWith(".")) return require(id);
-    return loadTs(path.relative(projectRoot, path.resolve(path.dirname(filePath), `${id}.ts`)));
+    const resolved = path.resolve(path.dirname(filePath), id);
+    const fileTarget = `${resolved}.ts`;
+    const indexTarget = path.join(resolved, "index.ts");
+    return loadTs(path.relative(projectRoot, fs.existsSync(fileTarget) ? fileTarget : indexTarget));
   };
 
   new Function("require", "exports", "module", output)(localRequire, module.exports, module);
@@ -31,6 +34,7 @@ function loadTs(relativeFile) {
 }
 
 const { buildMemoryFromFormData, buildPlaceFromFormData } = loadTs("src/utils/lifelogHelpers.ts");
+const { normalizeState } = loadTs("src/db/database.ts");
 const { normalizeStoredMall } = loadTs("src/utils/placeMeta.ts");
 
 const settings = {
@@ -41,6 +45,7 @@ const settings = {
 };
 
 let failures = 0;
+let assertions = 0;
 
 function makeFormData(entries) {
   const formData = new FormData();
@@ -51,6 +56,7 @@ function makeFormData(entries) {
 }
 
 function assertEqual(label, actualValue, expectedValue) {
+  assertions += 1;
   if (JSON.stringify(actualValue) === JSON.stringify(expectedValue)) return;
   failures += 1;
   console.error(`[${label}] mismatch`);
@@ -71,6 +77,97 @@ const newPlace = buildPlaceFromFormData(
 assertEqual("new place uses default city", newPlace.city, "杭州");
 assertEqual("new place infers province", newPlace.province, "浙江省");
 assertEqual("new place infers mall", newPlace.mall, "湖滨银泰");
+
+const normalizedWithPlans = normalizeState({
+  people: [
+    {
+      id: "p1",
+      name: "小林",
+      relationship: "朋友",
+      favorite: false,
+      preferences: [],
+      dislikes: [],
+      anniversaries: [{ title: "相识日", date: "2024-05-20" }],
+      notes: ""
+    }
+  ],
+  places: [
+    {
+      id: "l1",
+      name: "餐厅",
+      country: "中国",
+      province: "",
+      city: "杭州",
+      area: "",
+      mall: "",
+      storeName: "",
+      category: "餐厅",
+      rating: 0,
+      address: "",
+      mapUrl: "",
+      sourceUrl: "",
+      platformLinks: [],
+      photos: [],
+      desc: "",
+      tags: [],
+      favorite: false
+    }
+  ],
+  memories: [
+    {
+      id: "m1",
+      title: "纪念日",
+      date: "2026-05-20",
+      personIds: ["p1"],
+      placeId: "l1",
+      placeIds: ["l1"],
+      mood: "开心",
+      content: "",
+      tags: [],
+      photos: []
+    }
+  ],
+  anniversaryPlans: [
+    {
+      id: "ap1",
+      personId: "p1",
+      anniversaryTitle: "相识日",
+      anniversaryDate: "2024-05-20",
+      occurrenceYear: 2026,
+      targetDate: "2026-05-20",
+      status: "doing",
+      title: "安排",
+      notes: "",
+      budget: "",
+      checklist: [{ id: "t1", text: "订餐厅", done: false }],
+      placeIds: ["l1", "missing"],
+      reminderDaysBefore: [7, 1],
+      memoryId: "m1",
+      createdAt: "2026-05-01T00:00:00.000Z",
+      updatedAt: "2026-05-01T00:00:00.000Z"
+    },
+    {
+      id: "ap2",
+      personId: "missing",
+      anniversaryTitle: "生日",
+      anniversaryDate: "2024-05-20",
+      occurrenceYear: 2026,
+      targetDate: "2026-05-20",
+      status: "todo",
+      title: "无效安排",
+      notes: "",
+      budget: "",
+      checklist: [],
+      placeIds: [],
+      reminderDaysBefore: [],
+      createdAt: "2026-05-01T00:00:00.000Z",
+      updatedAt: "2026-05-01T00:00:00.000Z"
+    }
+  ]
+});
+assertEqual("anniversary plans normalize valid records", normalizedWithPlans.anniversaryPlans.length, 1);
+assertEqual("anniversary plan filters invalid place refs", normalizedWithPlans.anniversaryPlans[0].placeIds, ["l1"]);
+assertEqual("anniversary plan keeps valid memory ref", normalizedWithPlans.anniversaryPlans[0].memoryId, "m1");
 
 const editedPlace = buildPlaceFromFormData(
   makeFormData({
@@ -196,4 +293,4 @@ if (failures) {
   process.exit(1);
 }
 
-console.log("LifeLog save helper regression passed: 25 cases.");
+console.log(`LifeLog save helper regression passed: ${assertions} cases.`);
