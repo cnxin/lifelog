@@ -1,5 +1,24 @@
 # 变更日志
 
+## v0.1.0-test.78 (2026-05-26)
+
+### 备份导入
+
+- 修复备份导入时照片记录 `memoryId` 指向旧回忆，导致完整性校验把有效照片丢弃的问题。
+- 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。
+- 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。
+
+### 下载镜像
+
+- APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。
+
+### 验证
+
+- 通过 `npm.cmd run test:backup-import`、`npm.cmd run test:helpers` 和 `npm.cmd run build`。
+- 使用用户提供的真实备份文件验证导入归一化通过。
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.78.apk`。
+- Android `versionCode` 更新为 `78`，`versionName` 更新为 `0.1.0-test.78`。
+
 ## v0.1.0-test.77 (2026-05-26)
 
 ### Android 备份导出

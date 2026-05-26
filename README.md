@@ -17,19 +17,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.77`
+当前版本：`0.1.0-test.78`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.77
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.77/lifelog-v0.1.0-test.77.apk
-- 仓库镜像：https://github.com/cnxin/lifelog/raw/main/downloads/lifelog-v0.1.0-test.77.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.78
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.78/lifelog-v0.1.0-test.78.apk
+- 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.78.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.77.apk`
-- 大小：`3622676` bytes
-- SHA256：`232b4175d5a6dc2da1ed578311c0607d044414fe4eb534dfdec7d9af6013b69c`
+- 文件名：`lifelog-v0.1.0-test.78.apk`
+- 大小：`3622804` bytes
+- SHA256：`6335b167b2b2892aee507c4044c5bf2243b4a4fd557fd28d8ed5d5d1a2de5900`
 
 如果 GitHub raw 下载慢，可进入 [Releases](https://github.com/cnxin/lifelog/releases) 选择最新 APK；App 内更新会同时比较 CDN 清单、GitHub raw 清单和 GitHub latest Release，避免 CDN 缓存旧版本时误判。
 
@@ -73,11 +73,10 @@ npm.cmd run release:apk
 
 ## 最新更新
 
-- Android 完整备份导出改为调用系统文件保存器，可自行选择保存目录和文件名。
-- 备份导出完成后会显示文件名、保存位置说明和 Android 返回的文件位置标识。
-- 取消 Android 保存器时会提示已取消导出，不再表现为无反馈。
-- 表单内人物 / 地点搜索框进一步隔离内部输入框样式，避免被外层表单样式覆盖。
-- Web 端仍保留浏览器默认下载逻辑，桌面测试可直接下载 JSON 备份文件。
+- 修复备份导入时照片记录 `memoryId` 过期导致完整性校验失败的问题。
+- 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。
+- 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。
+- APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。
 
 ## 仓库结构
 

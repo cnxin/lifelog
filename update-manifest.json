@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.77",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.77",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.77/lifelog-v0.1.0-test.77.apk",
-  "mirrorApkUrl": "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.77.apk",
-  "apkName": "lifelog-v0.1.0-test.77.apk",
-  "apkSize": 3622676,
-  "publishedAt": "2026-05-26T14:46:42Z",
-  "body": "- Android 完整备份导出改为调用系统文件保存器，可自行选择保存目录和文件名。\n- 备份导出完成后会显示文件名、保存位置说明和 Android 返回的文件位置标识。\n- 取消 Android 保存器时会提示已取消导出，不再表现为无反馈。\n- 表单内人物 / 地点搜索框进一步隔离内部输入框样式，避免被外层表单样式覆盖。\n- Web 端仍保留浏览器默认下载逻辑，桌面测试可直接下载 JSON 备份文件。"
+  "version": "0.1.0-test.78",
+  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.78",
+  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.78/lifelog-v0.1.0-test.78.apk",
+  "mirrorApkUrl": "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.78.apk",
+  "apkName": "lifelog-v0.1.0-test.78.apk",
+  "apkSize": 3622804,
+  "publishedAt": "2026-05-26T15:29:19Z",
+  "body": "- 修复备份导入时照片记录 memoryId 过期导致完整性校验失败的问题。\n- 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。\n- 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。\n- APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。"
 }

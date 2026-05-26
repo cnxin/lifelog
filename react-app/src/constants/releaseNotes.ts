@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.78",
+    date: "2026-05-26",
+    title: "备份导入完整性和国内镜像下载修复",
+    highlights: [
+      "修复备份导入时照片记录 memoryId 过期导致完整性校验失败的问题。",
+      "导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。",
+      "导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。",
+      "APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。"
+    ]
+  },
+  {
     version: "0.1.0-test.77",
     date: "2026-05-26",
     title: "Android 备份保存和表单控件稳定性优化",
