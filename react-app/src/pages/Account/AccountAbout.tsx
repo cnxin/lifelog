@@ -122,7 +122,7 @@ export default function AccountAbout() {
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
-              <p className="update-download-hint">优先使用 GitHub Release APK；如果很慢，请复制链接到浏览器，或进入 Release 页面手动选择 APK。</p>
+              <p className="update-download-hint">优先使用国内镜像 APK；如果打不开，会保留 GitHub Release 作为兜底下载入口。</p>
             </div>
           )}
         </GlassCard>

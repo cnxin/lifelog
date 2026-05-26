@@ -156,7 +156,7 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
 }
 
 export function getPreferredApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
-  return update?.apkUrl || update?.mirrorApkUrl || update?.releaseUrl || "";
+  return update?.mirrorApkUrl || update?.apkUrl || update?.releaseUrl || "";
 }
 
 function buildJsDelivrApkUrl(version: string, assetName: string) {
