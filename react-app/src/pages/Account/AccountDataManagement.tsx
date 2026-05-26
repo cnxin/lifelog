@@ -99,9 +99,17 @@ export default function AccountDataManagement() {
   }
 
   async function handleExport() {
-    const result = await exportData();
-    setLastExport(result);
-    notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
+    try {
+      const result = await exportData();
+      setLastExport(result);
+      notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      notify({
+        message: /cancel/i.test(message) ? "已取消导出备份" : `导出备份失败：${message || "请稍后重试"}`,
+        tone: /cancel/i.test(message) ? "info" : "error"
+      });
+    }
   }
 
   return (
@@ -175,6 +183,7 @@ export default function AccountDataManagement() {
             <strong>{lastExport.fileName}</strong>
             <span>{lastExport.locationLabel}</span>
             <p>{lastExport.locationDetail}</p>
+            {lastExport.path && <code>{lastExport.path}</code>}
           </GlassCard>
         )}
       </div>

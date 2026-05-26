@@ -443,6 +443,17 @@
   line-height: 1.45;
 }
 
+.backup-export-result code {
+  display: block;
+  border-radius: 10px;
+  padding: 7px 9px;
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .feedback-card {
   display: grid;
   gap: 12px;

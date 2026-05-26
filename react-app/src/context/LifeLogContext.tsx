@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Capacitor } from "@capacitor/core";
 import { APP_VERSION } from "../constants/version";
 import {
   clearPlaceMergeHistory,
@@ -71,17 +70,14 @@ import {
   type FullBackupPayload
 } from "../utils/lifelogBackup";
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
+import { saveBackupFile, type BackupExportTarget } from "../utils/backupExport";
 
 type DeletedEntrySnapshot =
   | { type: "person"; person: Person; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
   | { type: "place"; place: Place; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
   | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
-interface BackupExportResult {
-  fileName: string;
-  locationLabel: string;
-  locationDetail: string;
-}
+type BackupExportResult = BackupExportTarget;
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -625,17 +621,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           photos: backupPhotos.length
         }
       };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-      URL.revokeObjectURL(url);
-      return {
-        fileName,
-        ...getBackupDownloadLocation()
-      };
+      return saveBackupFile(fileName, JSON.stringify(payload, null, 2));
     }
 
     async function resetDemo() {
@@ -713,18 +699,4 @@ export function useLifeLog() {
     throw new Error("useLifeLog must be used inside LifeLogProvider");
   }
   return context;
-}
-
-function getBackupDownloadLocation() {
-  if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
-    return {
-      locationLabel: "手机系统下载目录",
-      locationDetail: "通常在“文件管理/我的文件 > 下载（Download）”中，也可以在系统下载通知里打开。"
-    };
-  }
-
-  return {
-    locationLabel: "浏览器默认下载目录",
-    locationDetail: "具体位置取决于当前浏览器设置，桌面端通常是“下载/Downloads”。"
-  };
 }
