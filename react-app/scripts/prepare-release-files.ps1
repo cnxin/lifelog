@@ -15,7 +15,7 @@ if (-not (Test-Path $sourceApkPath)) {
   throw "Release APK not found. Run npm.cmd run release:apk first: $sourceApkPath"
 }
 
-$packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+$packageJson = Get-Content $packageJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $version = [string]$packageJson.version
 $apkName = "lifelog-v$version.apk"
 $downloadsDir = Join-Path $repoRoot "downloads"
@@ -30,7 +30,7 @@ $apk = Get-Item $targetApkPath
 $sha256 = (Get-FileHash -Algorithm SHA256 $targetApkPath).Hash.ToLowerInvariant()
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
-$manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+$manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $manifest.version = $version
 $manifest.releaseUrl = "https://github.com/cnxin/lifelog/releases/tag/v$version"
 $manifest.apkUrl = "https://github.com/cnxin/lifelog/releases/download/v$version/$apkName"

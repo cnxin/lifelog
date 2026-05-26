@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.79",
+    date: "2026-05-27",
+    title: "备份预检、更新来源和发布流程优化",
+    highlights: [
+      "导入预检新增照片归属修复、缺失引用、孤立照片和补回关联提示。",
+      "更新检查页新增下载源展示，可区分 Gitee 国内镜像、GitHub Release 和 CDN。",
+      "更新检查优先读取 Gitee 镜像清单，同版本时优先使用包含国内镜像的清单。",
+      "新增 release:prepare-files 脚本，减少 APK 复制和 update-manifest 字段回填漏步骤。"
+    ]
+  },
+  {
     version: "0.1.0-test.78",
     date: "2026-05-26",
     title: "备份导入完整性和国内镜像下载修复",

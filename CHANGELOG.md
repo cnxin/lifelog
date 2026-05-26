@@ -1,5 +1,28 @@
 # 变更日志
 
+## v0.1.0-test.79 (2026-05-27)
+
+### 备份体验
+
+- 导入预检新增照片归属修复、缺失引用、孤立照片和补回关联提示，导入前能更清楚判断备份质量。
+- 导出失败会在控制台记录详细错误，便于继续排查 Android 首次导出失败的原因。
+
+### 更新检查
+
+- 更新检查页新增下载源展示，可区分 Gitee 国内镜像、GitHub Release 和 CDN。
+- 更新检查优先读取 Gitee 镜像清单，同版本时优先使用包含国内镜像的清单。
+
+### 发布流程
+
+- 新增 `release:prepare-files` 脚本，自动复制 APK 并回填 `update-manifest.json` 基础字段。
+- README 补充 Gitee 镜像、发布脚本和备份排查说明。
+
+### 验证
+
+- 通过 `npm.cmd run test:backup-health`、`npm.cmd run test:backup-import`、`npm.cmd run test:update-checker`、`npm.cmd run build` 和 `git diff --check`。
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.79.apk`。
+- Android `versionCode` 更新为 `79`，`versionName` 更新为 `0.1.0-test.79`。
+
 ## v0.1.0-test.78 (2026-05-26)
 
 ### 备份导入

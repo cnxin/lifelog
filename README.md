@@ -17,19 +17,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.78`
+当前版本：`0.1.0-test.79`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.78
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.78/lifelog-v0.1.0-test.78.apk
-- 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.78.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.79
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.79/lifelog-v0.1.0-test.79.apk
+- 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.79.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.78.apk`
-- 大小：`3622804` bytes
-- SHA256：`6335b167b2b2892aee507c4044c5bf2243b4a4fd557fd28d8ed5d5d1a2de5900`
+- 文件名：`lifelog-v0.1.0-test.79.apk`
+- 大小：`3623664` bytes
+- SHA256：`c17aeae3607a423dd5cc30769c6cedb21723b0be8818998c97d060d271535df1`
 
 如果 GitHub 下载慢，可优先使用 Gitee 国内镜像；App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判。
 
@@ -78,10 +78,10 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 修复备份导入时照片记录 `memoryId` 过期导致完整性校验失败的问题。
-- 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。
-- 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。
-- APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。
+- 导入预检新增照片归属修复、缺失引用、孤立照片和补回关联提示。
+- 更新检查页新增下载源展示，可区分 Gitee 国内镜像、GitHub Release 和 CDN。
+- 更新检查优先读取 Gitee 镜像清单，同版本时优先使用包含国内镜像的清单。
+- 新增 `release:prepare-files` 脚本，减少 APK 复制和 update-manifest 字段回填漏步骤。
 
 ## 备份排查
 

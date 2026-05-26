@@ -1,10 +1,10 @@
 {
-  "version": "0.1.0-test.78",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.78",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.78/lifelog-v0.1.0-test.78.apk",
-  "mirrorApkUrl": "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.78.apk",
-  "apkName": "lifelog-v0.1.0-test.78.apk",
-  "apkSize": 3622804,
-  "publishedAt": "2026-05-26T15:29:19Z",
-  "body": "- 修复备份导入时照片记录 memoryId 过期导致完整性校验失败的问题。\n- 导入会根据回忆中的照片引用自动修复照片归属，保留有效照片。\n- 导出完整备份时会同步修正照片和回忆的双向关联，避免再次生成不一致备份。\n- APK 下载优先使用 Gitee 国内镜像，GitHub Release 保留为兜底。"
+    "version":  "0.1.0-test.79",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.79",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.79/lifelog-v0.1.0-test.79.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.79.apk",
+    "apkName":  "lifelog-v0.1.0-test.79.apk",
+    "apkSize":  3623664,
+    "publishedAt":  "2026-05-26T17:39:41Z",
+    "body":  "- 导入预检新增照片归属修复、缺失引用、孤立照片和补回关联提示。\n- 更新检查页新增下载源展示，可区分 Gitee 国内镜像、GitHub Release 和 CDN。\n- 更新检查优先读取 Gitee 镜像清单，同版本时优先使用包含国内镜像的清单。\n- 新增 release:prepare-files 脚本，减少 APK 复制和 update-manifest 字段回填漏步骤。"
 }
