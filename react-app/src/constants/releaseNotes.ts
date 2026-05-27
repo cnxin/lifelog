@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.83",
+    date: "2026-05-27",
+    title: "内置升级进度和 APK 校验",
+    highlights: [
+      "内置升级新增下载进度条，下载中会禁用重复点击，避免重复拉起升级任务。",
+      "发布清单新增 APK SHA256，Android 下载完成后会校验文件完整性再打开安装器。",
+      "安装来源权限设置返回后会自动继续本次升级，减少重复操作。",
+      "升级失败、校验失败或兜底下载会在更新卡片中展示当前阶段。"
+    ]
+  },
+  {
     version: "0.1.0-test.82",
     date: "2026-05-27",
     title: "内置升级和外部下载分流",

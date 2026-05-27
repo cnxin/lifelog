@@ -154,6 +154,51 @@
   background: var(--primary);
 }
 
+.update-upgrade-progress {
+  display: grid;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.update-upgrade-progress div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.update-upgrade-progress strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.update-upgrade-progress span {
+  min-width: 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  text-align: right;
+}
+
+.update-progress-track {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.update-progress-track i {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 180ms ease;
+}
+
 .update-check-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

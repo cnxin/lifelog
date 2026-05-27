@@ -28,6 +28,7 @@ const buildGradlePath = path.join(projectRoot, "android", "app", "build.gradle")
 const releaseNotesPath = path.join(projectRoot, "src", "constants", "releaseNotes.ts");
 const readmePath = path.join(repoRoot, "README.md");
 const changelogPath = path.join(repoRoot, "CHANGELOG.md");
+const manifestPath = path.join(repoRoot, "update-manifest.json");
 
 const packageJson = readJson(packageJsonPath);
 const packageLock = readJson(packageLockPath);
@@ -58,6 +59,19 @@ expect(changelog.includes(`## v${version}`), `CHANGELOG.md is missing v${version
 
 expect(fs.existsSync(apkPath), `Release APK is missing at ${apkPath}`);
 
+let apk;
+let sha256;
+if (fs.existsSync(apkPath)) {
+  apk = fs.statSync(apkPath);
+  sha256 = getSha256(apkPath);
+  const manifest = readJson(manifestPath);
+  expect(manifest.version === version, `update-manifest.json version mismatch: ${manifest.version} !== ${version}`);
+  expect(manifest.apkName === apkName, `update-manifest.json apkName mismatch: ${manifest.apkName} !== ${apkName}`);
+  expect(manifest.apkSize === apk.size, `update-manifest.json apkSize mismatch: ${manifest.apkSize} !== ${apk.size}`);
+  expect(manifest.apkSha256 === sha256, `update-manifest.json apkSha256 mismatch: ${manifest.apkSha256} !== ${sha256}`);
+  expect(readme.includes(sha256), "README.md is missing APK SHA256");
+}
+
 if (failures.length) {
   console.error("Release readiness check failed:");
   for (const failure of failures) {
@@ -65,9 +79,6 @@ if (failures.length) {
   }
   process.exit(1);
 }
-
-const apk = fs.statSync(apkPath);
-const sha256 = getSha256(apkPath);
 
 console.log(`Release readiness check passed: ${version}`);
 console.log(`APK: downloads/${apkName}`);

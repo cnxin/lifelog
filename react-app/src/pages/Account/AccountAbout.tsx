@@ -1,11 +1,11 @@
 import { Copy, Download, ExternalLink, Info, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
-import { canInstallApkPackages, openApkDownload, openApkInstallPermissionSettings, openExternalUrl } from "../../utils/externalLinks";
+import { addApkDownloadProgressListener, canInstallApkPackages, openApkDownload, openApkInstallPermissionSettings, openExternalUrl, type ApkDownloadProgress } from "../../utils/externalLinks";
 import {
   checkLatestAppUpdate,
   formatFileSize,
@@ -19,9 +19,38 @@ import {
 export default function AccountAbout() {
   const notify = useToast();
   const [isChecking, setIsChecking] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeProgress, setUpgradeProgress] = useState<ApkDownloadProgress | null>(null);
   const [latestUpdate, setLatestUpdate] = useState<AppUpdateInfo | null>(null);
+  const pendingUpgradeRef = useRef<AppUpdateInfo | null>(null);
   const currentRelease = getReleaseNote(APP_VERSION);
   const previousReleases = RELEASE_NOTES.filter((note) => note.version !== currentRelease.version).slice(0, 3);
+
+  useEffect(() => {
+    let removeListener: (() => void) | null = null;
+    void addApkDownloadProgressListener((progress) => {
+      setUpgradeProgress(progress);
+      if (progress.stage === "opening" || progress.stage === "fallback" || progress.stage === "failed") {
+        setIsUpgrading(false);
+      }
+    }).then((handle) => {
+      removeListener = () => void handle.remove();
+    });
+
+    return () => removeListener?.();
+  }, []);
+
+  useEffect(() => {
+    function handleWindowFocus() {
+      if (!pendingUpgradeRef.current) return;
+      const pendingUpdate = pendingUpgradeRef.current;
+      pendingUpgradeRef.current = null;
+      void handleBuiltInUpgrade(pendingUpdate, true);
+    }
+
+    window.addEventListener("focus", handleWindowFocus);
+    return () => window.removeEventListener("focus", handleWindowFocus);
+  }, []);
 
   async function handleCheckUpdate() {
     if (isChecking) return;
@@ -51,22 +80,40 @@ export default function AccountAbout() {
     });
   }
 
-  async function handleBuiltInUpgrade(update: AppUpdateInfo) {
+  async function handleBuiltInUpgrade(update: AppUpdateInfo, resumedFromPermission = false) {
+    if (isUpgrading) return;
     const canInstall = await canInstallApkPackages();
     if (!canInstall) {
+      pendingUpgradeRef.current = update;
       notify({
-        message: "请先允许 LifeLog 安装未知来源应用，返回后再点内置升级",
+        message: "请先允许 LifeLog 安装未知来源应用，返回后会继续升级",
         tone: "info"
       });
       await openApkInstallPermissionSettings();
       return;
     }
 
+    setIsUpgrading(true);
+    setUpgradeProgress({
+      stage: "downloading",
+      bytesRead: 0,
+      totalBytes: update.apkSize || 0,
+      percent: 0,
+      fileName: update.apkName
+    });
     notify({
-      message: "开始下载 APK，完成后会自动打开系统安装器",
+      message: resumedFromPermission ? "已获得安装权限，继续下载 APK" : "开始下载 APK，完成后会自动打开系统安装器",
       tone: "info"
     });
-    await openApkDownload(update);
+    try {
+      await openApkDownload(update);
+    } catch (error) {
+      setIsUpgrading(false);
+      notify({
+        message: error instanceof Error ? `内置升级失败：${error.message}` : "内置升级失败，请尝试外部下载",
+        tone: "error"
+      });
+    }
   }
 
   const downloadUrl = getPreferredApkDownloadUrl(latestUpdate);
@@ -147,10 +194,21 @@ export default function AccountAbout() {
                 ))}
             </div>
           )}
+          {upgradeProgress && (
+            <div className={`update-upgrade-progress ${upgradeProgress.stage}`}>
+              <div>
+                <strong>{formatUpgradeStage(upgradeProgress.stage)}</strong>
+                <span>{formatUpgradeProgress(upgradeProgress)}</span>
+              </div>
+              <div className="update-progress-track">
+                <i style={{ width: `${Math.max(0, Math.min(100, upgradeProgress.percent || 0))}%` }} />
+              </div>
+            </div>
+          )}
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
-              <button className="link-action detail-link-button" type="button" onClick={() => void handleBuiltInUpgrade(latestUpdate)}>
-                <Download /> 内置升级
+              <button className="link-action detail-link-button" type="button" onClick={() => void handleBuiltInUpgrade(latestUpdate)} disabled={isUpgrading}>
+                <Download /> {isUpgrading ? "升级中" : "内置升级"}
               </button>
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(externalDownloadUrl)}>
                 <ExternalLink size={14} />
@@ -237,4 +295,30 @@ function formatReleaseDate(value: string) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function formatUpgradeStage(stage: ApkDownloadProgress["stage"]) {
+  switch (stage) {
+    case "downloading":
+      return "正在下载";
+    case "verifying":
+      return "正在校验";
+    case "opening":
+      return "打开安装器";
+    case "fallback":
+      return "已切换备用下载";
+    case "failed":
+      return "升级失败";
+    default:
+      return "准备升级";
+  }
+}
+
+function formatUpgradeProgress(progress: ApkDownloadProgress) {
+  if (progress.stage === "verifying") return "正在校验 APK 完整性";
+  if (progress.stage === "opening") return "请在系统安装器中确认安装";
+  if (progress.stage === "fallback") return "已打开备用下载入口";
+  if (progress.stage === "failed") return progress.message || "请尝试外部下载";
+  const total = progress.totalBytes > 0 ? formatFileSize(progress.totalBytes) : "未知大小";
+  return `${progress.percent || 0}% · ${formatFileSize(progress.bytesRead)} / ${total}`;
 }

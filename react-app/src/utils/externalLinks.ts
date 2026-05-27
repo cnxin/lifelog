@@ -1,12 +1,13 @@
-import { Capacitor, registerPlugin } from "@capacitor/core";
+import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 import type { Place, PlaceLinkPlatform } from "../types";
 import { buildAmapWebMarkerUrl, inferPlatformFromLink } from "./placeLinks";
 
 interface NativeExternalBrowserPlugin {
   open(options: { url: string; packageName?: string }): Promise<void>;
-  installApk(options: { url: string; fileName?: string; fallbackUrl?: string }): Promise<void>;
+  installApk(options: { url: string; fileName?: string; fallbackUrl?: string; expectedSha256?: string }): Promise<void>;
   canInstallPackages(): Promise<{ granted: boolean }>;
   openInstallPermissionSettings(): Promise<void>;
+  addListener(eventName: "apkDownloadProgress", listenerFunc: (progress: ApkDownloadProgress) => void): Promise<PluginListenerHandle>;
 }
 
 interface NativeLaunchTarget {
@@ -16,6 +17,15 @@ interface NativeLaunchTarget {
 }
 
 const NativeExternalBrowser = registerPlugin<NativeExternalBrowserPlugin>("NativeExternalBrowser");
+
+export interface ApkDownloadProgress {
+  stage: "downloading" | "verifying" | "opening" | "fallback" | "failed";
+  bytesRead: number;
+  totalBytes: number;
+  percent: number;
+  fileName: string;
+  message?: string;
+}
 
 export async function openExternalUrl(rawUrl: string) {
   const url = rawUrl.trim();
@@ -47,11 +57,11 @@ export async function openApkDownloadUrl(rawUrl: string) {
   await openExternalUrl(url);
 }
 
-export async function openApkDownload(update: { apkUrl?: string; mirrorApkUrl?: string; releaseUrl?: string; apkName?: string } | null | undefined) {
+export async function openApkDownload(update: { apkUrl?: string; mirrorApkUrl?: string; releaseUrl?: string; apkName?: string; apkSha256?: string } | null | undefined) {
   if (!update) return;
   const primaryUrl = update.mirrorApkUrl || update.apkUrl || update.releaseUrl || "";
   const fallbackUrl = primaryUrl === update.apkUrl ? update.releaseUrl || "" : update.apkUrl || update.releaseUrl || "";
-  await openApkDownloadUrlWithFallback(primaryUrl, update.apkName, fallbackUrl);
+  await openApkDownloadUrlWithFallback(primaryUrl, update.apkName, fallbackUrl, update.apkSha256);
 }
 
 export async function canInstallApkPackages() {
@@ -73,13 +83,20 @@ export async function openApkInstallPermissionSettings() {
   }
 }
 
-export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = "", rawFallbackUrl = "") {
+export function addApkDownloadProgressListener(listener: (progress: ApkDownloadProgress) => void) {
+  if (!Capacitor.isNativePlatform()) {
+    return Promise.resolve({ remove: async () => undefined });
+  }
+  return NativeExternalBrowser.addListener("apkDownloadProgress", listener);
+}
+
+export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = "", rawFallbackUrl = "", expectedSha256 = "") {
   const url = rawUrl.trim();
   const fallbackUrl = rawFallbackUrl.trim();
   if (!url) return;
 
   if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
-    await openNativeApkInstaller(url, fileName, fallbackUrl);
+    await openNativeApkInstaller(url, fileName, fallbackUrl, expectedSha256);
     return;
   }
 
@@ -151,9 +168,9 @@ async function openNativeViewUrl(url: string, packageName = "", fallbackUrl = ""
   window.location.href = /^https?:\/\//i.test(fallback) ? buildAndroidViewIntentUrl(fallback) : fallback;
 }
 
-async function openNativeApkInstaller(url: string, fileName = "", fallbackUrl = "") {
+async function openNativeApkInstaller(url: string, fileName = "", fallbackUrl = "", expectedSha256 = "") {
   try {
-    await NativeExternalBrowser.installApk({ url, fileName, fallbackUrl });
+    await NativeExternalBrowser.installApk({ url, fileName, fallbackUrl, expectedSha256 });
   } catch (error) {
     console.warn("原生 APK 下载打开失败，回退到外部链接:", error);
     await openNativeViewUrl(fallbackUrl || url);

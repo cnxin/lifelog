@@ -85,12 +85,13 @@ const manifest = parseUpdateManifestPayload(
     apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.64/lifelog-v0.1.0-test.64.apk",
     mirrorApkUrl: "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/lifelog-v0.1.0-test.64.apk",
     apkName: "lifelog-v0.1.0-test.64.apk",
-    apkSize: 3591000
+    apkSize: 3591000,
+    apkSha256: "abc123"
   },
   "0.1.0-test.63"
 );
 
-if (!manifest.hasUpdate || manifest.latestVersion !== "0.1.0-test.64" || !manifest.mirrorApkUrl.includes("cdn.jsdelivr.net")) {
+if (!manifest.hasUpdate || manifest.latestVersion !== "0.1.0-test.64" || !manifest.mirrorApkUrl.includes("cdn.jsdelivr.net") || manifest.apkSha256 !== "abc123") {
   failures += 1;
   console.error(`[parseUpdateManifestPayload] unexpected payload: ${JSON.stringify(manifest)}`);
 }

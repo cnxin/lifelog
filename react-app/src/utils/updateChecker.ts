@@ -13,6 +13,7 @@ export interface AppUpdateInfo {
   mirrorApkUrl: string;
   apkName: string;
   apkSize: number;
+  apkSha256: string;
   body: string;
   publishedAt: string;
   checkedAt: string;
@@ -33,6 +34,7 @@ interface UpdateManifestPayload {
   mirrorApkUrl?: string;
   apkName?: string;
   apkSize?: number;
+  apkSha256?: string;
   body?: string;
   publishedAt?: string;
 }
@@ -88,6 +90,7 @@ export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = A
     mirrorApkUrl: "",
     apkName: "",
     apkSize: 0,
+    apkSha256: "",
     body: "",
     source: best.source,
     hasUpdate: false
@@ -149,6 +152,7 @@ export function parseUpdateManifestPayload(payload: UpdateManifestPayload & { so
     mirrorApkUrl: payload.mirrorApkUrl || "",
     apkName: payload.apkName || `lifelog-v${latestVersion}.apk`,
     apkSize: typeof payload.apkSize === "number" ? payload.apkSize : 0,
+    apkSha256: payload.apkSha256 || "",
     body: payload.body || "",
     publishedAt: payload.publishedAt || "",
     checkedAt: new Date().toISOString(),
@@ -172,6 +176,7 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
     mirrorApkUrl: apkAsset?.name ? buildJsDelivrApkUrl(latestVersion, apkAsset.name) : "",
     apkName: apkAsset?.name || "",
     apkSize: typeof apkAsset?.size === "number" ? apkAsset.size : 0,
+    apkSha256: "",
     body: payload.body || "",
     publishedAt: payload.published_at || "",
     checkedAt: new Date().toISOString(),

@@ -37,6 +37,7 @@ $manifest.apkUrl = "https://github.com/cnxin/lifelog/releases/download/v$version
 $manifest.mirrorApkUrl = "https://gitee.com/ysjugg/lifelog/raw/main/downloads/$apkName"
 $manifest.apkName = $apkName
 $manifest.apkSize = $apk.Length
+$manifest.apkSha256 = $sha256
 $manifest.publishedAt = $publishedAt
 Write-Utf8NoBom $manifestPath (($manifest | ConvertTo-Json -Depth 8) + "`n")
 

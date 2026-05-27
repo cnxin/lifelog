@@ -1,10 +1,11 @@
 {
-    "version":  "0.1.0-test.82",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.82",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.82/lifelog-v0.1.0-test.82.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.82.apk",
-    "apkName":  "lifelog-v0.1.0-test.82.apk",
-    "apkSize":  3626640,
-    "publishedAt":  "2026-05-27T09:07:48Z",
-    "body":  "- 更新页主按钮改为内置升级，优先从 Gitee 下载 APK 并自动打开系统安装器。\n- 新增安装来源权限预检，未授权时会先跳转到系统设置，减少下载后安装失败。\n- 外部下载保留为独立入口，并优先打开 GitHub Release APK，避免浏览器把 Gitee raw 保存成 zip。\n- 更新信息同时展示内置下载源和外部下载源，升级路径更清晰。"
+    "version":  "0.1.0-test.83",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.83",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.83/lifelog-v0.1.0-test.83.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.83.apk",
+    "apkName":  "lifelog-v0.1.0-test.83.apk",
+    "apkSize":  3628384,
+    "apkSha256":  "306186c811cea039eb0886faeb1e23acf80896a68b9b1654d1ebc6bb0efae3c2",
+    "publishedAt":  "2026-05-27T14:39:02Z",
+    "body":  "- 内置升级新增下载进度条，下载中会禁用重复点击，避免重复拉起升级任务。\n- 发布清单新增 APK SHA256，Android 下载完成后会校验文件完整性再打开安装器。\n- 安装来源权限设置返回后会自动继续本次升级，减少重复操作。\n- 升级失败、校验失败或兜底下载会在更新卡片中展示当前阶段。"
 }

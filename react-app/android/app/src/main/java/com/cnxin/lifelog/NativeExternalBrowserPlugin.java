@@ -18,6 +18,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @CapacitorPlugin(name = "NativeExternalBrowser")
 public class NativeExternalBrowserPlugin extends Plugin {
@@ -85,13 +88,14 @@ public class NativeExternalBrowserPlugin extends Plugin {
 
         String fileName = sanitizeApkFileName(call.getString("fileName", ""));
         String fallbackUrl = call.getString("fallbackUrl", "").trim();
-        execute(() -> downloadAndInstallApk(call, url, fileName, fallbackUrl));
+        String expectedSha256 = call.getString("expectedSha256", "").trim().toLowerCase();
+        execute(() -> downloadAndInstallApk(call, url, fileName, fallbackUrl, expectedSha256));
     }
 
-    private void downloadAndInstallApk(PluginCall call, String url, String fileName, String fallbackUrl) {
+    private void downloadAndInstallApk(PluginCall call, String url, String fileName, String fallbackUrl, String expectedSha256) {
         File apkFile = new File(getContext().getCacheDir(), fileName);
         try {
-            downloadToFile(url, apkFile);
+            downloadToFile(url, apkFile, expectedSha256);
             getBridge().executeOnMainThread(() -> openDownloadedApk(call, apkFile, fallbackUrl));
         } catch (Exception error) {
             getBridge().executeOnMainThread(() -> openFallbackOrReject(call, fallbackUrl, error));
@@ -105,6 +109,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 return;
             }
 
+            notifyApkProgress("opening", apkFile.length(), apkFile.length(), apkFile.getName(), "");
             Intent intent = new Intent(Intent.ACTION_VIEW);
             Uri apkUri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", apkFile);
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
@@ -123,6 +128,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
     private void openFallbackOrReject(PluginCall call, String fallbackUrl, Exception originalError) {
         if (!fallbackUrl.isEmpty()) {
             try {
+                notifyApkProgress("fallback", 0, 0, "", originalError.getMessage());
                 Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
                 fallbackIntent.addCategory(Intent.CATEGORY_BROWSABLE);
                 fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -136,10 +142,11 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 // Fall through to reject with the original download/install error.
             }
         }
+        notifyApkProgress("failed", 0, 0, "", originalError.getMessage());
         call.reject("Failed to download or open APK", originalError);
     }
 
-    private void downloadToFile(String rawUrl, File targetFile) throws IOException {
+    private void downloadToFile(String rawUrl, File targetFile, String expectedSha256) throws IOException {
         HttpURLConnection connection = null;
         try {
             URL url = new URL(rawUrl);
@@ -155,12 +162,20 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 throw new IOException("APK download returned HTTP " + statusCode);
             }
 
+            long totalBytes = connection.getContentLengthLong();
             try (BufferedInputStream input = new BufferedInputStream(connection.getInputStream());
                  FileOutputStream output = new FileOutputStream(targetFile, false)) {
                 byte[] buffer = new byte[8192];
                 int bytesRead;
+                long downloadedBytes = 0;
+                long lastNotifiedBytes = 0;
                 while ((bytesRead = input.read(buffer)) != -1) {
                     output.write(buffer, 0, bytesRead);
+                    downloadedBytes += bytesRead;
+                    if (downloadedBytes - lastNotifiedBytes >= 131072 || downloadedBytes == totalBytes) {
+                        notifyApkProgress("downloading", downloadedBytes, totalBytes, targetFile.getName(), "");
+                        lastNotifiedBytes = downloadedBytes;
+                    }
                 }
             }
 
@@ -172,6 +187,12 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 if (fileInput.read() != 'P' || fileInput.read() != 'K') {
                     throw new IOException("Downloaded file is not an APK archive");
                 }
+            }
+
+            notifyApkProgress("verifying", targetFile.length(), targetFile.length(), targetFile.getName(), "");
+            String actualSha256 = getSha256(targetFile);
+            if (!expectedSha256.isEmpty() && !expectedSha256.equals(actualSha256)) {
+                throw new IOException("APK SHA256 mismatch: " + actualSha256);
             }
         } finally {
             if (connection != null) {
@@ -186,6 +207,36 @@ public class NativeExternalBrowserPlugin extends Plugin {
             cleaned = "lifelog-update.apk";
         }
         return cleaned.toLowerCase().endsWith(".apk") ? cleaned : cleaned + ".apk";
+    }
+
+    private String getSha256(File file) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            try (DigestInputStream input = new DigestInputStream(new FileInputStream(file), digest)) {
+                byte[] buffer = new byte[8192];
+                while (input.read(buffer) != -1) {
+                    // DigestInputStream updates the digest as bytes are read.
+                }
+            }
+            StringBuilder builder = new StringBuilder();
+            for (byte item : digest.digest()) {
+                builder.append(String.format("%02x", item));
+            }
+            return builder.toString();
+        } catch (NoSuchAlgorithmException error) {
+            throw new IOException("SHA-256 is not available", error);
+        }
+    }
+
+    private void notifyApkProgress(String stage, long bytesRead, long totalBytes, String fileName, String message) {
+        JSObject progress = new JSObject();
+        progress.put("stage", stage);
+        progress.put("bytesRead", bytesRead);
+        progress.put("totalBytes", totalBytes);
+        progress.put("percent", totalBytes > 0 ? Math.min(100, Math.round((bytesRead * 100.0) / totalBytes)) : 0);
+        progress.put("fileName", fileName == null ? "" : fileName);
+        progress.put("message", message == null ? "" : message);
+        notifyListeners("apkDownloadProgress", progress);
     }
 
     private boolean canRequestPackageInstalls() {
