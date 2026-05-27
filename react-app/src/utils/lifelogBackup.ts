@@ -197,8 +197,7 @@ function validateIntegrity(value: unknown, state: LifeLogState, photos: Photo[])
     people: state.people.length,
     places: state.places.length,
     memories: state.memories.length,
-    anniversaryPlans: state.anniversaryPlans.length,
-    photos: photos.length
+    anniversaryPlans: state.anniversaryPlans.length
   };
 
   for (const key of Object.keys(expected) as Array<keyof typeof expected>) {
@@ -206,5 +205,10 @@ function validateIntegrity(value: unknown, state: LifeLogState, photos: Photo[])
     if (Number(value[key]) !== expected[key]) {
       throw new Error("备份完整性校验失败，导入已取消。请重新导出备份后再试。");
     }
+  }
+
+  const declaredPhotos = Number(value.photos);
+  if (Number.isFinite(declaredPhotos) && declaredPhotos > 0 && photos.length === 0) {
+    throw new Error("备份照片记录缺失，导入已取消。请重新导出备份后再试。");
   }
 }

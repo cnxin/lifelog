@@ -1,22 +1,44 @@
-import type { LifeLogState, MemoryEvent, Person, Place } from "../types";
+import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place } from "../types";
+import { findPlaceDuplicateGroups } from "./placeDedup";
 import { isRecord } from "./lifelogHelpers";
 import { getMemoryPlaceIds } from "./memoryPlaces";
+
+export interface BackupHealthGroup {
+  id: string;
+  title: string;
+  status: "ok" | "warning" | "info";
+  count: number;
+  items: string[];
+}
 
 export interface BackupHealthReport {
   status: "ok" | "warning";
   people: number;
   places: number;
   memories: number;
+  anniversaryPlans: number;
   photoRefs: number;
+  attentionCount: number;
   issueCount: number;
   issues: string[];
+  attentions: string[];
+  groups: BackupHealthGroup[];
+  duplicatePlaceGroups: number;
+  strongDuplicatePlaceGroups: number;
 }
 
 export interface BackupImportPreview {
+  schemaVersion: string;
   people: number;
   places: number;
   memories: number;
+  anniversaryPlans: number;
   photos: number;
+  peopleDelta: number | null;
+  placesDelta: number | null;
+  memoriesDelta: number | null;
+  anniversaryPlansDelta: number | null;
+  photosDelta: number | null;
   repairedPhotos: number;
   ignoredPhotos: number;
   missingPhotoRefs: number;
@@ -29,22 +51,38 @@ export interface BackupImportPreview {
 
 export function buildBackupHealthReport(state: LifeLogState): BackupHealthReport {
   const issues = collectStateIssues(state);
+  const duplicatePlaceGroups = findPlaceDuplicateGroups(state.places);
+  const strongDuplicatePlaceGroups = duplicatePlaceGroups.filter((group) => group.strength === "strong").length;
+  const groups = buildHealthGroups(state, issues, {
+    duplicatePlaceGroups: duplicatePlaceGroups.length,
+    strongDuplicatePlaceGroups
+  });
+  const attentions = groups
+    .filter((group) => group.id !== "integrity" && group.status !== "ok")
+    .flatMap((group) => group.items.map((item) => `${group.title}：${item}`));
   return {
     status: issues.length ? "warning" : "ok",
     people: state.people.length,
     places: state.places.length,
     memories: state.memories.length,
+    anniversaryPlans: state.anniversaryPlans.length,
     photoRefs: countMemoryPhotoRefs(state),
+    attentionCount: attentions.length,
     issueCount: issues.length,
-    issues
+    issues,
+    attentions,
+    groups,
+    duplicatePlaceGroups: duplicatePlaceGroups.length,
+    strongDuplicatePlaceGroups
   };
 }
 
-export function buildBackupImportPreview(input: Record<string, unknown>): BackupImportPreview {
+export function buildBackupImportPreview(input: Record<string, unknown>, currentState?: LifeLogState): BackupImportPreview {
   const sourceState = isRecord(input.data) ? input.data : input;
   const people = Array.isArray(sourceState.people) ? sourceState.people : [];
   const places = Array.isArray(sourceState.places) ? sourceState.places : [];
   const memories = Array.isArray(sourceState.memories) ? sourceState.memories : [];
+  const anniversaryPlans = Array.isArray(sourceState.anniversaryPlans) ? sourceState.anniversaryPlans : [];
   const photos = Array.isArray(input.photos) ? input.photos : [];
   const photoReport = inspectBackupPhotoLinks(
     memories.map((item) => (isRecord(item) ? item : {})),
@@ -54,15 +92,23 @@ export function buildBackupImportPreview(input: Record<string, unknown>): Backup
   const stateLike = {
     people: people.map((item) => (isRecord(item) ? item : {})),
     places: places.map((item) => (isRecord(item) ? item : {})),
-    memories: memories.map((item) => (isRecord(item) ? item : {}))
+    memories: memories.map((item) => (isRecord(item) ? item : {})),
+    anniversaryPlans: anniversaryPlans.map((item) => (isRecord(item) ? item : {}))
   };
   const issues = collectRawStateIssues(stateLike);
 
   return {
+    schemaVersion: String(input.schemaVersion || input.version || ""),
     people: people.length,
     places: places.length,
     memories: memories.length,
+    anniversaryPlans: anniversaryPlans.length,
     photos: photos.length,
+    peopleDelta: currentState ? people.length - currentState.people.length : null,
+    placesDelta: currentState ? places.length - currentState.places.length : null,
+    memoriesDelta: currentState ? memories.length - currentState.memories.length : null,
+    anniversaryPlansDelta: currentState ? anniversaryPlans.length - currentState.anniversaryPlans.length : null,
+    photosDelta: currentState ? photos.length - countMemoryPhotoRefs(currentState) : null,
     repairedPhotos: photoReport.repairedPhotos,
     ignoredPhotos: photoReport.ignoredPhotos,
     missingPhotoRefs: photoReport.missingPhotoRefs,
@@ -78,7 +124,8 @@ function collectStateIssues(state: LifeLogState) {
   return collectRawStateIssues({
     people: state.people,
     places: state.places,
-    memories: state.memories
+    memories: state.memories,
+    anniversaryPlans: state.anniversaryPlans
   });
 }
 
@@ -86,11 +133,13 @@ function collectRawStateIssues(state: {
   people: Array<Record<string, unknown> | Person>;
   places: Array<Record<string, unknown> | Place>;
   memories: Array<Record<string, unknown> | MemoryEvent>;
+  anniversaryPlans?: Array<Record<string, unknown> | AnniversaryPlan>;
 }) {
   const issues: string[] = [];
   const personIds = collectIds(state.people, "人物", issues);
   const placeIds = collectIds(state.places, "地点", issues);
-  collectIds(state.memories, "回忆", issues);
+  const memoryIds = collectIds(state.memories, "回忆", issues);
+  if (state.anniversaryPlans) collectIds(state.anniversaryPlans, "纪念日安排", issues);
 
   let missingPeopleRefs = 0;
   let missingPlaceRefs = 0;
@@ -108,11 +157,121 @@ function collectRawStateIssues(state: {
   if (missingPeopleRefs) issues.push(`${missingPeopleRefs} 处回忆关联了不存在的人物`);
   if (missingPlaceRefs) issues.push(`${missingPlaceRefs} 处回忆关联了不存在的地点`);
 
+  if (state.anniversaryPlans) {
+    let missingPlanPeopleRefs = 0;
+    let missingPlanPlaceRefs = 0;
+    let missingPlanMemoryRefs = 0;
+    for (const plan of state.anniversaryPlans) {
+      const personId = typeof plan.personId === "string" ? plan.personId : "";
+      if (personId && !personIds.has(personId)) missingPlanPeopleRefs += 1;
+
+      const planPlaceIds = Array.isArray(plan.placeIds) ? plan.placeIds : [];
+      missingPlanPlaceRefs += planPlaceIds.filter((id) => typeof id === "string" && !placeIds.has(id)).length;
+
+      const memoryId = typeof plan.memoryId === "string" ? plan.memoryId : "";
+      if (memoryId && !memoryIds.has(memoryId)) missingPlanMemoryRefs += 1;
+    }
+    if (missingPlanPeopleRefs) issues.push(`${missingPlanPeopleRefs} 条纪念日安排关联了不存在的人物`);
+    if (missingPlanPlaceRefs) issues.push(`${missingPlanPlaceRefs} 处纪念日安排关联了不存在的地点`);
+    if (missingPlanMemoryRefs) issues.push(`${missingPlanMemoryRefs} 条纪念日安排关联了不存在的回忆`);
+  }
+
   return issues;
 }
 
+function buildHealthGroups(
+  state: LifeLogState,
+  integrityIssues: string[],
+  duplicateStats: { duplicatePlaceGroups: number; strongDuplicatePlaceGroups: number }
+): BackupHealthGroup[] {
+  const peopleItems = [
+    state.people.filter((person) => !person.birthday).length ? `${state.people.filter((person) => !person.birthday).length} 个人物缺少生日` : "",
+    state.people.filter((person) => !person.preferences.length && !person.dislikes.length).length
+      ? `${state.people.filter((person) => !person.preferences.length && !person.dislikes.length).length} 个人物还没有喜好或雷区`
+      : "",
+    countDuplicatePersonNames(state.people) ? `${countDuplicatePersonNames(state.people)} 组人物姓名可能重复` : ""
+  ].filter(Boolean);
+
+  const placeIdsInMemories = new Set(state.memories.flatMap(getMemoryPlaceIds));
+  const placesWithoutVisit = state.places.filter((place) => !placeIdsInMemories.has(place.id)).length;
+  const placesWithoutMap = state.places.filter((place) => !hasPlaceNavigation(place)).length;
+  const placeItems = [
+    duplicateStats.strongDuplicatePlaceGroups ? `${duplicateStats.strongDuplicatePlaceGroups} 组强重复地点可直接合并` : "",
+    duplicateStats.duplicatePlaceGroups > duplicateStats.strongDuplicatePlaceGroups
+      ? `${duplicateStats.duplicatePlaceGroups - duplicateStats.strongDuplicatePlaceGroups} 组疑似重复地点需要确认`
+      : "",
+    placesWithoutMap ? `${placesWithoutMap} 个地点缺少地图或平台入口` : "",
+    placesWithoutVisit ? `${placesWithoutVisit} 个地点还没有到访记录` : ""
+  ].filter(Boolean);
+
+  const contextlessMemories = state.memories.filter((memory) => !memory.personIds.length && !getMemoryPlaceIds(memory).length).length;
+  const emptyMemories = state.memories.filter((memory) => !memory.title.trim() && !memory.content.trim() && !memory.photos.length).length;
+  const plansWithoutChecklist = state.anniversaryPlans.filter((plan) => !plan.checklist.length && !plan.notes && !plan.budget && !plan.placeIds.length).length;
+  const donePlansWithoutMemory = state.anniversaryPlans.filter((plan) => plan.status === "done" && !plan.memoryId).length;
+  const memoryItems = [
+    contextlessMemories ? `${contextlessMemories} 条回忆没有关联人物或地点` : "",
+    emptyMemories ? `${emptyMemories} 条回忆缺少标题、正文和照片` : "",
+    plansWithoutChecklist ? `${plansWithoutChecklist} 条纪念日安排还没有具体内容` : "",
+    donePlansWithoutMemory ? `${donePlansWithoutMemory} 条已完成安排还没有关联回忆` : ""
+  ].filter(Boolean);
+
+  return [
+    {
+      id: "integrity",
+      title: "关联完整性",
+      status: integrityIssues.length ? "warning" : "ok",
+      count: integrityIssues.length,
+      items: integrityIssues.length ? integrityIssues : ["人物、地点、回忆和安排的关键关联正常"]
+    },
+    {
+      id: "people",
+      title: "人物资料",
+      status: peopleItems.length ? "info" : "ok",
+      count: peopleItems.length,
+      items: peopleItems.length ? peopleItems : ["生日、喜好和雷区资料整体完整"]
+    },
+    {
+      id: "places",
+      title: "地点质量",
+      status: placeItems.length ? "info" : "ok",
+      count: placeItems.length,
+      items: placeItems.length ? placeItems : ["地点重复、地图入口和到访记录状态正常"]
+    },
+    {
+      id: "records",
+      title: "回忆与安排",
+      status: memoryItems.length ? "info" : "ok",
+      count: memoryItems.length,
+      items: memoryItems.length ? memoryItems : ["回忆上下文和纪念日安排状态正常"]
+    }
+  ];
+}
+
+function hasPlaceNavigation(place: Place) {
+  return Boolean(
+    place.mapUrl ||
+    place.sourceUrl ||
+    place.platformLinks.length ||
+    (typeof place.latitude === "number" && typeof place.longitude === "number")
+  );
+}
+
+function countDuplicatePersonNames(people: Person[]) {
+  const buckets = new Map<string, number>();
+  people.forEach((person) => {
+    const key = [person.name, person.nickname, person.relationship].map(normalizeText).filter(Boolean).join("|");
+    if (!key) return;
+    buckets.set(key, (buckets.get(key) || 0) + 1);
+  });
+  return Array.from(buckets.values()).filter((count) => count > 1).length;
+}
+
+function normalizeText(value?: string) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, "");
+}
+
 function collectIds(
-  items: Array<Record<string, unknown> | Person | Place | MemoryEvent>,
+  items: Array<Record<string, unknown> | { id?: unknown }>,
   label: string,
   issues: string[]
 ) {

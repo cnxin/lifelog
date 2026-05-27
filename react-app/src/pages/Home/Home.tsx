@@ -5,7 +5,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { EntryType, MemoryEvent, Place } from "../../types";
+import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
@@ -377,7 +377,20 @@ function buildTodayActions({
   onQuickMemory: () => void;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
-  const reminders = previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 7, limit: 4 })
+  const todayPlanAction = findTodayAnniversaryPlanAction(state.anniversaryPlans, state.people);
+  if (todayPlanAction) {
+    actions.push({
+      id: `today-plan-${todayPlanAction.plan.id}`,
+      icon: <Sparkles />,
+      title: todayPlanAction.title,
+      desc: todayPlanAction.desc,
+      meta: todayPlanAction.meta,
+      tone: "warm",
+      onClick: () => onOpenPerson(todayPlanAction.plan.personId, "#anniversaries")
+    });
+  }
+
+  const reminders = previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 0, limit: 4 })
     .filter((reminder) => reminder.type !== "生日" && reminder.type !== "纪念日")
     .slice(0, 2);
 
@@ -429,14 +442,38 @@ function buildTodayActions({
     actions.push({
       id: "record-today",
       icon: <PenLine />,
-      title: "今天先记一件小事",
-      desc: "人物、地点和照片都可以之后再补。",
+      title: "今天没有必须处理的事项",
+      desc: "可以先记一条回忆，或去纪念日区块查看未来 30 天安排。",
       meta: "记录",
       onClick: onQuickMemory
     });
   }
 
   return actions.slice(0, 3);
+}
+
+function findTodayAnniversaryPlanAction(anniversaryPlans: AnniversaryPlan[], people: ReturnType<typeof useLifeLog>["state"]["people"]) {
+  const today = toDateKey(new Date());
+  const plan = anniversaryPlans
+    .filter((item) => item.targetDate === today && item.status !== "done" && item.status !== "skipped")
+    .sort(compareTodayPlans)[0];
+  if (!plan) return null;
+
+  const person = people.find((item) => item.id === plan.personId);
+  const done = plan.checklist.filter((item) => item.done).length;
+  const total = plan.checklist.length;
+  return {
+    plan,
+    title: `${person?.name || "某人"}的${plan.anniversaryTitle}就是今天`,
+    desc: total ? `${plan.title} · 已完成 ${done}/${total} 项` : `${plan.title} · 今天确认安排`,
+    meta: plan.status === "doing" ? "准备中" : "今日"
+  };
+}
+
+function compareTodayPlans(left: AnniversaryPlan, right: AnniversaryPlan) {
+  const leftScore = left.status === "doing" ? 1 : 0;
+  const rightScore = right.status === "doing" ? 1 : 0;
+  return rightScore - leftScore || right.updatedAt.localeCompare(left.updatedAt);
 }
 
 function findPersonToContact(people: Array<{ id: string; name: string; favorite: boolean }>, memories: MemoryEvent[]) {

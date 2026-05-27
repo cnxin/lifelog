@@ -1286,6 +1286,26 @@
   line-height: 1.35;
 }
 
+.plan-reuse-button {
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.plan-reuse-button svg {
+  width: 15px;
+  height: 15px;
+}
+
 .plan-checklist {
   display: grid;
   gap: 8px;

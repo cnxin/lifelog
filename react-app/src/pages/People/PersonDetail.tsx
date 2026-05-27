@@ -67,6 +67,9 @@ export default function PersonDetail() {
   const selectedPlan = selectedAnniversary && selectedOccurrence
     ? findPlanForAnniversary(state.anniversaryPlans, person.id, selectedAnniversary, selectedOccurrence.year)
     : undefined;
+  const selectedPlanHistory = selectedAnniversary && selectedOccurrence
+    ? findPlanHistoryForAnniversary(state.anniversaryPlans, person.id, selectedAnniversary, selectedOccurrence.year)
+    : [];
   const selectedHistoryAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === historyAnniversaryKey);
   const selectedHistoryOccurrence = selectedHistoryAnniversary ? buildAnniversaryOccurrence(selectedHistoryAnniversary.date) : null;
   const selectedHistoryPlans = selectedHistoryAnniversary && selectedHistoryOccurrence
@@ -309,6 +312,7 @@ export default function PersonDetail() {
           targetDate={selectedOccurrence.date}
           daysUntilTarget={selectedOccurrence.days}
           plan={selectedPlan}
+          historicalPlans={selectedPlanHistory}
           places={state.places}
           onClose={() => setPlanningAnniversaryKey(null)}
           onSave={async (plan) => {

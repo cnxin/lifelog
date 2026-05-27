@@ -1,4 +1,4 @@
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Copy, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanStatus, AnniversaryPlanTodo, Person, Place } from "../types";
 import { formatDaysUntilLabel } from "../utils/date";
@@ -11,6 +11,7 @@ interface AnniversaryPlanSheetProps {
   targetDate: string;
   daysUntilTarget: number;
   plan?: AnniversaryPlan;
+  historicalPlans?: AnniversaryPlan[];
   places: Place[];
   onClose: () => void;
   onSave: (plan: AnniversaryPlan) => Promise<void>;
@@ -34,6 +35,7 @@ export default function AnniversaryPlanSheet({
   targetDate,
   daysUntilTarget,
   plan,
+  historicalPlans = [],
   places,
   onClose,
   onSave,
@@ -49,6 +51,13 @@ export default function AnniversaryPlanSheet({
   const [checklist, setChecklist] = useState<AnniversaryPlanTodo[]>(() => plan?.checklist || []);
   const [newTodo, setNewTodo] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const reusablePlan = useMemo(
+    () =>
+      historicalPlans
+        .filter((item) => item.occurrenceYear < occurrenceYear)
+        .sort((left, right) => right.occurrenceYear - left.occurrenceYear)[0],
+    [historicalPlans, occurrenceYear]
+  );
 
   const progress = useMemo(() => {
     if (!checklist.length) return "还没有待办";
@@ -80,6 +89,22 @@ export default function AnniversaryPlanSheet({
 
   function removeTodo(id: string) {
     setChecklist((current) => current.filter((item) => item.id !== id));
+  }
+
+  function reuseHistoricalPlan(source: AnniversaryPlan) {
+    setTitle(`${person.name} · ${anniversary.title}安排`);
+    setStatus("todo");
+    setBudget(source.budget);
+    setNotes(source.notes);
+    setPlaceIds(source.placeIds);
+    setReminderDaysBefore(source.reminderDaysBefore);
+    setChecklist(
+      source.checklist.map((item) => ({
+        id: `todo_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        text: item.text,
+        done: false
+      }))
+    );
   }
 
   async function handleSave() {
@@ -148,6 +173,13 @@ export default function AnniversaryPlanSheet({
             <strong>{progress}</strong>
             <span>{person.name} · {anniversary.title} · {occurrenceYear}</span>
           </div>
+
+          {reusablePlan && (
+            <button className="plan-reuse-button" type="button" onClick={() => reuseHistoricalPlan(reusablePlan)}>
+              <Copy />
+              复用 {reusablePlan.occurrenceYear} 年安排
+            </button>
+          )}
 
           <div className="plan-checklist">
             {checklist.map((item) => (

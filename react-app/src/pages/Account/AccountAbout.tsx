@@ -1,4 +1,4 @@
-import { Copy, Download, ExternalLink, Info, RefreshCw } from "lucide-react";
+import { Bell, Copy, Download, ExternalLink, Info, PackageCheck, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useToast } from "../../context/ToastContext";
@@ -6,6 +6,7 @@ import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { addApkDownloadProgressListener, canInstallApkPackages, openApkDownload, openApkInstallPermissionSettings, openExternalUrl, type ApkDownloadProgress } from "../../utils/externalLinks";
+import { checkNotificationPermission, requestNotificationPermission } from "../../utils/notificationPermissions";
 import {
   checkLatestAppUpdate,
   formatFileSize,
@@ -22,6 +23,8 @@ export default function AccountAbout() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeProgress, setUpgradeProgress] = useState<ApkDownloadProgress | null>(null);
   const [latestUpdate, setLatestUpdate] = useState<AppUpdateInfo | null>(null);
+  const [installPermissionGranted, setInstallPermissionGranted] = useState<boolean | null>(null);
+  const [notificationPermissionGranted, setNotificationPermissionGranted] = useState<boolean | null>(null);
   const pendingUpgradeRef = useRef<AppUpdateInfo | null>(null);
   const currentRelease = getReleaseNote(APP_VERSION);
   const previousReleases = RELEASE_NOTES.filter((note) => note.version !== currentRelease.version).slice(0, 3);
@@ -41,7 +44,21 @@ export default function AccountAbout() {
   }, []);
 
   useEffect(() => {
+    void refreshPermissionStatus();
+  }, []);
+
+  async function refreshPermissionStatus() {
+    const [canInstall, canNotify] = await Promise.all([
+      canInstallApkPackages(),
+      checkNotificationPermission()
+    ]);
+    setInstallPermissionGranted(canInstall);
+    setNotificationPermissionGranted(canNotify);
+  }
+
+  useEffect(() => {
     function handleWindowFocus() {
+      void refreshPermissionStatus();
       if (!pendingUpgradeRef.current) return;
       const pendingUpdate = pendingUpgradeRef.current;
       pendingUpgradeRef.current = null;
@@ -83,6 +100,7 @@ export default function AccountAbout() {
   async function handleBuiltInUpgrade(update: AppUpdateInfo, resumedFromPermission = false) {
     if (isUpgrading) return;
     const canInstall = await canInstallApkPackages();
+    setInstallPermissionGranted(canInstall);
     if (!canInstall) {
       pendingUpgradeRef.current = update;
       notify({
@@ -114,6 +132,20 @@ export default function AccountAbout() {
         tone: "error"
       });
     }
+  }
+
+  async function handleOpenInstallPermission() {
+    await openApkInstallPermissionSettings();
+    void refreshPermissionStatus();
+  }
+
+  async function handleRequestNotificationPermission() {
+    const granted = await requestNotificationPermission();
+    setNotificationPermissionGranted(granted);
+    notify({
+      message: granted ? "通知权限已开启" : "通知权限未开启，可在系统设置中允许通知",
+      tone: granted ? "success" : "info"
+    });
   }
 
   const downloadUrl = getPreferredApkDownloadUrl(latestUpdate);
@@ -257,6 +289,38 @@ export default function AccountAbout() {
           <strong>存储</strong>
           <span>本机离线存储，支持备份导出</span>
         </GlassCard>
+        <GlassCard className="native-permission-card">
+          <div className="settings-capability-overview-head">
+            <strong>安装与提醒权限</strong>
+            <span>真机升级前检查</span>
+          </div>
+          <div className="native-permission-list">
+            <div className="native-permission-item">
+              <PackageCheck />
+              <div>
+                <strong>APK 安装权限</strong>
+                <span>{formatPermissionStatus(installPermissionGranted, "允许安装新版本", "需要允许未知来源安装")}</span>
+              </div>
+              <button className="mini-action" type="button" onClick={() => void handleOpenInstallPermission()}>
+                设置
+              </button>
+            </div>
+            <div className="native-permission-item">
+              <Bell />
+              <div>
+                <strong>通知权限</strong>
+                <span>{formatPermissionStatus(notificationPermissionGranted, "纪念日和联系提醒可用", "提醒可能无法弹出")}</span>
+              </div>
+              <button className="mini-action" type="button" onClick={() => void handleRequestNotificationPermission()}>
+                授权
+              </button>
+            </div>
+          </div>
+          <button className="mini-action add native-permission-refresh" type="button" onClick={() => void refreshPermissionStatus()}>
+            <RefreshCw size={14} />
+            刷新权限状态
+          </button>
+        </GlassCard>
         <button className="glass-card detail-row github-project-row" type="button" onClick={() => void openExternalUrl("https://github.com/cnxin/lifelog")}>
           <strong>GitHub</strong>
           <span>github.com/cnxin/lifelog</span>
@@ -321,4 +385,9 @@ function formatUpgradeProgress(progress: ApkDownloadProgress) {
   if (progress.stage === "failed") return progress.message || "请尝试外部下载";
   const total = progress.totalBytes > 0 ? formatFileSize(progress.totalBytes) : "未知大小";
   return `${progress.percent || 0}% · ${formatFileSize(progress.bytesRead)} / ${total}`;
+}
+
+function formatPermissionStatus(value: boolean | null, grantedText: string, deniedText: string) {
+  if (value === null) return "检查中";
+  return value ? grantedText : deniedText;
 }

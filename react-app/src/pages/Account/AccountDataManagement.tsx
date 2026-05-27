@@ -1,4 +1,4 @@
-import { Database, Download, RotateCcw, ShieldCheck, Upload } from "lucide-react";
+import { Database, Download, RotateCcw, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useConfirm } from "../../context/ConfirmContext";
@@ -8,7 +8,7 @@ import { buildBackupHealthReport, buildBackupImportPreview } from "../../utils/b
 import { isRecord } from "../../utils/lifelogHelpers";
 
 export default function AccountDataManagement() {
-  const { state, exportData, importData, resetDemo } = useLifeLog();
+  const { state, exportData, importData, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -39,7 +39,14 @@ export default function AccountDataManagement() {
       if (!isRecord(parsed)) {
         throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
       }
-      const preview = buildBackupImportPreview(parsed);
+      const preview = buildBackupImportPreview(parsed, state);
+      const countPreview = [
+        `人物 ${preview.people}${formatDelta(preview.peopleDelta)}`,
+        `地点 ${preview.places}${formatDelta(preview.placesDelta)}`,
+        `回忆 ${preview.memories}${formatDelta(preview.memoriesDelta)}`,
+        `安排 ${preview.anniversaryPlans}${formatDelta(preview.anniversaryPlansDelta)}`,
+        `照片 ${preview.photos}${formatDelta(preview.photosDelta)}`
+      ].join(" · ");
       const photoPreview = [
         preview.repairedPhotos ? `${preview.repairedPhotos} 张照片将自动修复归属` : "",
         preview.extraPhotoRefs ? `${preview.extraPhotoRefs} 张照片将补回回忆引用` : "",
@@ -47,9 +54,9 @@ export default function AccountDataManagement() {
         preview.ignoredPhotos ? `${preview.ignoredPhotos} 张照片会被忽略` : ""
       ].filter(Boolean).join("；");
       previewMessage = [
-        `将导入：${preview.people} 个人物 · ${preview.places} 个地点 · ${preview.memories} 条回忆 · ${preview.photos} 张照片。`,
+        `将导入：${countPreview}。`,
         preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
-        preview.appVersion ? `备份版本：${preview.appVersion}。` : "",
+        preview.appVersion ? `备份版本：${preview.appVersion}${preview.schemaVersion ? ` · schema ${preview.schemaVersion}` : ""}。` : "",
         photoPreview ? `照片检查：${photoPreview}。` : "照片检查：未发现明显照片关联问题。",
         preview.issueCount ? `预检发现 ${preview.issueCount} 个关联问题：${preview.issues.slice(0, 2).join("；")}。` : "预检未发现明显关联问题。",
         `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份。`
@@ -120,6 +127,22 @@ export default function AccountDataManagement() {
     }
   }
 
+  async function handleMergeStrongDuplicates() {
+    const count = duplicatePlaceGroups.filter((group) => group.strength === "strong").length;
+    if (!count) return;
+    const accepted = await confirm({
+      title: "合并强重复地点",
+      message: `将自动合并 ${count} 组强重复地点，并同步修正相关回忆关联。合并后可在地点页撤销最近一次合并。`,
+      confirmText: "确认合并"
+    });
+    if (!accepted) return;
+    const merged = await mergeAllDuplicatePlaces();
+    notify({
+      message: merged ? `已合并 ${merged} 条重复地点` : "没有可自动合并的重复地点",
+      tone: merged ? "success" : "info"
+    });
+  }
+
   return (
     <section className="section">
       <div className="section-header">
@@ -145,10 +168,38 @@ export default function AccountDataManagement() {
           </div>
           <p>
             {healthReport.status === "ok"
-              ? "当前数据关联完整，可以直接导出完整备份。"
+              ? healthReport.attentionCount
+                ? `备份可用，另有 ${healthReport.attentionCount} 项资料可继续补全。`
+                : "当前数据关联完整，可以直接导出完整备份。"
               : `${healthReport.issueCount} 个问题：${healthReport.issues.slice(0, 2).join("；")}`}
           </p>
         </GlassCard>
+        <div className="backup-health-grid">
+          {healthReport.groups.map((group) => (
+            <GlassCard className={`backup-health-group ${group.status}`} key={group.id}>
+              <div className="backup-health-group-head">
+                <strong>{group.title}</strong>
+                <span>{group.status === "ok" ? "正常" : `${group.count} 项`}</span>
+              </div>
+              <ul>
+                {group.items.slice(0, 3).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </GlassCard>
+          ))}
+        </div>
+        {healthReport.strongDuplicatePlaceGroups > 0 && (
+          <button className="data-cleanup-card glass-card" type="button" onClick={() => void handleMergeStrongDuplicates()}>
+            <div className="data-action-icon">
+              <Sparkles />
+            </div>
+            <div>
+              <strong>合并 {healthReport.strongDuplicatePlaceGroups} 组强重复地点</strong>
+              <span>自动保留信息更完整的记录，并同步回忆里的地点关联</span>
+            </div>
+          </button>
+        )}
         <div className="data-action-grid">
           <button
             className="data-action-card glass-card"
@@ -216,4 +267,9 @@ function formatBackupDate(value: string) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function formatDelta(value: number | null) {
+  if (value === null || value === 0) return "";
+  return value > 0 ? `（+${value}）` : `（${value}）`;
 }
