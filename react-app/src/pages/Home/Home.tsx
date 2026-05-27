@@ -1,5 +1,5 @@
 import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { MouseEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -19,6 +19,7 @@ export default function Home() {
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
+  const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const upcoming = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .slice(0, 4)
@@ -83,8 +84,18 @@ export default function Home() {
     },
     onQuickMemory: () => {
       openQuickMemory();
-    }
+    },
+    actionPrefs
   });
+
+  function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
+    const next: TodayActionPrefs = {
+      ...actionPrefs,
+      [actionId]: mode === "snooze" ? buildSnoozeUntil() : "dismissed"
+    };
+    setActionPrefs(next);
+    saveTodayActionPrefs(next);
+  }
 
   return (
     <>
@@ -142,14 +153,26 @@ export default function Home() {
         </div>
         <div className="today-action-list">
           {todayActions.map((action) => (
-            <button className={`today-action-card ${action.tone || ""}`} key={action.id} onClick={action.onClick}>
-              <span className="today-action-icon">{action.icon}</span>
-              <span className="today-action-copy">
-                <strong>{action.title}</strong>
-                <small>{action.desc}</small>
-              </span>
-              {action.meta && <em>{action.meta}</em>}
-            </button>
+            <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
+              <button className="today-action-main" type="button" onClick={action.onClick}>
+                <span className="today-action-icon">{action.icon}</span>
+                <span className="today-action-copy">
+                  <strong>{action.title}</strong>
+                  <small>{action.desc}</small>
+                </span>
+                {action.meta && <em>{action.meta}</em>}
+              </button>
+              {action.canDismiss && (
+                <span className="today-action-tools">
+                  <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "snooze"))}>
+                    稍后
+                  </button>
+                  <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "dismiss"))}>
+                    今天忽略
+                  </button>
+                </span>
+              )}
+            </div>
           ))}
         </div>
       </section>
@@ -352,8 +375,11 @@ interface TodayAction {
   desc: string;
   meta?: string;
   tone?: "warm" | "cool";
+  canDismiss?: boolean;
   onClick: () => void;
 }
+
+type TodayActionPrefs = Record<string, number | "dismissed">;
 
 function buildTodayActions({
   state,
@@ -364,7 +390,8 @@ function buildTodayActions({
   onOpenPerson,
   onOpenCalendar,
   onAddMemoryForPerson,
-  onQuickMemory
+  onQuickMemory,
+  actionPrefs
 }: {
   state: ReturnType<typeof useLifeLog>["state"];
   reminderSettings: ReturnType<typeof useLifeLog>["reminderSettings"];
@@ -375,6 +402,7 @@ function buildTodayActions({
   onOpenCalendar: () => void;
   onAddMemoryForPerson: (personId: string) => void;
   onQuickMemory: () => void;
+  actionPrefs: TodayActionPrefs;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
   const todayPlanAction = findTodayAnniversaryPlanAction(state.anniversaryPlans, state.people);
@@ -386,6 +414,7 @@ function buildTodayActions({
       desc: todayPlanAction.desc,
       meta: todayPlanAction.meta,
       tone: "warm",
+      canDismiss: true,
       onClick: () => onOpenPerson(todayPlanAction.plan.personId, "#anniversaries")
     });
   }
@@ -401,6 +430,7 @@ function buildTodayActions({
       title: reminder.title,
       desc: [formatMonthDay(toDateKey(reminder.at)), reminder.body || "未来 7 天内需要留意"].filter(Boolean).join(" · "),
       meta: reminder.type,
+      canDismiss: true,
       onClick: () => {
         if (reminder.sourcePath) {
           navigateToReminderSource(reminder.sourcePath, onOpenPerson, onOpenCalendar);
@@ -420,6 +450,7 @@ function buildTodayActions({
       desc: personToContact.daysSinceContact === null ? "还没有共同回忆，可以从第一次互动开始。" : `距离上次记录已经 ${personToContact.daysSinceContact} 天。`,
       meta: "联系",
       tone: "warm",
+      canDismiss: true,
       onClick: () => onAddMemoryForPerson(personToContact.personId)
     });
   }
@@ -434,12 +465,15 @@ function buildTodayActions({
       desc: ctx.personNames.length || ctx.placeNames.length ? [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ") : todayMemory.content || "有一条旧回忆可以回看。",
       meta: formatMonthDay(todayMemory.date),
       tone: "cool",
+      canDismiss: true,
       onClick: () => onOpenMemory(todayMemory.id)
     });
   }
 
-  if (!actions.length) {
-    actions.push({
+  const visibleActions = actions.filter((action) => !isActionSuppressed(action.id, actionPrefs));
+
+  if (!visibleActions.length) {
+    visibleActions.push({
       id: "record-today",
       icon: <PenLine />,
       title: "今天没有必须处理的事项",
@@ -449,7 +483,45 @@ function buildTodayActions({
     });
   }
 
-  return actions.slice(0, 3);
+  return visibleActions.slice(0, 3);
+}
+
+function handleActionTool(event: MouseEvent<HTMLButtonElement>, handler: () => void) {
+  event.stopPropagation();
+  handler();
+}
+
+function loadTodayActionPrefs(): TodayActionPrefs {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = window.localStorage.getItem(getTodayActionPrefKey());
+    return stored ? JSON.parse(stored) as TodayActionPrefs : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTodayActionPrefs(prefs: TodayActionPrefs) {
+  try {
+    window.localStorage.setItem(getTodayActionPrefKey(), JSON.stringify(prefs));
+  } catch {
+    // 本地偏好失败时不影响首页主流程。
+  }
+}
+
+function isActionSuppressed(actionId: string, prefs: TodayActionPrefs) {
+  const value = prefs[actionId];
+  if (value === "dismissed") return true;
+  if (typeof value === "number") return Date.now() < value;
+  return false;
+}
+
+function buildSnoozeUntil() {
+  return Date.now() + 4 * 60 * 60 * 1000;
+}
+
+function getTodayActionPrefKey() {
+  return `lifelog:today-actions:${toDateKey(new Date())}`;
 }
 
 function findTodayAnniversaryPlanAction(anniversaryPlans: AnniversaryPlan[], people: ReturnType<typeof useLifeLog>["state"]["people"]) {

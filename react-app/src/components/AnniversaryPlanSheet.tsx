@@ -28,6 +28,55 @@ const statusOptions: Array<{ value: AnniversaryPlanStatus; label: string }> = [
 
 const reminderOptions = [14, 7, 3, 1, 0];
 
+interface PlanTemplate {
+  id: string;
+  label: string;
+  title: string;
+  budget: string;
+  notes: string;
+  reminderDaysBefore: number[];
+  todos: string[];
+}
+
+const planTemplates: PlanTemplate[] = [
+  {
+    id: "birthday",
+    label: "生日",
+    title: "生日晚餐和祝福准备",
+    budget: "礼物、餐厅和蛋糕预算待定",
+    notes: "确认时间、餐厅、礼物和是否需要提前预订。",
+    reminderDaysBefore: [14, 7, 1],
+    todos: ["确认当天时间", "挑选礼物", "预订餐厅或蛋糕", "当天记录回忆"]
+  },
+  {
+    id: "gift",
+    label: "送礼",
+    title: "礼物准备",
+    budget: "按喜好和实用性筛选",
+    notes: "结合喜好档案和雷区，记录备选礼物与购买渠道。",
+    reminderDaysBefore: [7, 3, 1],
+    todos: ["查看喜好和雷区", "列出礼物备选", "购买或下单", "准备包装和祝福语"]
+  },
+  {
+    id: "dinner",
+    label: "聚餐",
+    title: "聚餐安排",
+    budget: "餐厅和交通预算待定",
+    notes: "记录餐厅候选、预约时间、同行人员和注意事项。",
+    reminderDaysBefore: [7, 3, 0],
+    todos: ["确定人数和时间", "选择并预订地点", "确认交通和集合方式", "聚餐后记录回忆"]
+  },
+  {
+    id: "trip",
+    label: "出行",
+    title: "纪念日出行计划",
+    budget: "交通、住宿和餐饮预算待定",
+    notes: "记录路线、预约、天气和需要携带的物品。",
+    reminderDaysBefore: [14, 7, 3, 1],
+    todos: ["确定目的地和日期", "预订交通或住宿", "准备行程清单", "整理当天照片和回忆"]
+  }
+];
+
 export default function AnniversaryPlanSheet({
   person,
   anniversary,
@@ -107,6 +156,21 @@ export default function AnniversaryPlanSheet({
     );
   }
 
+  function applyTemplate(template: PlanTemplate) {
+    setTitle(`${person.name} · ${template.title}`);
+    setStatus("todo");
+    setBudget(template.budget);
+    setNotes(template.notes);
+    setReminderDaysBefore(template.reminderDaysBefore);
+    setChecklist(
+      template.todos.map((text) => ({
+        id: `todo_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        text,
+        done: false
+      }))
+    );
+  }
+
   async function handleSave() {
     setIsSaving(true);
     try {
@@ -180,6 +244,17 @@ export default function AnniversaryPlanSheet({
               复用 {reusablePlan.occurrenceYear} 年安排
             </button>
           )}
+
+          <div>
+            <span className="field-title">安排模板</span>
+            <div className="plan-template-row">
+              {planTemplates.map((template) => (
+                <button type="button" key={template.id} onClick={() => applyTemplate(template)}>
+                  {template.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="plan-checklist">
             {checklist.map((item) => (

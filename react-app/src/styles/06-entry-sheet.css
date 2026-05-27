@@ -1306,6 +1306,23 @@
   height: 15px;
 }
 
+.plan-template-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plan-template-row button {
+  min-height: 34px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .plan-checklist {
   display: grid;
   gap: 8px;

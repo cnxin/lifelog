@@ -1,21 +1,25 @@
-import { Database, Download, RotateCcw, ShieldCheck, Sparkles, Upload } from "lucide-react";
+import { ChevronDown, Database, Download, ExternalLink, RotateCcw, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
-import { buildBackupHealthReport, buildBackupImportPreview } from "../../utils/backupHealth";
+import { buildBackupHealthDetailGroups, buildBackupHealthReport, buildBackupImportPreview } from "../../utils/backupHealth";
 import { isRecord } from "../../utils/lifelogHelpers";
 
 export default function AccountDataManagement() {
   const { state, exportData, importData, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
+  const navigate = useNavigate();
   const confirm = useConfirm();
   const notify = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
   const [lastExport, setLastExport] = useState<Awaited<ReturnType<typeof exportData>> | null>(null);
+  const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
+  const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
 
   const dataSummary = useMemo(
     () => [
@@ -176,19 +180,68 @@ export default function AccountDataManagement() {
         </GlassCard>
         <div className="backup-health-grid">
           {healthReport.groups.map((group) => (
-            <GlassCard className={`backup-health-group ${group.status}`} key={group.id}>
+            <button
+              className={`backup-health-group glass-card ${group.status} ${openHealthGroupId === group.id ? "open" : ""}`}
+              type="button"
+              key={group.id}
+              onClick={() => setOpenHealthGroupId((current) => (current === group.id ? null : group.id))}
+            >
               <div className="backup-health-group-head">
                 <strong>{group.title}</strong>
-                <span>{group.status === "ok" ? "正常" : `${group.count} 项`}</span>
+                <span>
+                  {group.status === "ok" ? "正常" : `${group.count} 项`}
+                  <ChevronDown size={13} />
+                </span>
               </div>
               <ul>
                 {group.items.slice(0, 3).map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </GlassCard>
+            </button>
           ))}
         </div>
+        {openHealthGroupId && (
+          <GlassCard className="backup-health-detail-card">
+            {healthDetails
+              .filter((group) => group.id === openHealthGroupId)
+              .map((group) => (
+                <div className="backup-health-detail-content" key={group.id}>
+                  <div className="backup-health-detail-head">
+                    <strong>{group.title}</strong>
+                    <span>{group.items.length ? `${group.items.length} 项可处理` : "暂无问题"}</span>
+                  </div>
+                  {group.items.length ? (
+                    <div className="backup-health-detail-list">
+                      {group.items.slice(0, 8).map((item) => (
+                        <div className={`backup-health-detail-item ${item.tone || ""}`} key={item.id}>
+                          <div>
+                            <strong>{item.title}</strong>
+                            <span>{item.desc}</span>
+                          </div>
+                          {item.path && (
+                            <button
+                              type="button"
+                              className="mini-action"
+                              onClick={() => {
+                                if (item.path) navigate(item.path);
+                              }}
+                            >
+                              <ExternalLink size={13} />
+                              去处理
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {group.items.length > 8 && <p>还有 {group.items.length - 8} 项，建议按列表逐步处理。</p>}
+                    </div>
+                  ) : (
+                    <p>{group.emptyText}</p>
+                  )}
+                </div>
+              ))}
+          </GlassCard>
+        )}
         {healthReport.strongDuplicatePlaceGroups > 0 && (
           <button className="data-cleanup-card glass-card" type="button" onClick={() => void handleMergeStrongDuplicates()}>
             <div className="data-action-icon">

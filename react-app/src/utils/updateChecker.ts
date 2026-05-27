@@ -18,7 +18,15 @@ export interface AppUpdateInfo {
   publishedAt: string;
   checkedAt: string;
   source: string;
+  diagnostics: UpdateSourceDiagnostic[];
   hasUpdate: boolean;
+}
+
+export interface UpdateSourceDiagnostic {
+  source: string;
+  status: "ok" | "empty" | "failed" | "invalid";
+  message: string;
+  version?: string;
 }
 
 interface GitHubReleaseAsset {
@@ -48,21 +56,26 @@ interface GitHubReleasePayload {
 }
 
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
-  const candidates = await Promise.allSettled([
-    fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL),
-    fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL),
-    fetchUpdateManifest(UPDATE_MANIFEST_URL),
-    fetchLatestRelease()
-  ]);
+  const sources = [
+    { name: "Gitee 国内镜像清单", fetcher: () => fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL) },
+    { name: "GitHub raw 清单", fetcher: () => fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL) },
+    { name: "CDN 清单", fetcher: () => fetchUpdateManifest(UPDATE_MANIFEST_URL) },
+    { name: "GitHub Release", fetcher: fetchLatestRelease }
+  ];
+  const candidates = await Promise.allSettled(sources.map((source) => source.fetcher()));
+  const diagnostics = buildUpdateDiagnostics(candidates, sources.map((source) => source.name));
   const updates = candidates
     .flatMap((candidate) => (candidate.status === "fulfilled" && candidate.value ? [candidate.value] : []))
     .flatMap((payload) => parseUpdateCandidate(payload, APP_VERSION));
 
   if (updates.length > 0) {
-    return chooseBestAppUpdate(updates, APP_VERSION);
+    return {
+      ...chooseBestAppUpdate(updates, APP_VERSION),
+      diagnostics
+    };
   }
 
-  throw new Error("没有读取到可用的更新信息");
+  throw new Error(`没有读取到可用的更新信息：${formatUpdateDiagnostics(diagnostics)}`);
 }
 
 function parseUpdateCandidate(payload: UpdateManifestPayload | GitHubReleasePayload, currentVersion = APP_VERSION) {
@@ -93,6 +106,7 @@ export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = A
     apkSha256: "",
     body: "",
     source: best.source,
+    diagnostics: best.diagnostics,
     hasUpdate: false
   };
 }
@@ -157,6 +171,7 @@ export function parseUpdateManifestPayload(payload: UpdateManifestPayload & { so
     publishedAt: payload.publishedAt || "",
     checkedAt: new Date().toISOString(),
     source: payload.source || "更新清单",
+    diagnostics: [],
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0
   };
 }
@@ -181,8 +196,62 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
     publishedAt: payload.published_at || "",
     checkedAt: new Date().toISOString(),
     source: "GitHub Release",
+    diagnostics: [],
     hasUpdate: compareVersions(latestVersion, currentVersion) > 0
   };
+}
+
+function buildUpdateDiagnostics(
+  candidates: PromiseSettledResult<UpdateManifestPayload | GitHubReleasePayload | null>[],
+  names: string[]
+): UpdateSourceDiagnostic[] {
+  return candidates.map((candidate, index) => {
+    const source = names[index] || "更新来源";
+    if (candidate.status === "rejected") {
+      return {
+        source,
+        status: "failed",
+        message: candidate.reason instanceof Error ? candidate.reason.message : "请求失败"
+      };
+    }
+
+    if (!candidate.value) {
+      return {
+        source,
+        status: "empty",
+        message: "未返回可用清单"
+      };
+    }
+
+    try {
+      const update = isGitHubReleasePayload(candidate.value)
+        ? parseGitHubReleasePayload(candidate.value)
+        : parseUpdateManifestPayload(candidate.value);
+      return {
+        source,
+        status: "ok",
+        message: update.apkName || update.releaseUrl || "已读取",
+        version: update.latestVersion
+      };
+    } catch (error) {
+      return {
+        source,
+        status: "invalid",
+        message: error instanceof Error ? error.message : "解析失败"
+      };
+    }
+  });
+}
+
+function formatUpdateDiagnostics(diagnostics: UpdateSourceDiagnostic[]) {
+  return diagnostics.map((item) => `${item.source} ${formatDiagnosticStatus(item.status)}${item.message ? `（${item.message}）` : ""}`).join("；");
+}
+
+function formatDiagnosticStatus(status: UpdateSourceDiagnostic["status"]) {
+  if (status === "ok") return "正常";
+  if (status === "empty") return "无数据";
+  if (status === "invalid") return "解析失败";
+  return "失败";
 }
 
 export function getPreferredApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {

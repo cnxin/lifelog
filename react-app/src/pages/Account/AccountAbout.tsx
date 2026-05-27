@@ -14,7 +14,8 @@ import {
   getExternalApkDownloadUrl,
   getPreferredApkDownloadSource,
   getPreferredApkDownloadUrl,
-  type AppUpdateInfo
+  type AppUpdateInfo,
+  type UpdateSourceDiagnostic
 } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
@@ -23,6 +24,7 @@ export default function AccountAbout() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeProgress, setUpgradeProgress] = useState<ApkDownloadProgress | null>(null);
   const [latestUpdate, setLatestUpdate] = useState<AppUpdateInfo | null>(null);
+  const [updateDiagnostics, setUpdateDiagnostics] = useState<UpdateSourceDiagnostic[]>([]);
   const [installPermissionGranted, setInstallPermissionGranted] = useState<boolean | null>(null);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState<boolean | null>(null);
   const pendingUpgradeRef = useRef<AppUpdateInfo | null>(null);
@@ -75,11 +77,14 @@ export default function AccountAbout() {
     try {
       const update = await checkLatestAppUpdate();
       setLatestUpdate(update);
+      setUpdateDiagnostics(update.diagnostics || []);
       notify({
         message: update.hasUpdate ? `发现新版本 ${update.latestVersion}` : "当前已经是最新版本",
         tone: update.hasUpdate ? "success" : "info"
       });
     } catch (error) {
+      setLatestUpdate(null);
+      setUpdateDiagnostics(parseDiagnosticsFromError(error));
       notify({
         message: error instanceof Error ? `检查更新失败：${error.message}` : "检查更新失败，请稍后重试",
         tone: "error"
@@ -224,6 +229,16 @@ export default function AccountAbout() {
                 .map((line) => (
                   <span key={line}>{line.replace(/^[-*]\s*/, "")}</span>
                 ))}
+            </div>
+          )}
+          {updateDiagnostics.length > 0 && (
+            <div className="update-source-diagnostics">
+              {updateDiagnostics.map((item) => (
+                <span className={item.status} key={item.source}>
+                  <strong>{item.source}</strong>
+                  {formatDiagnosticText(item)}
+                </span>
+              ))}
             </div>
           )}
           {upgradeProgress && (
@@ -390,4 +405,34 @@ function formatUpgradeProgress(progress: ApkDownloadProgress) {
 function formatPermissionStatus(value: boolean | null, grantedText: string, deniedText: string) {
   if (value === null) return "检查中";
   return value ? grantedText : deniedText;
+}
+
+function formatDiagnosticText(item: UpdateSourceDiagnostic) {
+  const version = item.version ? `${item.version} · ` : "";
+  if (item.status === "ok") return `${version}${item.message}`;
+  if (item.status === "empty") return "无可用数据";
+  if (item.status === "invalid") return `解析失败：${item.message}`;
+  return `失败：${item.message}`;
+}
+
+function parseDiagnosticsFromError(error: unknown): UpdateSourceDiagnostic[] {
+  const message = error instanceof Error ? error.message : "";
+  const [, detail = ""] = message.split("：");
+  if (!detail) return [];
+  return detail.split("；").map((chunk) => {
+    const source = chunk.replace(/\s+(正常|无数据|解析失败|失败).*$/, "").trim();
+    const status = chunk.includes("正常")
+      ? "ok"
+      : chunk.includes("无数据")
+        ? "empty"
+        : chunk.includes("解析失败")
+          ? "invalid"
+          : "failed";
+    const detailMatch = chunk.match(/（(.+)）/);
+    return {
+      source: source || "更新来源",
+      status,
+      message: detailMatch?.[1] || ""
+    };
+  });
 }

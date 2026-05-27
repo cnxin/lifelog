@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.85",
+    date: "2026-05-28",
+    title: "体检详情、今日行动处理和更新诊断",
+    highlights: [
+      "资料体检分组支持展开具体问题，缺失关联、资料补全和记录问题可直接跳转处理。",
+      "首页今日行动新增稍后和今天忽略，临时不处理的提醒不会反复占用首页。",
+      "纪念日安排新增生日、送礼、聚餐和出行模板，可一键填入预算、提醒、备注和待办。",
+      "检查更新会展示 Gitee、GitHub raw、CDN 和 GitHub Release 的来源诊断，便于定位网络或缓存问题。"
+    ]
+  },
+  {
     version: "0.1.0-test.84",
     date: "2026-05-27",
     title: "数据健康、纪念日复用和权限状态",

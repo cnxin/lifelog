@@ -1,5 +1,6 @@
-import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place } from "../types";
+import type { AnniversaryPlan, ID, LifeLogState, MemoryEvent, Person, Place } from "../types";
 import { findPlaceDuplicateGroups } from "./placeDedup";
+import { buildPlaceDisplayName } from "./placeMeta";
 import { isRecord } from "./lifelogHelpers";
 import { getMemoryPlaceIds } from "./memoryPlaces";
 
@@ -25,6 +26,22 @@ export interface BackupHealthReport {
   groups: BackupHealthGroup[];
   duplicatePlaceGroups: number;
   strongDuplicatePlaceGroups: number;
+}
+
+export interface BackupHealthDetailItem {
+  id: string;
+  title: string;
+  desc: string;
+  path?: string;
+  tone?: "warning" | "info";
+}
+
+export interface BackupHealthDetailGroup {
+  id: string;
+  title: string;
+  status: BackupHealthGroup["status"];
+  items: BackupHealthDetailItem[];
+  emptyText: string;
 }
 
 export interface BackupImportPreview {
@@ -75,6 +92,48 @@ export function buildBackupHealthReport(state: LifeLogState): BackupHealthReport
     duplicatePlaceGroups: duplicatePlaceGroups.length,
     strongDuplicatePlaceGroups
   };
+}
+
+export function buildBackupHealthDetailGroups(state: LifeLogState): BackupHealthDetailGroup[] {
+  const integrityIssues = collectStateIssues(state);
+  const duplicateGroups = findPlaceDuplicateGroups(state.places);
+  const placeIdsInMemories = new Set(state.memories.flatMap(getMemoryPlaceIds));
+
+  return [
+    {
+      id: "integrity",
+      title: "关联完整性",
+      status: integrityIssues.length ? "warning" : "ok",
+      emptyText: "人物、地点、回忆和安排的关键关联正常。",
+      items: integrityIssues.map((issue, index) => ({
+        id: `integrity-${index}`,
+        title: issue,
+        desc: "建议先导出备份，再根据提示检查异常数据。",
+        tone: "warning"
+      }))
+    },
+    {
+      id: "people",
+      title: "人物资料",
+      status: buildPeopleHealthDetailItems(state.people).length ? "info" : "ok",
+      emptyText: "生日、喜好和雷区资料整体完整。",
+      items: buildPeopleHealthDetailItems(state.people)
+    },
+    {
+      id: "places",
+      title: "地点质量",
+      status: buildPlaceHealthDetailItems(state.places, duplicateGroups, placeIdsInMemories).length ? "info" : "ok",
+      emptyText: "地点重复、地图入口和到访记录状态正常。",
+      items: buildPlaceHealthDetailItems(state.places, duplicateGroups, placeIdsInMemories)
+    },
+    {
+      id: "records",
+      title: "回忆与安排",
+      status: buildRecordHealthDetailItems(state).length ? "info" : "ok",
+      emptyText: "回忆上下文和纪念日安排状态正常。",
+      items: buildRecordHealthDetailItems(state)
+    }
+  ];
 }
 
 export function buildBackupImportPreview(input: Record<string, unknown>, currentState?: LifeLogState): BackupImportPreview {
@@ -247,6 +306,137 @@ function buildHealthGroups(
   ];
 }
 
+function buildPeopleHealthDetailItems(people: Person[]): BackupHealthDetailItem[] {
+  const items: BackupHealthDetailItem[] = [];
+
+  people
+    .filter((person) => !person.birthday)
+    .forEach((person) => {
+      items.push({
+        id: `birthday-${person.id}`,
+        title: `${person.name} 缺少生日`,
+        desc: "补充后会出现在首页、日历和提醒中。",
+        path: `/people/${person.id}`
+      });
+    });
+
+  people
+    .filter((person) => !person.preferences.length && !person.dislikes.length)
+    .forEach((person) => {
+      items.push({
+        id: `prefs-${person.id}`,
+        title: `${person.name} 还没有喜好或雷区`,
+        desc: "补充偏好、过敏、禁忌和送礼线索后，后续安排更好用。",
+        path: `/people/${person.id}`
+      });
+    });
+
+  buildDuplicatePersonNameGroups(people).forEach((group) => {
+    items.push({
+      id: `duplicate-person-${group.key}`,
+      title: `${group.people.length} 个人物资料可能重复`,
+      desc: group.people.map((person) => person.name).join("、"),
+      path: "/people"
+    });
+  });
+
+  return items;
+}
+
+function buildPlaceHealthDetailItems(
+  places: Place[],
+  duplicateGroups: ReturnType<typeof findPlaceDuplicateGroups>,
+  placeIdsInMemories: Set<ID>
+): BackupHealthDetailItem[] {
+  const items: BackupHealthDetailItem[] = [];
+
+  duplicateGroups.forEach((group) => {
+    items.push({
+      id: `duplicate-place-${group.signature}`,
+      title: `${group.strength === "strong" ? "强重复" : "疑似重复"}地点：${group.label}`,
+      desc: `${group.placeIds.length} 条记录 · ${group.reason}`,
+      path: "/places",
+      tone: group.strength === "strong" ? "warning" : "info"
+    });
+  });
+
+  places
+    .filter((place) => !hasPlaceNavigation(place))
+    .forEach((place) => {
+      items.push({
+        id: `place-map-${place.id}`,
+        title: `${buildPlaceDisplayName(place)} 缺少地图或平台入口`,
+        desc: "补充高德、平台链接或坐标后，可以从详情页直接打开外部 App。",
+        path: `/places/${place.id}`
+      });
+    });
+
+  places
+    .filter((place) => !placeIdsInMemories.has(place.id))
+    .forEach((place) => {
+      items.push({
+        id: `place-visit-${place.id}`,
+        title: `${buildPlaceDisplayName(place)} 还没有到访记录`,
+        desc: "记录一次相关回忆后，地点统计和常去地点会更准确。",
+        path: `/places/${place.id}`
+      });
+    });
+
+  return items;
+}
+
+function buildRecordHealthDetailItems(state: LifeLogState): BackupHealthDetailItem[] {
+  const items: BackupHealthDetailItem[] = [];
+  const peopleById = new Map(state.people.map((person) => [person.id, person.name]));
+
+  state.memories
+    .filter((memory) => !memory.personIds.length && !getMemoryPlaceIds(memory).length)
+    .forEach((memory) => {
+      items.push({
+        id: `memory-context-${memory.id}`,
+        title: `${memory.title || memory.date} 没有关联人物或地点`,
+        desc: "补充上下文后，人物详情、地点详情和搜索结果会更完整。",
+        path: `/memories/${memory.id}`
+      });
+    });
+
+  state.memories
+    .filter((memory) => !memory.title.trim() && !memory.content.trim() && !memory.photos.length)
+    .forEach((memory) => {
+      items.push({
+        id: `memory-empty-${memory.id}`,
+        title: `${memory.date} 有一条空回忆`,
+        desc: "建议补充标题、正文或照片，或者确认是否需要删除。",
+        path: `/memories/${memory.id}`,
+        tone: "warning"
+      });
+    });
+
+  state.anniversaryPlans
+    .filter((plan) => !plan.checklist.length && !plan.notes && !plan.budget && !plan.placeIds.length)
+    .forEach((plan) => {
+      items.push({
+        id: `plan-empty-${plan.id}`,
+        title: `${peopleById.get(plan.personId) || "某人"}的${plan.anniversaryTitle}安排还没有内容`,
+        desc: `${plan.occurrenceYear} · 可补充待办、预算、地点或备注。`,
+        path: `/people/${plan.personId}#anniversaries`
+      });
+    });
+
+  state.anniversaryPlans
+    .filter((plan) => plan.status === "done" && !plan.memoryId)
+    .forEach((plan) => {
+      items.push({
+        id: `plan-memory-${plan.id}`,
+        title: `${peopleById.get(plan.personId) || "某人"}的${plan.anniversaryTitle}已完成但未关联回忆`,
+        desc: "关联当天回忆后，往年安排回看会更完整。",
+        path: `/people/${plan.personId}#anniversaries`
+      });
+    });
+
+  return items;
+}
+
 function hasPlaceNavigation(place: Place) {
   return Boolean(
     place.mapUrl ||
@@ -264,6 +454,18 @@ function countDuplicatePersonNames(people: Person[]) {
     buckets.set(key, (buckets.get(key) || 0) + 1);
   });
   return Array.from(buckets.values()).filter((count) => count > 1).length;
+}
+
+function buildDuplicatePersonNameGroups(people: Person[]) {
+  const buckets = new Map<string, Person[]>();
+  people.forEach((person) => {
+    const key = [person.name, person.nickname, person.relationship].map(normalizeText).filter(Boolean).join("|");
+    if (!key) return;
+    buckets.set(key, [...(buckets.get(key) || []), person]);
+  });
+  return Array.from(buckets.entries())
+    .filter(([, group]) => group.length > 1)
+    .map(([key, group]) => ({ key, people: group }));
 }
 
 function normalizeText(value?: string) {
