@@ -4,6 +4,7 @@ import { buildAmapWebMarkerUrl, inferPlatformFromLink } from "./placeLinks";
 
 interface NativeExternalBrowserPlugin {
   open(options: { url: string; packageName?: string }): Promise<void>;
+  installApk(options: { url: string; fileName?: string; fallbackUrl?: string }): Promise<void>;
 }
 
 interface NativeLaunchTarget {
@@ -37,7 +38,27 @@ export async function openApkDownloadUrl(rawUrl: string) {
   if (!url) return;
 
   if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
-    await openNativeViewUrl(url);
+    await openNativeApkInstaller(url);
+    return;
+  }
+
+  await openExternalUrl(url);
+}
+
+export async function openApkDownload(update: { apkUrl?: string; mirrorApkUrl?: string; releaseUrl?: string; apkName?: string } | null | undefined) {
+  if (!update) return;
+  const primaryUrl = update.mirrorApkUrl || update.apkUrl || update.releaseUrl || "";
+  const fallbackUrl = primaryUrl === update.apkUrl ? update.releaseUrl || "" : update.apkUrl || update.releaseUrl || "";
+  await openApkDownloadUrlWithFallback(primaryUrl, update.apkName, fallbackUrl);
+}
+
+export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = "", rawFallbackUrl = "") {
+  const url = rawUrl.trim();
+  const fallbackUrl = rawFallbackUrl.trim();
+  if (!url) return;
+
+  if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
+    await openNativeApkInstaller(url, fileName, fallbackUrl);
     return;
   }
 
@@ -107,6 +128,15 @@ async function openNativeViewUrl(url: string, packageName = "", fallbackUrl = ""
   console.warn("原生外部链接打开失败，回退到系统链接:", lastError);
   const fallback = fallbackUrl || url;
   window.location.href = /^https?:\/\//i.test(fallback) ? buildAndroidViewIntentUrl(fallback) : fallback;
+}
+
+async function openNativeApkInstaller(url: string, fileName = "", fallbackUrl = "") {
+  try {
+    await NativeExternalBrowser.installApk({ url, fileName, fallbackUrl });
+  } catch (error) {
+    console.warn("原生 APK 下载打开失败，回退到外部链接:", error);
+    await openNativeViewUrl(fallbackUrl || url);
+  }
 }
 
 function buildNativeOpenAttempts(url: string, packageName = "", fallbackUrl = "") {

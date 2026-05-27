@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.81",
+    date: "2026-05-27",
+    title: "Gitee APK 镜像安装修复",
+    highlights: [
+      "恢复 Gitee 国内镜像作为 APK 主下载源，GitHub Release 保留为兜底入口。",
+      "Android 端改为应用内下载 APK 后用系统安装器打开，避免 Gitee raw 的 text/plain 响应被保存成 zip。",
+      "安装前会校验下载文件不为空且具备 APK 压缩包文件头，异常时自动回退到 GitHub Release。",
+      "发布脚本重新把镜像 APK 地址写回 Gitee raw，保留国内下载链路。"
+    ]
+  },
+  {
     version: "0.1.0-test.80",
     date: "2026-05-27",
     title: "当前更新显示和 APK 下载格式修复",

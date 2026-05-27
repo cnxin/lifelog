@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
-import { openApkDownloadUrl, openExternalUrl } from "../../utils/externalLinks";
+import { openApkDownload, openExternalUrl } from "../../utils/externalLinks";
 import { checkLatestAppUpdate, formatFileSize, getPreferredApkDownloadSource, getPreferredApkDownloadUrl, type AppUpdateInfo } from "../../utils/updateChecker";
 
 export default function AccountAbout() {
@@ -117,7 +117,7 @@ export default function AccountAbout() {
           )}
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
-              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownloadUrl(downloadUrl)}>
+              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownload(latestUpdate)}>
                 <Download /> 下载 APK
               </button>
               <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(downloadUrl)}>
@@ -127,7 +127,7 @@ export default function AccountAbout() {
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
-              <p className="update-download-hint">优先使用国内镜像 APK；如果打不开，会保留 GitHub Release 作为兜底下载入口。</p>
+              <p className="update-download-hint">优先使用 Gitee 国内镜像；Android 会按 APK 文件安装，GitHub Release 保留为兜底下载入口。</p>
             </div>
           )}
         </GlassCard>

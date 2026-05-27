@@ -17,21 +17,21 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.80`
+当前版本：`0.1.0-test.81`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.80
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.80/lifelog-v0.1.0-test.80.apk
-- 仓库镜像：https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.80.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.81
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.81/lifelog-v0.1.0-test.81.apk
+- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.81.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.80.apk`
-- 大小：`3624056` bytes
-- SHA256：`853200aa1d168240f49fa47f3e7f6fd0a20f1d61b5197445d5b35e6c506d780b`
+- 文件名：`lifelog-v0.1.0-test.81.apk`
+- 大小：`3625664` bytes
+- SHA256：`bc1083c0f0051ff628fcba42f01c15b2359df00d48575864c3fa5d4c5da3ff25`
 
-App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装下载优先使用 GitHub Release 附件，避免部分镜像把安装包保存成 zip。
+App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装优先使用 Gitee 国内镜像，Android 端会下载到本地 `.apk` 后用系统安装器打开，避免 Gitee raw 响应头导致保存成 zip。
 
 ### 本地开发
 
@@ -78,10 +78,10 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 修复当前版本为 0.79 时，当前更新仍显示 0.78 的打包顺序问题。
-- Gitee 保留为更新清单来源，不再作为 APK 安装包优先下载源。
-- APK 下载改回优先使用 GitHub Release 附件，避免 Android 把 Gitee raw 文件保存成 zip。
-- 发布脚本默认把镜像 APK 地址写回 jsDelivr 文件镜像，安装入口继续以 GitHub Release 为准。
+- 恢复 Gitee 国内镜像作为 APK 主下载源，GitHub Release 保留为兜底入口。
+- Android 端改为应用内下载 APK 后用系统安装器打开，避免 Gitee raw 的 text/plain 响应被保存成 zip。
+- 安装前会校验下载文件不为空且具备 APK 压缩包文件头，异常时自动回退到 GitHub Release。
+- 发布脚本重新把镜像 APK 地址写回 Gitee raw，保留国内下载链路。
 
 ## 备份排查
 

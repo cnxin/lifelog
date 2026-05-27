@@ -1,5 +1,24 @@
 # 变更日志
 
+## v0.1.0-test.81 (2026-05-27)
+
+### Gitee 下载
+
+- 恢复 Gitee 国内镜像作为 APK 主下载源，GitHub Release 保留为兜底入口。
+- Android 端改为应用内下载 APK 后用系统安装器打开，避免 Gitee raw 的 `text/plain` 响应被保存成 zip。
+- 安装前会校验下载文件不为空且具备 APK 压缩包文件头，异常时自动回退到 GitHub Release。
+
+### 发布流程
+
+- 发布脚本重新把镜像 APK 地址写回 Gitee raw，保留国内下载链路。
+- 更新检查的下载源展示重新显示 Gitee 国内镜像优先。
+
+### 验证
+
+- 通过 `npm.cmd run test:update-checker`、`npm.cmd run test:external-links`、`npm.cmd run build` 和 Android `:app:compileDebugJavaWithJavac`。
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.81.apk`。
+- Android `versionCode` 更新为 `81`，`versionName` 更新为 `0.1.0-test.81`。
+
 ## v0.1.0-test.80 (2026-05-27)
 
 ### 更新显示
