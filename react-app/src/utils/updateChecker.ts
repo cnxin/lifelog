@@ -181,15 +181,20 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
 }
 
 export function getPreferredApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
-  return update?.mirrorApkUrl || update?.apkUrl || update?.releaseUrl || "";
+  if (!update) return "";
+  return isInstallableApkUrl(update.apkUrl) ? update.apkUrl : update.mirrorApkUrl || update.releaseUrl || "";
 }
 
 export function getPreferredApkDownloadSource(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
   if (!update) return "";
+  if (isInstallableApkUrl(update.apkUrl)) return formatDownloadSource(update.apkUrl);
   if (update.mirrorApkUrl) return formatDownloadSource(update.mirrorApkUrl);
-  if (update.apkUrl) return formatDownloadSource(update.apkUrl);
   if (update.releaseUrl) return "Release 页面";
   return "";
+}
+
+function isInstallableApkUrl(url: string) {
+  return Boolean(url && !url.includes("gitee.com"));
 }
 
 function formatDownloadSource(url: string) {

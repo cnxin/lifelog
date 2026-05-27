@@ -17,21 +17,21 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.79`
+当前版本：`0.1.0-test.80`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.79
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.79/lifelog-v0.1.0-test.79.apk
-- 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.79.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.80
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.80/lifelog-v0.1.0-test.80.apk
+- 仓库镜像：https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/lifelog-v0.1.0-test.80.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.79.apk`
-- 大小：`3623664` bytes
-- SHA256：`c17aeae3607a423dd5cc30769c6cedb21723b0be8818998c97d060d271535df1`
+- 文件名：`lifelog-v0.1.0-test.80.apk`
+- 大小：`3624056` bytes
+- SHA256：`853200aa1d168240f49fa47f3e7f6fd0a20f1d61b5197445d5b35e6c506d780b`
 
-如果 GitHub 下载慢，可优先使用 Gitee 国内镜像；App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判。
+App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装下载优先使用 GitHub Release 附件，避免部分镜像把安装包保存成 zip。
 
 ### 本地开发
 
@@ -78,10 +78,10 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 导入预检新增照片归属修复、缺失引用、孤立照片和补回关联提示。
-- 更新检查页新增下载源展示，可区分 Gitee 国内镜像、GitHub Release 和 CDN。
-- 更新检查优先读取 Gitee 镜像清单，同版本时优先使用包含国内镜像的清单。
-- 新增 `release:prepare-files` 脚本，减少 APK 复制和 update-manifest 字段回填漏步骤。
+- 修复当前版本为 0.79 时，当前更新仍显示 0.78 的打包顺序问题。
+- Gitee 保留为更新清单来源，不再作为 APK 安装包优先下载源。
+- APK 下载改回优先使用 GitHub Release 附件，避免 Android 把 Gitee raw 文件保存成 zip。
+- 发布脚本默认把镜像 APK 地址写回 jsDelivr 文件镜像，安装入口继续以 GitHub Release 为准。
 
 ## 备份排查
 

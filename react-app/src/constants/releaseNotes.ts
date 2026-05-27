@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.80",
+    date: "2026-05-27",
+    title: "当前更新显示和 APK 下载格式修复",
+    highlights: [
+      "修复当前版本为 0.79 时，当前更新仍显示 0.78 的打包顺序问题。",
+      "Gitee 保留为更新清单来源，不再作为 APK 安装包优先下载源。",
+      "APK 下载改回优先使用 GitHub Release 附件，避免 Android 把 Gitee raw 文件保存成 zip。",
+      "发布脚本默认把镜像 APK 地址写回 jsDelivr 文件镜像，安装入口继续以 GitHub Release 为准。"
+    ]
+  },
+  {
     version: "0.1.0-test.79",
     date: "2026-05-27",
     title: "备份预检、更新来源和发布流程优化",

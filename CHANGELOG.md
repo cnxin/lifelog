@@ -1,5 +1,24 @@
 # 变更日志
 
+## v0.1.0-test.80 (2026-05-27)
+
+### 更新显示
+
+- 修复当前版本为 `0.1.0-test.79` 时，当前更新仍显示 `0.1.0-test.78` 的打包顺序问题。
+- 确保 release notes 在构建 APK 前写入，当前版本和当前更新保持一致。
+
+### APK 下载
+
+- Gitee 保留为更新清单来源，不再作为 APK 安装包优先下载源。
+- APK 下载改回优先使用 GitHub Release 附件，避免 Android 把 Gitee raw 文件保存成 zip。
+- 发布脚本默认把镜像 APK 地址写回 jsDelivr 文件镜像，安装入口继续以 GitHub Release 为准。
+
+### 验证
+
+- 通过 `npm.cmd run test:release-ready`、`npm.cmd run test:update-checker` 和 `git diff --check`。
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.80.apk`。
+- Android `versionCode` 更新为 `80`，`versionName` 更新为 `0.1.0-test.80`。
+
 ## v0.1.0-test.79 (2026-05-27)
 
 ### 备份体验
