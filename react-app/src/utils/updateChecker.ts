@@ -184,6 +184,18 @@ export function getPreferredApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" 
   return update?.mirrorApkUrl || update?.apkUrl || update?.releaseUrl || "";
 }
 
+export function getExternalApkDownloadUrl(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
+  return update?.apkUrl || update?.mirrorApkUrl || update?.releaseUrl || "";
+}
+
+export function getExternalApkDownloadSource(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
+  if (!update) return "";
+  if (update.apkUrl) return formatDownloadSource(update.apkUrl);
+  if (update.mirrorApkUrl) return formatDownloadSource(update.mirrorApkUrl);
+  if (update.releaseUrl) return "Release 页面";
+  return "";
+}
+
 export function getPreferredApkDownloadSource(update: Pick<AppUpdateInfo, "apkUrl" | "mirrorApkUrl" | "releaseUrl"> | null | undefined) {
   if (!update) return "";
   if (update.mirrorApkUrl) return formatDownloadSource(update.mirrorApkUrl);

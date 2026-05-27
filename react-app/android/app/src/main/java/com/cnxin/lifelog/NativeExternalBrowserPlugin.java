@@ -3,6 +3,8 @@ package com.cnxin.lifelog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import androidx.core.content.FileProvider;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -46,6 +48,34 @@ public class NativeExternalBrowserPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void canInstallPackages(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("granted", canRequestPackageInstalls());
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void openInstallPermissionSettings(PluginCall call) {
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Uri uri = Uri.parse("package:" + getContext().getPackageName());
+            intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, uri);
+        } else {
+            intent = new Intent(Settings.ACTION_SECURITY_SETTINGS);
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        try {
+            getContext().startActivity(intent);
+            JSObject result = new JSObject();
+            result.put("opened", true);
+            call.resolve(result);
+        } catch (ActivityNotFoundException error) {
+            call.reject("Cannot open install permission settings", error);
+        }
+    }
+
+    @PluginMethod
     public void installApk(PluginCall call) {
         String url = call.getString("url", "").trim();
         if (url.isEmpty()) {
@@ -70,6 +100,11 @@ public class NativeExternalBrowserPlugin extends Plugin {
 
     private void openDownloadedApk(PluginCall call, File apkFile, String fallbackUrl) {
         try {
+            if (!canRequestPackageInstalls()) {
+                openInstallPermissionSettings(call);
+                return;
+            }
+
             Intent intent = new Intent(Intent.ACTION_VIEW);
             Uri apkUri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", apkFile);
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
@@ -151,5 +186,9 @@ public class NativeExternalBrowserPlugin extends Plugin {
             cleaned = "lifelog-update.apk";
         }
         return cleaned.toLowerCase().endsWith(".apk") ? cleaned : cleaned + ".apk";
+    }
+
+    private boolean canRequestPackageInstalls() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getContext().getPackageManager().canRequestPackageInstalls();
     }
 }

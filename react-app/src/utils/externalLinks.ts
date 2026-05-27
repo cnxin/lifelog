@@ -5,6 +5,8 @@ import { buildAmapWebMarkerUrl, inferPlatformFromLink } from "./placeLinks";
 interface NativeExternalBrowserPlugin {
   open(options: { url: string; packageName?: string }): Promise<void>;
   installApk(options: { url: string; fileName?: string; fallbackUrl?: string }): Promise<void>;
+  canInstallPackages(): Promise<{ granted: boolean }>;
+  openInstallPermissionSettings(): Promise<void>;
 }
 
 interface NativeLaunchTarget {
@@ -50,6 +52,25 @@ export async function openApkDownload(update: { apkUrl?: string; mirrorApkUrl?: 
   const primaryUrl = update.mirrorApkUrl || update.apkUrl || update.releaseUrl || "";
   const fallbackUrl = primaryUrl === update.apkUrl ? update.releaseUrl || "" : update.apkUrl || update.releaseUrl || "";
   await openApkDownloadUrlWithFallback(primaryUrl, update.apkName, fallbackUrl);
+}
+
+export async function canInstallApkPackages() {
+  if (!Capacitor.isNativePlatform()) return true;
+  try {
+    const result = await NativeExternalBrowser.canInstallPackages();
+    return result.granted;
+  } catch {
+    return true;
+  }
+}
+
+export async function openApkInstallPermissionSettings() {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    await NativeExternalBrowser.openInstallPermissionSettings();
+  } catch (error) {
+    console.warn("打开安装来源权限设置失败:", error);
+  }
 }
 
 export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = "", rawFallbackUrl = "") {

@@ -1,10 +1,10 @@
 {
-    "version":  "0.1.0-test.81",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.81",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.81/lifelog-v0.1.0-test.81.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.81.apk",
-    "apkName":  "lifelog-v0.1.0-test.81.apk",
-    "apkSize":  3625664,
-    "publishedAt":  "2026-05-27T08:24:43Z",
-    "body":  "- 恢复 Gitee 国内镜像作为 APK 主下载源，GitHub Release 保留为兜底入口。\n- Android 端改为应用内下载 APK 后用系统安装器打开，避免 Gitee raw 的 text/plain 响应被保存成 zip。\n- 安装前会校验下载文件不为空且具备 APK 压缩包文件头，异常时自动回退到 GitHub Release。\n- 发布脚本重新把镜像 APK 地址写回 Gitee raw，保留国内下载链路。"
+    "version":  "0.1.0-test.82",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.82",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.82/lifelog-v0.1.0-test.82.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.82.apk",
+    "apkName":  "lifelog-v0.1.0-test.82.apk",
+    "apkSize":  3626640,
+    "publishedAt":  "2026-05-27T09:07:48Z",
+    "body":  "- 更新页主按钮改为内置升级，优先从 Gitee 下载 APK 并自动打开系统安装器。\n- 新增安装来源权限预检，未授权时会先跳转到系统设置，减少下载后安装失败。\n- 外部下载保留为独立入口，并优先打开 GitHub Release APK，避免浏览器把 Gitee raw 保存成 zip。\n- 更新信息同时展示内置下载源和外部下载源，升级路径更清晰。"
 }

@@ -28,6 +28,8 @@ const {
   formatFileSize,
   getPreferredApkDownloadSource,
   getPreferredApkDownloadUrl,
+  getExternalApkDownloadSource,
+  getExternalApkDownloadUrl,
   parseGitHubReleasePayload,
   parseUpdateManifestPayload
 } = loadTs("src/utils/updateChecker.ts");
@@ -153,6 +155,26 @@ const preferredSource = getPreferredApkDownloadSource({
 if (!preferredSource.includes("Gitee")) {
   failures += 1;
   console.error(`[getPreferredApkDownloadSource] expected Gitee source, actual ${preferredSource}`);
+}
+
+const externalDownload = getExternalApkDownloadUrl({
+  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
+  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
+  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
+});
+if (!externalDownload.includes("github.com/cnxin/lifelog/releases/download/")) {
+  failures += 1;
+  console.error(`[getExternalApkDownloadUrl] expected GitHub APK first, actual ${externalDownload}`);
+}
+
+const externalSource = getExternalApkDownloadSource({
+  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
+  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
+  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
+});
+if (!externalSource.includes("GitHub")) {
+  failures += 1;
+  console.error(`[getExternalApkDownloadSource] expected GitHub source, actual ${externalSource}`);
 }
 
 const fallbackDownload = getPreferredApkDownloadUrl({

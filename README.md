@@ -17,19 +17,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.81`
+当前版本：`0.1.0-test.82`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.81
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.81/lifelog-v0.1.0-test.81.apk
-- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.81.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.82
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.82/lifelog-v0.1.0-test.82.apk
+- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.82.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.81.apk`
-- 大小：`3625664` bytes
-- SHA256：`bc1083c0f0051ff628fcba42f01c15b2359df00d48575864c3fa5d4c5da3ff25`
+- 文件名：`lifelog-v0.1.0-test.82.apk`
+- 大小：`3626640` bytes
+- SHA256：`857c0f4a7c368e431c9306f5853f1a7429c097cc910c9d820974ab651adb02c6`
 
 App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装优先使用 Gitee 国内镜像，Android 端会下载到本地 `.apk` 后用系统安装器打开，避免 Gitee raw 响应头导致保存成 zip。
 
@@ -78,10 +78,10 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 恢复 Gitee 国内镜像作为 APK 主下载源，GitHub Release 保留为兜底入口。
-- Android 端改为应用内下载 APK 后用系统安装器打开，避免 Gitee raw 的 text/plain 响应被保存成 zip。
-- 安装前会校验下载文件不为空且具备 APK 压缩包文件头，异常时自动回退到 GitHub Release。
-- 发布脚本重新把镜像 APK 地址写回 Gitee raw，保留国内下载链路。
+- 更新页主按钮改为内置升级，优先从 Gitee 下载 APK 并自动打开系统安装器。
+- 新增安装来源权限预检，未授权时会先跳转到系统设置，减少下载后安装失败。
+- 外部下载保留为独立入口，并优先打开 GitHub Release APK，避免浏览器把 Gitee raw 保存成 zip。
+- 更新信息同时展示内置下载源和外部下载源，升级路径更清晰。
 
 ## 备份排查
 

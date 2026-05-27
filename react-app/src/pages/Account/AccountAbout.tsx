@@ -1,12 +1,20 @@
-import { Copy, Download, Info, RefreshCw } from "lucide-react";
+import { Copy, Download, ExternalLink, Info, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
 import { APP_VERSION } from "../../constants/version";
 import { copyTextToClipboard } from "../../utils/diagnostics";
-import { openApkDownload, openExternalUrl } from "../../utils/externalLinks";
-import { checkLatestAppUpdate, formatFileSize, getPreferredApkDownloadSource, getPreferredApkDownloadUrl, type AppUpdateInfo } from "../../utils/updateChecker";
+import { canInstallApkPackages, openApkDownload, openApkInstallPermissionSettings, openExternalUrl } from "../../utils/externalLinks";
+import {
+  checkLatestAppUpdate,
+  formatFileSize,
+  getExternalApkDownloadSource,
+  getExternalApkDownloadUrl,
+  getPreferredApkDownloadSource,
+  getPreferredApkDownloadUrl,
+  type AppUpdateInfo
+} from "../../utils/updateChecker";
 
 export default function AccountAbout() {
   const notify = useToast();
@@ -43,8 +51,28 @@ export default function AccountAbout() {
     });
   }
 
+  async function handleBuiltInUpgrade(update: AppUpdateInfo) {
+    const canInstall = await canInstallApkPackages();
+    if (!canInstall) {
+      notify({
+        message: "请先允许 LifeLog 安装未知来源应用，返回后再点内置升级",
+        tone: "info"
+      });
+      await openApkInstallPermissionSettings();
+      return;
+    }
+
+    notify({
+      message: "开始下载 APK，完成后会自动打开系统安装器",
+      tone: "info"
+    });
+    await openApkDownload(update);
+  }
+
   const downloadUrl = getPreferredApkDownloadUrl(latestUpdate);
   const downloadSource = getPreferredApkDownloadSource(latestUpdate);
+  const externalDownloadUrl = getExternalApkDownloadUrl(latestUpdate);
+  const externalDownloadSource = getExternalApkDownloadSource(latestUpdate);
   return (
     <section className="section">
       <div className="section-header">
@@ -101,6 +129,10 @@ export default function AccountAbout() {
                 <strong>下载源</strong>
                 {downloadSource || "未知"}
               </span>
+              <span>
+                <strong>外部下载</strong>
+                {externalDownloadSource || "未知"}
+              </span>
             </div>
           )}
           {latestUpdate?.body && (
@@ -117,17 +149,21 @@ export default function AccountAbout() {
           )}
           {latestUpdate?.hasUpdate && (
             <div className="update-check-actions">
-              <button className="link-action detail-link-button" type="button" onClick={() => void openApkDownload(latestUpdate)}>
-                <Download /> 下载 APK
+              <button className="link-action detail-link-button" type="button" onClick={() => void handleBuiltInUpgrade(latestUpdate)}>
+                <Download /> 内置升级
+              </button>
+              <button className="mini-action" type="button" onClick={() => void openExternalUrl(externalDownloadUrl)}>
+                <ExternalLink size={14} />
+                外部下载
               </button>
               <button className="mini-action" type="button" onClick={() => void handleCopyDownloadUrl(downloadUrl)}>
                 <Copy size={14} />
-                复制链接
+                复制镜像
               </button>
               <button className="mini-action" type="button" onClick={() => void openExternalUrl(latestUpdate.releaseUrl)}>
                 查看 Release
               </button>
-              <p className="update-download-hint">优先使用 Gitee 国内镜像；Android 会按 APK 文件安装，GitHub Release 保留为兜底下载入口。</p>
+              <p className="update-download-hint">内置升级会优先从 Gitee 下载 APK 并打开系统安装器；外部下载优先使用 GitHub Release，保留浏览器下载入口。</p>
             </div>
           )}
         </GlassCard>

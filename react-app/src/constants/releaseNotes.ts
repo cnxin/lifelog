@@ -7,6 +7,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.82",
+    date: "2026-05-27",
+    title: "内置升级和外部下载分流",
+    highlights: [
+      "更新页主按钮改为内置升级，优先从 Gitee 下载 APK 并自动打开系统安装器。",
+      "新增安装来源权限预检，未授权时会先跳转到系统设置，减少下载后安装失败。",
+      "外部下载保留为独立入口，并优先打开 GitHub Release APK，避免浏览器把 Gitee raw 保存成 zip。",
+      "更新信息同时展示内置下载源和外部下载源，升级路径更清晰。"
+    ]
+  },
+  {
     version: "0.1.0-test.81",
     date: "2026-05-27",
     title: "Gitee APK 镜像安装修复",

@@ -1,5 +1,19 @@
 # 变更日志
 
+## v0.1.0-test.82 (2026-05-27)
+
+### 升级体验
+
+- 更新页主按钮改为内置升级，优先从 Gitee 下载 APK 并自动打开系统安装器。
+- 新增安装来源权限预检，未授权时会先跳转到系统设置，减少下载后安装失败。
+- 外部下载保留为独立入口，并优先打开 GitHub Release APK，避免浏览器把 Gitee raw 保存成 zip。
+- 更新信息同时展示内置下载源和外部下载源，升级路径更清晰。
+
+### 验证
+
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.82.apk`。
+- Android `versionCode` 更新为 `82`，`versionName` 更新为 `0.1.0-test.82`。
+
 ## v0.1.0-test.81 (2026-05-27)
 
 ### Gitee 下载

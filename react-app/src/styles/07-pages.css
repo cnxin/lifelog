@@ -182,6 +182,10 @@
   padding-inline: 14px;
 }
 
+.update-check-actions .mini-action:last-of-type {
+  grid-column: 1 / -1;
+}
+
 .update-check-actions .mini-action {
   padding-inline: 14px;
   color: var(--primary);
