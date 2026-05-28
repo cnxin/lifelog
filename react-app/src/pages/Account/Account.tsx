@@ -1,5 +1,5 @@
-import { CloudOff, Crown, Database, Info, KeyRound, Settings, ShieldCheck, UserRound } from "lucide-react";
-import { useState } from "react";
+import { CloudOff, Crown, Database, Info, KeyRound, Settings, UserRound } from "lucide-react";
+import { useLayoutEffect, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { AppSettingsPanel, DataOrganizePanel } from "../Settings/Settings";
 import AccountAbout from "./AccountAbout";
@@ -10,6 +10,10 @@ type AccountTab = "account" | "app" | "data" | "about";
 
 export default function Account() {
   const [activeTab, setActiveTab] = useState<AccountTab>("account");
+
+  useLayoutEffect(() => {
+    document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [activeTab]);
 
   return (
     <>
@@ -40,29 +44,29 @@ export default function Account() {
             <GlassCard className="management-info-card">
               <UserRound />
               <div>
-                <strong>本地账号</strong>
-                <span>当前没有云端登录，资料只保存在本设备。</span>
+                <strong>本地免费</strong>
+                <span>人物、地点、回忆、提醒、备份、分享等本地功能全部免费使用。</span>
               </div>
             </GlassCard>
             <GlassCard className="management-info-card">
               <CloudOff />
               <div>
-                <strong>云同步</strong>
-                <span>暂未开启。后续如果加入云端功能，会在这里显示同步状态和设备列表。</span>
+                <strong>云端高级</strong>
+                <span>暂未开启。后续只对云同步、云备份、多设备和云端恢复做高级能力。</span>
               </div>
             </GlassCard>
             <GlassCard className="management-info-card">
               <Crown />
               <div>
-                <strong>付费解锁</strong>
-                <span>当前为本地免费功能。未来付费功能会在这里验证购买状态。</span>
+                <strong>购买验证</strong>
+                <span>仅用于云端高级权益校验，不影响任何本地功能使用。</span>
               </div>
             </GlassCard>
             <GlassCard className="management-info-card">
               <KeyRound />
               <div>
                 <strong>授权信息</strong>
-                <span>暂无授权码或订阅凭证。后续可用于恢复购买和绑定设备。</span>
+                <span>暂无云端订阅凭证。后续可用于恢复购买和绑定云端账号。</span>
               </div>
             </GlassCard>
           </div>

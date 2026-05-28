@@ -1,5 +1,5 @@
 import { Bell, Copy, Download, ExternalLink, Info, PackageCheck, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useToast } from "../../context/ToastContext";
 import { getReleaseNote, RELEASE_NOTES } from "../../constants/releaseNotes";
@@ -23,12 +23,15 @@ export default function AccountAbout() {
   const [isChecking, setIsChecking] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeProgress, setUpgradeProgress] = useState<ApkDownloadProgress | null>(null);
+  const [upgradeTelemetry, setUpgradeTelemetry] = useState<UpgradeTelemetry | null>(null);
   const [latestUpdate, setLatestUpdate] = useState<AppUpdateInfo | null>(null);
   const [updateDiagnostics, setUpdateDiagnostics] = useState<UpdateSourceDiagnostic[]>([]);
   const [installPermissionGranted, setInstallPermissionGranted] = useState<boolean | null>(null);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState<boolean | null>(null);
   const [isRefreshingPermissions, setIsRefreshingPermissions] = useState(false);
   const pendingUpgradeRef = useRef<AppUpdateInfo | null>(null);
+  const downloadTelemetryRef = useRef({ startedAt: 0, lastBytes: 0, lastAt: 0 });
+  const downloadSourceRef = useRef("");
   const currentRelease = getReleaseNote(APP_VERSION);
   const previousReleases = RELEASE_NOTES.filter((note) => note.version !== currentRelease.version).slice(0, 3);
 
@@ -36,6 +39,13 @@ export default function AccountAbout() {
     let removeListener: (() => void) | null = null;
     void addApkDownloadProgressListener((progress) => {
       setUpgradeProgress(progress);
+      if (progress.stage === "downloading") {
+        updateUpgradeTelemetry(downloadTelemetryRef.current, setUpgradeTelemetry, downloadSourceRef.current, progress);
+      } else if (progress.stage === "verifying" || progress.stage === "opening") {
+        updateUpgradeTelemetry(downloadTelemetryRef.current, setUpgradeTelemetry, downloadSourceRef.current, progress, true);
+      } else if (progress.stage === "fallback") {
+        setUpgradeTelemetry((current) => (current ? { ...current, sourceLabel: downloadSourceRef.current || current.sourceLabel } : current));
+      }
       if (progress.stage === "opening" || progress.stage === "fallback" || progress.stage === "failed") {
         setIsUpgrading(false);
       }
@@ -123,6 +133,15 @@ export default function AccountAbout() {
     }
 
     setIsUpgrading(true);
+    downloadTelemetryRef.current = { startedAt: 0, lastBytes: 0, lastAt: 0 };
+    downloadSourceRef.current =
+      getPreferredApkDownloadSource(update) ||
+      getExternalApkDownloadSource(update) ||
+      update.apkUrl ||
+      update.mirrorApkUrl ||
+      update.releaseUrl ||
+      "下载源";
+    setUpgradeTelemetry(null);
     setUpgradeProgress({
       stage: "downloading",
       bytesRead: 0,
@@ -163,6 +182,7 @@ export default function AccountAbout() {
   const downloadSource = getPreferredApkDownloadSource(latestUpdate);
   const externalDownloadUrl = getExternalApkDownloadUrl(latestUpdate);
   const externalDownloadSource = getExternalApkDownloadSource(latestUpdate);
+  const upgradePercent = upgradeProgress ? getUpgradePercent(upgradeProgress) : 0;
   return (
     <section className="section">
       <div className="section-header">
@@ -254,8 +274,15 @@ export default function AccountAbout() {
                 <span>{formatUpgradeProgress(upgradeProgress)}</span>
               </div>
               <div className="update-progress-track">
-                <i style={{ width: `${Math.max(0, Math.min(100, upgradeProgress.percent || 0))}%` }} />
+                <i style={{ width: `${upgradePercent}%` }} />
               </div>
+              {upgradeTelemetry && upgradeProgress.stage === "downloading" && (
+                <div className="update-progress-meta">
+                  <span>来源：{upgradeTelemetry.sourceLabel || "下载源"}</span>
+                  <span>速度：{formatTransferSpeed(upgradeTelemetry.speedBytesPerSecond)}</span>
+                  <span>{upgradeTelemetry.etaSeconds !== null ? `预计剩余 ${formatEta(upgradeTelemetry.etaSeconds)}` : "剩余时间计算中"}</span>
+                </div>
+              )}
             </div>
           )}
           {latestUpdate?.hasUpdate && (
@@ -375,13 +402,13 @@ export default function AccountAbout() {
         <GlassCard className="settings-capability-overview">
           <div className="settings-capability-overview-head">
             <strong>应用能力</strong>
-            <span>本地优先</span>
+            <span>本地免费 + 云端高级</span>
           </div>
           <div className="settings-capability-overview-list">
             {[
+              { label: "本地免费", value: "人物、地点、回忆、提醒、备份、分享全部可用" },
+              { label: "云端高级", value: "云同步、云备份、多设备同步、云端分享恢复" },
               { label: "资料管理", value: "人物、地点、商场、关系档案" },
-              { label: "生活记录", value: "回忆、照片、纪念日安排" },
-              { label: "提醒备份", value: "本地提醒、完整备份、恢复导入" },
               { label: "使用方式", value: "本地优先、离线可用、APK 更新" }
             ].map((item) => (
               <div className="settings-capability-overview-item" key={item.label}>
@@ -431,7 +458,83 @@ function formatUpgradeProgress(progress: ApkDownloadProgress) {
   if (progress.stage === "fallback") return "已打开备用下载入口";
   if (progress.stage === "failed") return progress.message || "请尝试外部下载";
   const total = progress.totalBytes > 0 ? formatFileSize(progress.totalBytes) : "未知大小";
-  return `${progress.percent || 0}% · ${formatFileSize(progress.bytesRead)} / ${total}`;
+  return `${getUpgradePercent(progress)}% · ${formatFileSize(progress.bytesRead)} / ${total}`;
+}
+
+function getUpgradePercent(progress: ApkDownloadProgress) {
+  if (progress.stage === "verifying" || progress.stage === "opening") return 100;
+  if (Number.isFinite(progress.percent) && progress.percent > 0) return Math.max(0, Math.min(100, progress.percent));
+  if (progress.totalBytes > 0 && progress.bytesRead > 0) {
+    return Math.max(0, Math.min(100, Math.round((progress.bytesRead * 100) / progress.totalBytes)));
+  }
+  return 0;
+}
+
+interface UpgradeTelemetry {
+  startedAt: string;
+  speedBytesPerSecond: number;
+  etaSeconds: number | null;
+  sourceLabel: string;
+}
+
+interface DownloadTelemetryTracker {
+  startedAt: number;
+  lastBytes: number;
+  lastAt: number;
+}
+
+function updateUpgradeTelemetry(
+  tracker: DownloadTelemetryTracker,
+  setUpgradeTelemetry: Dispatch<SetStateAction<UpgradeTelemetry | null>>,
+  sourceLabel: string,
+  progress: ApkDownloadProgress,
+  keepExisting = false
+) {
+  const now = Date.now();
+  if (!tracker.startedAt) {
+    tracker.startedAt = now;
+    tracker.lastBytes = progress.bytesRead;
+    tracker.lastAt = now;
+  }
+
+  const lastAt = tracker.lastAt || tracker.startedAt || now;
+  const elapsedMs = Math.max(1, now - lastAt);
+  const deltaBytes = Math.max(0, progress.bytesRead - tracker.lastBytes);
+  const fallbackElapsed = Math.max(1, now - tracker.startedAt);
+  const speedBytesPerSecond = deltaBytes > 0
+    ? deltaBytes / (elapsedMs / 1000)
+    : progress.bytesRead > 0
+      ? progress.bytesRead / (fallbackElapsed / 1000)
+      : 0;
+  const remainingBytes = progress.totalBytes > 0 ? Math.max(0, progress.totalBytes - progress.bytesRead) : 0;
+  const etaSeconds = speedBytesPerSecond > 0 && remainingBytes > 0 ? Math.ceil(remainingBytes / speedBytesPerSecond) : null;
+
+  tracker.lastBytes = Math.max(tracker.lastBytes, progress.bytesRead);
+  tracker.lastAt = now;
+
+  setUpgradeTelemetry((current) => ({
+    startedAt: new Date(tracker.startedAt).toISOString(),
+    speedBytesPerSecond,
+    etaSeconds,
+    sourceLabel: keepExisting && current?.sourceLabel ? current.sourceLabel : sourceLabel || current?.sourceLabel || ""
+  }));
+}
+
+function formatTransferSpeed(bytesPerSecond: number) {
+  if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return "计算中";
+  if (bytesPerSecond < 1024) return `${Math.max(1, Math.round(bytesPerSecond))} B/s`;
+  const kb = bytesPerSecond / 1024;
+  if (kb < 1024) return `${kb.toFixed(kb >= 100 ? 0 : 1)} KB/s`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(mb >= 100 ? 0 : 1)} MB/s`;
+}
+
+function formatEta(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "即将完成";
+  if (seconds < 60) return `${seconds} 秒`;
+  const minutes = Math.floor(seconds / 60);
+  const remain = seconds % 60;
+  return `${minutes} 分 ${remain} 秒`;
 }
 
 function PermissionBadge({ value }: { value: boolean | null }) {

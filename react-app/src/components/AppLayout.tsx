@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import type { EntryType, Place } from "../types";
 import { todayLabel } from "../utils/date";
 import BottomNav from "./BottomNav";
+import BackToTopButton from "./BackToTopButton";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
 import GlobalSearchPanel from "./GlobalSearchPanel";
@@ -218,6 +219,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {!isUtilityPage(location.pathname) && (
         <FloatingActionButton actions={floatingActions} />
       )}
+      <BackToTopButton />
       <BottomNav />
       <EntrySheet
         key={`entry-sheet-${sheetType || "closed"}-${sheetMode}-${placeDraftKey}`}

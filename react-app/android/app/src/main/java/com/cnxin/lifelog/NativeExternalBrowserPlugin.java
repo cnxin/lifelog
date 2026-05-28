@@ -89,15 +89,31 @@ public class NativeExternalBrowserPlugin extends Plugin {
         String fileName = sanitizeApkFileName(call.getString("fileName", ""));
         String fallbackUrl = call.getString("fallbackUrl", "").trim();
         String expectedSha256 = call.getString("expectedSha256", "").trim().toLowerCase();
-        execute(() -> downloadAndInstallApk(call, url, fileName, fallbackUrl, expectedSha256));
+        Double expectedSizeValue = call.getDouble("expectedSize", 0D);
+        long expectedSize = expectedSizeValue == null ? 0L : Math.max(0L, Math.round(expectedSizeValue));
+        execute(() -> downloadAndInstallApk(call, url, fileName, fallbackUrl, expectedSha256, expectedSize));
     }
 
-    private void downloadAndInstallApk(PluginCall call, String url, String fileName, String fallbackUrl, String expectedSha256) {
+    private void downloadAndInstallApk(PluginCall call, String url, String fileName, String fallbackUrl, String expectedSha256, long expectedSize) {
         File apkFile = new File(getContext().getCacheDir(), fileName);
         try {
-            downloadToFile(url, apkFile, expectedSha256);
+            downloadToFile(url, apkFile, expectedSha256, expectedSize);
             getBridge().executeOnMainThread(() -> openDownloadedApk(call, apkFile, fallbackUrl));
         } catch (Exception error) {
+            if (!fallbackUrl.isEmpty() && !fallbackUrl.equals(url)) {
+                try {
+                    if (apkFile.exists() && !apkFile.delete()) {
+                        // Best effort cleanup before retrying the备用源。
+                    }
+                    notifyApkProgress("fallback", 0, 0, apkFile.getName(), error.getMessage());
+                    downloadToFile(fallbackUrl, apkFile, expectedSha256, expectedSize);
+                    getBridge().executeOnMainThread(() -> openDownloadedApk(call, apkFile, ""));
+                    return;
+                } catch (Exception fallbackError) {
+                    getBridge().executeOnMainThread(() -> openFallbackOrReject(call, fallbackUrl, fallbackError));
+                    return;
+                }
+            }
             getBridge().executeOnMainThread(() -> openFallbackOrReject(call, fallbackUrl, error));
         }
     }
@@ -146,7 +162,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
         call.reject("Failed to download or open APK", originalError);
     }
 
-    private void downloadToFile(String rawUrl, File targetFile, String expectedSha256) throws IOException {
+    private void downloadToFile(String rawUrl, File targetFile, String expectedSha256, long expectedSize) throws IOException {
         HttpURLConnection connection = null;
         try {
             URL url = new URL(rawUrl);
@@ -162,7 +178,9 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 throw new IOException("APK download returned HTTP " + statusCode);
             }
 
-            long totalBytes = connection.getContentLengthLong();
+            long contentLength = connection.getContentLengthLong();
+            long totalBytes = contentLength > 0 ? contentLength : Math.max(0, expectedSize);
+            notifyApkProgress("downloading", 0, totalBytes, targetFile.getName(), "");
             try (BufferedInputStream input = new BufferedInputStream(connection.getInputStream());
                  FileOutputStream output = new FileOutputStream(targetFile, false)) {
                 byte[] buffer = new byte[8192];
@@ -236,7 +254,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
         progress.put("percent", totalBytes > 0 ? Math.min(100, Math.round((bytesRead * 100.0) / totalBytes)) : 0);
         progress.put("fileName", fileName == null ? "" : fileName);
         progress.put("message", message == null ? "" : message);
-        notifyListeners("apkDownloadProgress", progress);
+        getBridge().executeOnMainThread(() -> notifyListeners("apkDownloadProgress", progress));
     }
 
     private boolean canRequestPackageInstalls() {

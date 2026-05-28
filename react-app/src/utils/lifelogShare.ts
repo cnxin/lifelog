@@ -77,6 +77,10 @@ export interface LifeLogShareImportResult {
   memoriesCreated: number;
   memoriesSkipped: number;
   photosCreated: number;
+  createdPersonIds: string[];
+  createdPlaceIds: string[];
+  createdMemoryIds: string[];
+  createdPhotoIds: string[];
 }
 
 interface ShareImportPlan {
@@ -305,7 +309,11 @@ export async function buildShareImportPlan(payloadInput: LifeLogSharePayload, st
       placesReused,
       memoriesCreated: memories.length,
       memoriesSkipped,
-      photosCreated: photos.length
+      photosCreated: photos.length,
+      createdPersonIds: people.map((person) => person.id),
+      createdPlaceIds: places.map((place) => place.id),
+      createdMemoryIds: memories.map((memory) => memory.id),
+      createdPhotoIds: photos.map((photo) => photo.id)
     }
   };
 }

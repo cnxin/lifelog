@@ -12,7 +12,7 @@ import { isRecord } from "../../utils/lifelogHelpers";
 import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableExport";
 
 export default function AccountDataManagement() {
-  const { state, exportData, importData, importShareData, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
+  const { state, exportData, importData, importShareData, undoShareImport, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
   const navigate = useNavigate();
   const confirm = useConfirm();
   const notify = useToast();
@@ -24,6 +24,8 @@ export default function AccountDataManagement() {
   const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
   const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
+  const [lastFullBackupAt, setLastFullBackupAt] = useState(() => localStorage.getItem("lifelog:last-full-backup-at") || "");
+  const backupReminder = useMemo(() => getBackupReminder(lastFullBackupAt), [lastFullBackupAt]);
 
   const dataSummary = useMemo(
     () => [
@@ -176,13 +178,24 @@ export default function AccountDataManagement() {
       const result = await importShareData(payload);
       notify({
         message: [
+          result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
           result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
           result.placesReused ? `复用地点 ${result.placesReused}` : "",
           result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
-          result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : ""
+          result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : "",
+          result.photosCreated ? `新增照片 ${result.photosCreated}` : ""
         ].filter(Boolean).join(" · ") || "分享包已处理",
         tone: "success",
-        durationMs: 4200
+        durationMs: 6200,
+        actions: [
+          {
+            label: "撤销",
+            onClick: async () => {
+              await undoShareImport(result);
+              notify({ message: "已撤销本次分享导入", tone: "success" });
+            }
+          }
+        ]
       });
     } catch (error) {
       await confirm({
@@ -213,6 +226,9 @@ export default function AccountDataManagement() {
     try {
       const result = await exportData();
       setLastExport(result);
+      const nextBackupAt = new Date().toISOString();
+      localStorage.setItem("lifelog:last-full-backup-at", nextBackupAt);
+      setLastFullBackupAt(nextBackupAt);
       notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
@@ -271,6 +287,16 @@ export default function AccountDataManagement() {
           <strong>本地数据备份与分享导入</strong>
           <span>{dataSummary}</span>
           <p>数据保存在当前设备的 IndexedDB 中。完整备份会包含资料、照片、设置和提醒；导入和重置会覆盖当前本地数据。</p>
+        </GlassCard>
+        <GlassCard className={`backup-reminder-card ${backupReminder.state}`}>
+          <div className="backup-reminder-head">
+            <ShieldCheck />
+            <div>
+              <strong>{backupReminder.title}</strong>
+              <span>{backupReminder.subtitle}</span>
+            </div>
+          </div>
+          <p>{backupReminder.detail}</p>
         </GlassCard>
         <GlassCard className={`backup-health-card ${healthReport.status}`}>
           <div className="backup-health-head">
@@ -490,4 +516,42 @@ function formatBackupDate(value: string) {
 function formatDelta(value: number | null) {
   if (value === null || value === 0) return "";
   return value > 0 ? `（+${value}）` : `（${value}）`;
+}
+
+function getBackupReminder(raw: string) {
+  if (!raw) {
+    return {
+      state: "warning",
+      title: "还没有完整备份",
+      subtitle: "建议先导出一次完整备份",
+      detail: "当前设备还没有记录到完整备份时间。建议先导出完整备份，便于后续导入恢复。"
+    };
+  }
+
+  const time = new Date(raw).getTime();
+  if (!Number.isFinite(time)) {
+    return {
+      state: "warning",
+      title: "备份时间无法识别",
+      subtitle: "建议重新导出一次完整备份",
+      detail: "本地记录的完整备份时间格式异常。重新导出一次完整备份后会自动修正。"
+    };
+  }
+
+  const days = Math.floor((Date.now() - time) / 86400000);
+  if (days < 7) {
+    return {
+      state: "ok",
+      title: "最近已备份",
+      subtitle: `${days} 天前导出过完整备份`,
+      detail: "本地完整备份时间较新，可以继续正常使用。"
+    };
+  }
+
+  return {
+    state: "warning",
+    title: "建议重新备份",
+    subtitle: `${days} 天未导出完整备份`,
+    detail: "完整备份时间已经较久，建议重新导出一次，减少数据丢失风险。"
+  };
 }

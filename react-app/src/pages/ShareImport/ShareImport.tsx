@@ -8,7 +8,7 @@ import { buildShareImportPreview, normalizeLifeLogSharePayload, type LifeLogShar
 import { extractLifeLogShareHashFromText, parseLifeLogShareLinkHash } from "../../utils/lifelogShareLink";
 
 export default function ShareImport() {
-  const { state, importShareData } = useLifeLog();
+  const { state, importShareData, undoShareImport } = useLifeLog();
   const notify = useToast();
   const navigate = useNavigate();
   const [payload, setPayload] = useState<LifeLogSharePayload | null>(null);
@@ -63,7 +63,21 @@ export default function ShareImport() {
         result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : ""
       ].filter(Boolean).join(" · ") || "分享内容已处理";
       setDoneText(message);
-      notify({ message, tone: "success", durationMs: 3600 });
+      notify({
+        message,
+        tone: "success",
+        actions: [
+          {
+            label: "撤销",
+            onClick: async () => {
+              await undoShareImport(result);
+              setDoneText("");
+              notify({ message: "已撤销本次分享导入", tone: "success" });
+            }
+          }
+        ],
+        durationMs: 6200
+      });
     } catch (err) {
       notify({
         message: `导入失败：${err instanceof Error ? err.message : "请稍后重试"}`,
@@ -170,9 +184,14 @@ export default function ShareImport() {
             )}
           </div>
           {doneText ? (
-            <div className="share-import-done">
-              <CheckCircle2 size={17} />
-              <span>{doneText}</span>
+            <div className="share-import-done-row">
+              <div className="share-import-done">
+                <CheckCircle2 size={17} />
+                <span>{doneText}</span>
+              </div>
+              <button className="mini-action" type="button" onClick={() => setDoneText("")}>
+                继续导入
+              </button>
             </div>
           ) : (
             <button className="primary-btn share-import-submit" type="button" onClick={() => void handleImport()} disabled={isImporting}>

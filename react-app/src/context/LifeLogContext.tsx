@@ -125,6 +125,7 @@ interface LifeLogContextValue {
   exportMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<BackupExportResult>;
   exportPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<BackupExportResult>;
   importShareData: (payload: LifeLogSharePayload) => Promise<LifeLogShareImportResult>;
+  undoShareImport: (result: LifeLogShareImportResult) => Promise<void>;
   resetDemo: () => Promise<void>;
   loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
 }
@@ -733,6 +734,23 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return plan.result;
     }
 
+    async function undoShareImport(result: LifeLogShareImportResult) {
+      const memoryIds = result.createdMemoryIds || [];
+      const personIds = result.createdPersonIds || [];
+      const placeIds = result.createdPlaceIds || [];
+
+      if (memoryIds.length) await Promise.all(memoryIds.map(deleteMemoryRecord));
+      if (personIds.length) await Promise.all(personIds.map(deletePersonRecord));
+      if (placeIds.length) await Promise.all(placeIds.map(deletePlaceRecord));
+
+      setState((current) => ({
+        ...current,
+        people: current.people.filter((person) => !personIds.includes(person.id)),
+        places: current.places.filter((place) => !placeIds.includes(place.id)),
+        memories: current.memories.filter((memory) => !memoryIds.includes(memory.id))
+      }));
+    }
+
     async function resetDemo() {
       await resetDatabase();
       await clearPlaceMergeHistory();
@@ -783,6 +801,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       exportMemoryShare,
       exportPlacesShare,
       importShareData,
+      undoShareImport,
       resetDemo,
       loadMemoryPhotos
     };

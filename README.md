@@ -17,19 +17,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.86`
+当前版本：`0.1.0-test.87`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.86
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.86/lifelog-v0.1.0-test.86.apk
-- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.86.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.87
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.87/lifelog-v0.1.0-test.87.apk
+- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.87.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.86.apk`
-- 大小：`3657960` bytes
-- SHA256：`bf3ef776b1cc37137e5b84a3c74f3018ddde829d6f6a100edc6c504c3d0e5be1`
+- 文件名：`lifelog-v0.1.0-test.87.apk`
+- 大小：`3661512` bytes
+- SHA256：`c20df66c59b126f5884e408dee8d4e6c501f8babf265f92ceb171e74428a6cc2`
 
 App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装优先使用 Gitee 国内镜像，Android 端会下载到本地 `.apk` 后用系统安装器打开，避免 Gitee raw 响应头导致保存成 zip。
 
@@ -78,11 +78,10 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 底部导航收敛为首页、档案、回忆三项，人物 / 地点与时间线 / 日历改为页面内分段切换。
-- 设置页重组为账号、应用、数据、关于四个平级入口，移除重复的管理中心和当前更新信息。
-- 人物喜好档案和禁忌雷区拆分为独立标准编辑面板，列表和详情页都可直接修改。
-- 修复 Web 顶部黑色挖孔装饰常驻显示，并优化 Android 状态栏背景。
-- 修正美团分享链接的平台识别，并补充分享导入、筛选记忆和表单草稿恢复等体验优化。
+- 本地功能全部保持免费，仅为未来云同步、云备份、多设备同步和云端分享恢复保留高级权益。
+- 分享包导入支持撤销本次导入，人物、地点、回忆和照片新增内容都能回滚。
+- 完整备份增加最近导出时间提醒，长列表新增回到顶部按钮。
+- 内置升级补充下载速度、剩余时间和来源展示，并在主源失败时自动重试备用源。
 
 ## 备份排查
 

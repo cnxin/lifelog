@@ -572,6 +572,19 @@
   transition: width 180ms ease;
 }
 
+.update-progress-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.update-progress-meta span {
+  min-width: 0;
+}
+
 .update-check-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1034,6 +1047,17 @@
   font-weight: 800;
 }
 
+.share-import-done-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.share-import-done-row .mini-action {
+  min-height: 38px;
+}
+
 .release-note-head {
   display: flex;
   align-items: flex-start;
@@ -1160,6 +1184,62 @@
   color: var(--text-sub);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.backup-reminder-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 7%, transparent), transparent 60%),
+    var(--card-bg);
+}
+
+.backup-reminder-card.warning {
+  border-color: color-mix(in srgb, var(--danger) 18%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--danger) 8%, transparent), transparent 60%),
+    var(--card-bg);
+}
+
+.backup-reminder-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.backup-reminder-head > svg {
+  color: var(--primary);
+}
+
+.backup-reminder-card.warning .backup-reminder-head > svg {
+  color: var(--danger);
+}
+
+.backup-reminder-head strong,
+.backup-reminder-head span,
+.backup-reminder-card p {
+  display: block;
+}
+
+.backup-reminder-head strong {
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.backup-reminder-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.backup-reminder-card p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .data-action-grid {

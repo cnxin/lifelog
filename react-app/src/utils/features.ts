@@ -1,10 +1,8 @@
 export type PremiumFeatureId =
-  | "quickInbox"
-  | "relationshipActionCenter"
-  | "memoryFlashback"
-  | "structuredWriting"
-  | "readableExport"
-  | "privacyMode";
+  | "cloudSync"
+  | "cloudBackup"
+  | "multiDeviceSync"
+  | "cloudShareRestore";
 
 export interface PurchaseVerificationResult {
   status: "unverified" | "active" | "expired" | "invalid";
@@ -14,25 +12,16 @@ export interface PurchaseVerificationResult {
 }
 
 export const premiumFeatureLabels: Record<PremiumFeatureId, string> = {
-  quickInbox: "快速记录收件箱",
-  relationshipActionCenter: "人物行动中心",
-  memoryFlashback: "回忆闪回",
-  structuredWriting: "结构化正文",
-  readableExport: "可读导出",
-  privacyMode: "隐私显示模式"
+  cloudSync: "云端同步",
+  cloudBackup: "云端备份",
+  multiDeviceSync: "多设备同步",
+  cloudShareRestore: "云端分享恢复"
 };
 
-const unlockedByDefault = new Set<PremiumFeatureId>([
-  "quickInbox",
-  "relationshipActionCenter",
-  "memoryFlashback",
-  "structuredWriting",
-  "readableExport",
-  "privacyMode"
-]);
+const unlockedCloudEntitlements = new Set<PremiumFeatureId>();
 
 export function isFeatureUnlocked(featureId: PremiumFeatureId) {
-  return unlockedByDefault.has(featureId);
+  return unlockedCloudEntitlements.has(featureId);
 }
 
 export function getPurchaseVerificationSnapshot(): PurchaseVerificationResult {
@@ -40,7 +29,7 @@ export function getPurchaseVerificationSnapshot(): PurchaseVerificationResult {
     status: "unverified",
     source: "none",
     checkedAt: new Date().toISOString(),
-    entitlementIds: Array.from(unlockedByDefault)
+    entitlementIds: Array.from(unlockedCloudEntitlements)
   };
 }
 
