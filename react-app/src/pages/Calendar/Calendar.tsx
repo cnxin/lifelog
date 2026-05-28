@@ -1,9 +1,10 @@
-import { ChevronLeft, ChevronRight, PenLine } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Heart, PenLine } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTags from "../../components/MemoryTags";
+import PageSegmentNav from "../../components/PageSegmentNav";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import {
@@ -64,6 +65,13 @@ export default function Calendar() {
 
   return (
     <>
+      <PageSegmentNav
+        ariaLabel="回忆视图"
+        items={[
+          { to: "/memories", label: "时间线", icon: <Heart />, end: true },
+          { to: "/calendar", label: "日历", icon: <CalendarDays /> }
+        ]}
+      />
       <section className="section">
         <GlassCard className="calendar-panel">
           <div className="calendar-header">

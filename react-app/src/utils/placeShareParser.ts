@@ -463,17 +463,19 @@ function detectSourceType(text: string, url: string): PlaceSourceType {
   if (linkPlatform === "wechat") return "wechat";
   if (linkPlatform === "official") return "official";
 
+  const urlValue = url.toLowerCase();
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:meituan\.com|meishi\.meituan\.com|i\.meituan\.com)\b/.test(urlValue) || /(?:imeituan|meituan|meituanwaimai):\/\//.test(urlValue)) return "meituan";
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:dianping\.com|dpurl\.cn)\b/.test(urlValue) || /(?:dianping|dianpingapp|dper):\/\//.test(urlValue)) return "dianping";
+  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?amap\.com\b/.test(urlValue) || /(?:amapuri|androidamap):\/\//.test(urlValue)) return "amap";
+
   const value = `${text} ${url}`.toLowerCase();
-  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:meituan\.com|meishi\.meituan\.com|i\.meituan\.com)\b/.test(value) || /(?:imeituan|meituan|meituanwaimai):\/\//.test(value)) return "meituan";
-  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?(?:dianping\.com|dpurl\.cn)\b/.test(value) || /(?:dianping|dianpingapp|dper):\/\//.test(value)) return "dianping";
-  if (/(?:^|\W)(?:https?:\/\/)?(?:[^/\s]+\.)?amap\.com\b/.test(value) || /(?:amapuri|androidamap):\/\//.test(value)) return "amap";
+  if (value.includes("meituan") || value.includes("imeituan://") || value.includes("美团")) return "meituan";
   if (value.includes("xiaohongshu") || value.includes("xhslink") || value.includes("小红书")) return "xiaohongshu";
   if (value.includes("douyin") || value.includes("抖音")) return "douyin";
   if (value.includes("baidumap") || value.includes("map.baidu") || value.includes("百度地图")) return "baidu";
   if (value.includes("qqmap") || value.includes("map.qq") || value.includes("腾讯地图")) return "tencent";
   if (value.includes("weixin") || value.includes("wechat") || value.includes("微信位置") || value.includes("微信")) return "wechat";
   if (value.includes("dianping") || value.includes("dper://") || value.includes("dpurl.cn") || value.includes("大众点评") || value.includes("点评")) return "dianping";
-  if (value.includes("meituan") || value.includes("imeituan://") || value.includes("美团")) return "meituan";
   if (value.includes("amap") || value.includes("高德")) return "amap";
   return "generic";
 }

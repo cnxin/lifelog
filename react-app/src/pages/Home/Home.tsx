@@ -1,4 +1,4 @@
-import { Calendar, Clock, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, Clock, Heart, History, Inbox, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -19,6 +19,7 @@ export default function Home() {
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
+  const [inboxText, setInboxText] = useState("");
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const upcoming = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
@@ -38,11 +39,26 @@ export default function Home() {
     [getPersonName, state.memories, state.places]
   );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(state.memories);
+  const flashbacks = buildFlashbacks(state.memories, getPersonName, getPlaceName).slice(0, 4);
 
   function openQuickMemory(personIds: string[] = [], placeIds: string[] = []) {
     setInitialMemoryPersonIds(personIds);
     setInitialMemoryPlaceIds(placeIds);
     setEntrySheetType("memory");
+  }
+
+  function openInboxMemory() {
+    const text = inboxText.trim();
+    if (!text) {
+      openQuickMemory();
+      return;
+    }
+
+    setInitialMemoryPersonIds([]);
+    setInitialMemoryPlaceIds([]);
+    setInboxText("");
+    setEntrySheetType("memory");
+    window.localStorage.setItem("lifelog:quick-inbox-prefill", text);
   }
 
   const tasks = [
@@ -87,6 +103,7 @@ export default function Home() {
     },
     actionPrefs
   });
+  const hasRealTodayActions = todayActions.some((action) => !action.isEmptyState);
 
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
@@ -126,20 +143,28 @@ export default function Home() {
       </section>
 
       <section className="section">
-        <button
-          className="quick-memory-card"
-          onClick={() => {
-            openQuickMemory();
-          }}
-        >
-          <div className="quick-memory-icon">
-            <PenLine />
+        <GlassCard className="quick-inbox-card">
+          <div className="quick-inbox-head">
+            <span className="quick-memory-icon">
+              <Inbox />
+            </span>
+            <div>
+              <strong>快速记录收件箱</strong>
+              <span>先把一句话放进来，保存后再慢慢整理人物、地点和标签。</span>
+            </div>
           </div>
-          <div>
-            <strong>快速记录</strong>
-            <span>先用一句话记下今天的人、地点和事情</span>
+          <div className="quick-inbox-input">
+            <textarea
+              value={inboxText}
+              onChange={(event) => setInboxText(event.target.value)}
+              placeholder="例如：今天和小林在湖滨吃了晚饭，聊到下次去看展"
+            />
+            <button type="button" onClick={openInboxMemory}>
+              <PenLine />
+              {inboxText.trim() ? "整理成回忆" : "快速记录"}
+            </button>
           </div>
-        </button>
+        </GlassCard>
       </section>
 
       <section className="section">
@@ -147,9 +172,15 @@ export default function Home() {
           <h2>
             <Sparkles /> 今日行动
           </h2>
-          <button className="see-all" onClick={() => openQuickMemory()}>
-            记录
-          </button>
+          {hasRealTodayActions ? (
+            <button className="see-all" onClick={() => openQuickMemory()}>
+              记录
+            </button>
+          ) : (
+            <button className="see-all" onClick={() => navigate("/calendar")}>
+              日历
+            </button>
+          )}
         </div>
         <div className="today-action-list">
           {todayActions.map((action) => (
@@ -353,6 +384,28 @@ export default function Home() {
           </GlassCard>
         )}
       </section>
+
+      {flashbacks.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <History /> 回忆闪回
+            </h2>
+            <button className="see-all" onClick={() => navigate("/memories")}>
+              全部
+            </button>
+          </div>
+          <div className="flashback-list">
+            {flashbacks.map((item) => (
+              <button className="flashback-card glass-card" type="button" key={`${item.kind}-${item.memory.id}`} onClick={() => navigate(`/memories/${item.memory.id}`)}>
+                <span>{item.badge}</span>
+                <strong>{item.title}</strong>
+                <small>{item.desc}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <EntrySheet
         type={entrySheetType}
         memoryMode={entrySheetType === "memory" ? "quick" : "full"}
@@ -368,6 +421,65 @@ export default function Home() {
   );
 }
 
+interface FlashbackItem {
+  kind: string;
+  badge: string;
+  title: string;
+  desc: string;
+  memory: MemoryEvent;
+}
+
+function buildFlashbacks(
+  memories: MemoryEvent[],
+  getPersonName: (id: string) => string,
+  getPlaceName: (id: string) => string
+): FlashbackItem[] {
+  const today = new Date();
+  const month = today.getMonth();
+  const day = today.getDate();
+  const currentYear = today.getFullYear();
+  const byKey = new Map<string, FlashbackItem>();
+
+  memories
+    .filter((memory) => {
+      const date = new Date(`${memory.date}T00:00:00`);
+      return date.getFullYear() < currentYear && date.getMonth() === month && date.getDate() === day;
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 2)
+    .forEach((memory) => {
+      const years = currentYear - new Date(`${memory.date}T00:00:00`).getFullYear();
+      byKey.set(memory.id, {
+        kind: "on-this-day",
+        badge: `${years} 年前`,
+        title: memory.title || "往年今日",
+        desc: buildMemoryContextLine(memory, getPersonName, getPlaceName) || memory.content || "有一条旧回忆可以回看。",
+        memory
+      });
+    });
+
+  [...memories]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(3, 16)
+    .forEach((memory) => {
+      if (byKey.size >= 4 || byKey.has(memory.id)) return;
+      byKey.set(memory.id, {
+        kind: "recent-context",
+        badge: formatMonthDay(memory.date),
+        title: memory.title || "最近的旧回忆",
+        desc: buildMemoryContextLine(memory, getPersonName, getPlaceName) || memory.content || "可以重新打开看看细节。",
+        memory
+      });
+    });
+
+  return Array.from(byKey.values());
+}
+
+function buildMemoryContextLine(memory: MemoryEvent, getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {
+  const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+  return [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ");
+}
+
 interface TodayAction {
   id: string;
   icon: JSX.Element;
@@ -376,6 +488,7 @@ interface TodayAction {
   meta?: string;
   tone?: "warm" | "cool";
   canDismiss?: boolean;
+  isEmptyState?: boolean;
   onClick: () => void;
 }
 
@@ -477,9 +590,10 @@ function buildTodayActions({
       id: "record-today",
       icon: <PenLine />,
       title: "今天没有必须处理的事项",
-      desc: "可以先记一条回忆，或去纪念日区块查看未来 30 天安排。",
-      meta: "记录",
-      onClick: onQuickMemory
+      desc: "提醒、联系和纪念日安排都暂时不用处理。可以去日历看看未来安排。",
+      meta: "空闲",
+      isEmptyState: true,
+      onClick: onOpenCalendar
     });
   }
 

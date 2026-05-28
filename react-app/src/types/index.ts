@@ -139,13 +139,17 @@ export interface AppSettings {
   defaultRelationship: string;
   defaultMood: string;
   themeStyle: ThemeStyle;
+  privacyMode?: boolean;
+  hidePhotoThumbnails?: boolean;
 }
 
 export const defaultAppSettings: AppSettings = {
   defaultCity: "杭州",
   defaultRelationship: "朋友",
   defaultMood: "开心",
-  themeStyle: "classic"
+  themeStyle: "classic",
+  privacyMode: false,
+  hidePhotoThumbnails: false
 };
 
 export type EntryType = "person" | "place" | "memory";

@@ -19,6 +19,7 @@ const MemoryDetail = lazy(() => import("./pages/Memories/MemoryDetail"));
 // 设置/账号页（低频）
 const Settings = lazy(() => import("./pages/Settings/Settings"));
 const Account = lazy(() => import("./pages/Account/Account"));
+const ShareImport = lazy(() => import("./pages/ShareImport/ShareImport"));
 
 function PageLoading() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/share/import" element={<ShareImport />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -1,10 +1,12 @@
-import { Building2, GitMerge, MapPin, Plus, RotateCcw, Star, Store } from "lucide-react";
+import { Building2, CheckSquare, GitMerge, MapPin, Plus, RotateCcw, Share2, Square, Star, Store, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import LocalShareSheet from "../../components/LocalShareSheet";
+import PageSegmentNav from "../../components/PageSegmentNav";
 import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
@@ -13,6 +15,7 @@ import type { Place, PlaceDuplicateGroup, PlaceMergePreview } from "../../types"
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
+import { usePersistentState } from "../../hooks/usePersistentState";
 import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
 import { buildMallVisitStats, buildPlaceVisitStats, type MallVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
@@ -26,6 +29,15 @@ import {
 } from "../../utils/placeMeta";
 
 type PlaceSortMode = "smart" | "recent" | "rating" | "name";
+interface PlaceFilterState {
+  query: string;
+  country: string;
+  province: string;
+  city: string;
+  area: string;
+  category: string;
+  sortMode: PlaceSortMode;
+}
 
 export default function Places() {
   const {
@@ -46,8 +58,20 @@ export default function Places() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const locationFilter = usePlaceLocationFilter(state.places);
+  const [filters, setFilters] = usePersistentState<PlaceFilterState>(
+    "lifelog:filters:places",
+    {
+      query: "",
+      country: "全部",
+      province: "全部",
+      city: "全部",
+      area: "全部",
+      category: "全部",
+      sortMode: "smart"
+    },
+    isPlaceFilterState
+  );
+  const locationFilter = usePlaceLocationFilter(state.places, filters);
   const {
     country,
     province,
@@ -63,12 +87,16 @@ export default function Places() {
     areaOptions,
     matches: matchesLocation,
   } = locationFilter;
-  const [category, setCategory] = useState("全部");
+  const query = filters.query;
+  const category = filters.category;
+  const sortMode = filters.sortMode;
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
-  const [sortMode, setSortMode] = useState<PlaceSortMode>("smart");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [weakQueueIndex, setWeakQueueIndex] = useState<number | null>(null);
+  const [batchShareMode, setBatchShareMode] = useState(false);
+  const [selectedSharePlaceIds, setSelectedSharePlaceIds] = useState<string[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
   const strongDuplicateGroups = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong"),
     [duplicatePlaceGroups],
@@ -252,15 +280,49 @@ export default function Places() {
   }
 
   function clearFilters() {
-    setQuery("");
-    setCountry("全部");
-    setProvince("全部");
-    setCity("全部");
-    setArea("全部");
-    setCategory("全部");
+    const reset = {
+      query: "",
+      country: "全部",
+      province: "全部",
+      city: "全部",
+      area: "全部",
+      category: "全部",
+      sortMode: "smart" as const
+    };
+    setFilters(reset);
+    setCountry(reset.country);
+    setProvince(reset.province);
+    setCity(reset.city);
+    setArea(reset.area);
+  }
+
+  function updateFilters(patch: Partial<PlaceFilterState>) {
+    setFilters({ ...filters, ...patch });
+  }
+
+  function updateCountry(value: string) {
+    setCountry(value);
+    updateFilters({ country: value, province: "全部", city: "全部", area: "全部" });
+  }
+
+  function updateProvince(value: string) {
+    setProvince(value);
+    updateFilters({ province: value, city: "全部", area: "全部" });
+  }
+
+  function updateCity(value: string) {
+    setCity(value);
+    updateFilters({ city: value, area: "全部" });
+  }
+
+  function updateArea(value: string) {
+    setArea(value);
+    updateFilters({ area: value });
   }
 
   const storePlaceRows = placeRows.filter(({ place }) => !isMallRecord(place));
+  const selectablePlaceIds = storePlaceRows.map(({ place }) => place.id);
+  const selectedShareCount = selectedSharePlaceIds.length;
   const activeFilterLabels = buildActiveFilterLabels({
     query: query.trim(),
     country,
@@ -272,10 +334,17 @@ export default function Places() {
 
   return (
     <>
+      <PageSegmentNav
+        ariaLabel="档案视图"
+        items={[
+          { to: "/people", label: "人物", icon: <Users />, end: true },
+          { to: "/places", label: "地点", icon: <MapPin /> }
+        ]}
+      />
       <SearchBar
         value={query}
         placeholder="搜索地点、区域、城市、标签"
-        onChange={setQuery}
+        onChange={(query) => updateFilters({ query })}
       />
       <div className="location-switcher">
         <label>
@@ -283,7 +352,7 @@ export default function Places() {
           <SelectPicker
             label="国家筛选"
             value={country}
-            onChange={setCountry}
+            onChange={updateCountry}
             options={countries.map((item) => ({ value: item, label: item }))}
           />
         </label>
@@ -292,7 +361,7 @@ export default function Places() {
           <SelectPicker
             label="省州筛选"
             value={province}
-            onChange={setProvince}
+            onChange={updateProvince}
             options={provinceOptions.map((item) => ({ value: item, label: item }))}
           />
         </label>
@@ -301,7 +370,7 @@ export default function Places() {
           <SelectPicker
             label="城市筛选"
             value={city}
-            onChange={setCity}
+            onChange={updateCity}
             options={cityOptions.map((item) => ({ value: item, label: item }))}
           />
         </label>
@@ -311,7 +380,7 @@ export default function Places() {
           <button
             className={`category-pill ${item === area ? "active" : ""}`}
             key={item}
-            onClick={() => setArea(item)}
+            onClick={() => updateArea(item)}
           >
             {item}
           </button>
@@ -322,7 +391,7 @@ export default function Places() {
           <button
             className={`category-pill ${item === category ? "active" : ""}`}
             key={item}
-            onClick={() => setCategory(item)}
+            onClick={() => updateFilters({ category: item })}
           >
             {item}
           </button>
@@ -352,7 +421,7 @@ export default function Places() {
               type="button"
               className={option.value === sortMode ? "active" : ""}
               key={option.value}
-              onClick={() => setSortMode(option.value)}
+              onClick={() => updateFilters({ sortMode: option.value })}
             >
               {option.label}
             </button>
@@ -468,19 +537,87 @@ export default function Places() {
           <h2>
             <Store /> 具体店铺 / 场所
           </h2>
-          {!mallGroups.length && (
-            <button className="see-all" onClick={() => setCreatingNew(true)}>
-              新建商场
-            </button>
-          )}
+          <div className="section-header-actions">
+            {storePlaceRows.length > 0 && (
+              <button
+                className="see-all"
+                onClick={() => {
+                  setBatchShareMode((current) => !current);
+                  setSelectedSharePlaceIds([]);
+                }}
+              >
+                {batchShareMode ? "取消" : "批量分享"}
+              </button>
+            )}
+            {!mallGroups.length && (
+              <button className="see-all" onClick={() => setCreatingNew(true)}>
+                新建商场
+              </button>
+            )}
+          </div>
         </div>
+        {batchShareMode && (
+          <GlassCard className="batch-share-toolbar">
+            <div>
+              <strong>已选择 {selectedShareCount} 个地点</strong>
+              <span>会生成一个本地分享包，接收方预览后添加。</span>
+            </div>
+            <div>
+              <button
+                className="mini-action"
+                type="button"
+                onClick={() => setSelectedSharePlaceIds(selectedShareCount === selectablePlaceIds.length ? [] : selectablePlaceIds)}
+              >
+                {selectedShareCount === selectablePlaceIds.length ? <Square size={14} /> : <CheckSquare size={14} />}
+                {selectedShareCount === selectablePlaceIds.length ? "取消全选" : "全选"}
+              </button>
+              <button
+                className="mini-action add"
+                type="button"
+                disabled={!selectedShareCount}
+                onClick={() => setShareOpen(true)}
+              >
+                <Share2 size={14} />
+                分享
+              </button>
+              <button
+                className="mini-action"
+                type="button"
+                onClick={() => {
+                  setBatchShareMode(false);
+                  setSelectedSharePlaceIds([]);
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </GlassCard>
+        )}
         <div className="list">
           {storePlaceRows.map(({ place, visitStats }) => {
+            const selected = selectedSharePlaceIds.includes(place.id);
             return (
-              <GlassCard className="place-card" key={place.id}>
+              <GlassCard className={`place-card ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""}`} key={place.id}>
+                {batchShareMode && (
+                  <button
+                    className="place-share-select"
+                    type="button"
+                    aria-pressed={selected}
+                    aria-label={selected ? "取消选择地点" : "选择地点"}
+                    onClick={() => toggleSharePlace(place.id, setSelectedSharePlaceIds)}
+                  >
+                    {selected ? <CheckSquare size={18} /> : <Square size={18} />}
+                  </button>
+                )}
                 <button
                   className="place-tap"
-                  onClick={() => navigate(`/places/${place.id}`)}
+                  onClick={() => {
+                    if (batchShareMode) {
+                      toggleSharePlace(place.id, setSelectedSharePlaceIds);
+                      return;
+                    }
+                    navigate(`/places/${place.id}`);
+                  }}
                 >
                   <div className="place-img">
                     <MapPin />
@@ -488,7 +625,13 @@ export default function Places() {
                 </button>
                 <div
                   className="place-info"
-                  onClick={() => navigate(`/places/${place.id}`)}
+                  onClick={() => {
+                    if (batchShareMode) {
+                      toggleSharePlace(place.id, setSelectedSharePlaceIds);
+                      return;
+                    }
+                    navigate(`/places/${place.id}`);
+                  }}
                 >
                   <div className="place-name">
                     <span>{buildPlaceDisplayName(place)}</span>
@@ -500,6 +643,7 @@ export default function Places() {
                         aria-label={place.favorite ? "取消收藏" : "收藏"}
                         onClick={(event) => {
                           event.stopPropagation();
+                          if (batchShareMode) return;
                           void togglePlaceFavorite(place.id);
                         }}
                       >
@@ -527,10 +671,21 @@ export default function Places() {
                   <Tags items={place.tags} />
                 </div>
                 <div className="person-side-actions">
-                  <CardActions
-                    onEdit={() => setEditingId(place.id)}
-                    onDelete={() => handleDelete(place.id)}
-                  />
+                  {batchShareMode ? (
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label={selected ? "取消选择地点" : "选择地点"}
+                      onClick={() => toggleSharePlace(place.id, setSelectedSharePlaceIds)}
+                    >
+                      {selected ? <CheckSquare /> : <Square />}
+                    </button>
+                  ) : (
+                    <CardActions
+                      onEdit={() => setEditingId(place.id)}
+                      onDelete={() => handleDelete(place.id)}
+                    />
+                  )}
                 </div>
               </GlassCard>
             );
@@ -591,6 +746,23 @@ export default function Places() {
           }}
         />
       )}
+      <LocalShareSheet
+        target={
+          shareOpen
+            ? {
+                type: "places",
+                placeIds: selectedSharePlaceIds,
+                title: `批量分享 ${selectedSharePlaceIds.length} 个地点`,
+                count: selectedSharePlaceIds.length
+              }
+            : null
+        }
+        onClose={() => {
+          setShareOpen(false);
+          setBatchShareMode(false);
+          setSelectedSharePlaceIds([]);
+        }}
+      />
     </>
   );
 }
@@ -601,6 +773,28 @@ const placeSortOptions: Array<{ value: PlaceSortMode; label: string }> = [
   { value: "rating", label: "评分" },
   { value: "name", label: "名称" }
 ];
+
+function isPlaceFilterState(value: unknown): value is PlaceFilterState {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PlaceFilterState>;
+  return (
+    typeof candidate.query === "string" &&
+    typeof candidate.country === "string" &&
+    typeof candidate.province === "string" &&
+    typeof candidate.city === "string" &&
+    typeof candidate.area === "string" &&
+    typeof candidate.category === "string" &&
+    ["smart", "recent", "rating", "name"].includes(String(candidate.sortMode))
+  );
+}
+
+function toggleSharePlace(placeId: string, setSelected: (updater: (current: string[]) => string[]) => void) {
+  setSelected((current) => (
+    current.includes(placeId)
+      ? current.filter((id) => id !== placeId)
+      : [...current, placeId]
+  ));
+}
 
 function comparePlaceRows(
   left: { place: Place; visitStats: PlaceVisitStats },

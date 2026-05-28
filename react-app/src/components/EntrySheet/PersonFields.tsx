@@ -5,6 +5,12 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { groupsToText, splitPreferenceItems } from "../../utils/text";
 import DateInput from "../DateInput";
 import SelectPicker from "../SelectPicker";
+import {
+  getDraftJson,
+  getDraftValue,
+  hasDraftField,
+  type DraftFieldMap
+} from "./draftValues";
 
 const RELATIONSHIP_OPTIONS = ["朋友", "家人", "同事", "同学", "恋人", "其他"].map((item) => ({ value: item, label: item }));
 const BOOLEAN_OPTIONS = [
@@ -12,8 +18,16 @@ const BOOLEAN_OPTIONS = [
   { value: "false", label: "否" }
 ];
 
-export function PersonFields({ person, isEditing }: { person?: Person; isEditing: boolean }) {
-  if (!isEditing) return <QuickPersonFields />;
+export function PersonFields({
+  person,
+  isEditing,
+  draftValues
+}: {
+  person?: Person;
+  isEditing: boolean;
+  draftValues?: DraftFieldMap;
+}) {
+  if (!isEditing) return <QuickPersonFields draftValues={draftValues} />;
 
   const customAnniversaries = (person?.anniversaries || []).filter((item) => item.title !== "生日");
 
@@ -22,11 +36,11 @@ export function PersonFields({ person, isEditing }: { person?: Person; isEditing
       <div className="form-row">
         <label>
           姓名
-          <input name="name" defaultValue={person?.name} required />
+          <input name="name" defaultValue={getDraftValue(draftValues, "name", person?.name || "")} required />
         </label>
         <label>
           昵称
-          <input name="nickname" defaultValue={person?.nickname || ""} />
+          <input name="nickname" defaultValue={getDraftValue(draftValues, "nickname", person?.nickname || "")} />
         </label>
       </div>
       <div className="form-row">
@@ -35,7 +49,7 @@ export function PersonFields({ person, isEditing }: { person?: Person; isEditing
           <SelectPicker
             name="relationship"
             label="人物关系"
-            defaultValue={person?.relationship || "朋友"}
+            defaultValue={getDraftValue(draftValues, "relationship", person?.relationship || "朋友")}
             options={RELATIONSHIP_OPTIONS}
           />
         </label>
@@ -44,21 +58,22 @@ export function PersonFields({ person, isEditing }: { person?: Person; isEditing
           <SelectPicker
             name="favorite"
             label="人物收藏"
-            defaultValue={person?.favorite ? "true" : "false"}
+            defaultValue={getDraftValue(draftValues, "favorite", person?.favorite ? "true" : "false")}
             options={BOOLEAN_OPTIONS}
           />
         </label>
       </div>
-      <BirthdayDateFields birthday={person?.birthday} />
+      <BirthdayDateFields birthday={person?.birthday} draftValues={draftValues} />
       <p className="form-hint">只记录公历生日，农历日期会自动计算并显示。</p>
       <label>纪念日</label>
-      <AnniversaryEditor anniversaries={customAnniversaries} />
+      <AnniversaryEditor anniversaries={customAnniversaries} draftValues={draftValues} />
       <label>
         喜好档案
       </label>
       <PreferenceGroupEditor
         name="preferences"
         groups={person?.preferences}
+        draftValues={draftValues}
         defaults={[
           { category: "颜色", items: ["蓝色", "黑色"] },
           { category: "食物", items: ["火锅", "寿司"] },
@@ -70,6 +85,7 @@ export function PersonFields({ person, isEditing }: { person?: Person; isEditing
         name="dislikes"
         danger
         groups={person?.dislikes}
+        draftValues={draftValues}
         defaults={[
           { category: "过敏", items: ["花生"] },
           { category: "口味", items: ["不吃辣"] }
@@ -77,14 +93,23 @@ export function PersonFields({ person, isEditing }: { person?: Person; isEditing
       />
       <label>
         备注
-        <textarea name="notes" defaultValue={person?.notes} placeholder="记录一些重要细节，例如：喜欢喝美式，不吃香菜。" />
+        <textarea
+          name="notes"
+          defaultValue={getDraftValue(draftValues, "notes", person?.notes || "")}
+          placeholder="记录一些重要细节，例如：喜欢喝美式，不吃香菜。"
+        />
       </label>
     </>
   );
 }
 
-function BirthdayDateFields({ birthday }: { birthday?: string }) {
-  const [birthdayValue, setBirthdayValue] = useState(birthday || "");
+function BirthdayDateFields({ birthday, draftValues }: { birthday?: string; draftValues?: DraftFieldMap }) {
+  const draftBirthday = buildDraftDate(
+    getDraftValue(draftValues, "birthdayYear", ""),
+    getDraftValue(draftValues, "birthdayMonth", ""),
+    getDraftValue(draftValues, "birthdayDay", "")
+  );
+  const [birthdayValue, setBirthdayValue] = useState(draftBirthday || birthday || "");
   const [year = "", month = "", day = ""] = birthdayValue.split("-");
 
   return (
@@ -98,32 +123,32 @@ function BirthdayDateFields({ birthday }: { birthday?: string }) {
   );
 }
 
-function QuickPersonFields() {
+function QuickPersonFields({ draftValues }: { draftValues?: DraftFieldMap }) {
   const { settings } = useLifeLog();
 
   return (
     <>
       <label>
         姓名
-        <input name="name" placeholder="例如：王晓明" required autoFocus />
+        <input name="name" defaultValue={getDraftValue(draftValues, "name")} placeholder="例如：王晓明" required autoFocus />
       </label>
       <label>
         关系
         <SelectPicker
           name="relationship"
           label="人物关系"
-          defaultValue={settings.defaultRelationship}
+          defaultValue={getDraftValue(draftValues, "relationship", settings.defaultRelationship)}
           options={RELATIONSHIP_OPTIONS}
         />
       </label>
-      <input type="hidden" name="favorite" value="false" />
+      <input type="hidden" name="favorite" value={getDraftValue(draftValues, "favorite", "false")} />
       <input type="hidden" name="preferences" value="" />
       <input type="hidden" name="dislikes" value="" />
       <input type="hidden" name="anniversaries" value="[]" />
       <p className="form-hint">先记下这个人就可以，生日、喜好、禁忌和纪念日可以在详情页慢慢补。</p>
       <label>
         一句话备注
-        <textarea name="notes" placeholder="例如：喜欢喝美式，不吃香菜。" />
+        <textarea name="notes" defaultValue={getDraftValue(draftValues, "notes")} placeholder="例如：喜欢喝美式，不吃香菜。" />
       </label>
     </>
   );
@@ -140,9 +165,15 @@ interface PreferenceEditorRow {
   draftItem: string;
 }
 
-function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] }) {
+function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Anniversary[]; draftValues?: DraftFieldMap }) {
+  const draftAnniversaries = getDraftJson<AnniversaryRow[] | null>(draftValues, "anniversaries", null);
   const [rows, setRows] = useState<AnniversaryRow[]>(
-    anniversaries?.length
+    draftAnniversaries
+      ? draftAnniversaries.map((item) => ({
+        title: item.title,
+        date: item.date
+      }))
+      : anniversaries?.length
       ? anniversaries.map((item) => ({
         title: item.title,
         date: item.date
@@ -219,19 +250,21 @@ function AnniversaryEditor({ anniversaries }: { anniversaries?: Anniversary[] })
   );
 }
 
-function PreferenceGroupEditor({
+export function PreferenceGroupEditor({
   name,
   groups,
   defaults,
+  draftValues,
   danger = false
 }: {
   name: string;
   groups?: PreferenceGroup[];
   defaults: PreferenceGroup[];
+  draftValues?: DraftFieldMap;
   danger?: boolean;
 }) {
   const [rows, setRows] = useState(() =>
-    (groups ?? defaults).map((group) => ({
+    (hasDraftField(draftValues, name) ? parseDraftGroups(getDraftValue(draftValues, name)) : (groups ?? defaults)).map((group) => ({
       category: group.category,
       items: [...group.items],
       draftItem: ""
@@ -387,4 +420,24 @@ function mergePreferenceItems(currentItems: string[], nextItems: string[]) {
       seen.add(item);
       return true;
     });
+}
+
+function buildDraftDate(year: string, month: string, day: string) {
+  if (!year || !month || !day) return "";
+  return `${year.padStart(4, "0")}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+function parseDraftGroups(value: string): PreferenceGroup[] {
+  return value
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [category, rawItems = ""] = line.split(/[:：]/);
+      return {
+        category: category.trim(),
+        items: splitPreferenceItems(rawItems)
+      };
+    })
+    .filter((group) => group.category && group.items.length);
 }

@@ -9,8 +9,28 @@ import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
 import PlacePicker from "../PlacePicker";
 import { PhotoUploader } from "../PhotoUploader";
+import {
+  getDraftValue,
+  getDraftValues,
+  hasDraftField,
+  type DraftFieldMap
+} from "./draftValues";
 
 const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
+const STRUCTURED_MEMORY_TEMPLATES = [
+  {
+    label: "三段记录",
+    content: "发生了什么：\n\n当时感受：\n\n下次注意："
+  },
+  {
+    label: "地点体验",
+    content: "环境：\n\n服务：\n\n推荐点：\n\n下次想试："
+  },
+  {
+    label: "人物互动",
+    content: "一起做了什么：\n\n聊到的事：\n\nTA 的偏好/雷区：\n\n下次可以："
+  }
+];
 
 export function MemoryFields({
   memory,
@@ -23,11 +43,14 @@ export function MemoryFields({
   mode,
   photos,
   onPhotosChange,
-  isSubmitting
+  isSubmitting,
+  draftValues,
+  onCreatePerson,
+  onCreatePlace
 }: {
   memory?: MemoryEvent;
   people: Array<{ id: string; name: string }>;
-  places: Array<{ id: string; name: string }>;
+  places: Array<{ id: string; name: string; storeName?: string; mall?: string; area?: string; city?: string; address?: string }>;
   initialPersonIds?: string[];
   initialPlaceId?: string;
   initialPlaceIds?: string[];
@@ -36,26 +59,40 @@ export function MemoryFields({
   photos: Photo[];
   onPhotosChange: (photos: Photo[]) => void;
   isSubmitting: boolean;
+  draftValues?: DraftFieldMap;
+  onCreatePerson?: (name: string) => Promise<string>;
+  onCreatePlace?: (name: string) => Promise<string>;
 }) {
   const { settings } = useLifeLog();
-  const selectedPersonIds = memory?.personIds?.length ? memory.personIds : initialPersonIds.filter(Boolean);
-  const selectedPlaceIds = getInitialPlaceIds(memory, initialPlaceId, initialPlaceIds);
+  const draftPersonIds = getDraftValues(draftValues, "personIds").filter(Boolean);
+  const draftPlaceIds = getDraftMemoryPlaceIds(draftValues);
+  const selectedPersonIds = hasDraftField(draftValues, "personIds")
+    ? draftPersonIds
+    : memory?.personIds?.length
+      ? memory.personIds
+      : initialPersonIds.filter(Boolean);
+  const selectedPlaceIds = hasDraftField(draftValues, "placeIds") || hasDraftField(draftValues, "placeId")
+    ? draftPlaceIds
+    : getInitialPlaceIds(memory, initialPlaceId, initialPlaceIds);
   const todayValue = new Date().toISOString().slice(0, 10);
-  const [quickDate, setQuickDate] = useState(initialDate || todayValue);
+  const inboxPrefill = !memory && mode === "quick" ? consumeQuickInboxPrefill() : "";
+  const [quickDate, setQuickDate] = useState(getDraftValue(draftValues, "date", initialDate || todayValue));
   const [quickContent, setQuickContent] = useState(() =>
-    !memory && mode === "quick"
+    getDraftValue(draftValues, "title") ||
+    inboxPrefill ||
+    (!memory && mode === "quick"
       ? buildDefaultQuickMemoryTitle({
           personNames: resolvePersonNames(initialPersonIds, people),
           placeName: resolvePlaceNames(getInitialPlaceIds(undefined, initialPlaceId, initialPlaceIds), places).join("、")
         })
-      : ""
+      : "")
   );
-  const [quickDetailsContent, setQuickDetailsContent] = useState("");
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => initialPersonIds.filter(Boolean));
+  const [quickDetailsContent, setQuickDetailsContent] = useState(getDraftValue(draftValues, "content"));
+  const [detailsOpen, setDetailsOpen] = useState(() => hasRestoredQuickDetails(draftValues));
+  const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => selectedPersonIds);
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [fullPlaceIds, setFullPlaceIds] = useState<string[]>(() => selectedPlaceIds);
-  const [mood, setMood] = useState<string>(memory ? memory.mood : settings.defaultMood);
+  const [mood, setMood] = useState<string>(getDraftValue(draftValues, "mood", memory ? memory.mood : settings.defaultMood));
   const quickInferenceContent = detailsOpen ? quickDetailsContent : quickContent;
   const quickPreview = inferQuickMemory({
     rawTitle: quickContent,
@@ -174,11 +211,23 @@ export function MemoryFields({
             <div className="form-row">
               <div>
                 <span className="field-title">人物</span>
-                <PersonPicker people={people} value={quickPersonIds} onChange={setQuickPersonIds} />
+                <PersonPicker
+                  people={people}
+                  value={quickPersonIds}
+                  onChange={setQuickPersonIds}
+                  onCreate={onCreatePerson}
+                  includeEmptyMarker
+                />
               </div>
               <div>
                 <span className="field-title">地点</span>
-                <PlacePicker places={places} value={quickPlaceIds} onChange={setQuickPlaceIds} />
+                <PlacePicker
+                  places={places}
+                  value={quickPlaceIds}
+                  onChange={setQuickPlaceIds}
+                  onCreate={onCreatePlace}
+                  includeEmptyMarker
+                />
                 <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
               </div>
             </div>
@@ -217,7 +266,11 @@ export function MemoryFields({
             </div>
             <label>
               标签
-              <input name="tags" placeholder="日常、值得记住；可用顿号、逗号或分号分隔" />
+              <input
+                name="tags"
+                defaultValue={getDraftValue(draftValues, "tags")}
+                placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
+              />
             </label>
           </div>
         )}
@@ -257,13 +310,18 @@ export function MemoryFields({
         标题
         <input
           name="title"
-          defaultValue={memory?.title === "新的回忆" ? "" : memory?.title || ""}
+          defaultValue={getDraftValue(draftValues, "title", memory?.title === "新的回忆" ? "" : memory?.title || "")}
           placeholder="留空将自动按人物 / 地点生成摘要"
         />
       </label>
       <label className="inline-field">
         <span className="inline-field-label">日期</span>
-        <DateInput name="date" label="回忆日期" defaultValue={memory?.date || initialDate || todayValue} required />
+        <DateInput
+          name="date"
+          label="回忆日期"
+          defaultValue={getDraftValue(draftValues, "date", memory?.date || initialDate || todayValue)}
+          required
+        />
       </label>
       <label>
         心情
@@ -288,17 +346,33 @@ export function MemoryFields({
       </label>
       <div>
         <span className="field-title">关联人物</span>
-        <PersonPicker people={people} defaultSelected={selectedPersonIds} />
+        <PersonPicker people={people} defaultSelected={selectedPersonIds} onCreate={onCreatePerson} includeEmptyMarker />
       </div>
       <div>
         <span className="field-title">关联地点</span>
-        <PlacePicker places={places} value={fullPlaceIds} onChange={setFullPlaceIds} />
+        <PlacePicker
+          places={places}
+          value={fullPlaceIds}
+          onChange={setFullPlaceIds}
+          onCreate={onCreatePlace}
+          includeEmptyMarker
+        />
         <input type="hidden" name="placeId" value={fullPlaceIds[0] || ""} />
         <p className="form-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
       </div>
       <label>
         内容
         <div className="content-template-grid">
+          {STRUCTURED_MEMORY_TEMPLATES.map((template) => (
+            <button
+              type="button"
+              className="content-template-chip strong"
+              key={template.label}
+              onClick={(event) => insertTemplateIntoSiblingTextarea(event.currentTarget, template.content)}
+            >
+              {template.label}
+            </button>
+          ))}
           {buildMemoryContentTemplates(
             resolvePersonNames(selectedPersonIds, people),
             resolvePlaceNames(fullPlaceIds, places)
@@ -315,7 +389,7 @@ export function MemoryFields({
         </div>
         <textarea
           name="content"
-          defaultValue={memory?.content || ""}
+          defaultValue={getDraftValue(draftValues, "content", memory?.content || "")}
           placeholder="可按“发生了什么 / 当时感受 / 下次注意”三段记录。"
         />
       </label>
@@ -333,7 +407,7 @@ export function MemoryFields({
         标签
         <input
           name="tags"
-          defaultValue={memory?.tags.join("，") || ""}
+          defaultValue={getDraftValue(draftValues, "tags", memory?.tags.join("，") || "")}
           placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
         />
       </label>
@@ -376,6 +450,28 @@ function getInitialPlaceIds(memory: MemoryEvent | undefined, initialPlaceId: str
   return Array.from(new Set(ids));
 }
 
+function getDraftMemoryPlaceIds(draftValues?: DraftFieldMap) {
+  const ids = [
+    ...getDraftValues(draftValues, "placeIds"),
+    getDraftValue(draftValues, "placeId")
+  ]
+    .map((id) => id.trim())
+    .filter(Boolean);
+  return Array.from(new Set(ids));
+}
+
+function hasRestoredQuickDetails(draftValues?: DraftFieldMap) {
+  if (!draftValues) return false;
+  const title = getDraftValue(draftValues, "title").trim();
+  const content = getDraftValue(draftValues, "content").trim();
+  return (
+    hasDraftField(draftValues, "tags") && Boolean(getDraftValue(draftValues, "tags").trim()) ||
+    getDraftValues(draftValues, "personIds").length > 0 ||
+    getDraftMemoryPlaceIds(draftValues).length > 0 ||
+    Boolean(content && content !== title)
+  );
+}
+
 function appendTemplate(current: string, template: string) {
   const trimmed = current.trim();
   if (!trimmed) return template;
@@ -389,4 +485,15 @@ function insertTemplateIntoSiblingTextarea(button: HTMLButtonElement, template: 
   textarea.value = appendTemplate(textarea.value, template);
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
   textarea.focus();
+}
+
+function consumeQuickInboxPrefill() {
+  if (typeof window === "undefined") return "";
+  try {
+    const value = window.localStorage.getItem("lifelog:quick-inbox-prefill") || "";
+    window.localStorage.removeItem("lifelog:quick-inbox-prefill");
+    return value;
+  } catch {
+    return "";
+  }
 }

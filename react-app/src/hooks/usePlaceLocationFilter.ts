@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Place } from "../types";
 
 export interface PlaceLocationFilter {
@@ -17,15 +17,23 @@ export interface PlaceLocationFilter {
   matches: (place: Pick<Place, "country" | "province" | "city" | "area">) => boolean;
 }
 
+export interface PlaceLocationFilterInitialValue {
+  country?: string;
+  province?: string;
+  city?: string;
+  area?: string;
+}
+
 const ALL = "全部";
 const UNSET = "未设置";
 const UNGROUPED = "未分组";
 
-export function usePlaceLocationFilter(places: Place[]): PlaceLocationFilter {
-  const [country, setCountry] = useState(ALL);
-  const [province, setProvince] = useState(ALL);
-  const [city, setCity] = useState(ALL);
-  const [area, setArea] = useState(ALL);
+export function usePlaceLocationFilter(places: Place[], initialValue: PlaceLocationFilterInitialValue = {}): PlaceLocationFilter {
+  const initializedRef = useRef(false);
+  const [country, setCountry] = useState(initialValue.country || ALL);
+  const [province, setProvince] = useState(initialValue.province || ALL);
+  const [city, setCity] = useState(initialValue.city || ALL);
+  const [area, setArea] = useState(initialValue.area || ALL);
 
   const countries = useMemo(
     () => [ALL, ...new Set(places.map((place) => place.country || "中国"))],
@@ -77,8 +85,11 @@ export function usePlaceLocationFilter(places: Place[]): PlaceLocationFilter {
     [city, country, province, places],
   );
 
-  // 父级变化时重置子级
   useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      return;
+    }
     setProvince(ALL);
     setCity(ALL);
     setArea(ALL);

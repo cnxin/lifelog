@@ -1,29 +1,42 @@
-import { Plus, RotateCcw, Star } from "lucide-react";
+import { MapPin, Plus, RotateCcw, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import PageSegmentNav from "../../components/PageSegmentNav";
+import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import SearchBar from "../../components/SearchBar";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
+import { usePersistentState } from "../../hooks/usePersistentState";
 import type { Person } from "../../types";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel } from "../../utils/date";
 import { buildRelationshipHealth, type RelationshipHealth } from "../../utils/relationshipHealth";
 import { initials } from "../../utils/text";
 
 type PeopleSortMode = "smart" | "recent" | "name";
+interface PeopleFilterState {
+  query: string;
+  sortMode: PeopleSortMode;
+}
 
 export default function People() {
-  const { state, deleteEntry, getDeleteSnapshot, restoreDeletedEntry, togglePersonFavorite } = useLifeLog();
+  const { state, deleteEntry, getDeleteSnapshot, restoreDeletedEntry, togglePersonFavorite, updatePersonProfile } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
+  const [filters, setFilters] = usePersistentState<PeopleFilterState>(
+    "lifelog:filters:people",
+    { query: "", sortMode: "smart" },
+    isPeopleFilterState
+  );
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
-  const [sortMode, setSortMode] = useState<PeopleSortMode>("smart");
+  const [preferenceEditor, setPreferenceEditor] = useState<{ personId: string; mode: PersonPreferenceMode } | null>(null);
+  const query = filters.query;
+  const sortMode = filters.sortMode;
   const normalizedQuery = query.trim().toLowerCase();
 
   const peopleRows = useMemo(() => {
@@ -44,7 +57,15 @@ export default function People() {
   }, [normalizedQuery, sortMode, state.memories, state.people]);
 
   function clearSearch() {
-    setQuery("");
+    setFilters({ query: "", sortMode: "smart" });
+  }
+
+  function setQuery(query: string) {
+    setFilters({ ...filters, query });
+  }
+
+  function setSortMode(sortMode: PeopleSortMode) {
+    setFilters({ ...filters, sortMode });
   }
 
   async function handleDelete(id: string) {
@@ -75,6 +96,13 @@ export default function People() {
 
   return (
     <>
+      <PageSegmentNav
+        ariaLabel="档案视图"
+        items={[
+          { to: "/people", label: "人物", icon: <Users />, end: true },
+          { to: "/places", label: "地点", icon: <MapPin /> }
+        ]}
+      />
       <SearchBar value={query} placeholder="搜索姓名、喜好、关系" onChange={setQuery} />
       <section className="section list-filter-section">
         <div className="list-filter-summary">
@@ -139,7 +167,11 @@ export default function People() {
                     <span>{health.detail}</span>
                     {health.memoryCount > 0 && <span>{health.memoryCount} 条回忆</span>}
                   </div>
-                  <PreferenceLines preferences={person.preferences} dislikes={person.dislikes} />
+                  <PreferenceLines
+                    preferences={person.preferences}
+                    dislikes={person.dislikes}
+                    onEdit={(mode) => setPreferenceEditor({ personId: person.id, mode })}
+                  />
                 </div>
                 <div className="person-side-actions">
                   <CardActions onEdit={() => setEditingId(person.id)} onDelete={() => handleDelete(person.id)} />
@@ -167,6 +199,15 @@ export default function People() {
       </section>
       <EntrySheet type={editingId ? "person" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
       <EntrySheet type={creatingNew ? "person" : null} onClose={() => setCreatingNew(false)} />
+      <PersonPreferenceSheet
+        person={state.people.find((person) => person.id === preferenceEditor?.personId) || null}
+        mode={preferenceEditor?.mode || "preferences"}
+        onClose={() => setPreferenceEditor(null)}
+        onSave={async (personId, patch) => {
+          await updatePersonProfile(personId, patch);
+          notify({ message: preferenceEditor?.mode === "dislikes" ? "雷区已更新" : "喜好档案已更新", tone: "success" });
+        }}
+      />
     </>
   );
 }
@@ -176,6 +217,15 @@ const peopleSortOptions: Array<{ value: PeopleSortMode; label: string }> = [
   { value: "recent", label: "最近" },
   { value: "name", label: "名称" }
 ];
+
+function isPeopleFilterState(value: unknown): value is PeopleFilterState {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PeopleFilterState>;
+  return (
+    typeof candidate.query === "string" &&
+    ["smart", "recent", "name"].includes(String(candidate.sortMode))
+  );
+}
 
 function comparePeopleRows(
   left: { person: Person; health: RelationshipHealth },
@@ -225,12 +275,21 @@ interface PreferenceGroupShape {
 function PreferenceLines({
   preferences,
   dislikes,
+  onEdit
 }: {
   preferences: PreferenceGroupShape[];
   dislikes: PreferenceGroupShape[];
+  onEdit: (mode: PersonPreferenceMode) => void;
 }) {
   const hasContent = preferences.some((g) => g.items.length) || dislikes.some((g) => g.items.length);
-  if (!hasContent) return null;
+  if (!hasContent) {
+    return (
+      <div className="person-pref-lines">
+        <PreferenceLineButton mode="preferences" tone="like" label="喜好档案" text="点击补充喜好" onEdit={onEdit} />
+        <PreferenceLineButton mode="dislikes" tone="dislike" label="禁忌雷区" text="点击补充雷区" onEdit={onEdit} />
+      </div>
+    );
+  }
 
   return (
     <div className="person-pref-lines">
@@ -238,20 +297,62 @@ function PreferenceLines({
         .filter((g) => g.items.length)
         .slice(0, 2)
         .map((group) => (
-          <div className="person-pref-line like" key={`like-${group.category}`}>
-            <span className="person-pref-label">喜 · {group.category}</span>
-            <span className="person-pref-items">{group.items.slice(0, 4).join("、")}</span>
-          </div>
+          <PreferenceLineButton
+            mode="preferences"
+            tone="like"
+            label={`喜 · ${group.category}`}
+            text={group.items.slice(0, 4).join("、")}
+            onEdit={onEdit}
+            key={`like-${group.category}`}
+          />
         ))}
       {dislikes
         .filter((g) => g.items.length)
         .slice(0, 1)
         .map((group) => (
-          <div className="person-pref-line dislike" key={`dis-${group.category}`}>
-            <span className="person-pref-label">忌 · {group.category}</span>
-            <span className="person-pref-items">{group.items.slice(0, 4).join("、")}</span>
-          </div>
+          <PreferenceLineButton
+            mode="dislikes"
+            tone="dislike"
+            label={`忌 · ${group.category}`}
+            text={group.items.slice(0, 4).join("、")}
+            onEdit={onEdit}
+            key={`dis-${group.category}`}
+          />
         ))}
+      {!preferences.some((g) => g.items.length) && (
+        <PreferenceLineButton mode="preferences" tone="like" label="喜好档案" text="点击补充喜好" onEdit={onEdit} />
+      )}
+      {!dislikes.some((g) => g.items.length) && (
+        <PreferenceLineButton mode="dislikes" tone="dislike" label="禁忌雷区" text="点击补充雷区" onEdit={onEdit} />
+      )}
     </div>
+  );
+}
+
+function PreferenceLineButton({
+  mode,
+  tone,
+  label,
+  text,
+  onEdit
+}: {
+  mode: PersonPreferenceMode;
+  tone: "like" | "dislike";
+  label: string;
+  text: string;
+  onEdit: (mode: PersonPreferenceMode) => void;
+}) {
+  return (
+    <button
+      className={`person-pref-line person-pref-edit-area ${tone}`}
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onEdit(mode);
+      }}
+    >
+      <span className="person-pref-label">{label}</span>
+      <span className="person-pref-items">{text}</span>
+    </button>
   );
 }

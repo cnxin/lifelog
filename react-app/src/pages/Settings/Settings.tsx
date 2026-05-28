@@ -1,4 +1,4 @@
-import { BarChart3, Bell, ChevronDown, GitMerge, HeartPulse, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bell, ChevronDown, EyeOff, GitMerge, HeartPulse, SlidersHorizontal } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DateInput from "../../components/DateInput";
@@ -39,7 +39,21 @@ const themeOptions: Array<{
   }
 ];
 
+export function AppSettingsPanel() {
+  return <SettingsContent sections={["visual", "reminders", "privacy", "defaults"]} />;
+}
+
+export function DataOrganizePanel() {
+  return <SettingsContent sections={["overview", "health", "dedupe"]} />;
+}
+
 export default function Settings() {
+  return <SettingsContent />;
+}
+
+type SettingsSection = "visual" | "overview" | "health" | "dedupe" | "reminders" | "privacy" | "defaults";
+
+function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
   const navigate = useNavigate();
   const {
     state,
@@ -79,6 +93,8 @@ export default function Settings() {
     [duplicatePlaceGroups]
   );
   const healthReport = useMemo(() => buildDataHealthReport(state), [state]);
+  const visibleSections = sections || ["visual", "overview", "health", "dedupe", "reminders", "privacy", "defaults"];
+  const show = (section: SettingsSection) => visibleSections.includes(section);
 
   async function handleMergeAll() {
     if (mergeLockRef.current) return;
@@ -153,7 +169,7 @@ export default function Settings() {
 
   return (
     <>
-      <section className="section">
+      {show("visual") && <section className="section">
         <div className="section-header">
           <h2>
             <SlidersHorizontal /> 视觉风格
@@ -175,9 +191,9 @@ export default function Settings() {
           ))}
         </div>
         <p className="form-hint settings-section-hint">选择后会立即应用到全局页面和控件，并在刷新后保留。</p>
-      </section>
+      </section>}
 
-      <section className="section">
+      {show("overview") && <section className="section">
         <div className="section-header">
           <h2>
             <BarChart3 /> 数据概览
@@ -211,9 +227,9 @@ export default function Settings() {
             <span>去过的城市</span>
           </div>
         </GlassCard>
-      </section>
+      </section>}
 
-      <section className="section">
+      {show("health") && <section className="section">
         <div className="section-header">
           <h2>
             <HeartPulse /> 资料体检
@@ -248,9 +264,9 @@ export default function Settings() {
         ) : (
           <GlassCard className="empty">人物、地点和回忆的核心字段都已经比较完整。</GlassCard>
         )}
-      </section>
+      </section>}
 
-      <section className="section">
+      {show("dedupe") && <section className="section">
         <div className="section-header">
           <h2>
             <GitMerge /> 地点去重
@@ -296,9 +312,9 @@ export default function Settings() {
             </button>
           </div>
         )}
-      </section>
+      </section>}
 
-      <section className="section">
+      {show("reminders") && <section className="section">
         <div className="section-header">
           <h2>
             <Bell /> 提醒设置
@@ -311,9 +327,47 @@ export default function Settings() {
           </button>
         </div>
         {showReminders && <ReminderSettings />}
-      </section>
+      </section>}
 
-      <section className="section">
+      {show("privacy") && <section className="section">
+        <div className="section-header">
+          <h2>
+            <EyeOff /> 隐私显示
+          </h2>
+        </div>
+        <div className="privacy-setting-list">
+          <GlassCard className="reminder-config-row privacy-setting-row">
+            <div>
+              <strong>隐私模式</strong>
+              <span>模糊首页、列表和详情里的主要文字，适合公共场合临时打开。</span>
+            </div>
+            <label className="reminder-toggle">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.privacyMode)}
+                onChange={(event) => void updateSettings({ privacyMode: event.target.checked })}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </GlassCard>
+          <GlassCard className="reminder-config-row privacy-setting-row">
+            <div>
+              <strong>隐藏照片缩略图</strong>
+              <span>照片网格和地点照片会以柔和遮罩显示，点开前不暴露内容。</span>
+            </div>
+            <label className="reminder-toggle">
+              <input
+                type="checkbox"
+                checked={Boolean(settings.hidePhotoThumbnails)}
+                onChange={(event) => void updateSettings({ hidePhotoThumbnails: event.target.checked })}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </GlassCard>
+        </div>
+      </section>}
+
+      {show("defaults") && <section className="section">
         <div className="section-header">
           <h2>
             <SlidersHorizontal /> 默认值
@@ -386,7 +440,7 @@ export default function Settings() {
           </GlassCard>
         </div>
         <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>
-      </section>
+      </section>}
 
       {openPicker && (
         <>

@@ -16,6 +16,11 @@ import { getPlacePlatformLink } from "../../utils/placeMeta";
 import NumberStepper from "../NumberStepper";
 import PlacePhotoInput from "../PlacePhotoInput";
 import SelectPicker from "../SelectPicker";
+import {
+  getDraftValue,
+  hasDraftField,
+  type DraftFieldMap
+} from "./draftValues";
 
 const PLACE_CATEGORY_OPTIONS = ["餐厅", "咖啡厅", "电影院", "景点", "商场", "酒店", "公园", "书店", "杂货店", "服装店", "医院", "学校", "公司", "其他"].map((item) => ({ value: item, label: item }));
 const BOOLEAN_OPTIONS = [
@@ -28,66 +33,76 @@ export function PlaceFields({
   place,
   initialPlaceDraft,
   initialShareReview,
-  isEditing
+  isEditing,
+  draftValues
 }: {
   place?: Place;
   initialPlaceDraft?: Partial<Place>;
   initialShareReview?: PlaceDraft;
   isEditing: boolean;
+  draftValues?: DraftFieldMap;
 }) {
-  if (!isEditing) return <QuickPlaceFields initialPlaceDraft={initialPlaceDraft} initialShareReview={initialShareReview} />;
+  if (!isEditing) {
+    return (
+      <QuickPlaceFields
+        initialPlaceDraft={initialPlaceDraft}
+        initialShareReview={initialShareReview}
+        draftValues={draftValues}
+      />
+    );
+  }
 
   return (
     <>
       <div className="form-row">
         <label>
           国家
-          <input name="country" defaultValue={place?.country || "中国"} />
+          <input name="country" defaultValue={getDraftValue(draftValues, "country", place?.country || "中国")} />
         </label>
         <label>
           省 / 州
-          <input name="province" defaultValue={place?.province || ""} placeholder="例如：浙江省" />
+          <input name="province" defaultValue={getDraftValue(draftValues, "province", place?.province || "")} placeholder="例如：浙江省" />
         </label>
       </div>
       <div className="form-row">
         <label>
           城市
-          <input name="city" defaultValue={place?.city} placeholder="杭州、绍兴..." />
+          <input name="city" defaultValue={getDraftValue(draftValues, "city", place?.city || "")} placeholder="杭州、绍兴..." />
         </label>
         <label>
           区 / 商圈
-          <input name="area" defaultValue={place?.area} placeholder="例如：上城区、柯桥区、湖滨商圈" />
+          <input name="area" defaultValue={getDraftValue(draftValues, "area", place?.area || "")} placeholder="例如：上城区、柯桥区、湖滨商圈" />
         </label>
       </div>
       <div className="form-row">
         <label>
           商场 / 园区 / 景区
-          <input name="mall" defaultValue={place?.mall || ""} placeholder="如果这是商场本体，可留空；店铺可填所在商场" />
+          <input name="mall" defaultValue={getDraftValue(draftValues, "mall", place?.mall || "")} placeholder="如果这是商场本体，可留空；店铺可填所在商场" />
         </label>
         <label>
           店铺 / 场所
-          <input name="storeName" defaultValue={place?.storeName} placeholder="分店、楼层、影厅、景点入口等" />
+          <input name="storeName" defaultValue={getDraftValue(draftValues, "storeName", place?.storeName || "")} placeholder="分店、楼层、影厅、景点入口等" />
         </label>
       </div>
       <p className="form-hint">层级按国家 / 省 / 市 / 商场 / 店铺记录；地点名称填主名称，商场和店铺分开更清晰。</p>
       <div className="form-row">
         <label>
           地点名称
-          <input name="name" defaultValue={place?.name} required />
+          <input name="name" defaultValue={getDraftValue(draftValues, "name", place?.name || "")} required />
         </label>
         <label>
           分类
           <SelectPicker
             name="category"
             label="地点分类"
-            defaultValue={place?.category || "餐厅"}
+            defaultValue={getDraftValue(draftValues, "category", place?.category || "餐厅")}
             options={PLACE_CATEGORY_OPTIONS}
           />
         </label>
       </div>
       <label>
         详细地址
-        <input name="address" defaultValue={place?.address || ""} placeholder="例如：杭州市上城区湖滨银泰 B1" />
+        <input name="address" defaultValue={getDraftValue(draftValues, "address", place?.address || "")} placeholder="例如：杭州市上城区湖滨银泰 B1" />
       </label>
       <div className="form-row">
         <label>
@@ -97,7 +112,7 @@ export function PlaceFields({
             min={0}
             max={5}
             step={0.1}
-            defaultValue={place?.rating ?? 0}
+            defaultValue={Number(getDraftValue(draftValues, "rating", String(place?.rating ?? 0)))}
             label="地点评分"
           />
         </label>
@@ -106,7 +121,7 @@ export function PlaceFields({
           <SelectPicker
             name="favorite"
             label="地点收藏"
-            defaultValue={place?.favorite ? "true" : "false"}
+            defaultValue={getDraftValue(draftValues, "favorite", place?.favorite ? "true" : "false")}
             options={BOOLEAN_OPTIONS}
           />
         </label>
@@ -114,37 +129,37 @@ export function PlaceFields({
       <div className="form-row">
         <label>
           高德分享链接
-          <input name="mapUrl" defaultValue={place?.mapUrl || ""} placeholder="粘贴高德分享链接，详情页可直接打开高德" />
+          <input name="mapUrl" defaultValue={getDraftValue(draftValues, "mapUrl", place?.mapUrl || "")} placeholder="粘贴高德分享链接，详情页可直接打开高德" />
         </label>
         <label>
           参考链接 / 攻略链接
-          <input name="sourceUrl" defaultValue={place?.sourceUrl || ""} placeholder="官网、攻略、笔记或圆周旅迹链接" />
+          <input name="sourceUrl" defaultValue={getDraftValue(draftValues, "sourceUrl", place?.sourceUrl || "")} placeholder="官网、攻略、笔记或圆周旅迹链接" />
         </label>
       </div>
       <div className="form-row">
         <label>
           纬度
-          <input name="latitude" defaultValue={place?.latitude || ""} inputMode="decimal" placeholder="例如：30.2741" />
+          <input name="latitude" defaultValue={getDraftValue(draftValues, "latitude", place?.latitude ? String(place.latitude) : "")} inputMode="decimal" placeholder="例如：30.2741" />
         </label>
         <label>
           经度
-          <input name="longitude" defaultValue={place?.longitude || ""} inputMode="decimal" placeholder="例如：120.1551" />
+          <input name="longitude" defaultValue={getDraftValue(draftValues, "longitude", place?.longitude ? String(place.longitude) : "")} inputMode="decimal" placeholder="例如：120.1551" />
         </label>
       </div>
       <p className="form-hint">有高德分享链接时优先用链接；也可以直接填写经纬度作为定位。</p>
-      <PlatformLinksEditor initialText={extractPlatformLinksText(place)} />
+      <PlatformLinksEditor initialText={getDraftValue(draftValues, "platformLinks", extractPlatformLinksText(place))} />
       <div>
         <span className="field-title">照片</span>
-        <PlacePhotoInput defaultValue={(place?.photos || []).join("\n")} />
+        <PlacePhotoInput defaultValue={getDraftValue(draftValues, "photos", (place?.photos || []).join("\n"))} />
       </div>
       <p className="form-hint">详情页会展示前 3 张照片；链接失效时会自动隐藏。</p>
       <label>
         描述
-        <textarea name="desc" defaultValue={place?.desc} placeholder="适合约会或聚餐，环境安静..." />
+        <textarea name="desc" defaultValue={getDraftValue(draftValues, "desc", place?.desc || "")} placeholder="适合约会或聚餐，环境安静..." />
       </label>
       <label>
         标签
-        <input name="tags" defaultValue={place?.tags.join("，")} placeholder="安静、推荐；可用顿号、逗号或分号分隔" />
+        <input name="tags" defaultValue={getDraftValue(draftValues, "tags", place?.tags.join("，") || "")} placeholder="安静、推荐；可用顿号、逗号或分号分隔" />
       </label>
     </>
   );
@@ -176,22 +191,29 @@ function placeToDraft(place?: Partial<Place>): Partial<PlaceDraft> {
 
 function QuickPlaceFields({
   initialPlaceDraft,
-  initialShareReview
+  initialShareReview,
+  draftValues
 }: {
   initialPlaceDraft?: Partial<Place>;
   initialShareReview?: PlaceDraft;
+  draftValues?: DraftFieldMap;
 }) {
   const { settings } = useLifeLog();
   const [shareText, setShareText] = useState("");
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     ...emptyPlaceDraft(),
     ...placeToDraft(initialPlaceDraft),
-    city: initialPlaceDraft?.city || settings.defaultCity
+    ...draftValuesToPlaceDraft(draftValues),
+    city: getDraftValue(draftValues, "city", initialPlaceDraft?.city || settings.defaultCity)
   }));
   const [message, setMessage] = useState(initialShareReview ? "已读取系统分享，请确认识别结果后再应用到表单。" : "");
   const [shareReview, setShareReview] = useState<PlaceDraft | null>(initialShareReview || null);
-  const [showLocationDetails, setShowLocationDetails] = useState(false);
-  const [showLinkDetails, setShowLinkDetails] = useState(false);
+  const [showLocationDetails, setShowLocationDetails] = useState(() =>
+    hasAnyDraftField(draftValues, ["province", "area", "storeName", "address", "latitude", "longitude"])
+  );
+  const [showLinkDetails, setShowLinkDetails] = useState(() =>
+    hasAnyDraftField(draftValues, ["mapUrl", "sourceUrl", "platformLinks", "photos", "tags"])
+  );
 
   function applyShareText() {
     const parsed = parsePlaceShare(shareText);
@@ -811,4 +833,33 @@ function buildPlaceDisclosureSummary(items: Array<string | false | undefined>, f
   if (!normalized.length) return fallback;
   if (normalized.length <= 2) return normalized.join(" · ");
   return `${normalized.slice(0, 2).join(" · ")} 等 ${normalized.length} 项`;
+}
+
+function draftValuesToPlaceDraft(draftValues?: DraftFieldMap): Partial<PlaceDraft> {
+  if (!draftValues) return {};
+
+  return {
+    name: getDraftValue(draftValues, "name"),
+    country: getDraftValue(draftValues, "country", "中国"),
+    province: getDraftValue(draftValues, "province"),
+    city: getDraftValue(draftValues, "city"),
+    area: getDraftValue(draftValues, "area"),
+    mall: getDraftValue(draftValues, "mall"),
+    storeName: getDraftValue(draftValues, "storeName"),
+    category: getDraftValue(draftValues, "category", "其他"),
+    rating: Number(getDraftValue(draftValues, "rating", "0")) || 0,
+    address: getDraftValue(draftValues, "address"),
+    latitude: getDraftValue(draftValues, "latitude"),
+    longitude: getDraftValue(draftValues, "longitude"),
+    mapUrl: getDraftValue(draftValues, "mapUrl"),
+    sourceUrl: getDraftValue(draftValues, "sourceUrl"),
+    platformLinks: getDraftValue(draftValues, "platformLinks"),
+    photos: getDraftValue(draftValues, "photos"),
+    desc: getDraftValue(draftValues, "desc"),
+    tags: getDraftValue(draftValues, "tags")
+  };
+}
+
+function hasAnyDraftField(draftValues: DraftFieldMap | undefined, names: string[]) {
+  return names.some((name) => hasDraftField(draftValues, name) && getDraftValue(draftValues, name).trim());
 }

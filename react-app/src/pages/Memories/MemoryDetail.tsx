@@ -1,8 +1,9 @@
-import { ArrowLeft, Calendar, Heart, MapPin, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Calendar, Heart, MapPin, Share2, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTags from "../../components/MemoryTags";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import { PhotoGrid } from "../../components/PhotoGrid";
@@ -27,6 +28,7 @@ export default function MemoryDetail() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
   const memory = state.memories.find((item) => item.id === memoryId);
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
@@ -126,6 +128,9 @@ export default function MemoryDetail() {
               </button>
               <button className="category-pill" onClick={() => setAddingRelated(true)}>
                 再记一条相关回忆
+              </button>
+              <button className="category-pill" onClick={() => setShareOpen(true)}>
+                <Share2 size={14} /> 分享
               </button>
             </div>
           </div>
@@ -268,6 +273,19 @@ export default function MemoryDetail() {
         initialPlaceIds={placeIds}
         memoryMode="quick"
         onClose={() => setAddingRelated(false)}
+      />
+      <LocalShareSheet
+        target={
+          shareOpen
+            ? {
+                type: "memory",
+                memoryId: memory.id,
+                title: getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName)),
+                photoCount: photoIds.length
+              }
+            : null
+        }
+        onClose={() => setShareOpen(false)}
       />
     </>
   );

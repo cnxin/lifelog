@@ -1,15 +1,17 @@
-import { Plus, RotateCcw } from "lucide-react";
+import { CalendarDays, Heart, Plus, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
+import PageSegmentNav from "../../components/PageSegmentNav";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
+import { usePersistentState } from "../../hooks/usePersistentState";
 import type { MemoryEvent } from "../../types";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
@@ -20,11 +22,16 @@ export default function Memories() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [personFilter, setPersonFilter] = useState("");
-  const [placeFilter, setPlaceFilter] = useState("");
-  const [moodFilter, setMoodFilter] = useState("");
-  const [tagFilter, setTagFilter] = useState("");
+  const [filters, setFilters] = usePersistentState<MemoryFilterState>(
+    "lifelog:filters:memories",
+    { query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" },
+    isMemoryFilterState
+  );
+  const query = filters.query;
+  const personFilter = filters.personFilter;
+  const placeFilter = filters.placeFilter;
+  const moodFilter = filters.moodFilter;
+  const tagFilter = filters.tagFilter;
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
 
@@ -93,43 +100,50 @@ export default function Memories() {
   }
 
   function clearFilters() {
-    setQuery("");
-    setPersonFilter("");
-    setPlaceFilter("");
-    setMoodFilter("");
-    setTagFilter("");
+    setFilters({ query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" });
+  }
+
+  function updateFilters(patch: Partial<MemoryFilterState>) {
+    setFilters({ ...filters, ...patch });
   }
 
   return (
     <>
-      <SearchBar value={query} placeholder="搜索标题、正文、人物、地点、心情或标签" onChange={setQuery} />
+      <PageSegmentNav
+        ariaLabel="回忆视图"
+        items={[
+          { to: "/memories", label: "时间线", icon: <Heart />, end: true },
+          { to: "/calendar", label: "日历", icon: <CalendarDays /> }
+        ]}
+      />
+      <SearchBar value={query} placeholder="搜索标题、正文、人物、地点、心情或标签" onChange={(query) => updateFilters({ query })} />
       <section className="section memory-filter-section">
         <div className="memory-filter-grid">
           <SelectPicker
             label="筛选人物"
             value={personFilter}
-            onChange={setPersonFilter}
+            onChange={(personFilter) => updateFilters({ personFilter })}
             placeholder="全部人物"
             options={[{ value: "", label: "全部人物" }, ...filterOptions.people]}
           />
           <SelectPicker
             label="筛选地点"
             value={placeFilter}
-            onChange={setPlaceFilter}
+            onChange={(placeFilter) => updateFilters({ placeFilter })}
             placeholder="全部地点"
             options={[{ value: "", label: "全部地点" }, ...filterOptions.places]}
           />
           <SelectPicker
             label="筛选心情"
             value={moodFilter}
-            onChange={setMoodFilter}
+            onChange={(moodFilter) => updateFilters({ moodFilter })}
             placeholder="全部心情"
             options={[{ value: "", label: "全部心情" }, ...filterOptions.moods]}
           />
           <SelectPicker
             label="筛选标签"
             value={tagFilter}
-            onChange={setTagFilter}
+            onChange={(tagFilter) => updateFilters({ tagFilter })}
             placeholder="全部标签"
             options={[{ value: "", label: "全部标签" }, ...filterOptions.tags]}
           />
@@ -210,6 +224,26 @@ export default function Memories() {
       <EntrySheet type={editingId ? "memory" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
       <EntrySheet type={creatingNew ? "memory" : null} memoryMode="quick" onClose={() => setCreatingNew(false)} />
     </>
+  );
+}
+
+interface MemoryFilterState {
+  query: string;
+  personFilter: string;
+  placeFilter: string;
+  moodFilter: string;
+  tagFilter: string;
+}
+
+function isMemoryFilterState(value: unknown): value is MemoryFilterState {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<MemoryFilterState>;
+  return (
+    typeof candidate.query === "string" &&
+    typeof candidate.personFilter === "string" &&
+    typeof candidate.placeFilter === "string" &&
+    typeof candidate.moodFilter === "string" &&
+    typeof candidate.tagFilter === "string"
   );
 }
 

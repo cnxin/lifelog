@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { EntryType, Place } from "../types";
 import { todayLabel } from "../utils/date";
@@ -8,12 +8,13 @@ import FloatingActionButton, { type FloatingAction } from "./FloatingActionButto
 import GlobalSearchPanel from "./GlobalSearchPanel";
 import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
-import { Camera, CalendarPlus, ClipboardPaste, MapPinPlus, PenLine, UserPlus } from "lucide-react";
+import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
+import { extractLifeLogShareHashFromText } from "../utils/lifelogShareLink";
 import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -23,7 +24,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/memories": { title: "回忆", subtitle: "把人物和地点串起来" },
   "/calendar": { title: "日历", subtitle: "生日、纪念日和回忆时间线" },
   "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
-  "/account": { title: "账号管理", subtitle: "本地资料、备份和应用信息" }
+  "/account": { title: "设置", subtitle: "账号、应用、数据和关于" }
 };
 
 function getPageMeta(pathname: string) {
@@ -42,13 +43,14 @@ function entryTypeForPath(pathname: string): EntryType {
 }
 
 function isUtilityPage(pathname: string) {
-  return pathname === "/settings" || pathname === "/account";
+  return pathname === "/settings" || pathname === "/account" || pathname.startsWith("/share/import");
 }
 
 type SheetMode = "quick" | "full";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sheetType, setSheetType] = useState<EntryType | null>(null);
   const [sheetMode, setSheetMode] = useState<SheetMode>("full");
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
@@ -72,9 +74,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       setSearchOpen(false);
       return true;
     }
-    if (!sheetType) return false;
-    setSheetType(null);
-    return true;
+    const closeSheetEvent = new Event("lifelog:request-close-entry-sheet", { cancelable: true });
+    window.dispatchEvent(closeSheetEvent);
+    return closeSheetEvent.defaultPrevented;
   });
   useEffect(() => {
     document.documentElement.dataset.themeStyle = settings.themeStyle;
@@ -163,6 +165,28 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }
 
+  async function openLifeLogShareImport() {
+    if (!navigator.clipboard?.readText) {
+      navigate("/share/import");
+      notify({ message: "可在导入页粘贴 LifeLog 分享链接", tone: "info" });
+      return;
+    }
+
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      const hash = extractLifeLogShareHashFromText(text);
+      if (!hash) {
+        navigate("/share/import");
+        notify({ message: "剪贴板里没有识别到 LifeLog 分享链接", tone: "info" });
+        return;
+      }
+      navigate(`/share/import#${hash}`);
+    } catch {
+      navigate("/share/import");
+      notify({ message: "无法读取剪贴板，可在导入页手动粘贴", tone: "info" });
+    }
+  }
+
   const floatingActions = buildFloatingActions({
     pathname: location.pathname,
     onQuickMemory: () => openSheet("memory", "quick"),
@@ -170,6 +194,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     onPerson: () => openSheet("person"),
     onPlace: () => openSheet("place"),
     onPastePlaceShare: () => void openPlaceShareFromClipboard(),
+    onImportLifeLogShare: () => void openLifeLogShareImport(),
     onMemoryForPerson: (personId) => openSheet("memory", "quick", { personIds: [personId] }),
     onEditPerson: (personId) => openSheet("person", "full", { itemId: personId }),
     onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
@@ -177,7 +202,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   });
 
   return (
-    <div className={`app-container theme-${settings.themeStyle}`}>
+    <div className={`app-container theme-${settings.themeStyle} ${settings.privacyMode ? "privacy-mode" : ""} ${settings.hidePhotoThumbnails ? "hide-photo-thumbnails" : ""}`}>
       <NetworkBanner />
       <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} onSearch={() => setSearchOpen(true)} />
       <main className="main-content">
@@ -227,6 +252,7 @@ function buildFloatingActions({
   onPerson,
   onPlace,
   onPastePlaceShare,
+  onImportLifeLogShare,
   onMemoryForPerson,
   onEditPerson,
   onMemoryForPlace,
@@ -238,6 +264,7 @@ function buildFloatingActions({
   onPerson: () => void;
   onPlace: () => void;
   onPastePlaceShare: () => void;
+  onImportLifeLogShare: () => void;
   onMemoryForPerson: (personId: string) => void;
   onEditPerson: (personId: string) => void;
   onMemoryForPlace: (placeId: string) => void;
@@ -384,6 +411,7 @@ function buildFloatingActions({
       icon: <MapPinPlus />,
       onClick: onPlace
     },
+    lifeLogShareAction(onImportLifeLogShare),
     placeShareAction(onPastePlaceShare)
   ];
 }
@@ -405,6 +433,16 @@ function placeShareAction(onClick: () => void): FloatingAction {
     label: "粘贴地点分享",
     desc: "读取剪贴板并预填地点",
     icon: <ClipboardPaste />,
+    onClick
+  };
+}
+
+function lifeLogShareAction(onClick: () => void): FloatingAction {
+  return {
+    id: "import-lifelog-share",
+    label: "导入分享",
+    desc: "读取 LifeLog 分享链接",
+    icon: <Link2 />,
     onClick
   };
 }

@@ -24,6 +24,7 @@ import {
   saveMemoryRecord,
   savePersonRecord,
   savePlaceRecord,
+  savePlaceRecords,
   savePhotoRecords,
   saveReminderSettings,
   deletePhotosByMemoryId
@@ -69,6 +70,16 @@ import {
   serializeBackupPhoto,
   type FullBackupPayload
 } from "../utils/lifelogBackup";
+import {
+  buildMemorySharePayload,
+  buildPlacesSharePayload,
+  buildShareFileName,
+  buildShareImportPlan,
+  type LifeLogShareImportResult,
+  type LifeLogSharePayload,
+  type MemoryShareOptions,
+  type PlaceShareOptions
+} from "../utils/lifelogShare";
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
 import { saveBackupFile, type BackupExportTarget } from "../utils/backupExport";
 
@@ -85,6 +96,7 @@ interface LifeLogContextValue {
   reminderSettings: ReminderSettings;
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
+  updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
   togglePersonFavorite: (id: string) => Promise<void>;
   saveAnniversaryPlan: (plan: AnniversaryPlan) => Promise<string>;
   deleteAnniversaryPlan: (id: string) => Promise<void>;
@@ -108,6 +120,11 @@ interface LifeLogContextValue {
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   exportData: () => Promise<BackupExportResult>;
+  buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
+  buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
+  exportMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<BackupExportResult>;
+  exportPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<BackupExportResult>;
+  importShareData: (payload: LifeLogSharePayload) => Promise<LifeLogShareImportResult>;
   resetDemo: () => Promise<void>;
   loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
 }
@@ -209,6 +226,21 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       } finally {
         favoritePendingRef.current.people.delete(id);
       }
+    }
+
+    async function updatePersonProfile(id: string, patch: Pick<Person, "preferences" | "dislikes">) {
+      const person = state.people.find((item) => item.id === id);
+      if (!person) throw new Error("没有找到这个人物。");
+      const next: Person = {
+        ...person,
+        preferences: patch.preferences,
+        dislikes: patch.dislikes
+      };
+      await savePersonRecord(next);
+      setState((current) => ({
+        ...current,
+        people: current.people.map((item) => (item.id === id ? next : item))
+      }));
     }
 
     async function togglePlaceFavorite(id: string) {
@@ -583,7 +615,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         defaultMood: next.defaultMood || defaultAppSettings.defaultMood,
         themeStyle: ["classic", "cream", "mint", "mist"].includes(next.themeStyle)
           ? next.themeStyle
-          : defaultAppSettings.themeStyle
+          : defaultAppSettings.themeStyle,
+        privacyMode: Boolean(next.privacyMode),
+        hidePhotoThumbnails: Boolean(next.hidePhotoThumbnails)
       };
       await saveAppSettings(normalized);
       setSettings(normalized);
@@ -650,6 +684,55 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return saveBackupFile(fileName, JSON.stringify(payload, null, 2));
     }
 
+    async function buildMemoryShare(memoryId: string, options: MemoryShareOptions): Promise<LifeLogSharePayload> {
+      const memory = state.memories.find((item) => item.id === memoryId);
+      if (!memory) throw new Error("没有找到要分享的回忆。");
+      const photos = options.includePhotos ? await loadMemoryPhotos(memory.id, memory.photos || []) : [];
+      return buildMemorySharePayload({
+        state,
+        memoryId,
+        photos,
+        options,
+        appVersion: APP_VERSION
+      });
+    }
+
+    async function buildPlacesShare(placeIds: string[], options: PlaceShareOptions): Promise<LifeLogSharePayload> {
+      return buildPlacesSharePayload({
+        state,
+        placeIds,
+        options,
+        appVersion: APP_VERSION
+      });
+    }
+
+    async function exportMemoryShare(memoryId: string, options: MemoryShareOptions): Promise<BackupExportResult> {
+      const payload = await buildMemoryShare(memoryId, options);
+      return saveBackupFile(buildShareFileName(payload), JSON.stringify(payload, null, 2));
+    }
+
+    async function exportPlacesShare(placeIds: string[], options: PlaceShareOptions): Promise<BackupExportResult> {
+      const payload = await buildPlacesShare(placeIds, options);
+      return saveBackupFile(buildShareFileName(payload), JSON.stringify(payload, null, 2));
+    }
+
+    async function importShareData(payload: LifeLogSharePayload): Promise<LifeLogShareImportResult> {
+      const plan = await buildShareImportPlan(payload, state);
+      if (plan.people.length) await Promise.all(plan.people.map(savePersonRecord));
+      if (plan.places.length) await savePlaceRecords(plan.places);
+      if (plan.memories.length) await Promise.all(plan.memories.map(saveMemoryRecord));
+      if (plan.photos.length) await savePhotoRecords(plan.photos);
+
+      setState((current) => ({
+        ...current,
+        people: mergeById(current.people, plan.people),
+        places: mergeById(current.places, plan.places),
+        memories: mergeById(current.memories, plan.memories)
+      }));
+
+      return plan.result;
+    }
+
     async function resetDemo() {
       await resetDatabase();
       await clearPlaceMergeHistory();
@@ -671,6 +754,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       reminderSettings,
       isLoading,
       savePerson,
+      updatePersonProfile,
       togglePersonFavorite,
       saveAnniversaryPlan,
       deleteAnniversaryPlan,
@@ -694,12 +778,25 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       updateSettings,
       updateReminderSettings,
       exportData,
+      buildMemoryShare,
+      buildPlacesShare,
+      exportMemoryShare,
+      exportPlacesShare,
+      importShareData,
       resetDemo,
       loadMemoryPhotos
     };
   }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
+}
+
+function mergeById<T extends { id: string }>(current: T[], incoming: T[]) {
+  if (!incoming.length) return current;
+  const incomingById = new Map(incoming.map((item) => [item.id, item]));
+  const merged = current.map((item) => incomingById.get(item.id) || item);
+  const missing = incoming.filter((item) => !current.some((currentItem) => currentItem.id === item.id));
+  return [...merged, ...missing];
 }
 
 function restoreMemoryList(current: MemoryEvent[], snapshots: MemoryEvent[]) {

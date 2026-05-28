@@ -113,6 +113,9 @@ export default function AnniversaryPlanSheet({
     const done = checklist.filter((item) => item.done).length;
     return `${done} / ${checklist.length} 项完成`;
   }, [checklist]);
+  const doneCount = checklist.filter((item) => item.done).length;
+  const canRunPlan = Boolean(plan);
+  const canCompletePlan = checklist.length ? doneCount === checklist.length : Boolean(notes.trim() || budget.trim() || placeIds.length);
 
   function toggleReminder(days: number) {
     setReminderDaysBefore((current) =>
@@ -199,6 +202,54 @@ export default function AnniversaryPlanSheet({
     }
   }
 
+  async function saveWithPatch(patch: Partial<AnniversaryPlan>) {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const now = new Date().toISOString();
+      const nextPlan: AnniversaryPlan = {
+        id: plan?.id || `ap_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        personId: person.id,
+        anniversaryTitle: anniversary.title,
+        anniversaryDate: anniversary.date,
+        occurrenceYear,
+        targetDate,
+        status,
+        title: title.trim() || `${person.name} · ${anniversary.title}安排`,
+        notes: notes.trim(),
+        budget: budget.trim(),
+        checklist: checklist.filter((item) => item.text.trim()).map((item) => ({ ...item, text: item.text.trim() })),
+        placeIds,
+        reminderDaysBefore,
+        memoryId: plan?.memoryId,
+        createdAt: plan?.createdAt || now,
+        updatedAt: now,
+        ...patch
+      };
+      await onSave(nextPlan);
+      setStatus(nextPlan.status);
+      setChecklist(nextPlan.checklist);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function markDoing() {
+    await saveWithPatch({ status: "doing" });
+  }
+
+  async function markAllTodosDone() {
+    const nextChecklist = checklist.map((item) => ({ ...item, done: true }));
+    setChecklist(nextChecklist);
+    await saveWithPatch({ status: "doing", checklist: nextChecklist });
+  }
+
+  async function completePlan() {
+    const nextChecklist = checklist.map((item) => ({ ...item, done: true }));
+    setChecklist(nextChecklist);
+    await saveWithPatch({ status: "done", checklist: nextChecklist });
+  }
+
   return (
     <div className="sheet anniversary-plan-sheet">
       <button className="sheet-backdrop" type="button" aria-label="关闭安排" onClick={onClose} />
@@ -237,6 +288,37 @@ export default function AnniversaryPlanSheet({
             <strong>{progress}</strong>
             <span>{person.name} · {anniversary.title} · {occurrenceYear}</span>
           </div>
+
+          {canRunPlan && (
+            <div className={`plan-run-card ${status}`}>
+              <div>
+                <strong>{status === "done" ? "安排已完成" : daysUntilTarget === 0 ? "今天执行安排" : "安排执行闭环"}</strong>
+                <span>
+                  {checklist.length
+                    ? `已完成 ${doneCount}/${checklist.length} 项，完成后可以直接记录回忆。`
+                    : "没有待办时，可先确认备注、预算或地点，再标记完成。"}
+                </span>
+              </div>
+              <div className="plan-run-actions">
+                {status === "todo" && (
+                  <button type="button" onClick={() => void markDoing()}>
+                    开始准备
+                  </button>
+                )}
+                {checklist.length > 0 && doneCount < checklist.length && (
+                  <button type="button" onClick={() => void markAllTodosDone()}>
+                    全部勾选
+                  </button>
+                )}
+                <button type="button" disabled={!canCompletePlan} onClick={() => void completePlan()}>
+                  标记完成
+                </button>
+                <button type="button" onClick={() => onCreateMemory(plan!)}>
+                  记录回忆
+                </button>
+              </div>
+            </div>
+          )}
 
           {reusablePlan && (
             <button className="plan-reuse-button" type="button" onClick={() => reuseHistoricalPlan(reusablePlan)}>

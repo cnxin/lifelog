@@ -1,10 +1,11 @@
-import { ArrowLeft, Calendar, Gift, Heart, MapPin, Sparkles, Star } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Gift, Heart, MapPin, MessageCircle, Sparkles, Star } from "lucide-react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import AnniversaryPlanSheet from "../../components/AnniversaryPlanSheet";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
+import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import type { Anniversary, AnniversaryPlan } from "../../types";
@@ -19,7 +20,7 @@ export default function PersonDetail() {
   const { personId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, getPersonName, getPlaceName, saveAnniversaryPlan, deleteAnniversaryPlan } = useLifeLog();
+  const { state, getPersonName, getPlaceName, saveAnniversaryPlan, deleteAnniversaryPlan, updatePersonProfile } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
@@ -28,6 +29,7 @@ export default function PersonDetail() {
   const [planningAnniversaryKey, setPlanningAnniversaryKey] = useState<string | null>(null);
   const [historyAnniversaryKey, setHistoryAnniversaryKey] = useState<string | null>(null);
   const [memoryPlanId, setMemoryPlanId] = useState<string | undefined>();
+  const [editingPreferenceMode, setEditingPreferenceMode] = useState<PersonPreferenceMode | null>(null);
   const anniversariesRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -62,6 +64,13 @@ export default function PersonDetail() {
   );
   const groupedMemories = groupMemoriesByMonth(relatedMemories);
   const latestMemory = relatedMemories[0];
+  const actionCenter = buildPersonActionCenter({
+    person,
+    relatedMemories,
+    relatedPlaces,
+    anniversaryPlans: state.anniversaryPlans,
+    getPlaceName
+  });
   const selectedAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planningAnniversaryKey);
   const selectedOccurrence = selectedAnniversary ? buildAnniversaryOccurrence(selectedAnniversary.date) : null;
   const selectedPlan = selectedAnniversary && selectedOccurrence
@@ -187,11 +196,34 @@ export default function PersonDetail() {
 
       <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
 
+      <section className="section person-detail-section">
+        <div className="section-header">
+          <h2>
+            <MessageCircle /> 行动中心
+          </h2>
+          <button className="see-all" onClick={() => setAddingMemory(true)}>
+            记录
+          </button>
+        </div>
+        <div className="person-action-grid">
+          {actionCenter.map((action) => (
+            <button className={`person-action-card glass-card ${action.tone}`} type="button" key={action.id} onClick={action.onClick}>
+              <span>{action.icon}</span>
+              <strong>{action.title}</strong>
+              <small>{action.desc}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="section">
         <div className="section-header">
           <h2>
             <Heart /> 喜好档案
           </h2>
+          <button className="see-all" type="button" onClick={() => setEditingPreferenceMode("preferences")}>
+            编辑
+          </button>
         </div>
         <PreferenceBlocks groups={person.preferences} emptyText="还没有记录喜好" />
       </section>
@@ -199,11 +231,14 @@ export default function PersonDetail() {
       <section className="section">
         <div className="section-header">
           <h2>禁忌 / 雷区</h2>
+          <button className="see-all" type="button" onClick={() => setEditingPreferenceMode("dislikes")}>
+            编辑
+          </button>
         </div>
         <PreferenceBlocks groups={person.dislikes} emptyText="还没有记录禁忌" danger />
       </section>
 
-      <section className="section person-detail-section" ref={anniversariesRef}>
+      <section className="section person-detail-section" ref={anniversariesRef} id="person-anniversaries">
         <div className="section-header">
           <h2>
             <Calendar /> 纪念日
@@ -280,6 +315,14 @@ export default function PersonDetail() {
       />
 
       <EntrySheet type={editing ? "person" : null} itemId={person.id} onClose={() => setEditing(false)} />
+      <PersonPreferenceSheet
+        person={editingPreferenceMode ? person : null}
+        mode={editingPreferenceMode || "preferences"}
+        onClose={() => setEditingPreferenceMode(null)}
+        onSave={async (personId, patch) => {
+          await updatePersonProfile(personId, patch);
+        }}
+      />
       <EntrySheet
         type={addingMemory ? "memory" : null}
         initialPersonId={person.id}
@@ -345,6 +388,86 @@ export default function PersonDetail() {
       )}
     </>
   );
+}
+
+function buildPersonActionCenter({
+  person,
+  relatedMemories,
+  relatedPlaces,
+  anniversaryPlans,
+  getPlaceName
+}: {
+  person: { id: string; name: string; birthday?: string; anniversaries: Anniversary[]; preferences: Array<{ category: string; items: string[] }>; dislikes: Array<{ category: string; items: string[] }> };
+  relatedMemories: Array<{ id: string; date: string }>;
+  relatedPlaces: string[];
+  anniversaryPlans: AnniversaryPlan[];
+  getPlaceName: (id: string) => string;
+}) {
+  const latestMemory = relatedMemories[0];
+  const daysSince = latestMemory ? daysSinceDate(latestMemory.date) : null;
+  const nextAnniversary = person.anniversaries
+    .map((anniversary) => ({
+      anniversary,
+      days: daysUntil(anniversary.date),
+      occurrence: buildAnniversaryOccurrence(anniversary.date)
+    }))
+    .sort((left, right) => left.days - right.days)[0];
+  const nextPlan = nextAnniversary
+    ? findPlanForAnniversary(anniversaryPlans, person.id, nextAnniversary.anniversary, nextAnniversary.occurrence.year)
+    : undefined;
+  const giftHints = [
+    ...person.preferences.flatMap((group) => group.items),
+    ...person.dislikes.flatMap((group) => group.items).map((item) => `避开 ${item}`)
+  ].slice(0, 4);
+
+  return [
+    {
+      id: "contact",
+      icon: <MessageCircle />,
+      title: daysSince === null ? "还没有共同回忆" : daysSince >= 21 ? `${daysSince} 天没记录互动` : "近期有互动记录",
+      desc: daysSince === null ? "可以从第一次相处开始记录。" : latestMemory ? `上次记录：${formatMonthDay(latestMemory.date)}` : "",
+      tone: daysSince === null || (daysSince ?? 0) >= 21 ? "warm" : "cool",
+      onClick: () => undefined
+    },
+    {
+      id: "anniversary",
+      icon: <Calendar />,
+      title: nextAnniversary ? `${nextAnniversary.days} 天后 · ${nextAnniversary.anniversary.title}` : "还没有纪念日",
+      desc: nextAnniversary
+        ? nextPlan
+          ? `安排状态：${planStatusLabel(nextPlan.status)}`
+          : "还没有安排，可以提前准备。"
+        : "补充生日或纪念日后会自动提醒。",
+      tone: nextAnniversary && !nextPlan ? "warm" : "cool",
+      onClick: () => {
+        document.getElementById("person-anniversaries")?.scrollIntoView({ behavior: "smooth" });
+      }
+    },
+    {
+      id: "places",
+      icon: <MapPin />,
+      title: relatedPlaces.length ? `一起去过 ${relatedPlaces.length} 个地点` : "还没有共同地点",
+      desc: relatedPlaces.length ? relatedPlaces.slice(0, 3).map(getPlaceName).join("、") : "记录回忆时关联地点后会自动汇总。",
+      tone: "cool",
+      onClick: () => undefined
+    },
+    {
+      id: "hints",
+      icon: giftHints.length ? <Gift /> : <CheckCircle2 />,
+      title: giftHints.length ? "送礼和避雷线索" : "还没有偏好线索",
+      desc: giftHints.length ? giftHints.join("、") : "补充喜好和雷区后，安排纪念日更省心。",
+      tone: giftHints.length ? "cool" : "warm",
+      onClick: () => undefined
+    }
+  ];
+}
+
+function daysSinceDate(date: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${date}T00:00:00`);
+  target.setHours(0, 0, 0, 0);
+  return Math.floor((today.getTime() - target.getTime()) / 86400000);
 }
 
 function AnniversaryPlanHistorySheet({

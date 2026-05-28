@@ -27,6 +27,7 @@ export default function AccountAbout() {
   const [updateDiagnostics, setUpdateDiagnostics] = useState<UpdateSourceDiagnostic[]>([]);
   const [installPermissionGranted, setInstallPermissionGranted] = useState<boolean | null>(null);
   const [notificationPermissionGranted, setNotificationPermissionGranted] = useState<boolean | null>(null);
+  const [isRefreshingPermissions, setIsRefreshingPermissions] = useState(false);
   const pendingUpgradeRef = useRef<AppUpdateInfo | null>(null);
   const currentRelease = getReleaseNote(APP_VERSION);
   const previousReleases = RELEASE_NOTES.filter((note) => note.version !== currentRelease.version).slice(0, 3);
@@ -50,12 +51,17 @@ export default function AccountAbout() {
   }, []);
 
   async function refreshPermissionStatus() {
-    const [canInstall, canNotify] = await Promise.all([
-      canInstallApkPackages(),
-      checkNotificationPermission()
-    ]);
-    setInstallPermissionGranted(canInstall);
-    setNotificationPermissionGranted(canNotify);
+    setIsRefreshingPermissions(true);
+    try {
+      const [canInstall, canNotify] = await Promise.all([
+        canInstallApkPackages(),
+        checkNotificationPermission()
+      ]);
+      setInstallPermissionGranted(canInstall);
+      setNotificationPermissionGranted(canNotify);
+    } finally {
+      setIsRefreshingPermissions(false);
+    }
   }
 
   useEffect(() => {
@@ -313,27 +319,53 @@ export default function AccountAbout() {
             <div className="native-permission-item">
               <PackageCheck />
               <div>
-                <strong>APK 安装权限</strong>
-                <span>{formatPermissionStatus(installPermissionGranted, "允许安装新版本", "需要允许未知来源安装")}</span>
+                <div className="native-permission-title-row">
+                  <strong>APK 安装权限</strong>
+                  <PermissionBadge value={installPermissionGranted} />
+                </div>
+                <PermissionTags
+                  value={installPermissionGranted}
+                  granted={["可安装更新", "内置升级可用"]}
+                  denied={["需安装授权", "升级前设置"]}
+                />
               </div>
-              <button className="mini-action" type="button" onClick={() => void handleOpenInstallPermission()}>
-                设置
-              </button>
+              {installPermissionGranted ? (
+                <button className="mini-action" type="button" onClick={() => void refreshPermissionStatus()}>
+                  复查
+                </button>
+              ) : (
+                <button className="mini-action" type="button" onClick={() => void handleOpenInstallPermission()}>
+                  设置
+                </button>
+              )}
             </div>
             <div className="native-permission-item">
               <Bell />
               <div>
-                <strong>通知权限</strong>
-                <span>{formatPermissionStatus(notificationPermissionGranted, "纪念日和联系提醒可用", "提醒可能无法弹出")}</span>
+                <div className="native-permission-title-row">
+                  <strong>通知权限</strong>
+                  <PermissionBadge value={notificationPermissionGranted} />
+                </div>
+                <PermissionTags
+                  value={notificationPermissionGranted}
+                  granted={["提醒可弹出", "通知已开启"]}
+                  denied={["通知未开启", "提醒可能失效"]}
+                />
               </div>
-              <button className="mini-action" type="button" onClick={() => void handleRequestNotificationPermission()}>
-                授权
-              </button>
+              {notificationPermissionGranted ? (
+                <button className="mini-action" type="button" onClick={() => void refreshPermissionStatus()}>
+                  复查
+                </button>
+              ) : (
+                <button className="mini-action" type="button" onClick={() => void handleRequestNotificationPermission()}>
+                  授权
+                </button>
+              )}
             </div>
           </div>
-          <button className="mini-action add native-permission-refresh" type="button" onClick={() => void refreshPermissionStatus()}>
+          <button className="mini-action add native-permission-refresh" type="button" onClick={() => void refreshPermissionStatus()} disabled={isRefreshingPermissions}>
             <RefreshCw size={14} />
-            刷新权限状态
+            {isRefreshingPermissions ? "刷新中..." : "刷新权限状态"}
           </button>
         </GlassCard>
         <button className="glass-card detail-row github-project-row" type="button" onClick={() => void openExternalUrl("https://github.com/cnxin/lifelog")}>
@@ -402,9 +434,22 @@ function formatUpgradeProgress(progress: ApkDownloadProgress) {
   return `${progress.percent || 0}% · ${formatFileSize(progress.bytesRead)} / ${total}`;
 }
 
-function formatPermissionStatus(value: boolean | null, grantedText: string, deniedText: string) {
-  if (value === null) return "检查中";
-  return value ? grantedText : deniedText;
+function PermissionBadge({ value }: { value: boolean | null }) {
+  const className = value === null ? "checking" : value ? "granted" : "denied";
+  const label = value === null ? "检查中" : value ? "已授权" : "未授权";
+  return <em className={`native-permission-badge ${className}`}>{label}</em>;
+}
+
+function PermissionTags({ value, granted, denied }: { value: boolean | null; granted: string[]; denied: string[] }) {
+  const className = value === null ? "checking" : value ? "granted" : "denied";
+  const tags = value === null ? ["正在检查"] : value ? granted : denied;
+  return (
+    <div className={`native-permission-tags ${className}`}>
+      {tags.map((tag) => (
+        <span key={tag}>{tag}</span>
+      ))}
+    </div>
+  );
 }
 
 function formatDiagnosticText(item: UpdateSourceDiagnostic) {

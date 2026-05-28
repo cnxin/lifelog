@@ -1,5 +1,6 @@
 import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { useToast } from "../context/ToastContext";
 import { blobToDataURL, compressImage, validateImageFile } from "../utils/imageCompression";
 
 interface PlacePhotoInputProps {
@@ -17,8 +18,10 @@ export default function PlacePhotoInput({
   maxPhotos = 6,
   disabled = false
 }: PlacePhotoInputProps) {
+  const notify = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState(defaultValue);
   const currentValue = isControlled ? value : internalValue;
@@ -31,25 +34,48 @@ export default function PlacePhotoInput({
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length || disabled) return;
+    setErrors([]);
     const remaining = maxPhotos - photos.length;
     if (remaining <= 0) {
-      alert(`最多只能添加 ${maxPhotos} 张地点照片`);
+      const message = `最多只能添加 ${maxPhotos} 张地点照片`;
+      setErrors([message]);
+      notify({ message, tone: "error" });
       return;
     }
 
     setIsProcessing(true);
     const nextPhotos = [...photos];
+    const nextErrors: string[] = [];
+    const selectedFiles = Array.from(files);
+    const filesToProcess = selectedFiles.slice(0, remaining);
+    if (selectedFiles.length > remaining) {
+      nextErrors.push(`已达到上限，只处理前 ${remaining} 张照片。`);
+    }
     try {
-      for (const file of Array.from(files).slice(0, remaining)) {
+      for (const file of filesToProcess) {
         const validation = validateImageFile(file);
         if (!validation.valid) {
-          alert(`${file.name}: ${validation.error}`);
+          nextErrors.push(`${file.name}: ${validation.error}`);
           continue;
         }
-        const compressed = await compressImage(file);
-        nextPhotos.push(await blobToDataURL(compressed.original));
+        try {
+          const compressed = await compressImage(file);
+          nextPhotos.push(await blobToDataURL(compressed.original));
+        } catch {
+          nextErrors.push(`${file.name}: 处理失败，请重试`);
+        }
       }
       commit(nextPhotos.join("\n"));
+      setErrors(nextErrors);
+      const addedCount = nextPhotos.length - photos.length;
+      if (addedCount > 0) {
+        notify({
+          message: nextErrors.length ? `已添加 ${addedCount} 张地点照片，${nextErrors.length} 项未处理` : `已添加 ${addedCount} 张地点照片`,
+          tone: nextErrors.length ? "info" : "success"
+        });
+      } else if (nextErrors.length) {
+        notify({ message: nextErrors[0], tone: "error" });
+      }
     } finally {
       setIsProcessing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -105,6 +131,15 @@ export default function PlacePhotoInput({
         {isProcessing ? <ImageIcon size={16} /> : <Upload size={16} />}
         {isProcessing ? "正在处理图片" : "上传本地图片"}
       </button>
+      {errors.length > 0 && (
+        <div className="place-photo-errors" role="status" aria-live="polite">
+          <strong>{errors.length === 1 ? "有一项未处理" : `${errors.length} 项未处理`}</strong>
+          {errors.slice(0, 3).map((error) => (
+            <span key={error}>{error}</span>
+          ))}
+          {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
+        </div>
+      )}
       <p className="form-hint">本地图片会压缩后保存到地点资料中；最多 {maxPhotos} 张，详情页展示前 3 张。</p>
     </div>
   );

@@ -1,9 +1,10 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Star, Store, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Share2, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -29,6 +30,7 @@ export default function PlaceDetail() {
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const place = state.places.find((item) => item.id === placeId);
 
   if (!place) {
@@ -105,6 +107,9 @@ export default function PlaceDetail() {
               <p>{buildPlaceContextLine(place)}</p>
               <button className="category-pill active" onClick={() => setEditing(true)}>
                 编辑地点
+              </button>
+              <button className="category-pill" onClick={() => setShareOpen(true)}>
+                <Share2 size={14} /> 分享
               </button>
             </div>
           </div>
@@ -301,6 +306,19 @@ export default function PlaceDetail() {
         initialPlaceId={place.id}
         memoryMode="quick"
         onClose={() => setAddingMemory(false)}
+      />
+      <LocalShareSheet
+        target={
+          shareOpen
+            ? {
+                type: "places",
+                placeIds: [place.id],
+                title: buildPlaceDisplayName(place),
+                count: 1
+              }
+            : null
+        }
+        onClose={() => setShareOpen(false)}
       />
     </>
   );

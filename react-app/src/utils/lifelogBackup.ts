@@ -120,7 +120,9 @@ function normalizeAppSettings(value: unknown): AppSettings {
     defaultCity: String(value.defaultCity || defaultAppSettings.defaultCity),
     defaultRelationship: String(value.defaultRelationship || defaultAppSettings.defaultRelationship),
     defaultMood: String(value.defaultMood || defaultAppSettings.defaultMood),
-    themeStyle: ["classic", "cream", "mint", "mist"].includes(themeStyle) ? (themeStyle as AppSettings["themeStyle"]) : defaultAppSettings.themeStyle
+    themeStyle: ["classic", "cream", "mint", "mist"].includes(themeStyle) ? (themeStyle as AppSettings["themeStyle"]) : defaultAppSettings.themeStyle,
+    privacyMode: Boolean(value.privacyMode ?? defaultAppSettings.privacyMode),
+    hidePhotoThumbnails: Boolean(value.hidePhotoThumbnails ?? defaultAppSettings.hidePhotoThumbnails)
   };
 }
 

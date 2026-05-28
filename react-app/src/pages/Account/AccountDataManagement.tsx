@@ -6,10 +6,13 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { buildBackupHealthDetailGroups, buildBackupHealthReport, buildBackupImportPreview } from "../../utils/backupHealth";
+import { saveReadableFile } from "../../utils/backupExport";
+import { buildShareImportPreview, isLifeLogSharePayload, normalizeLifeLogSharePayload } from "../../utils/lifelogShare";
 import { isRecord } from "../../utils/lifelogHelpers";
+import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableExport";
 
 export default function AccountDataManagement() {
-  const { state, exportData, importData, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
+  const { state, exportData, importData, importShareData, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
   const navigate = useNavigate();
   const confirm = useConfirm();
   const notify = useToast();
@@ -17,6 +20,7 @@ export default function AccountDataManagement() {
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
   const [lastExport, setLastExport] = useState<Awaited<ReturnType<typeof exportData>> | null>(null);
+  const [importRecovery, setImportRecovery] = useState<ImportRecoveryState | null>(null);
   const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
   const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
@@ -34,6 +38,7 @@ export default function AccountDataManagement() {
   async function handleImport(file: File | undefined) {
     if (!file) return;
     if (importLockRef.current) return;
+    setImportRecovery(null);
     let parsed: unknown;
     let previewMessage = "";
 
@@ -42,6 +47,10 @@ export default function AccountDataManagement() {
       parsed = JSON.parse(text) as unknown;
       if (!isRecord(parsed)) {
         throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
+      }
+      if (isLifeLogSharePayload(parsed)) {
+        await handleShareImport(parsed);
+        return;
       }
       const preview = buildBackupImportPreview(parsed, state);
       const countPreview = [
@@ -90,11 +99,95 @@ export default function AccountDataManagement() {
     setIsImporting(true);
     try {
       await importData(file);
+      setImportRecovery(null);
       notify({ message: "数据导入完成，当前资料已恢复", tone: "success" });
     } catch (error) {
+      const message = error instanceof Error ? error.message : "请检查文件格式。";
+      setImportRecovery({
+        file,
+        fileName: file.name,
+        message,
+        happenedAt: new Date().toISOString()
+      });
       await confirm({
         title: "导入失败",
-        message: error instanceof Error ? error.message : "请检查文件格式。",
+        message: `${message}\n\n可以稍后重试这个文件，或先导出当前数据后再重新选择备份。`,
+        confirmText: "知道了",
+        tone: "info"
+      });
+    } finally {
+      importLockRef.current = false;
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleShareImport(parsed: Record<string, unknown>) {
+    let previewMessage = "";
+    let payload;
+    try {
+      payload = normalizeLifeLogSharePayload(parsed);
+      const preview = buildShareImportPreview(payload, state);
+      const incoming = [
+        preview.incoming.people ? `${preview.incoming.people} 个人物` : "",
+        preview.incoming.places ? `${preview.incoming.places} 个地点` : "",
+        preview.incoming.memories ? `${preview.incoming.memories} 条回忆` : "",
+        preview.incoming.photos ? `${preview.incoming.photos} 张照片` : ""
+      ].filter(Boolean).join(" · ") || "没有可导入内容";
+      const effect = [
+        preview.willCreate.people ? `新增人物 ${preview.willCreate.people}` : "",
+        preview.willCreate.places ? `新增地点 ${preview.willCreate.places}` : "",
+        preview.willReuse.places ? `复用已有地点 ${preview.willReuse.places}` : "",
+        preview.willCreate.memories ? `新增回忆 ${preview.willCreate.memories}` : "",
+        preview.skippedMemories ? `跳过重复回忆 ${preview.skippedMemories}` : "",
+        preview.willCreate.photos ? `新增照片 ${preview.willCreate.photos}` : ""
+      ].filter(Boolean).join(" · ") || "没有新内容需要添加";
+      previewMessage = [
+        `分享包：${preview.title}`,
+        `内容：${incoming}。`,
+        `导入后：${effect}。`,
+        preview.exportedAt ? `分享时间：${formatBackupDate(preview.exportedAt)}。` : "",
+        "分享包只会添加或复用资料，不会覆盖当前本地数据。"
+      ].filter(Boolean).join("\n");
+    } catch (error) {
+      await confirm({
+        title: "分享包无法导入",
+        message: error instanceof Error ? error.message : "分享包结构不正确。",
+        confirmText: "知道了",
+        tone: "info"
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const accepted = await confirm({
+      title: "导入分享包",
+      message: previewMessage,
+      confirmText: "添加到 LifeLog"
+    });
+    if (!accepted) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    importLockRef.current = true;
+    setIsImporting(true);
+    try {
+      const result = await importShareData(payload);
+      notify({
+        message: [
+          result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
+          result.placesReused ? `复用地点 ${result.placesReused}` : "",
+          result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
+          result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : ""
+        ].filter(Boolean).join(" · ") || "分享包已处理",
+        tone: "success",
+        durationMs: 4200
+      });
+    } catch (error) {
+      await confirm({
+        title: "分享包导入失败",
+        message: error instanceof Error ? error.message : "请检查分享包后重试。",
         confirmText: "知道了",
         tone: "info"
       });
@@ -131,6 +224,25 @@ export default function AccountDataManagement() {
     }
   }
 
+  async function handleReadableExport(format: "markdown" | "html") {
+    try {
+      const date = new Date().toISOString().slice(0, 10);
+      const result = format === "markdown"
+        ? await saveReadableFile(`lifelog-readable-${date}.md`, buildReadableMarkdown(state), "text/markdown;charset=utf-8")
+        : await saveReadableFile(`lifelog-readable-${date}.html`, buildReadableHtml(state), "text/html;charset=utf-8");
+      setLastExport(result);
+      notify({ message: `可读导出已生成：${result.fileName}`, tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "请稍后重试";
+      notify({ message: `可读导出失败：${message}`, tone: "error" });
+    }
+  }
+
+  async function retryLastImport() {
+    if (!importRecovery?.file) return;
+    await handleImport(importRecovery.file);
+  }
+
   async function handleMergeStrongDuplicates() {
     const count = duplicatePlaceGroups.filter((group) => group.strength === "strong").length;
     if (!count) return;
@@ -156,7 +268,7 @@ export default function AccountDataManagement() {
       </div>
       <div className="data-management-panel">
         <GlassCard className="data-management-intro">
-          <strong>本地数据备份</strong>
+          <strong>本地数据备份与分享导入</strong>
           <span>{dataSummary}</span>
           <p>数据保存在当前设备的 IndexedDB 中。完整备份会包含资料、照片、设置和提醒；导入和重置会覆盖当前本地数据。</p>
         </GlassCard>
@@ -269,6 +381,32 @@ export default function AccountDataManagement() {
           </button>
           <button
             className="data-action-card glass-card"
+            onClick={() => void handleReadableExport("markdown")}
+            disabled={!hasUserData}
+          >
+            <div className="data-action-icon">
+              <Download />
+            </div>
+            <div>
+              <strong>导出 Markdown</strong>
+              <span>生成可直接阅读和归档的文字版本</span>
+            </div>
+          </button>
+          <button
+            className="data-action-card glass-card"
+            onClick={() => void handleReadableExport("html")}
+            disabled={!hasUserData}
+          >
+            <div className="data-action-icon">
+              <ExternalLink />
+            </div>
+            <div>
+              <strong>导出 HTML</strong>
+              <span>适合浏览器打开、打印或长期保存</span>
+            </div>
+          </button>
+          <button
+            className="data-action-card glass-card"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
           >
@@ -276,8 +414,8 @@ export default function AccountDataManagement() {
               <Upload />
             </div>
             <div>
-              <strong>{isImporting ? "导入中…" : "从备份恢复"}</strong>
-              <span>恢复资料、照片、设置和提醒</span>
+              <strong>{isImporting ? "导入中…" : "导入备份 / 分享包"}</strong>
+              <span>备份会覆盖恢复，分享包只会添加内容</span>
             </div>
           </button>
           <button className="data-action-card danger glass-card" onClick={() => void handleReset()}>
@@ -298,6 +436,26 @@ export default function AccountDataManagement() {
             {lastExport.path && <code>{lastExport.path}</code>}
           </GlassCard>
         )}
+        {importRecovery && (
+          <GlassCard className="backup-import-recovery">
+            <div>
+              <strong>上次导入失败</strong>
+              <span>{importRecovery.fileName} · {formatBackupDate(importRecovery.happenedAt)}</span>
+              <p>{importRecovery.message}</p>
+            </div>
+            <div className="backup-import-recovery-actions">
+              <button type="button" onClick={() => void retryLastImport()} disabled={isImporting}>
+                重试这个文件
+              </button>
+              <button type="button" onClick={() => fileInputRef.current?.click()}>
+                重新选择
+              </button>
+              <button type="button" onClick={() => void handleExport()} disabled={!hasUserData}>
+                先导出当前数据
+              </button>
+            </div>
+          </GlassCard>
+        )}
       </div>
       <input
         ref={fileInputRef}
@@ -308,6 +466,13 @@ export default function AccountDataManagement() {
       />
     </section>
   );
+}
+
+interface ImportRecoveryState {
+  file: File;
+  fileName: string;
+  message: string;
+  happenedAt: string;
 }
 
 function formatBackupDate(value: string) {

@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.85",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.85",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.85/lifelog-v0.1.0-test.85.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.85.apk",
-    "apkName":  "lifelog-v0.1.0-test.85.apk",
-    "apkSize":  3634512,
-    "apkSha256":  "7b11cfbe88ae698fff56ff0530412a991e7c4c55aac0083d66cc4de1c7b6a9c2",
-    "publishedAt":  "2026-05-27T16:27:01Z",
-    "body":  "- 资料体检分组支持展开具体问题，缺失关联、资料补全和记录问题可直接跳转处理。\n- 首页今日行动新增稍后和今天忽略，临时不处理的提醒不会反复占用首页。\n- 纪念日安排新增生日、送礼、聚餐和出行模板，可一键填入预算、提醒、备注和待办。\n- 检查更新会展示 Gitee、GitHub raw、CDN 和 GitHub Release 的来源诊断，便于定位网络或缓存问题。"
+    "version":  "0.1.0-test.86",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.86",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.86/lifelog-v0.1.0-test.86.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.86.apk",
+    "apkName":  "lifelog-v0.1.0-test.86.apk",
+    "apkSize":  3657960,
+    "apkSha256":  "bf3ef776b1cc37137e5b84a3c74f3018ddde829d6f6a100edc6c504c3d0e5be1",
+    "publishedAt":  "2026-05-28T10:25:36Z",
+    "body":  "- 底部导航收敛为首页、档案、回忆三项，人物 / 地点与时间线 / 日历改为页面内分段切换。\n- 设置页重组为账号、应用、数据、关于四个平级入口，移除重复的管理中心和当前更新信息。\n- 人物喜好档案和禁忌雷区拆分为独立标准编辑面板，列表和详情页都可直接修改。\n- 修复 Web 顶部黑色挖孔装饰常驻显示，并优化 Android 状态栏背景。\n- 修正美团分享链接的平台识别，并补充分享导入、筛选记忆和表单草稿恢复等体验优化。"
 }

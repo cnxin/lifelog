@@ -1,26 +1,26 @@
-import { CalendarDays, Heart, Home, MapPin, Settings, Users } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Archive, Heart, Home } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 
 const navItems = [
-  { to: "/", label: "首页", icon: Home },
-  { to: "/people", label: "人物", icon: Users },
-  { to: "/places", label: "地点", icon: MapPin },
-  { to: "/memories", label: "回忆", icon: Heart },
-  { to: "/calendar", label: "日历", icon: CalendarDays },
-  { to: "/settings", label: "设置", icon: Settings }
+  { to: "/", label: "首页", icon: Home, match: (pathname: string) => pathname === "/" },
+  { to: "/people", label: "档案", icon: Archive, match: (pathname: string) => pathname.startsWith("/people") || pathname.startsWith("/places") },
+  { to: "/memories", label: "回忆", icon: Heart, match: (pathname: string) => pathname.startsWith("/memories") || pathname.startsWith("/calendar") }
 ];
 
 export default function BottomNav() {
+  const location = useLocation();
+
   return (
     <nav className="bottom-nav" aria-label="主导航">
       {navItems.map((item) => {
         const Icon = item.icon;
+        const active = item.match(location.pathname);
         return (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === "/"}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+            className={`nav-item ${active ? "active" : ""}`}
           >
             <Icon />
             <span>{item.label}</span>

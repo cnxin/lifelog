@@ -7,6 +7,8 @@ interface PersonPickerProps {
   value?: string[];
   onChange?: (ids: string[]) => void;
   name?: string;
+  onCreate?: (name: string) => Promise<string>;
+  includeEmptyMarker?: boolean;
 }
 
 export default function PersonPicker({
@@ -14,7 +16,9 @@ export default function PersonPicker({
   defaultSelected = [],
   value,
   onChange,
-  name = "personIds"
+  name = "personIds",
+  onCreate,
+  includeEmptyMarker = false
 }: PersonPickerProps) {
   const isControlled = value !== undefined;
   const [internalSelected, setInternalSelected] = useState<string[]>(() =>
@@ -22,6 +26,7 @@ export default function PersonPicker({
   );
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const selected = isControlled ? value : internalSelected;
 
   const selectedPeople = useMemo(
@@ -56,8 +61,21 @@ export default function PersonPicker({
     window.setTimeout(() => setIsOpen(false), 120);
   }
 
+  async function createAndAdd() {
+    const name = query.trim();
+    if (!name || !onCreate || isCreating) return;
+    setIsCreating(true);
+    try {
+      const id = await onCreate(name);
+      if (id) add(id);
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   return (
     <div className={isOpen ? "person-picker open" : "person-picker"}>
+      {includeEmptyMarker && selected.length === 0 && <input type="hidden" name={name} value="" />}
       {selected.map((id) => (
         <input key={id} type="hidden" name={name} value={id} />
       ))}
@@ -115,7 +133,16 @@ export default function PersonPicker({
           )}
 
           {isOpen && !filtered.length && query.trim() && (
-            <p className="form-hint">没有匹配的人物，去“人物”页可以新增。</p>
+            <div className="picker-empty-action">
+              <span>没有匹配的人物</span>
+              {onCreate ? (
+                <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => void createAndAdd()} disabled={isCreating}>
+                  {isCreating ? "创建中..." : `新增“${query.trim()}”并关联`}
+                </button>
+              ) : (
+                <small>去“人物”页可以新增。</small>
+              )}
+            </div>
           )}
         </>
       )}
