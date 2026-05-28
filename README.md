@@ -10,6 +10,7 @@
 - **日历视图** - 聚合生日、纪念日和回忆，支持农历、节日和节气显示。
 - **Android 分享导入** - 从高德、美团、大众点评等 App 分享文本中识别地点草稿。
 - **本地优先备份** - 数据保存在 IndexedDB，支持完整备份、导入预检和健康检查。
+- **本地分享** - 回忆和地点可生成分享包、链接和二维码，接收方预览后再导入。
 - **提醒能力** - 支持生日、纪念日、联系提醒和回忆提醒，并展示调度预览。
 - **移动端体验** - Capacitor Android APK、系统返回键处理、全屏安全区和多主题适配。
 
@@ -17,19 +18,19 @@
 
 ### 下载 APK
 
-当前版本：`0.1.0-test.87`
+当前版本：`0.1.0-test.88`
 
 最新 Release：
 
-- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.87
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.87/lifelog-v0.1.0-test.87.apk
-- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.87.apk
+- Release 页面：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.88
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.88/lifelog-v0.1.0-test.88.apk
+- Gitee 镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.88.apk
 
 APK 信息：
 
-- 文件名：`lifelog-v0.1.0-test.87.apk`
-- 大小：`3661512` bytes
-- SHA256：`c20df66c59b126f5884e408dee8d4e6c501f8babf265f92ceb171e74428a6cc2`
+- 文件名：`lifelog-v0.1.0-test.88.apk`
+- 大小：`3677324` bytes
+- SHA256：`d49cc37b114158a9e54caab9d4a62ecd6e74809b23a31d926d81ebb123b18a95`
 
 App 内更新会同时比较 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub latest Release，避免单一来源缓存旧版本时误判；APK 安装优先使用 Gitee 国内镜像，Android 端会下载到本地 `.apk` 后用系统安装器打开，避免 Gitee raw 响应头导致保存成 zip。
 
@@ -78,10 +79,11 @@ npm.cmd run release:prepare-files
 
 ## 最新更新
 
-- 本地功能全部保持免费，仅为未来云同步、云备份、多设备同步和云端分享恢复保留高级权益。
-- 分享包导入支持撤销本次导入，人物、地点、回忆和照片新增内容都能回滚。
-- 完整备份增加最近导出时间提醒，长列表新增回到顶部按钮。
-- 内置升级补充下载速度、剩余时间和来源展示，并在主源失败时自动重试备用源。
+- 本地分享新增二维码，Android 支持 `lifelog://share/import#...` 深链扫码导入。
+- 分享记录中心保留分享包、分享链接和导入记录，链接可再次复制，分享导入支持撤销。
+- 提醒中心可处理今日和逾期纪念日安排，支持完成、跳过和完成后继续记录回忆。
+- 地点批量管理支持修改前预览、批量补充分类/商场/区域/标签，并可撤销。
+- 首页快速记录会保留未提交草稿，今日行动空状态降噪。
 
 ## 备份排查
 

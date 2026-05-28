@@ -18,6 +18,7 @@ import {
   resetDatabase,
   runPlaceMergeTransaction,
   deleteAnniversaryPlanRecord,
+  deletePhotoRecords,
   saveAnniversaryPlanRecord,
   saveAppSettings,
   savePlaceMergeHistoryEntry,
@@ -89,6 +90,8 @@ type DeletedEntrySnapshot =
   | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
 type BackupExportResult = BackupExportTarget;
+type PlaceBulkPatch = Partial<Pick<Place, "category" | "mall" | "area">> & { appendTags?: string[] };
+type PlaceBulkSnapshot = Pick<Place, "id" | "category" | "mall" | "area" | "tags">;
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -102,6 +105,8 @@ interface LifeLogContextValue {
   deleteAnniversaryPlan: (id: string) => Promise<void>;
   inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
   savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
+  updatePlacesBulk: (placeIds: string[], patch: PlaceBulkPatch) => Promise<{ count: number; before: PlaceBulkSnapshot[] }>;
+  restorePlacesBulk: (snapshots: PlaceBulkSnapshot[]) => Promise<number>;
   togglePlaceFavorite: (id: string) => Promise<void>;
   saveMemory: (formData: FormData, id?: string, photos?: Photo[]) => Promise<string>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
@@ -321,6 +326,71 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }));
 
       return place.id;
+    }
+
+    async function updatePlacesBulk(placeIds: string[], patch: PlaceBulkPatch) {
+      const targetIds = new Set(placeIds);
+      if (!targetIds.size) return { count: 0, before: [] };
+
+      const category = patch.category?.trim();
+      const mall = patch.mall?.trim();
+      const area = patch.area?.trim();
+      const appendTags = Array.from(new Set((patch.appendTags || []).map((tag) => tag.trim()).filter(Boolean)));
+      if (!category && !mall && !area && !appendTags.length) return { count: 0, before: [] };
+      const before = state.places
+        .filter((place) => targetIds.has(place.id))
+        .map((place) => ({
+          id: place.id,
+          category: place.category,
+          mall: place.mall,
+          area: place.area,
+          tags: [...place.tags]
+        }));
+
+      const nextPlaces = state.places.map((place) => {
+        if (!targetIds.has(place.id)) return place;
+        return {
+          ...place,
+          category: category || place.category,
+          mall: mall || place.mall,
+          area: area || place.area,
+          tags: appendTags.length ? Array.from(new Set([...place.tags, ...appendTags])) : place.tags
+        };
+      });
+      const changedPlaces = nextPlaces.filter((place) => targetIds.has(place.id));
+      if (!changedPlaces.length) return { count: 0, before: [] };
+
+      await savePlaceRecords(changedPlaces);
+      setState((current) => ({
+        ...current,
+        places: current.places.map((place) => nextPlaces.find((item) => item.id === place.id) || place)
+      }));
+      return { count: changedPlaces.length, before };
+    }
+
+    async function restorePlacesBulk(snapshots: PlaceBulkSnapshot[]) {
+      if (!snapshots.length) return 0;
+      const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+      const restoredPlaces = state.places
+        .filter((place) => snapshotById.has(place.id))
+        .map((place) => {
+          const snapshot = snapshotById.get(place.id)!;
+          return {
+            ...place,
+            category: snapshot.category,
+            mall: snapshot.mall,
+            area: snapshot.area,
+            tags: [...snapshot.tags]
+          };
+        });
+      if (!restoredPlaces.length) return 0;
+
+      await savePlaceRecords(restoredPlaces);
+      setState((current) => ({
+        ...current,
+        places: current.places.map((place) => restoredPlaces.find((item) => item.id === place.id) || place)
+      }));
+      return restoredPlaces.length;
     }
 
     async function saveMemory(formData: FormData, id?: string, photos?: Photo[]) {
@@ -738,8 +808,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const memoryIds = result.createdMemoryIds || [];
       const personIds = result.createdPersonIds || [];
       const placeIds = result.createdPlaceIds || [];
+      const photoIds = result.createdPhotoIds || [];
 
       if (memoryIds.length) await Promise.all(memoryIds.map(deleteMemoryRecord));
+      if (photoIds.length) await deletePhotoRecords(photoIds);
       if (personIds.length) await Promise.all(personIds.map(deletePersonRecord));
       if (placeIds.length) await Promise.all(placeIds.map(deletePlaceRecord));
 
@@ -778,6 +850,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       deleteAnniversaryPlan,
       inspectPlaceSave,
       savePlace,
+      updatePlacesBulk,
+      restorePlacesBulk,
       togglePlaceFavorite,
       saveMemory,
       deleteEntry,

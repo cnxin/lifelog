@@ -10,6 +10,8 @@ import { saveReadableFile } from "../../utils/backupExport";
 import { buildShareImportPreview, isLifeLogSharePayload, normalizeLifeLogSharePayload } from "../../utils/lifelogShare";
 import { isRecord } from "../../utils/lifelogHelpers";
 import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableExport";
+import { addShareHistoryEntry, clearShareHistory, formatShareHistoryCounts, loadShareHistory, updateShareHistoryEntry, type ShareHistoryEntry } from "../../utils/shareHistory";
+import { getShareImportViewTarget } from "../../utils/shareImportResult";
 
 export default function AccountDataManagement() {
   const { state, exportData, importData, importShareData, undoShareImport, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
@@ -21,6 +23,7 @@ export default function AccountDataManagement() {
   const [isImporting, setIsImporting] = useState(false);
   const [lastExport, setLastExport] = useState<Awaited<ReturnType<typeof exportData>> | null>(null);
   const [importRecovery, setImportRecovery] = useState<ImportRecoveryState | null>(null);
+  const [shareHistory, setShareHistory] = useState<ShareHistoryEntry[]>(() => loadShareHistory());
   const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
   const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
@@ -176,6 +179,29 @@ export default function AccountDataManagement() {
     setIsImporting(true);
     try {
       const result = await importShareData(payload);
+      const viewTarget = getShareImportViewTarget(result);
+      const historyEntry = addShareHistoryEntry({
+        direction: "import",
+        method: "file",
+        status: "imported",
+        title: payload.title || "分享包",
+        summary: [
+          result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
+          result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
+          result.placesReused ? `复用地点 ${result.placesReused}` : "",
+          result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
+          result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : "",
+          result.photosCreated ? `新增照片 ${result.photosCreated}` : ""
+        ].filter(Boolean).join(" · ") || "分享包已处理",
+        targetPath: viewTarget?.path,
+        counts: {
+          people: result.peopleCreated,
+          places: result.placesCreated,
+          memories: result.memoriesCreated,
+          photos: result.photosCreated
+        }
+      });
+      setShareHistory(loadShareHistory());
       notify({
         message: [
           result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
@@ -188,10 +214,21 @@ export default function AccountDataManagement() {
         tone: "success",
         durationMs: 6200,
         actions: [
+          ...(viewTarget
+            ? [{
+                label: viewTarget.label,
+                onClick: () => navigate(viewTarget.path)
+              }]
+            : []),
           {
             label: "撤销",
             onClick: async () => {
               await undoShareImport(result);
+              updateShareHistoryEntry(historyEntry.id, {
+                status: "undone",
+                summary: `${formatShareHistoryCounts(historyEntry.counts) || "分享内容"} · 已撤销`
+              });
+              setShareHistory(loadShareHistory());
               notify({ message: "已撤销本次分享导入", tone: "success" });
             }
           }
@@ -273,6 +310,20 @@ export default function AccountDataManagement() {
       message: merged ? `已合并 ${merged} 条重复地点` : "没有可自动合并的重复地点",
       tone: merged ? "success" : "info"
     });
+  }
+
+  function handleClearShareHistory() {
+    clearShareHistory();
+    setShareHistory([]);
+  }
+
+  async function handleCopyShareLink(link: string) {
+    try {
+      await navigator.clipboard.writeText(link);
+      notify({ message: "分享链接已复制", tone: "success" });
+    } catch {
+      notify({ message: "当前环境不能写入剪贴板，请重新生成分享链接", tone: "info" });
+    }
   }
 
   return (
@@ -468,6 +519,7 @@ export default function AccountDataManagement() {
               <strong>上次导入失败</strong>
               <span>{importRecovery.fileName} · {formatBackupDate(importRecovery.happenedAt)}</span>
               <p>{importRecovery.message}</p>
+              <p>当前本地数据没有被覆盖，可以重试、重新选择文件，或先导出当前数据。</p>
             </div>
             <div className="backup-import-recovery-actions">
               <button type="button" onClick={() => void retryLastImport()} disabled={isImporting}>
@@ -482,6 +534,45 @@ export default function AccountDataManagement() {
             </div>
           </GlassCard>
         )}
+        <GlassCard className="share-history-card">
+          <div className="settings-capability-overview-head">
+            <strong>分享记录</strong>
+            {shareHistory.length ? (
+              <button className="mini-action" type="button" onClick={handleClearShareHistory}>
+                清空
+              </button>
+            ) : (
+              <span>暂无记录</span>
+            )}
+          </div>
+          {shareHistory.length ? (
+            <div className="share-history-list">
+              {shareHistory.slice(0, 8).map((entry) => (
+                <div className={`share-history-item ${entry.status}`} key={entry.id}>
+                  <div>
+                    <strong>{entry.title}</strong>
+                    <span>{entry.summary || formatShareHistoryCounts(entry.counts) || "分享记录"}</span>
+                    <small>{formatShareHistoryDate(entry.createdAt)} · {formatShareHistoryMeta(entry)}</small>
+                  </div>
+                  <div className="share-history-actions">
+                    {entry.shareLink && entry.status !== "undone" && (
+                      <button className="mini-action" type="button" onClick={() => void handleCopyShareLink(entry.shareLink!)}>
+                        复制链接
+                      </button>
+                    )}
+                    {entry.targetPath && entry.status !== "undone" && (
+                      <button className="mini-action" type="button" onClick={() => navigate(entry.targetPath || "/")}>
+                        查看
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="form-hint">生成分享包、复制分享链接或导入分享后，这里会保留最近记录。</p>
+          )}
+        </GlassCard>
       </div>
       <input
         ref={fileInputRef}
@@ -511,6 +602,29 @@ function formatBackupDate(value: string) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function formatShareHistoryDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatShareHistoryMeta(entry: ShareHistoryEntry) {
+  const direction = entry.direction === "export" ? "发出" : "导入";
+  const method = entry.method === "link" ? "链接" : "文件";
+  const statusMap: Record<ShareHistoryEntry["status"], string> = {
+    created: "已生成",
+    imported: "已导入",
+    undone: "已撤销",
+    failed: "失败"
+  };
+  return `${direction} · ${method} · ${statusMap[entry.status]}`;
 }
 
 function formatDelta(value: number | null) {

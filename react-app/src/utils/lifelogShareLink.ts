@@ -2,6 +2,7 @@ import type { LifeLogSharePayload } from "./lifelogShare";
 
 const SHARE_LINK_VERSION = "v1";
 const MAX_SHARE_LINK_LENGTH = 6200;
+const APP_SHARE_ORIGIN = "lifelog://share";
 
 interface ShareLinkEnvelope {
   version: typeof SHARE_LINK_VERSION;
@@ -16,11 +17,11 @@ export class ShareLinkTooLargeError extends Error {
   }
 }
 
-export async function buildLifeLogShareLink(payload: LifeLogSharePayload, origin = window.location.origin) {
+export async function buildLifeLogShareLink(payload: LifeLogSharePayload, origin = getDefaultShareOrigin()) {
   const json = JSON.stringify(payload);
   const envelope = await encodeShareEnvelope(json);
   const hash = encodeURIComponent(JSON.stringify(envelope));
-  const link = `${origin}/share/import#${hash}`;
+  const link = `${origin.replace(/\/$/, "")}/import#${hash}`;
   if (link.length > MAX_SHARE_LINK_LENGTH) {
     throw new ShareLinkTooLargeError(link.length);
   }
@@ -54,13 +55,30 @@ export function extractLifeLogShareHashFromText(text: string) {
 
   try {
     const url = new URL(trimmed);
-    if (url.pathname === "/share/import" && url.hash) return url.hash.slice(1);
+    if (isLifeLogShareImportUrl(url) && url.hash) return url.hash.slice(1);
   } catch {
     // Continue with loose text matching below.
   }
 
-  const match = trimmed.match(/\/share\/import#([^\s"'<>]+)/);
+  const match = trimmed.match(/(?:\/share\/import|lifelog:\/\/share\/import)#([^\s"'<>]+)/);
   return match?.[1] || "";
+}
+
+export function buildLifeLogShareImportPathFromUrl(url: string) {
+  const hash = extractLifeLogShareHashFromText(url);
+  return hash ? `/share/import#${hash}` : "";
+}
+
+function getDefaultShareOrigin() {
+  const origin = window.location.origin;
+  if (/^https?:\/\/localhost(?::\d+)?$/i.test(origin)) return APP_SHARE_ORIGIN;
+  if (/^capacitor:\/\//i.test(origin)) return APP_SHARE_ORIGIN;
+  return `${origin}/share`;
+}
+
+function isLifeLogShareImportUrl(url: URL) {
+  if (url.protocol === "lifelog:" && url.hostname === "share" && url.pathname === "/import") return true;
+  return url.pathname === "/share/import";
 }
 
 async function encodeShareEnvelope(json: string): Promise<ShareLinkEnvelope> {

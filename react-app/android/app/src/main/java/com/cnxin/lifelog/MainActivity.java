@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
     private String pendingShareText;
+    private String pendingDeepLink;
     private final Handler shareHandler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -17,21 +18,25 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NativeExternalBrowserPlugin.class);
         registerPlugin(NativeBackupFilePlugin.class);
         captureShareText(getIntent());
+        captureDeepLink(getIntent());
         super.onCreate(savedInstanceState);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         captureShareText(intent);
+        captureDeepLink(intent);
         super.onNewIntent(intent);
         setIntent(intent);
         dispatchPendingShareText();
+        dispatchPendingDeepLink();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         dispatchPendingShareText();
+        dispatchPendingDeepLink();
     }
 
     private void captureShareText(Intent intent) {
@@ -77,6 +82,41 @@ public class MainActivity extends BridgeActivity {
     private void dispatchSharePayload(String data) {
         if (bridge != null) {
             bridge.triggerWindowJSEvent("lifelog:android-share-text", data);
+        }
+    }
+
+    private void captureDeepLink(Intent intent) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction()) || intent.getData() == null) {
+            return;
+        }
+
+        String url = intent.getData().toString();
+        if (url.startsWith("lifelog://share/import")) {
+            pendingDeepLink = url;
+        }
+    }
+
+    private void dispatchPendingDeepLink() {
+        if (bridge == null || pendingDeepLink == null || pendingDeepLink.isEmpty()) {
+            return;
+        }
+
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("url", pendingDeepLink);
+            String data = payload.toString();
+            bridge.triggerWindowJSEvent("lifelog:deep-link", data);
+            shareHandler.postDelayed(() -> dispatchDeepLinkPayload(data), 400);
+            shareHandler.postDelayed(() -> dispatchDeepLinkPayload(data), 1200);
+            pendingDeepLink = null;
+        } catch (JSONException error) {
+            pendingDeepLink = null;
+        }
+    }
+
+    private void dispatchDeepLinkPayload(String data) {
+        if (bridge != null) {
+            bridge.triggerWindowJSEvent("lifelog:deep-link", data);
         }
     }
 }

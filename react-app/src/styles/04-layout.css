@@ -1160,9 +1160,6 @@ button.person-pref-line {
 }
 
 .page-segment-nav {
-  position: sticky;
-  top: 0;
-  z-index: 24;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
@@ -1172,8 +1169,6 @@ button.person-pref-line {
   padding: 4px;
   background: color-mix(in srgb, var(--card-solid) 74%, var(--soft-purple) 26%);
   box-shadow: var(--control-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
 .page-segment-item {

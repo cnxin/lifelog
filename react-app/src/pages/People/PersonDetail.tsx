@@ -1,5 +1,5 @@
 import { ArrowLeft, Calendar, CheckCircle2, Gift, Heart, MapPin, MessageCircle, Sparkles, Star } from "lucide-react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import AnniversaryPlanSheet from "../../components/AnniversaryPlanSheet";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
@@ -20,6 +20,7 @@ export default function PersonDetail() {
   const { personId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { state, getPersonName, getPlaceName, saveAnniversaryPlan, deleteAnniversaryPlan, updatePersonProfile } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
@@ -40,6 +41,21 @@ export default function PersonDetail() {
     });
     return () => cancelAnimationFrame(frameId);
   }, [location.hash, personId]);
+
+  useEffect(() => {
+    const planId = searchParams.get("recordPlan");
+    if (!planId || !personId) return;
+    const plan = state.anniversaryPlans.find((item) => item.id === planId && item.personId === personId);
+    if (!plan) return;
+
+    setMemoryInitialDate(plan.targetDate);
+    setMemoryInitialPlaceIds(plan.placeIds);
+    setMemoryPlanId(plan.id);
+    setAddingMemory(true);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("recordPlan");
+    setSearchParams(nextParams, { replace: true });
+  }, [personId, searchParams, setSearchParams, state.anniversaryPlans]);
   const person = state.people.find((item) => item.id === personId);
 
   if (!person) {

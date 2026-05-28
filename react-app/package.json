@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.87",
+  "version": "0.1.0-test.88",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -42,11 +42,13 @@
     "@capacitor/core": "^8.3.1",
     "@capacitor/local-notifications": "^8.1.0",
     "@capacitor/status-bar": "^8.0.2",
+    "@types/qrcode": "^1.5.6",
     "@vitejs/plugin-react": "latest",
     "browser-image-compression": "^2.0.2",
     "dexie": "^4.4.2",
     "lucide-react": "latest",
     "lunar-javascript": "^1.7.7",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.0",

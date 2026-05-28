@@ -296,6 +296,11 @@ export async function deletePhotoRecord(id: string) {
   await db.photos.delete(id);
 }
 
+export async function deletePhotoRecords(ids: string[]) {
+  if (!ids.length) return;
+  await db.photos.bulkDelete(ids);
+}
+
 export async function deletePhotosByMemoryId(memoryId: string) {
   await db.photos.where("memoryId").equals(memoryId).delete();
 }

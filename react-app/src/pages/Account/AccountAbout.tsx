@@ -75,7 +75,7 @@ export default function AccountAbout() {
   }
 
   useEffect(() => {
-    function handleWindowFocus() {
+    function handleResume() {
       void refreshPermissionStatus();
       if (!pendingUpgradeRef.current) return;
       const pendingUpdate = pendingUpgradeRef.current;
@@ -83,8 +83,18 @@ export default function AccountAbout() {
       void handleBuiltInUpgrade(pendingUpdate, true);
     }
 
-    window.addEventListener("focus", handleWindowFocus);
-    return () => window.removeEventListener("focus", handleWindowFocus);
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") handleResume();
+    }
+
+    window.addEventListener("focus", handleResume);
+    window.addEventListener("pageshow", handleResume);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", handleResume);
+      window.removeEventListener("pageshow", handleResume);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   async function handleCheckUpdate() {

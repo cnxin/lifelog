@@ -39,6 +39,13 @@ interface PlaceFilterState {
   sortMode: PlaceSortMode;
 }
 
+interface PlaceBatchDraft {
+  category: string;
+  mall: string;
+  area: string;
+  tags: string;
+}
+
 export default function Places() {
   const {
     state,
@@ -53,6 +60,8 @@ export default function Places() {
     mergeAllDuplicatePlaces,
     undoLatestPlaceMerge,
     togglePlaceFavorite,
+    updatePlacesBulk,
+    restorePlacesBulk,
     getPersonName,
   } = useLifeLog();
   const confirm = useConfirm();
@@ -96,6 +105,8 @@ export default function Places() {
   const [weakQueueIndex, setWeakQueueIndex] = useState<number | null>(null);
   const [batchShareMode, setBatchShareMode] = useState(false);
   const [selectedSharePlaceIds, setSelectedSharePlaceIds] = useState<string[]>([]);
+  const [batchDraft, setBatchDraft] = useState<PlaceBatchDraft>({ category: "", mall: "", area: "", tags: "" });
+  const [batchPreviewOpen, setBatchPreviewOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const strongDuplicateGroups = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong"),
@@ -320,9 +331,41 @@ export default function Places() {
     updateFilters({ area: value });
   }
 
+  function updateBatchDraft(patch: Partial<PlaceBatchDraft>) {
+    setBatchDraft((current) => ({ ...current, ...patch }));
+  }
+
+  async function applyBatchUpdate() {
+    const patch = buildPlaceBatchPatch(batchDraft);
+    const result = await updatePlacesBulk(selectedSharePlaceIds, patch);
+    if (!result.count) {
+      notify({ message: "先填写要批量修改的字段", tone: "info" });
+      return;
+    }
+    setBatchDraft({ category: "", mall: "", area: "", tags: "" });
+    setBatchPreviewOpen(false);
+    notify({
+      message: `已更新 ${result.count} 个地点`,
+      tone: "success",
+      actions: [
+        {
+          label: "撤销",
+          onClick: async () => {
+            const restored = await restorePlacesBulk(result.before);
+            notify({ message: restored ? `已恢复 ${restored} 个地点` : "没有可恢复的地点", tone: restored ? "success" : "info" });
+          }
+        }
+      ]
+    });
+  }
+
   const storePlaceRows = placeRows.filter(({ place }) => !isMallRecord(place));
   const selectablePlaceIds = storePlaceRows.map(({ place }) => place.id);
   const selectedShareCount = selectedSharePlaceIds.length;
+  const batchPreview = useMemo(
+    () => buildPlaceBatchPreview(storePlaceRows.map(({ place }) => place), selectedSharePlaceIds, batchDraft),
+    [batchDraft, selectedSharePlaceIds, storePlaceRows]
+  );
   const activeFilterLabels = buildActiveFilterLabels({
     query: query.trim(),
     country,
@@ -544,9 +587,10 @@ export default function Places() {
                 onClick={() => {
                   setBatchShareMode((current) => !current);
                   setSelectedSharePlaceIds([]);
+                  setBatchDraft({ category: "", mall: "", area: "", tags: "" });
                 }}
               >
-                {batchShareMode ? "取消" : "批量分享"}
+                {batchShareMode ? "取消" : "批量管理"}
               </button>
             )}
             {!mallGroups.length && (
@@ -560,7 +604,7 @@ export default function Places() {
           <GlassCard className="batch-share-toolbar">
             <div>
               <strong>已选择 {selectedShareCount} 个地点</strong>
-              <span>会生成一个本地分享包，接收方预览后添加。</span>
+              <span>可批量分享，也可以统一补充分类、商场、区域或标签。</span>
             </div>
             <div>
               <button
@@ -586,11 +630,82 @@ export default function Places() {
                 onClick={() => {
                   setBatchShareMode(false);
                   setSelectedSharePlaceIds([]);
+                  setBatchDraft({ category: "", mall: "", area: "", tags: "" });
                 }}
               >
                 <X size={14} />
               </button>
             </div>
+            <div className="batch-edit-grid">
+              <label>
+                分类
+                <input
+                  value={batchDraft.category}
+                  placeholder="如 餐厅"
+                  onChange={(event) => updateBatchDraft({ category: event.target.value })}
+                />
+              </label>
+              <label>
+                商场
+                <input
+                  value={batchDraft.mall}
+                  placeholder="如 万象城"
+                  onChange={(event) => updateBatchDraft({ mall: event.target.value })}
+                />
+              </label>
+              <label>
+                区域
+                <input
+                  value={batchDraft.area}
+                  placeholder="如 西湖区"
+                  onChange={(event) => updateBatchDraft({ area: event.target.value })}
+                />
+              </label>
+              <label>
+                追加标签
+                <input
+                  value={batchDraft.tags}
+                  placeholder="用空格或逗号分隔"
+                  onChange={(event) => updateBatchDraft({ tags: event.target.value })}
+                />
+              </label>
+              <button
+                className="mini-action add"
+                type="button"
+                disabled={!selectedShareCount}
+                onClick={() => setBatchPreviewOpen(true)}
+              >
+                预览修改
+              </button>
+            </div>
+            {batchPreviewOpen && (
+              <div className="batch-preview-panel">
+                <div>
+                  <strong>将更新 {batchPreview.count} 个地点</strong>
+                  <span>{batchPreview.summary || "还没有填写要修改的字段"}</span>
+                </div>
+                {batchPreview.examples.length > 0 && (
+                  <ul>
+                    {batchPreview.examples.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+                <div>
+                  <button className="mini-action" type="button" onClick={() => setBatchPreviewOpen(false)}>
+                    取消
+                  </button>
+                  <button
+                    className="mini-action add"
+                    type="button"
+                    disabled={!batchPreview.count || !batchPreview.summary}
+                    onClick={() => void applyBatchUpdate()}
+                  >
+                    确认应用
+                  </button>
+                </div>
+              </div>
+            )}
           </GlassCard>
         )}
         <div className="list">
@@ -794,6 +909,40 @@ function toggleSharePlace(placeId: string, setSelected: (updater: (current: stri
       ? current.filter((id) => id !== placeId)
       : [...current, placeId]
   ));
+}
+
+function splitBatchTags(value: string) {
+  return value
+    .split(/[\s,，、]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildPlaceBatchPatch(draft: PlaceBatchDraft) {
+  return {
+    category: draft.category,
+    mall: draft.mall,
+    area: draft.area,
+    appendTags: splitBatchTags(draft.tags)
+  };
+}
+
+function buildPlaceBatchPreview(places: Place[], selectedIds: string[], draft: PlaceBatchDraft) {
+  const selected = new Set(selectedIds);
+  const targetPlaces = places.filter((place) => selected.has(place.id));
+  const patch = buildPlaceBatchPatch(draft);
+  const changes = [
+    patch.category.trim() ? `分类改为「${patch.category.trim()}」` : "",
+    patch.mall.trim() ? `商场改为「${patch.mall.trim()}」` : "",
+    patch.area.trim() ? `区域改为「${patch.area.trim()}」` : "",
+    patch.appendTags.length ? `追加标签「${patch.appendTags.join("、")}」` : ""
+  ].filter(Boolean);
+
+  return {
+    count: targetPlaces.length,
+    summary: changes.join(" · "),
+    examples: targetPlaces.slice(0, 3).map((place) => buildPlaceDisplayName(place))
+  };
 }
 
 function comparePlaceRows(

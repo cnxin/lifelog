@@ -898,6 +898,29 @@
   background: var(--soft-purple);
 }
 
+.local-share-qr {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--soft-purple);
+  text-align: center;
+}
+
+.local-share-qr img {
+  width: 176px;
+  height: 176px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.local-share-qr span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .share-import-page {
   padding-top: 12px;
 }
@@ -1056,6 +1079,79 @@
 
 .share-import-done-row .mini-action {
   min-height: 38px;
+}
+
+.share-history-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.share-history-list {
+  display: grid;
+  gap: 9px;
+}
+
+.share-history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--soft-purple);
+}
+
+.share-history-actions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.share-history-actions .mini-action {
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+.share-history-item > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.share-history-item strong,
+.share-history-item span,
+.share-history-item small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-history-item strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.share-history-item span,
+.share-history-item small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.share-history-item.imported,
+.share-history-item.created {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.share-history-item.undone {
+  opacity: 0.72;
+}
+
+.share-history-item.failed {
+  background: var(--danger-soft);
 }
 
 .release-note-head {
@@ -1941,13 +2037,34 @@
   .update-check-actions,
   .update-source-diagnostics span,
   .feedback-actions,
-  .backup-health-grid {
+  .backup-health-grid,
+  .reminder-center-item {
     grid-template-columns: 1fr;
   }
 
   .update-check-actions .link-action,
   .update-check-actions .mini-action {
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .reminder-center-item,
+  .batch-share-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .reminder-center-actions,
+  .batch-share-toolbar > div:last-child {
+    justify-content: flex-start;
+  }
+
+  .batch-share-toolbar .batch-edit-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .batch-edit-grid > .mini-action {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2703,6 +2820,99 @@
 
 .settings-section-hint {
   margin-top: 8px;
+}
+
+.reminder-center-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.reminder-center-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reminder-center-head div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.reminder-center-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.reminder-center-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.reminder-center-list {
+  display: grid;
+  gap: 9px;
+}
+
+.reminder-center-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--soft-purple);
+}
+
+.reminder-center-type {
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: var(--primary);
+  background: var(--card-bg);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.reminder-center-item > div:not(.reminder-center-actions) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.reminder-center-item strong,
+.reminder-center-item small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reminder-center-item strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.reminder-center-item small {
+  color: var(--text-sub);
+  font-size: 12px;
+}
+
+.reminder-center-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reminder-center-actions .mini-action {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .data-health-card {
@@ -3576,12 +3786,89 @@
 }
 
 .batch-share-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   margin-bottom: 12px;
   padding: 12px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.batch-share-toolbar .batch-edit-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.batch-edit-grid label {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.batch-edit-grid input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 13px;
+  outline: 0;
+  padding: 0 10px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.batch-edit-grid input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.batch-edit-grid > .mini-action {
+  min-height: 36px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.batch-preview-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 9px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--card-bg);
+}
+
+.batch-preview-panel > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.batch-preview-panel ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-sub);
+  font-size: 12px;
+}
+
+.batch-preview-panel > div:last-child {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .batch-share-toolbar > div:first-child {

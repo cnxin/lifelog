@@ -6,6 +6,8 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { buildShareImportPreview, normalizeLifeLogSharePayload, type LifeLogShareImportPreview, type LifeLogSharePayload } from "../../utils/lifelogShare";
 import { extractLifeLogShareHashFromText, parseLifeLogShareLinkHash } from "../../utils/lifelogShareLink";
+import { addShareHistoryEntry, formatShareHistoryCounts, updateShareHistoryEntry } from "../../utils/shareHistory";
+import { getShareImportViewTarget } from "../../utils/shareImportResult";
 
 export default function ShareImport() {
   const { state, importShareData, undoShareImport } = useLifeLog();
@@ -62,15 +64,40 @@ export default function ShareImport() {
         result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
         result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : ""
       ].filter(Boolean).join(" · ") || "分享内容已处理";
+      const viewTarget = getShareImportViewTarget(result);
+      const historyEntry = addShareHistoryEntry({
+        direction: "import",
+        method: "link",
+        status: "imported",
+        title: preview?.title || payload.title || "分享链接",
+        summary: message,
+        targetPath: viewTarget?.path,
+        counts: {
+          people: result.peopleCreated,
+          places: result.placesCreated,
+          memories: result.memoriesCreated,
+          photos: result.photosCreated
+        }
+      });
       setDoneText(message);
       notify({
         message,
         tone: "success",
         actions: [
+          ...(viewTarget
+            ? [{
+                label: viewTarget.label,
+                onClick: () => navigate(viewTarget.path)
+              }]
+            : []),
           {
             label: "撤销",
             onClick: async () => {
               await undoShareImport(result);
+              updateShareHistoryEntry(historyEntry.id, {
+                status: "undone",
+                summary: `${formatShareHistoryCounts(historyEntry.counts) || "分享内容"} · 已撤销`
+              });
               setDoneText("");
               notify({ message: "已撤销本次分享导入", tone: "success" });
             }

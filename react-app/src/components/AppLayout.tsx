@@ -15,7 +15,7 @@ import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
-import { extractLifeLogShareHashFromText } from "../utils/lifelogShareLink";
+import { buildLifeLogShareImportPathFromUrl, extractLifeLogShareHashFromText } from "../utils/lifelogShareLink";
 import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -85,6 +85,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       delete document.documentElement.dataset.themeStyle;
     };
   }, [settings.themeStyle]);
+  useEffect(() => {
+    function handleDeepLink(event: Event) {
+      const url = String((event as CustomEvent<{ url?: unknown }>).detail?.url || "");
+      const path = buildLifeLogShareImportPathFromUrl(url);
+      if (path) navigate(path);
+    }
+
+    window.addEventListener("lifelog:deep-link", handleDeepLink);
+    return () => window.removeEventListener("lifelog:deep-link", handleDeepLink);
+  }, [navigate]);
   useEffect(() => {
     function handleAndroidShare(event: Event) {
       const text = String((event as CustomEvent<{ text?: unknown }>).detail?.text || "").trim();

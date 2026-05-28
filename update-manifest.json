@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.87",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.87",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.87/lifelog-v0.1.0-test.87.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.87.apk",
-    "apkName":  "lifelog-v0.1.0-test.87.apk",
-    "apkSize":  3661512,
-    "apkSha256":  "c20df66c59b126f5884e408dee8d4e6c501f8babf265f92ceb171e74428a6cc2",
-    "publishedAt":  "2026-05-28T13:16:34Z",
-    "body":  "- 本地功能全部保持免费，仅为未来云同步、云备份、多设备同步和云端分享恢复保留高级权益。\n- 分享包导入支持撤销本次导入，人物、地点、回忆和照片新增内容都能回滚。\n- 完整备份增加最近导出时间提醒，长列表新增回到顶部按钮。\n- 内置升级补充下载速度、剩余时间和来源展示，并在主源失败时自动重试备用源。"
+    "version":  "0.1.0-test.88",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.88",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.88/lifelog-v0.1.0-test.88.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.88.apk",
+    "apkName":  "lifelog-v0.1.0-test.88.apk",
+    "apkSize":  3677324,
+    "apkSha256":  "d49cc37b114158a9e54caab9d4a62ecd6e74809b23a31d926d81ebb123b18a95",
+    "publishedAt":  "2026-05-28T16:44:24Z",
+    "body":  "- 本地分享新增可扫码二维码，Android 支持 lifelog:// 分享导入深链，真机扫码可直达导入页。\n- 分享记录中心保留分享包、分享链接和导入记录，链接可再次复制，分享导入支持撤销。\n- 提醒中心新增今日和逾期纪念日安排处理，可直接完成或跳过，完成后可直接打开回忆记录表单。\n- 地点批量管理支持修改前预览、批量补充分类/商场/区域/标签，并可在操作后撤销。\n- 首页快速记录会保留未提交草稿，今日行动空状态降噪。"
 }

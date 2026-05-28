@@ -1,4 +1,4 @@
-import { BarChart3, Bell, ChevronDown, EyeOff, GitMerge, HeartPulse, SlidersHorizontal } from "lucide-react";
+import { BarChart3, Bell, BellOff, Check, ChevronDown, EyeOff, ExternalLink, GitMerge, HeartPulse, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DateInput from "../../components/DateInput";
@@ -7,9 +7,11 @@ import NumberStepper from "../../components/NumberStepper";
 import TimePicker from "../../components/TimePicker";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
-import type { LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
+import { useToast } from "../../context/ToastContext";
+import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
+import { previewUpcomingReminders } from "../../utils/reminderScheduler";
 import ReminderSettings from "./ReminderSettings";
 
 const themeOptions: Array<{
@@ -52,24 +54,29 @@ export default function Settings() {
 }
 
 type SettingsSection = "visual" | "overview" | "health" | "dedupe" | "reminders" | "privacy" | "defaults";
+const REMINDER_DISMISS_PREFIX = "lifelog:reminder-center-dismissed:";
 
 function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
   const navigate = useNavigate();
   const {
     state,
     settings,
+    reminderSettings,
     duplicatePlaceGroups,
     latestPlaceMerge,
     mergeAllDuplicatePlaces,
     undoLatestPlaceMerge,
+    saveAnniversaryPlan,
     updateSettings
   } = useLifeLog();
   const confirm = useConfirm();
+  const notify = useToast();
   const mergeLockRef = useRef(false);
   const undoLockRef = useRef(false);
   const [isMerging, setIsMerging] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
+  const [dismissedReminderIds, setDismissedReminderIds] = useState<string[]>(() => loadDismissedReminderIds());
   const [openPicker, setOpenPicker] = useState<"relationship" | "mood" | null>(null);
   const [pickerAnchor, setPickerAnchor] = useState({ top: 0, right: 0 });
 
@@ -93,6 +100,12 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
     [duplicatePlaceGroups]
   );
   const healthReport = useMemo(() => buildDataHealthReport(state), [state]);
+  const reminderCenterItems = useMemo(() => {
+    const dismissed = new Set(dismissedReminderIds);
+    return previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 30, limit: 12 })
+      .filter((item) => !dismissed.has(String(item.id)));
+  }, [dismissedReminderIds, reminderSettings, state.memories, state.people]);
+  const duePlans = useMemo(() => buildDuePlanItems(state.anniversaryPlans, state.people), [state.anniversaryPlans, state.people]);
   const visibleSections = sections || ["visual", "overview", "health", "dedupe", "reminders", "privacy", "defaults"];
   const show = (section: SettingsSection) => visibleSections.includes(section);
 
@@ -164,6 +177,37 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
     setOpenPicker(null);
     void updateSettings({
       [key]: value
+    });
+  }
+
+  function dismissReminder(id: number) {
+    const key = getDismissedReminderKey();
+    const next = Array.from(new Set([...dismissedReminderIds, String(id)]));
+    localStorage.setItem(key, JSON.stringify(next));
+    setDismissedReminderIds(next);
+  }
+
+  function restoreDismissedReminders() {
+    localStorage.removeItem(getDismissedReminderKey());
+    setDismissedReminderIds([]);
+  }
+
+  async function updatePlanStatus(plan: AnniversaryPlan, status: "done" | "skipped") {
+    await saveAnniversaryPlan({
+      ...plan,
+      status,
+      checklist: status === "done" ? plan.checklist.map((item) => ({ ...item, done: true })) : plan.checklist,
+      updatedAt: new Date().toISOString()
+    });
+    notify({
+      message: status === "done" ? "安排已完成" : "安排已跳过",
+      tone: "success",
+      actions: status === "done"
+        ? [{
+            label: "记录回忆",
+            onClick: () => navigate(`/people/${plan.personId}?recordPlan=${encodeURIComponent(plan.id)}#anniversaries`)
+          }]
+        : undefined
     });
   }
 
@@ -317,15 +361,90 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
       {show("reminders") && <section className="section">
         <div className="section-header">
           <h2>
-            <Bell /> 提醒设置
+            <Bell /> 提醒中心
           </h2>
           <button
             className="category-pill"
             onClick={() => setShowReminders(!showReminders)}
           >
-            {showReminders ? "收起" : "展开"}
+            {showReminders ? "收起设置" : "提醒设置"}
           </button>
         </div>
+        <GlassCard className="reminder-center-card">
+          <div className="reminder-center-head">
+            <div>
+              <strong>未来 30 天</strong>
+              <span>
+                {reminderCenterItems.length || duePlans.length
+                  ? `${duePlans.length + reminderCenterItems.length} 个待关注事项`
+                  : dismissedReminderIds.length
+                    ? `今天已忽略 ${dismissedReminderIds.length} 个提醒`
+                    : "没有需要处理的提醒"}
+              </span>
+            </div>
+            {dismissedReminderIds.length > 0 && (
+              <button className="mini-action" type="button" onClick={restoreDismissedReminders}>
+                恢复忽略
+              </button>
+            )}
+          </div>
+          {duePlans.length || reminderCenterItems.length ? (
+            <div className="reminder-center-list">
+              {duePlans.map((item) => (
+                <div className="reminder-center-item action" key={item.plan.id}>
+                  <span className="reminder-center-type">安排</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <small>{item.desc}</small>
+                  </div>
+                  <div className="reminder-center-actions">
+                    <button className="mini-action" type="button" onClick={() => navigate(`/people/${item.plan.personId}#anniversaries`)}>
+                      <ExternalLink size={13} />
+                      查看
+                    </button>
+                    <button className="mini-action" type="button" onClick={() => void updatePlanStatus(item.plan, "done")}>
+                      <Check size={13} />
+                      完成
+                    </button>
+                    <button className="mini-action" type="button" onClick={() => void updatePlanStatus(item.plan, "skipped")}>
+                      <X size={13} />
+                      跳过
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {reminderCenterItems.slice(0, 6).map((item) => (
+                <div className="reminder-center-item" key={`${item.type}-${item.id}`}>
+                  <span className="reminder-center-type">{item.type}</span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <small>{formatReminderCenterDate(item.at)} · {item.body}</small>
+                  </div>
+                  <div className="reminder-center-actions">
+                    <button
+                      className="mini-action"
+                      type="button"
+                      onClick={() => navigate(item.sourcePath || "/calendar")}
+                    >
+                      <ExternalLink size={13} />
+                      查看
+                    </button>
+                    <button
+                      className="mini-action"
+                      type="button"
+                      onClick={() => dismissReminder(item.id)}
+                    >
+                      <BellOff size={13} />
+                      忽略
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="form-hint">今天忽略的提醒只会在当天隐藏，明天会重新进入提醒中心。</p>
+          )}
+        </GlassCard>
         {showReminders && <ReminderSettings />}
       </section>}
 
@@ -677,4 +796,48 @@ function safeArray<T>(value: T[] | undefined | null): T[] {
 
 function safeText(value: unknown) {
   return String(value || "");
+}
+
+function getDismissedReminderKey() {
+  return `${REMINDER_DISMISS_PREFIX}${new Date().toISOString().slice(0, 10)}`;
+}
+
+function loadDismissedReminderIds() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(getDismissedReminderKey()) || "[]") as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function formatReminderCenterDate(value: Date) {
+  return value.toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function buildDuePlanItems(plans: AnniversaryPlan[], people: Person[]) {
+  const today = new Date().toISOString().slice(0, 10);
+  return plans
+    .filter((plan) => plan.targetDate <= today && plan.status !== "done" && plan.status !== "skipped")
+    .sort((left, right) => left.targetDate.localeCompare(right.targetDate))
+    .slice(0, 6)
+    .map((plan) => {
+      const person = people.find((item) => item.id === plan.personId);
+      const done = plan.checklist.filter((item) => item.done).length;
+      const total = plan.checklist.length;
+      return {
+        plan,
+        title: `${person?.name || "未关联人物"} · ${plan.title}`,
+        desc: [
+          plan.targetDate < today ? `已到期 ${plan.targetDate}` : "今天执行",
+          total ? `待办 ${done}/${total}` : "暂无待办",
+          plan.placeIds.length ? `关联地点 ${plan.placeIds.length}` : ""
+        ].filter(Boolean).join(" · ")
+      };
+    });
 }

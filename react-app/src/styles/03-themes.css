@@ -954,6 +954,11 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   gap: 10px;
 }
 
+.today-action-empty {
+  display: grid;
+  gap: 10px;
+}
+
 .today-action-card {
   width: 100%;
   min-height: 72px;

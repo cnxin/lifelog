@@ -1,8 +1,10 @@
 import { Copy, Download, Share2, X } from "lucide-react";
 import { useState } from "react";
+import QRCode from "qrcode";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { copyTextToClipboard } from "../utils/diagnostics";
+import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
 import { buildLifeLogShareLink, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
 import type { MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
 
@@ -42,6 +44,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   const notify = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [qrImage, setQrImage] = useState("");
   const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>({
     includeContent: true,
     peopleMode: "public",
@@ -64,6 +68,17 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
       const result = target.type === "memory"
         ? await exportMemoryShare(target.memoryId, memoryOptions)
         : await exportPlacesShare(target.placeIds, placeOptions);
+      const counts = target.type === "memory"
+        ? { memories: 1, photos: memoryOptions.includePhotos ? target.photoCount : 0 }
+        : { places: target.count };
+      addShareHistoryEntry({
+        direction: "export",
+        method: "file",
+        status: "created",
+        title: target.title,
+        summary: formatShareHistoryCounts(counts) || result.fileName,
+        counts
+      });
       notify({
         message: `分享包已生成：${result.fileName}`,
         tone: "success",
@@ -96,6 +111,16 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
         : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
       const link = await buildLifeLogShareLink(payload);
       const copied = await copyTextToClipboard(link);
+      const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
+      addShareHistoryEntry({
+        direction: "export",
+        method: "link",
+        status: copied ? "created" : "failed",
+        title: target.title,
+        summary: copied ? (formatShareHistoryCounts(counts) || "分享链接") : "复制失败，已生成链接",
+        shareLink: link,
+        counts
+      });
       notify({
         message: copied ? "分享链接已复制" : "复制失败，已生成链接但当前环境不能写入剪贴板",
         tone: copied ? "success" : "info",
@@ -108,6 +133,47 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           ? error.message
           : "请稍后重试";
       notify({ message: `生成链接失败：${message}`, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
+    } finally {
+      setIsCopyingLink(false);
+    }
+  }
+
+  async function handleGenerateQr() {
+    if (!target) return;
+    if (target.type === "memory" && memoryOptions.includePhotos) {
+      notify({ message: "二维码不支持图片内容，请关闭图片后生成。", tone: "info" });
+      return;
+    }
+    if (target.type === "places" && placeOptions.includePhotos) {
+      notify({ message: "二维码不支持地点图片链接，请关闭图片后生成。", tone: "info" });
+      return;
+    }
+
+    setIsCopyingLink(true);
+    try {
+      const payload = target.type === "memory"
+        ? await buildMemoryShare(target.memoryId, { ...memoryOptions, includePhotos: false })
+        : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
+      const link = await buildLifeLogShareLink(payload);
+      setShareLink(link);
+      setQrImage(await QRCode.toDataURL(link, { width: 220, margin: 2, errorCorrectionLevel: "M" }));
+      const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
+      addShareHistoryEntry({
+        direction: "export",
+        method: "link",
+        status: "created",
+        title: target.title,
+        summary: formatShareHistoryCounts(counts) || "二维码分享链接",
+        shareLink: link,
+        counts
+      });
+    } catch (error) {
+      const message = error instanceof ShareLinkTooLargeError
+        ? "内容太多，二维码会过密，请改用分享包。"
+        : error instanceof Error
+          ? error.message
+          : "请稍后重试";
+      notify({ message, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
     } finally {
       setIsCopyingLink(false);
     }
@@ -195,6 +261,12 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               />
             </>
           )}
+          {shareLink && (
+            <div className="local-share-qr">
+              {qrImage && <img src={qrImage} alt="LifeLog 分享二维码" />}
+              <span>让对方扫码打开分享导入页面。二维码在本机生成；内容较多时建议改用分享包。</span>
+            </div>
+          )}
         </div>
 
         <div className="submit-row">
@@ -204,6 +276,10 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
             <Copy size={16} />
             {isCopyingLink ? "生成中…" : "复制链接"}
+          </button>
+          <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isCopyingLink || isExporting}>
+            <Share2 size={16} />
+            二维码
           </button>
           <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isExporting}>
             <Download size={16} />

@@ -1,5 +1,5 @@
 import { Calendar, Clock, Heart, History, Inbox, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
-import { MouseEvent, useMemo, useState } from "react";
+import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -19,7 +19,7 @@ export default function Home() {
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
-  const [inboxText, setInboxText] = useState("");
+  const [inboxText, setInboxText] = useState(() => loadQuickInboxDraft());
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const upcoming = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
@@ -41,6 +41,10 @@ export default function Home() {
   const monthlyMemoryCount = countMemoriesInCurrentMonth(state.memories);
   const flashbacks = buildFlashbacks(state.memories, getPersonName, getPlaceName).slice(0, 4);
 
+  useEffect(() => {
+    saveQuickInboxDraft(inboxText);
+  }, [inboxText]);
+
   function openQuickMemory(personIds: string[] = [], placeIds: string[] = []) {
     setInitialMemoryPersonIds(personIds);
     setInitialMemoryPlaceIds(placeIds);
@@ -59,6 +63,7 @@ export default function Home() {
     setInboxText("");
     setEntrySheetType("memory");
     window.localStorage.setItem("lifelog:quick-inbox-prefill", text);
+    clearQuickInboxDraft();
   }
 
   const tasks = [
@@ -98,12 +103,9 @@ export default function Home() {
     onAddMemoryForPerson: (personId) => {
       openQuickMemory([personId]);
     },
-    onQuickMemory: () => {
-      openQuickMemory();
-    },
     actionPrefs
   });
-  const hasRealTodayActions = todayActions.some((action) => !action.isEmptyState);
+  const hasRealTodayActions = todayActions.length > 0;
 
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
@@ -182,8 +184,8 @@ export default function Home() {
             </button>
           )}
         </div>
-        <div className="today-action-list">
-          {todayActions.map((action) => (
+        <div className={hasRealTodayActions ? "today-action-list" : "today-action-empty"}>
+          {hasRealTodayActions ? todayActions.map((action) => (
             <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
               <button className="today-action-main" type="button" onClick={action.onClick}>
                 <span className="today-action-icon">{action.icon}</span>
@@ -204,7 +206,12 @@ export default function Home() {
                 </span>
               )}
             </div>
-          ))}
+          )) : (
+            <GlassCard className="home-empty-card compact">
+              <strong>今天没有必须处理的事项</strong>
+              <span>提醒、联系和纪念日安排都暂时不用处理。可以直接记录新回忆，或去日历看看未来安排。</span>
+            </GlassCard>
+          )}
         </div>
       </section>
 
@@ -488,7 +495,6 @@ interface TodayAction {
   meta?: string;
   tone?: "warm" | "cool";
   canDismiss?: boolean;
-  isEmptyState?: boolean;
   onClick: () => void;
 }
 
@@ -503,7 +509,6 @@ function buildTodayActions({
   onOpenPerson,
   onOpenCalendar,
   onAddMemoryForPerson,
-  onQuickMemory,
   actionPrefs
 }: {
   state: ReturnType<typeof useLifeLog>["state"];
@@ -514,7 +519,6 @@ function buildTodayActions({
   onOpenPerson: (personId: string, hash?: string) => void;
   onOpenCalendar: () => void;
   onAddMemoryForPerson: (personId: string) => void;
-  onQuickMemory: () => void;
   actionPrefs: TodayActionPrefs;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
@@ -586,15 +590,7 @@ function buildTodayActions({
   const visibleActions = actions.filter((action) => !isActionSuppressed(action.id, actionPrefs));
 
   if (!visibleActions.length) {
-    visibleActions.push({
-      id: "record-today",
-      icon: <PenLine />,
-      title: "今天没有必须处理的事项",
-      desc: "提醒、联系和纪念日安排都暂时不用处理。可以去日历看看未来安排。",
-      meta: "空闲",
-      isEmptyState: true,
-      onClick: onOpenCalendar
-    });
+    return [];
   }
 
   return visibleActions.slice(0, 3);
@@ -636,6 +632,33 @@ function buildSnoozeUntil() {
 
 function getTodayActionPrefKey() {
   return `lifelog:today-actions:${toDateKey(new Date())}`;
+}
+
+function loadQuickInboxDraft() {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem("lifelog:quick-inbox-draft") || "";
+}
+
+function saveQuickInboxDraft(value: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const text = value.trim();
+    if (text) {
+      window.localStorage.setItem("lifelog:quick-inbox-draft", value);
+    } else {
+      clearQuickInboxDraft();
+    }
+  } catch {
+    // 草稿只是辅助恢复，不影响首页记录流程。
+  }
+}
+
+function clearQuickInboxDraft() {
+  try {
+    window.localStorage.removeItem("lifelog:quick-inbox-draft");
+  } catch {
+    // 忽略本地草稿清理失败。
+  }
 }
 
 function findTodayAnniversaryPlanAction(anniversaryPlans: AnniversaryPlan[], people: ReturnType<typeof useLifeLog>["state"]["people"]) {
