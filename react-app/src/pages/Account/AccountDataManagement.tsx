@@ -46,6 +46,7 @@ export default function AccountDataManagement() {
     setImportRecovery(null);
     let parsed: unknown;
     let previewMessage = "";
+    let recoveryPreview: ImportRecoveryState["preview"];
 
     try {
       const text = await file.text();
@@ -71,6 +72,14 @@ export default function AccountDataManagement() {
         preview.missingPhotoRefs ? `${preview.missingPhotoRefs} 个照片引用缺少文件` : "",
         preview.ignoredPhotos ? `${preview.ignoredPhotos} 张照片会被忽略` : ""
       ].filter(Boolean).join("；");
+      recoveryPreview = {
+        summary: countPreview,
+        backupTime: preview.exportedAt ? formatBackupDate(preview.exportedAt) : "",
+        appVersion: preview.appVersion,
+        issueCount: preview.issueCount,
+        issues: preview.issues.slice(0, 4),
+        photoNotes: photoPreview ? [photoPreview] : ["照片检查未发现明显关联问题。"]
+      };
       previewMessage = [
         `将导入：${countPreview}。`,
         preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
@@ -112,7 +121,9 @@ export default function AccountDataManagement() {
         file,
         fileName: file.name,
         message,
-        happenedAt: new Date().toISOString()
+        happenedAt: new Date().toISOString(),
+        preview: recoveryPreview,
+        suggestions: buildImportRecoverySuggestions(message, recoveryPreview)
       });
       await confirm({
         title: "导入失败",
@@ -519,6 +530,32 @@ export default function AccountDataManagement() {
               <strong>上次导入失败</strong>
               <span>{importRecovery.fileName} · {formatBackupDate(importRecovery.happenedAt)}</span>
               <p>{importRecovery.message}</p>
+              {importRecovery.preview && (
+                <div className="backup-import-recovery-preview">
+                  <strong>失败前预检</strong>
+                  <span>{importRecovery.preview.summary}</span>
+                  {importRecovery.preview.backupTime && <span>备份时间：{importRecovery.preview.backupTime}</span>}
+                  {importRecovery.preview.appVersion && <span>备份版本：{importRecovery.preview.appVersion}</span>}
+                  {importRecovery.preview.issueCount > 0 && (
+                    <ul>
+                      {importRecovery.preview.issues.map((issue) => (
+                        <li key={issue}>{issue}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {importRecovery.preview.photoNotes.map((note) => (
+                    <span key={note}>{note}</span>
+                  ))}
+                </div>
+              )}
+              <div className="backup-import-recovery-preview">
+                <strong>建议处理</strong>
+                <ul>
+                  {importRecovery.suggestions.map((suggestion) => (
+                    <li key={suggestion}>{suggestion}</li>
+                  ))}
+                </ul>
+              </div>
               <p>当前本地数据没有被覆盖，可以重试、重新选择文件，或先导出当前数据。</p>
             </div>
             <div className="backup-import-recovery-actions">
@@ -590,6 +627,30 @@ interface ImportRecoveryState {
   fileName: string;
   message: string;
   happenedAt: string;
+  preview?: {
+    summary: string;
+    backupTime: string;
+    appVersion: string;
+    issueCount: number;
+    issues: string[];
+    photoNotes: string[];
+  };
+  suggestions: string[];
+}
+
+function buildImportRecoverySuggestions(message: string, preview?: ImportRecoveryState["preview"]) {
+  const suggestions = ["先导出当前本地数据，保留导入前现场。"];
+  if (/完整性|integrity/i.test(message)) {
+    suggestions.push("优先让原设备重新导出完整备份；如果是旧备份，检查人物、地点、回忆和照片数量是否被手动改动。");
+  }
+  if (/照片|photo/i.test(message) || preview?.photoNotes.some((note) => !note.includes("未发现"))) {
+    suggestions.push("如果问题集中在照片，可以先尝试使用不含照片的备份或重新导出照片完整的备份。");
+  }
+  if (preview?.issueCount) {
+    suggestions.push("预检已发现关联问题，导入前建议先查看上方问题摘要，必要时保留原文件等待修复。");
+  }
+  suggestions.push("如果连续失败，保留这个 JSON 文件，后续可以按预检摘要做可恢复导入。");
+  return Array.from(new Set(suggestions));
 }
 
 function formatBackupDate(value: string) {

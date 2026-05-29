@@ -1091,6 +1091,50 @@ button.person-pref-line {
   font-weight: 800;
 }
 
+.linked-plan-list {
+  display: grid;
+  gap: 8px;
+}
+
+.linked-plan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  padding: 11px 12px;
+  text-align: left;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.linked-plan-card div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.linked-plan-card strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.linked-plan-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.linked-plan-card small {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

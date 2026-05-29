@@ -173,6 +173,13 @@ cd react-app
 npm.cmd run release:prepare-files
 ```
 
+一键完成本地发布准备检查、APK 构建和发布文件刷新：
+
+```powershell
+cd react-app
+npm.cmd run release:prepare
+```
+
 安装 release APK 到已连接设备：
 
 ```powershell

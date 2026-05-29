@@ -64,6 +64,23 @@ export function findAnnualPlanHistory(
     .sort((left, right) => right.occurrenceYear - left.occurrenceYear);
 }
 
+export function findMilestonePlanHistory(
+  plans: AnniversaryPlan[],
+  personId: string,
+  anniversary: Anniversary,
+  exclude?: { targetDate?: string; milestoneDay?: number }
+) {
+  return plans
+    .filter((plan) =>
+      normalizeAnniversaryPlanTargetKind(plan) === "milestone" &&
+      plan.personId === personId &&
+      plan.anniversaryTitle === anniversary.title &&
+      plan.anniversaryDate === anniversary.date &&
+      (!exclude?.targetDate || plan.targetDate !== exclude.targetDate || plan.milestoneDay !== exclude.milestoneDay)
+    )
+    .sort((left, right) => right.targetDate.localeCompare(left.targetDate) || (right.milestoneDay || 0) - (left.milestoneDay || 0));
+}
+
 export function formatAnniversaryPlanTargetTitle(plan: Pick<AnniversaryPlan, "anniversaryTitle" | "targetKind" | "milestoneLabel">) {
   return normalizeAnniversaryPlanTargetKind(plan) === "milestone" && plan.milestoneLabel
     ? `${plan.anniversaryTitle}${plan.milestoneLabel}`

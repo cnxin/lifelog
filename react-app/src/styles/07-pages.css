@@ -1481,6 +1481,32 @@
   line-height: 1.45;
 }
 
+.backup-import-recovery-preview {
+  display: grid;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--danger) 12%, transparent);
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: color-mix(in srgb, var(--card-solid) 88%, var(--danger-soft) 12%);
+}
+
+.backup-import-recovery-preview strong {
+  font-size: 12px;
+}
+
+.backup-import-recovery-preview ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 17px;
+}
+
+.backup-import-recovery-preview li {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .backup-import-recovery-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

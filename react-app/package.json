@@ -31,6 +31,7 @@
     "android:sync-version": "powershell -ExecutionPolicy Bypass -File scripts/sync-android-version.ps1",
     "android:debug": "powershell -ExecutionPolicy Bypass -File scripts/build-android-debug.ps1",
     "android:release": "powershell -ExecutionPolicy Bypass -File scripts/build-android-release.ps1",
+    "release:prepare": "powershell -ExecutionPolicy Bypass -File scripts/prepare-release.ps1",
     "release:apk": "powershell -ExecutionPolicy Bypass -File scripts/release-apk.ps1",
     "release:prepare-files": "powershell -ExecutionPolicy Bypass -File scripts/prepare-release-files.ps1",
     "android:install:release": "powershell -ExecutionPolicy Bypass -File scripts/install-android-release.ps1"

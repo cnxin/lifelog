@@ -8,9 +8,12 @@ export interface ReleaseNote {
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
   date: "2026-05-29",
-  title: "开发中",
+  title: "纪念日历史、导入恢复和发版准备",
   highlights: [
-    "暂无未发布变更。"
+    "人物详情的纪念日卡片新增节点历史入口，可查看已创建过的天数节点安排、状态、进度和关联回忆。",
+    "回忆详情会展示反向关联的纪念日安排，方便从回忆追溯年度安排或天数节点来源。",
+    "备份导入失败后会保留失败前预检摘要、照片检查结果和建议处理步骤。",
+    "新增 release:prepare 发布准备脚本，串联版本同步、核心回归、APK 构建、发布文件刷新和发版检查。"
   ]
 };
 

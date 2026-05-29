@@ -10,12 +10,13 @@ import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
-import type { MemoryEvent, Photo } from "../../types";
+import type { AnniversaryPlan, MemoryEvent, Photo } from "../../types";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
@@ -35,6 +36,7 @@ export default function MemoryDetail() {
   const photoIds = memory?.photos || [];
   const placeIds = memory ? getMemoryPlaceIds(memory) : [];
   const places = state.places.filter((item) => placeIds.includes(item.id));
+  const linkedPlans = memory ? state.anniversaryPlans.filter((plan) => plan.memoryId === memory.id) : [];
 
   // 加载照片
   useEffect(() => {
@@ -203,6 +205,27 @@ export default function MemoryDetail() {
         </section>
       )}
 
+      {linkedPlans.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Calendar /> 关联安排
+            </h2>
+          </div>
+          <div className="linked-plan-list">
+            {linkedPlans.map((plan) => (
+              <button className="linked-plan-card glass-card" type="button" key={plan.id} onClick={() => navigate(`/people/${plan.personId}#anniversaries`)}>
+                <div>
+                  <strong>{getPersonName(plan.personId)} · {formatAnniversaryPlanTargetTitle(plan)}</strong>
+                  <span>{formatLinkedPlanMeta(plan)}</span>
+                </div>
+                <small>{formatLinkedPlanStatus(plan.status)}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="section">
         <div className="section-header">
           <h2>
@@ -289,6 +312,21 @@ export default function MemoryDetail() {
       />
     </>
   );
+}
+
+function formatLinkedPlanMeta(plan: Pick<AnniversaryPlan, "targetKind" | "targetDate" | "occurrenceYear" | "milestoneLabel">) {
+  const kind = normalizeAnniversaryPlanTargetKind(plan);
+  if (kind === "milestone") {
+    return [plan.milestoneLabel || "节点", plan.targetDate].filter(Boolean).join(" · ");
+  }
+  return [`${plan.occurrenceYear} 年`, plan.targetDate].join(" · ");
+}
+
+function formatLinkedPlanStatus(status: AnniversaryPlan["status"]) {
+  if (status === "doing") return "准备中";
+  if (status === "done") return "已完成";
+  if (status === "skipped") return "已跳过";
+  return "未开始";
 }
 
 function formatPlaceAddressLine(place: {
