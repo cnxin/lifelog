@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.89",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.89",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.89/lifelog-v0.1.0-test.89.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.89.apk",
-    "apkName":  "lifelog-v0.1.0-test.89.apk",
-    "apkSize":  3681095,
-    "apkSha256":  "fbafdd8d06ce7c4e384d1544554eec7f598716b0e3eb473b23175859be742f35",
-    "publishedAt":  "2026-05-29T04:51:20Z",
-    "body":  "- 纪念日新增天数节点配置，支持情侣、宝宝、目标和自定义模板，可生成 100 天、365 天、1000 天等节点。\n- 天数节点接入首页纪念日卡片、人物详情、日历和提醒预览。\n- 天数节点安排可独立记录待办、预算、关联地点和回忆，不会覆盖年度纪念日安排。\n- 备份导入和数据规范化会保留天数节点配置及节点安排目标。"
+    "version":  "0.1.0-test.90",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.90",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.90/lifelog-v0.1.0-test.90.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.90.apk",
+    "apkName":  "lifelog-v0.1.0-test.90.apk",
+    "apkSize":  3683447,
+    "apkSha256":  "8dd13ffce758fc2a80c15bca988d9cdc066b7d971dbdcd01e2e80dd6451a0a6e",
+    "publishedAt":  "2026-05-29T07:57:12Z",
+    "body":  "- 人物详情的纪念日卡片新增节点历史入口，回忆详情也会展示反向关联的纪念日安排。\n- 快速记录回忆新增常用场景和当前上下文模板，没有预选人物或地点时也能一键填入标题。\n- 回忆详情照片默认展示前 9 张，照片较多时可手动展开全部。\n- 备份导入新增安全导入模式，可在严格导入失败后跳过异常照片并尽量恢复可用数据。\n- 新增 release:prepare 发布准备脚本，串联版本同步、核心回归、APK 构建和发布文件刷新。"
 }
