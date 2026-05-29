@@ -1,5 +1,28 @@
 import { Solar } from "lunar-javascript";
-import type { Anniversary, Person } from "../types";
+import type { Anniversary, AnniversaryMilestoneCounting, AnniversaryMilestoneMode, Person } from "../types";
+
+export const ANNIVERSARY_MILESTONE_TEMPLATES: Record<AnniversaryMilestoneMode, { label: string; days: number[] }> = {
+  off: { label: "关闭", days: [] },
+  couple: { label: "情侣", days: [100, 200, 300, 500, 1000, 2000] },
+  baby: { label: "宝宝", days: [30, 100, 365] },
+  goal: { label: "目标", days: [7, 21, 30, 50, 100, 365] },
+  custom: { label: "自定义", days: [] }
+};
+
+export interface AnniversaryMilestoneOccurrence {
+  anniversary: Anniversary;
+  milestoneDay: number;
+  counting: AnniversaryMilestoneCounting;
+  label: string;
+  date: string;
+  targetDate: Date;
+  days: number;
+}
+
+export interface PersonAnniversaryMilestoneOccurrence extends AnniversaryMilestoneOccurrence {
+  personId: string;
+  personName: string;
+}
 
 export function formatMonthDay(date?: string) {
   if (!date) return "未设置";
@@ -153,22 +176,141 @@ export function birthdayOccurrenceAgeLabel(date: string, occurrenceDate: Date) {
 export function getUpcomingAnniversaries(people: Person[]) {
   return people
     .flatMap((person) =>
-      person.anniversaries.map((anniversary: Anniversary) => {
+      person.anniversaries.flatMap((anniversary: Anniversary) => {
         const deltaDays = anniversaryDeltaDays(anniversary.date);
         const nextOccurrence = getNextAnnualOccurrence(anniversary.date);
         const days = diffDays(startOfLocalDay(new Date()), nextOccurrence);
-        return {
+        const annual = {
           ...anniversary,
           personId: person.id,
           personName: person.name,
+          kind: "annual" as const,
           days,
           deltaDays,
           label: formatDaysUntilLabel(days),
           yearLabel: anniversary.title === "生日" ? birthdayOccurrenceAgeLabel(anniversary.date, nextOccurrence) : anniversaryOccurrenceLabel(anniversary.date, nextOccurrence)
         };
+        const milestone = buildNextAnniversaryMilestone(anniversary);
+        if (!milestone) return [annual];
+        return [
+          annual,
+          {
+            ...anniversary,
+            personId: person.id,
+            personName: person.name,
+            kind: "milestone" as const,
+            milestoneDay: milestone.milestoneDay,
+            milestoneLabel: milestone.label,
+            milestoneDate: milestone.date,
+            date: milestone.date,
+            sourceDate: anniversary.date,
+            days: milestone.days,
+            deltaDays: milestone.days,
+            label: formatDaysUntilLabel(milestone.days),
+            yearLabel: milestone.label
+          }
+        ];
       })
     )
     .sort((a, b) => a.days - b.days || b.deltaDays - a.deltaDays);
+}
+
+export function normalizeAnniversaryMilestoneMode(value: unknown): AnniversaryMilestoneMode {
+  return isAnniversaryMilestoneMode(value) ? value : "off";
+}
+
+export function normalizeAnniversaryMilestoneCounting(value: unknown): AnniversaryMilestoneCounting {
+  return value === "ordinal" ? "ordinal" : "elapsed";
+}
+
+export function normalizeAnniversaryMilestoneDays(anniversary: Pick<Anniversary, "milestoneMode" | "milestoneDays">) {
+  const mode = normalizeAnniversaryMilestoneMode(anniversary.milestoneMode);
+  const sourceDays = mode === "custom" ? anniversary.milestoneDays : ANNIVERSARY_MILESTONE_TEMPLATES[mode].days;
+  return Array.from(
+    new Set(
+      (sourceDays || [])
+        .map(Number)
+        .filter((day) => Number.isInteger(day) && day > 0 && day <= 99999)
+    )
+  ).sort((a, b) => a - b);
+}
+
+export function formatAnniversaryMilestoneLabel(day: number, counting: AnniversaryMilestoneCounting = "elapsed") {
+  return counting === "ordinal" ? `第 ${day} 天` : `满 ${day} 天`;
+}
+
+export function buildNextAnniversaryMilestone(
+  anniversary: Anniversary,
+  referenceDate = new Date()
+): AnniversaryMilestoneOccurrence | null {
+  const source = parseLocalDate(anniversary.date);
+  if (Number.isNaN(source.getTime())) return null;
+  const reference = startOfLocalDay(referenceDate);
+  const counting = normalizeAnniversaryMilestoneCounting(anniversary.milestoneCounting);
+  const milestones = normalizeAnniversaryMilestoneDays(anniversary);
+  if (!milestones.length) return null;
+
+  for (const milestoneDay of milestones) {
+    const target = buildMilestoneTargetDate(source, milestoneDay, counting);
+    const days = diffDays(reference, target);
+    if (days < 0) continue;
+    return {
+      anniversary,
+      milestoneDay,
+      counting,
+      label: formatAnniversaryMilestoneLabel(milestoneDay, counting),
+      date: formatDateValue(target),
+      targetDate: target,
+      days
+    };
+  }
+
+  return null;
+}
+
+export function buildAnniversaryMilestoneDate(
+  date: string,
+  milestoneDay: number,
+  counting: AnniversaryMilestoneCounting = "elapsed"
+) {
+  const source = parseLocalDate(date);
+  if (Number.isNaN(source.getTime())) return null;
+  return buildMilestoneTargetDate(source, milestoneDay, counting);
+}
+
+export function buildUpcomingAnniversaryMilestones(
+  people: Person[],
+  options: { days?: number; referenceDate?: Date } = {}
+): PersonAnniversaryMilestoneOccurrence[] {
+  const reference = startOfLocalDay(options.referenceDate || new Date());
+  const windowDays = options.days ?? 30;
+  const entries: PersonAnniversaryMilestoneOccurrence[] = [];
+
+  for (const person of people) {
+    for (const anniversary of person.anniversaries) {
+      const source = parseLocalDate(anniversary.date);
+      if (Number.isNaN(source.getTime())) continue;
+      const counting = normalizeAnniversaryMilestoneCounting(anniversary.milestoneCounting);
+      for (const milestoneDay of normalizeAnniversaryMilestoneDays(anniversary)) {
+        const target = buildMilestoneTargetDate(source, milestoneDay, counting);
+        const days = diffDays(reference, target);
+        if (days < 0 || days > windowDays) continue;
+        entries.push({
+          personId: person.id,
+          personName: person.name,
+          anniversary,
+          milestoneDay,
+          counting,
+          label: formatAnniversaryMilestoneLabel(milestoneDay, counting),
+          date: formatDateValue(target),
+          targetDate: target,
+          days
+        });
+      }
+    }
+  }
+
+  return entries.sort((left, right) => left.days - right.days || left.milestoneDay - right.milestoneDay);
 }
 
 export function todayLabel() {
@@ -201,6 +343,20 @@ function startOfLocalDay(date: Date) {
 
 function diffDays(from: Date, to: Date) {
   return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+function buildMilestoneTargetDate(source: Date, milestoneDay: number, counting: AnniversaryMilestoneCounting) {
+  const target = startOfLocalDay(source);
+  target.setDate(target.getDate() + milestoneDay - (counting === "ordinal" ? 1 : 0));
+  return target;
+}
+
+function formatDateValue(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function isAnniversaryMilestoneMode(value: unknown): value is AnniversaryMilestoneMode {
+  return value === "off" || value === "couple" || value === "baby" || value === "goal" || value === "custom";
 }
 
 function completedYearsAt(source: Date, target: Date) {

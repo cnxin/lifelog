@@ -1258,6 +1258,60 @@
   margin-bottom: 2px;
 }
 
+.anniversary-milestone-config {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.anniversary-milestone-head,
+.anniversary-milestone-body {
+  display: grid;
+  gap: 8px;
+}
+
+.anniversary-milestone-tabs,
+.anniversary-counting-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.anniversary-milestone-tabs button,
+.anniversary-counting-tabs button {
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.anniversary-milestone-tabs button.active,
+.anniversary-counting-tabs button.active {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 24%, transparent);
+  background: var(--soft-purple);
+}
+
+.anniversary-milestone-preview {
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 12px;
+  padding: 7px 10px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .anniversary-editor>.mini-action.add {
   width: 100%;
   min-height: 44px;

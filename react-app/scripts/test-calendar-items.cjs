@@ -47,7 +47,15 @@ const state = {
       favorite: false,
       preferences: [],
       dislikes: [],
-      anniversaries: [{ title: "订婚", date: "2025-06-01" }],
+      anniversaries: [
+        {
+          title: "订婚",
+          date: "2025-06-01",
+          milestoneMode: "custom",
+          milestoneDays: [365],
+          milestoneCounting: "elapsed"
+        }
+      ],
       notes: ""
     }
   ],
@@ -65,6 +73,10 @@ if (range.start !== "2026-04-27" || range.end !== "2026-06-07") {
 
 if (!grouped["2026-06-01"]?.some((item) => item.title === "王芳媛 · 订婚")) {
   failures.push(`Missing next-month anniversary on 2026-06-01: ${JSON.stringify(grouped["2026-06-01"])}`);
+}
+
+if (!grouped["2026-06-01"]?.some((item) => item.title === "王芳媛 · 订婚 满 365 天")) {
+  failures.push(`Missing milestone anniversary on 2026-06-01: ${JSON.stringify(grouped["2026-06-01"])}`);
 }
 
 if (failures.length) {

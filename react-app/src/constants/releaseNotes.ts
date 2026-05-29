@@ -5,7 +5,27 @@ export interface ReleaseNote {
   highlights: string[];
 }
 
+export const UNRELEASED_NOTE: ReleaseNote = {
+  version: "Unreleased",
+  date: "2026-05-29",
+  title: "开发中",
+  highlights: [
+    "暂无未发布变更。"
+  ]
+};
+
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.89",
+    date: "2026-05-29",
+    title: "纪念日天数节点和安排闭环",
+    highlights: [
+      "纪念日新增天数节点配置，支持情侣、宝宝、目标和自定义模板，可生成 100 天、365 天、1000 天等节点。",
+      "天数节点接入首页纪念日卡片、人物详情、日历和提醒预览。",
+      "天数节点安排可独立记录待办、预算、关联地点和回忆，不会覆盖年度纪念日安排。",
+      "备份导入和数据规范化会保留天数节点配置及节点安排目标。"
+    ]
+  },
   {
     version: "0.1.0-test.88",
     date: "2026-05-28",

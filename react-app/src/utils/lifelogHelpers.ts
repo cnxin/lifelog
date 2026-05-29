@@ -7,6 +7,11 @@ import type {
   PlaceMergeHistoryEntry,
   PlaceMergePreview,
 } from "../types";
+import {
+  normalizeAnniversaryMilestoneCounting,
+  normalizeAnniversaryMilestoneDays,
+  normalizeAnniversaryMilestoneMode
+} from "./date";
 import { mergeMemoryPlaceReferences } from "./placeDedup";
 import { parsePlatformLinksText } from "./placeLinks";
 import { inferMallName, inferProvince, isMallRecord, normalizeCityName, normalizePlaceText } from "./placeMeta";
@@ -51,10 +56,7 @@ export function parseAnniversaries(value: FormDataEntryValue | null): Anniversar
     if (!Array.isArray(parsed)) return [];
 
     return parsed
-      .map((item) => ({
-        title: String(item.title || "").trim(),
-        date: String(item.date || "").trim()
-      }))
+      .map((item) => normalizeAnniversary(item))
       .filter((item) => item.title && isDateValue(item.date));
   } catch {
     return [];
@@ -65,6 +67,28 @@ export function mergeBirthdayAnniversary(birthday: string, anniversaries: Annive
   const custom = anniversaries.filter((item) => item.title !== "生日");
   if (!birthday) return custom;
   return [{ title: "生日", date: birthday }, ...custom];
+}
+
+export function normalizeAnniversary(value: Partial<Anniversary>): Anniversary {
+  const base: Anniversary = {
+    title: String(value.title || "").trim(),
+    date: String(value.date || "").trim()
+  };
+  const milestoneMode = normalizeAnniversaryMilestoneMode(value.milestoneMode);
+  if (milestoneMode === "off") return base;
+
+  const milestoneDays = normalizeAnniversaryMilestoneDays({
+    milestoneMode,
+    milestoneDays: value.milestoneDays
+  });
+  if (!milestoneDays.length) return base;
+
+  return {
+    ...base,
+    milestoneMode,
+    milestoneDays: milestoneMode === "custom" ? milestoneDays : undefined,
+    milestoneCounting: normalizeAnniversaryMilestoneCounting(value.milestoneCounting)
+  };
 }
 
 export function buildPlaceFromFormData(formData: FormData, id: string | undefined, settings: AppSettings): Place {

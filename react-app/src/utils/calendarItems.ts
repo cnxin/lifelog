@@ -1,5 +1,11 @@
 import type { LifeLogState } from "../types";
-import { formatCalendarLunarSummary } from "./date";
+import {
+  buildAnniversaryMilestoneDate,
+  formatCalendarLunarSummary,
+  formatAnniversaryMilestoneLabel,
+  normalizeAnniversaryMilestoneCounting,
+  normalizeAnniversaryMilestoneDays
+} from "./date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isManualTitle } from "./memoryDisplay";
 
 export type CalendarItem = {
@@ -59,6 +65,25 @@ export function buildCalendarItemsForDateRange(
           id: `person-${person.id}-${anniversary.title}-${dateKey}`,
           dateKey,
           title: `${person.name} · ${anniversary.title}`,
+          subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
+          subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
+          type: "person",
+          target: `/people/${person.id}#anniversaries`
+        });
+      }
+
+      const counting = normalizeAnniversaryMilestoneCounting(anniversary.milestoneCounting);
+      for (const milestoneDay of normalizeAnniversaryMilestoneDays(anniversary)) {
+        const milestoneDate = buildAnniversaryMilestoneDate(anniversary.date, milestoneDay, counting);
+        if (!milestoneDate) continue;
+        const dateKey = toCalendarDateKey(milestoneDate);
+        if (!isDateKeyInRange(dateKey, startDateKey, endDateKey)) continue;
+        const summary = formatCalendarLunarSummary(dateKey);
+        const milestoneLabel = formatAnniversaryMilestoneLabel(milestoneDay, counting);
+        items.push({
+          id: `person-${person.id}-${anniversary.title}-milestone-${milestoneDay}-${dateKey}`,
+          dateKey,
+          title: `${person.name} · ${anniversary.title} ${milestoneLabel}`,
           subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
           subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
           type: "person",

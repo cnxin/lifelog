@@ -8,13 +8,19 @@ import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
-import type { Anniversary, AnniversaryPlan } from "../../types";
-import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, daysUntil, formatMonthDay, getLunarDateInfo } from "../../utils/date";
+import type { Anniversary, AnniversaryPlan, AnniversaryPlanTargetKind } from "../../types";
+import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findPlanForAnniversaryTarget } from "../../utils/anniversaryPlans";
+import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildRelationshipHealth } from "../../utils/relationshipHealth";
 import { initials } from "../../utils/text";
 import { useEffect, useRef, useState } from "react";
+
+interface PlanningTarget {
+  anniversaryKey: string;
+  targetKind: AnniversaryPlanTargetKind;
+}
 
 export default function PersonDetail() {
   const { personId } = useParams();
@@ -27,7 +33,7 @@ export default function PersonDetail() {
   const [addingMemory, setAddingMemory] = useState(false);
   const [memoryInitialDate, setMemoryInitialDate] = useState<string | undefined>();
   const [memoryInitialPlaceIds, setMemoryInitialPlaceIds] = useState<string[]>([]);
-  const [planningAnniversaryKey, setPlanningAnniversaryKey] = useState<string | null>(null);
+  const [planningTarget, setPlanningTarget] = useState<PlanningTarget | null>(null);
   const [historyAnniversaryKey, setHistoryAnniversaryKey] = useState<string | null>(null);
   const [memoryPlanId, setMemoryPlanId] = useState<string | undefined>();
   const [editingPreferenceMode, setEditingPreferenceMode] = useState<PersonPreferenceMode | null>(null);
@@ -87,18 +93,26 @@ export default function PersonDetail() {
     anniversaryPlans: state.anniversaryPlans,
     getPlaceName
   });
-  const selectedAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planningAnniversaryKey);
+  const selectedAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planningTarget?.anniversaryKey);
   const selectedOccurrence = selectedAnniversary ? buildAnniversaryOccurrence(selectedAnniversary.date) : null;
-  const selectedPlan = selectedAnniversary && selectedOccurrence
-    ? findPlanForAnniversary(state.anniversaryPlans, person.id, selectedAnniversary, selectedOccurrence.year)
+  const selectedMilestone = selectedAnniversary ? buildNextAnniversaryMilestone(selectedAnniversary) : null;
+  const selectedPlanTarget = selectedAnniversary && planningTarget?.targetKind === "milestone"
+    ? selectedMilestone
+      ? buildMilestonePlanTarget(selectedMilestone)
+      : null
+    : selectedOccurrence
+    ? buildAnnualPlanTarget(selectedOccurrence)
+    : null;
+  const selectedPlan = selectedAnniversary && selectedPlanTarget
+    ? findPlanForAnniversaryTarget(state.anniversaryPlans, person.id, selectedAnniversary, selectedPlanTarget)
     : undefined;
-  const selectedPlanHistory = selectedAnniversary && selectedOccurrence
-    ? findPlanHistoryForAnniversary(state.anniversaryPlans, person.id, selectedAnniversary, selectedOccurrence.year)
+  const selectedPlanHistory = selectedAnniversary && selectedPlanTarget?.targetKind === "annual"
+    ? findAnnualPlanHistory(state.anniversaryPlans, person.id, selectedAnniversary, selectedPlanTarget.occurrenceYear)
     : [];
   const selectedHistoryAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === historyAnniversaryKey);
   const selectedHistoryOccurrence = selectedHistoryAnniversary ? buildAnniversaryOccurrence(selectedHistoryAnniversary.date) : null;
   const selectedHistoryPlans = selectedHistoryAnniversary && selectedHistoryOccurrence
-    ? findPlanHistoryForAnniversary(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryOccurrence.year)
+    ? findAnnualPlanHistory(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryOccurrence.year)
     : [];
   const completionTips: CompletionTip[] = [
     {
@@ -263,8 +277,14 @@ export default function PersonDetail() {
         <div className="list">
           {person.anniversaries.map((item) => {
             const occurrence = buildAnniversaryOccurrence(item.date);
-            const plan = findPlanForAnniversary(state.anniversaryPlans, person.id, item, occurrence.year);
-            const historyPlans = findPlanHistoryForAnniversary(state.anniversaryPlans, person.id, item, occurrence.year);
+            const milestone = buildNextAnniversaryMilestone(item);
+            const annualTarget = buildAnnualPlanTarget(occurrence);
+            const milestoneTarget = milestone ? buildMilestonePlanTarget(milestone) : null;
+            const plan = findPlanForAnniversaryTarget(state.anniversaryPlans, person.id, item, annualTarget);
+            const milestonePlan = milestoneTarget
+              ? findPlanForAnniversaryTarget(state.anniversaryPlans, person.id, item, milestoneTarget)
+              : undefined;
+            const historyPlans = findAnnualPlanHistory(state.anniversaryPlans, person.id, item, occurrence.year);
             return (
               <GlassCard className="anniversary-detail-card" key={`${item.title}-${item.date}`}>
                 <div className="anniversary-detail-head">
@@ -274,17 +294,38 @@ export default function PersonDetail() {
                 <div className="anniversary-detail-meta">
                   {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? birthdayAgeLabel(item.date) : anniversaryYearLabel(item.date)}
                 </div>
+                {milestone && (
+                  <button
+                    className={`anniversary-milestone-line ${milestonePlan ? "has-plan" : ""}`}
+                    type="button"
+                    onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "milestone" })}
+                  >
+                    <span>{milestone.label}</span>
+                    <strong>{milestonePlan ? planStatusLabel(milestonePlan.status) : formatDaysUntilLabel(milestone.days)}</strong>
+                    <small>{milestone.date}</small>
+                  </button>
+                )}
                 <AnniversaryPlanSummary plan={plan} />
                 <div className="anniversary-plan-actions">
-                  <button type="button" onClick={() => setPlanningAnniversaryKey(getAnniversaryKey(item))}>
+                  <button type="button" onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "annual" })}>
                     {plan ? "查看安排" : "添加安排"}
                   </button>
+                  {milestone && (
+                    <button type="button" onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "milestone" })}>
+                      {milestonePlan ? "查看节点安排" : "添加节点安排"}
+                    </button>
+                  )}
                   <button type="button" onClick={() => setHistoryAnniversaryKey(getAnniversaryKey(item))}>
                     {historyPlans.length ? `往年安排 ${historyPlans.length}` : "往年安排"}
                   </button>
                   {plan?.memoryId && (
                     <button type="button" onClick={() => navigate(`/memories/${plan.memoryId}`)}>
                       已记录回忆
+                    </button>
+                  )}
+                  {milestonePlan?.memoryId && (
+                    <button type="button" onClick={() => navigate(`/memories/${milestonePlan.memoryId}`)}>
+                      已记录节点回忆
                     </button>
                   )}
                 </div>
@@ -363,26 +404,29 @@ export default function PersonDetail() {
           });
         }}
       />
-      {selectedAnniversary && selectedOccurrence && (
+      {selectedAnniversary && selectedPlanTarget && (
         <AnniversaryPlanSheet
           person={person}
           anniversary={selectedAnniversary}
-          occurrenceYear={selectedOccurrence.year}
-          targetDate={selectedOccurrence.date}
-          daysUntilTarget={selectedOccurrence.days}
+          occurrenceYear={selectedPlanTarget.occurrenceYear}
+          targetKind={selectedPlanTarget.targetKind}
+          milestoneDay={selectedPlanTarget.milestoneDay}
+          milestoneLabel={selectedPlanTarget.milestoneLabel}
+          targetDate={selectedPlanTarget.targetDate}
+          daysUntilTarget={selectedPlanTarget.daysUntilTarget}
           plan={selectedPlan}
           historicalPlans={selectedPlanHistory}
           places={state.places}
-          onClose={() => setPlanningAnniversaryKey(null)}
+          onClose={() => setPlanningTarget(null)}
           onSave={async (plan) => {
             await saveAnniversaryPlan(plan);
           }}
           onDelete={async (planId) => {
             await deleteAnniversaryPlan(planId);
-            setPlanningAnniversaryKey(null);
+            setPlanningTarget(null);
           }}
           onCreateMemory={(plan) => {
-            setPlanningAnniversaryKey(null);
+            setPlanningTarget(null);
             setMemoryInitialDate(plan.targetDate);
             setMemoryInitialPlaceIds(plan.placeIds);
             setMemoryPlanId(plan.id);
@@ -421,15 +465,14 @@ function buildPersonActionCenter({
 }) {
   const latestMemory = relatedMemories[0];
   const daysSince = latestMemory ? daysSinceDate(latestMemory.date) : null;
-  const nextAnniversary = person.anniversaries
-    .map((anniversary) => ({
-      anniversary,
-      days: daysUntil(anniversary.date),
-      occurrence: buildAnniversaryOccurrence(anniversary.date)
-    }))
-    .sort((left, right) => left.days - right.days)[0];
-  const nextPlan = nextAnniversary
-    ? findPlanForAnniversary(anniversaryPlans, person.id, nextAnniversary.anniversary, nextAnniversary.occurrence.year)
+  const nextAnniversary = buildNextPersonAnniversaryAction(person.anniversaries);
+  const nextPlanTarget = nextAnniversary
+    ? nextAnniversary.kind === "milestone"
+      ? buildMilestonePlanTarget(nextAnniversary)
+      : buildAnnualPlanTarget(nextAnniversary.occurrence)
+    : null;
+  const nextPlan = nextAnniversary && nextPlanTarget
+    ? findPlanForAnniversaryTarget(anniversaryPlans, person.id, nextAnniversary.anniversary, nextPlanTarget)
     : undefined;
   const giftHints = [
     ...person.preferences.flatMap((group) => group.items),
@@ -448,10 +491,14 @@ function buildPersonActionCenter({
     {
       id: "anniversary",
       icon: <Calendar />,
-      title: nextAnniversary ? `${nextAnniversary.days} 天后 · ${nextAnniversary.anniversary.title}` : "还没有纪念日",
+      title: nextAnniversary
+        ? `${formatDaysUntilLabel(nextAnniversary.days)} · ${nextAnniversary.anniversary.title}${nextAnniversary.kind === "milestone" ? nextAnniversary.label : ""}`
+        : "还没有纪念日",
       desc: nextAnniversary
         ? nextPlan
           ? `安排状态：${planStatusLabel(nextPlan.status)}`
+          : nextAnniversary.kind === "milestone"
+          ? `天数节点：${nextAnniversary.label}，适合记录或提前准备。`
           : "还没有安排，可以提前准备。"
         : "补充生日或纪念日后会自动提醒。",
       tone: nextAnniversary && !nextPlan ? "warm" : "cool",
@@ -476,6 +523,32 @@ function buildPersonActionCenter({
       onClick: () => undefined
     }
   ];
+}
+
+function buildNextPersonAnniversaryAction(anniversaries: Anniversary[]) {
+  return anniversaries
+    .flatMap((anniversary) => {
+      const annual = {
+        kind: "annual" as const,
+        anniversary,
+        days: daysUntil(anniversary.date),
+        occurrence: buildAnniversaryOccurrence(anniversary.date)
+      };
+      const milestone = buildNextAnniversaryMilestone(anniversary);
+      if (!milestone) return [annual];
+      return [
+        annual,
+        {
+          kind: "milestone" as const,
+          anniversary,
+          milestoneDay: milestone.milestoneDay,
+          days: milestone.days,
+          label: milestone.label,
+          date: milestone.date
+        }
+      ];
+    })
+    .sort((left, right) => left.days - right.days)[0];
 }
 
 function daysSinceDate(date: string) {
@@ -582,36 +655,6 @@ function formatPlanProgress(plan: AnniversaryPlan) {
   if (!plan.checklist.length) return "暂无待办";
   const done = plan.checklist.filter((item) => item.done).length;
   return `${done}/${plan.checklist.length} 项完成`;
-}
-
-function findPlanForAnniversary(
-  plans: AnniversaryPlan[],
-  personId: string,
-  anniversary: Anniversary,
-  occurrenceYear: number
-) {
-  return plans.find((plan) =>
-    plan.personId === personId &&
-    plan.anniversaryTitle === anniversary.title &&
-    plan.anniversaryDate === anniversary.date &&
-    plan.occurrenceYear === occurrenceYear
-  );
-}
-
-function findPlanHistoryForAnniversary(
-  plans: AnniversaryPlan[],
-  personId: string,
-  anniversary: Anniversary,
-  excludeOccurrenceYear: number
-) {
-  return plans
-    .filter((plan) =>
-      plan.personId === personId &&
-      plan.anniversaryTitle === anniversary.title &&
-      plan.anniversaryDate === anniversary.date &&
-      plan.occurrenceYear !== excludeOccurrenceYear
-    )
-    .sort((left, right) => right.occurrenceYear - left.occurrenceYear);
 }
 
 function buildAnniversaryOccurrence(date: string) {

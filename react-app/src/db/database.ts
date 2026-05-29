@@ -16,6 +16,7 @@ import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
 import { removeMemoryPlaceId, getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { inferProvince, normalizeCityName, normalizeStoredMall } from "../utils/placeMeta";
+import { isDateValue, normalizeAnniversary } from "../utils/lifelogHelpers";
 
 const LEGACY_STORAGE_KEY = "lifelog-react-state-v1";
 
@@ -442,7 +443,8 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
     ...person,
     birthdayIsLunar: false,
     preferences: normalizeGroups((person as unknown as { preferences: unknown }).preferences, "喜好"),
-    dislikes: normalizeGroups((person as unknown as { dislikes: unknown }).dislikes, "禁忌")
+    dislikes: normalizeGroups((person as unknown as { dislikes: unknown }).dislikes, "禁忌"),
+    anniversaries: normalizePersonAnniversaries((person as unknown as { anniversaries: unknown }).anniversaries)
   })) as Person[];
   const places = (input.places || seedData.places).map((place) => ({
     ...place,
@@ -486,6 +488,13 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
   };
 }
 
+function normalizePersonAnniversaries(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => normalizeAnniversary(item as Partial<Person["anniversaries"][number]>))
+    .filter((item) => item.title && isDateValue(item.date));
+}
+
 function normalizeAnniversaryPlans(
   value: unknown,
   peopleIds: Set<string>,
@@ -505,12 +514,16 @@ function normalizeAnniversaryPlans(
     const status = ["todo", "doing", "done", "skipped"].includes(String(plan.status))
       ? (plan.status as AnniversaryPlan["status"])
       : "todo";
+    const targetKind = plan.targetKind === "milestone" && Number.isInteger(Number(plan.milestoneDay)) ? "milestone" : "annual";
     result.push({
       id: String(plan.id || `ap_${Date.now()}_${Math.random().toString(16).slice(2)}`),
       personId,
       anniversaryTitle: String(plan.anniversaryTitle || ""),
       anniversaryDate: String(plan.anniversaryDate || ""),
       occurrenceYear: Number(plan.occurrenceYear) || new Date().getFullYear(),
+      targetKind,
+      milestoneDay: targetKind === "milestone" ? Number(plan.milestoneDay) : undefined,
+      milestoneLabel: targetKind === "milestone" ? String(plan.milestoneLabel || "") : undefined,
       targetDate: String(plan.targetDate || ""),
       status,
       title: String(plan.title || ""),

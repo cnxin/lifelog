@@ -6,6 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
+import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
@@ -229,8 +230,8 @@ export default function Home() {
             <div className="anniversary-scroll">
               {upcoming.map((item, index) => (
                 <button
-                  key={`${item.personName}-${item.title}`}
-                  className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""}`}
+                  key={`${item.personId}-${item.title}-${item.kind}-${item.date}-${"milestoneDay" in item ? item.milestoneDay : ""}`}
+                  className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""} ${item.kind === "milestone" ? "milestone" : ""}`}
                   onClick={() => navigate(`/people/${item.personId}#anniversaries`)}
                 >
                   <div className="a-title">
@@ -673,7 +674,7 @@ function findTodayAnniversaryPlanAction(anniversaryPlans: AnniversaryPlan[], peo
   const total = plan.checklist.length;
   return {
     plan,
-    title: `${person?.name || "某人"}的${plan.anniversaryTitle}就是今天`,
+    title: `${person?.name || "某人"}的${formatAnniversaryPlanTargetTitle(plan)}就是今天`,
     desc: total ? `${plan.title} · 已完成 ${done}/${total} 项` : `${plan.title} · 今天确认安排`,
     meta: plan.status === "doing" ? "准备中" : "今日"
   };
@@ -708,11 +709,28 @@ function buildUpcomingPlanStatus(
   plans: ReturnType<typeof useLifeLog>["state"]["anniversaryPlans"],
   item: ReturnType<typeof getUpcomingAnniversaries>[number]
 ) {
-  const plan = plans.find((candidate) =>
-    candidate.personId === item.personId &&
-    candidate.anniversaryTitle === item.title &&
-    candidate.anniversaryDate === item.date &&
-    candidate.occurrenceYear === buildOccurrenceYear(item.date)
+  const plan = findPlanForAnniversaryTarget(
+    plans,
+    item.personId,
+    {
+      title: item.title,
+      date: item.kind === "milestone" ? item.sourceDate : item.date
+    },
+    item.kind === "milestone"
+      ? {
+        targetKind: "milestone",
+        occurrenceYear: buildOccurrenceYear(item.date),
+        targetDate: item.date,
+        daysUntilTarget: item.days,
+        milestoneDay: item.milestoneDay,
+        milestoneLabel: item.milestoneLabel
+      }
+      : {
+        targetKind: "annual",
+        occurrenceYear: buildOccurrenceYear(item.date),
+        targetDate: item.date,
+        daysUntilTarget: item.days
+      }
   );
 
   if (!plan) return { label: item.days <= 3 ? "临近未安排" : "未安排", tone: item.days <= 3 ? "urgent" : "missing" };

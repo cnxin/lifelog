@@ -1,8 +1,14 @@
 export type ID = string;
 
+export type AnniversaryMilestoneMode = "off" | "couple" | "baby" | "goal" | "custom";
+export type AnniversaryMilestoneCounting = "elapsed" | "ordinal";
+
 export interface Anniversary {
   title: string;
   date: string;
+  milestoneMode?: AnniversaryMilestoneMode;
+  milestoneDays?: number[];
+  milestoneCounting?: AnniversaryMilestoneCounting;
 }
 
 export interface PreferenceGroup {
@@ -93,6 +99,7 @@ export interface MemoryEvent {
 }
 
 export type AnniversaryPlanStatus = "todo" | "doing" | "done" | "skipped";
+export type AnniversaryPlanTargetKind = "annual" | "milestone";
 
 export interface AnniversaryPlanTodo {
   id: ID;
@@ -106,6 +113,9 @@ export interface AnniversaryPlan {
   anniversaryTitle: string;
   anniversaryDate: string;
   occurrenceYear: number;
+  targetKind?: AnniversaryPlanTargetKind;
+  milestoneDay?: number;
+  milestoneLabel?: string;
   targetDate: string;
   status: AnniversaryPlanStatus;
   title: string;

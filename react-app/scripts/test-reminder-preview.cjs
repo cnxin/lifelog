@@ -39,6 +39,7 @@ const today = new Date();
 const todayIso = formatDateValue(today);
 const futureAnniversary = formatDateValue(addDays(today, 6));
 const firstAnniversary = formatDateValue(today);
+const milestoneStart = formatDateValue(addDays(today, -97));
 const people = [
   {
     id: "p1",
@@ -63,6 +64,25 @@ const people = [
     preferences: [],
     dislikes: [],
     anniversaries: [{ title: "第一次见面", date: firstAnniversary }],
+    notes: ""
+  },
+  {
+    id: "p3",
+    name: "小顾",
+    relationship: "朋友",
+    birthday: "",
+    favorite: false,
+    preferences: [],
+    dislikes: [],
+    anniversaries: [
+      {
+        title: "相识日",
+        date: milestoneStart,
+        milestoneMode: "custom",
+        milestoneDays: [100],
+        milestoneCounting: "elapsed"
+      }
+    ],
     notes: ""
   }
 ];
@@ -94,7 +114,7 @@ const settings = {
 };
 
 const summary = previewReminderSchedule(people, memories, settings);
-const upcoming = previewUpcomingReminders(people, memories, settings, { days: 7, limit: 6 });
+const upcoming = previewUpcomingReminders(people, memories, settings, { days: 7, limit: 10 });
 const failures = [];
 
 if (summary.totalGenerated < 2 || summary.scheduledCount < 2) {
@@ -109,7 +129,7 @@ if (!upcoming.some((item) => item.type === "回忆" && item.title.includes("年�
   failures.push(`Missing memory preview: ${JSON.stringify(upcoming)}`);
 }
 
-const futureAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("相识日"));
+const futureAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.sourceId === "p1" && item.title.includes("相识日"));
 if (!futureAnniversaryPreview?.body.includes("还有 6 天") || !futureAnniversaryPreview.body.includes("提前 3 天提醒")) {
   failures.push(`Anniversary preview should use target-day distance, got: ${JSON.stringify(futureAnniversaryPreview)}`);
 }
@@ -121,6 +141,15 @@ if (futureAnniversaryPreview?.sourcePath !== "/people/p1#anniversaries") {
 const firstAnniversaryPreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("第一次见面"));
 if (!firstAnniversaryPreview?.body.includes("首次纪念日")) {
   failures.push(`First anniversary should use explicit label, got: ${JSON.stringify(firstAnniversaryPreview)}`);
+}
+
+const milestonePreview = upcoming.find((item) => item.type === "纪念日" && item.title.includes("满 100 天"));
+if (!milestonePreview?.body.includes("还有 3 天") || !milestonePreview.body.includes("满 100 天") || !milestonePreview.body.includes("提前 3 天提醒")) {
+  failures.push(`Milestone preview should show target-day distance, got: ${JSON.stringify(milestonePreview)}`);
+}
+
+if (milestonePreview?.sourcePath !== "/people/p3#anniversaries") {
+  failures.push(`Milestone preview should link to the person's anniversaries, got: ${JSON.stringify(milestonePreview)}`);
 }
 
 if (anniversaryYearLabel(futureAnniversary) !== "未满 1 周年") {

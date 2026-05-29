@@ -1,7 +1,7 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import type { Person, MemoryEvent, ReminderSettings } from '../types';
-import { daysUntil, anniversaryOccurrenceLabel, birthdayOccurrenceAgeLabel, formatDaysUntilLabel } from './date';
+import { daysUntil, anniversaryOccurrenceLabel, birthdayOccurrenceAgeLabel, buildUpcomingAnniversaryMilestones, formatDaysUntilLabel } from './date';
 
 const REMINDER_WINDOW_DAYS = 30;
 const MAX_PENDING_REMINDERS = 64;
@@ -264,6 +264,54 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
           }
         });
       }
+    }
+  }
+
+  const milestoneWindowDays = REMINDER_WINDOW_DAYS + settings.anniversaryAdvanceDays;
+  for (const milestone of buildUpcomingAnniversaryMilestones(people, { days: milestoneWindowDays })) {
+    if (milestone.anniversary.title === "生日") continue;
+
+    const days = milestone.days;
+    const advanceOffset = days - settings.anniversaryAdvanceDays;
+
+    if (advanceOffset >= 0 && advanceOffset <= REMINDER_WINDOW_DAYS) {
+      const targetAt = getScheduleDate(days, settings.anniversaryTime);
+      entries.push({
+        type: "纪念日",
+        targetAt,
+        targetLabel: formatDaysUntilLabel(days),
+        leadLabel: `提前 ${settings.anniversaryAdvanceDays} 天提醒`,
+        previewBody: `${formatDaysUntilLabel(days)} · ${milestone.label} · 提前 ${settings.anniversaryAdvanceDays} 天提醒`,
+        sourceKind: "person",
+        sourceId: milestone.personId,
+        sourcePath: `/people/${milestone.personId}#anniversaries`,
+        notification: {
+          id: generateId("anniversary-milestone-advance", milestone.personId, milestone.anniversary.title, String(milestone.milestoneDay)),
+          title: `${milestone.personName}的${milestone.anniversary.title}${milestone.label}快到了`,
+          body: `${formatDaysUntilLabel(days)} · ${milestone.label}`,
+          schedule: { at: getScheduleDate(advanceOffset, settings.anniversaryTime) }
+        }
+      });
+    }
+
+    if (days >= 0 && days <= REMINDER_WINDOW_DAYS) {
+      entries.push({
+        type: "纪念日",
+        targetAt: getScheduleDate(days, settings.anniversaryTime),
+        targetLabel: days === 0 ? "今天" : formatDaysUntilLabel(days),
+        leadLabel: "",
+        sourceKind: "person",
+        sourceId: milestone.personId,
+        sourcePath: `/people/${milestone.personId}#anniversaries`,
+        notification: {
+          id: generateId("anniversary-milestone-today", milestone.personId, milestone.anniversary.title, String(milestone.milestoneDay)),
+          title: days === 0
+            ? `今天是${milestone.personName}的${milestone.anniversary.title}${milestone.label}`
+            : `${milestone.personName}的${milestone.anniversary.title}${milestone.label}`,
+          body: `${milestone.label} · ${milestone.date}`,
+          schedule: { at: getScheduleDate(days, settings.anniversaryTime) }
+        }
+      });
     }
   }
 

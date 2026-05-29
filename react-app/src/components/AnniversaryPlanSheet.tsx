@@ -1,6 +1,6 @@
 import { Check, Copy, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Anniversary, AnniversaryPlan, AnniversaryPlanStatus, AnniversaryPlanTodo, Person, Place } from "../types";
+import type { Anniversary, AnniversaryPlan, AnniversaryPlanStatus, AnniversaryPlanTargetKind, AnniversaryPlanTodo, Person, Place } from "../types";
 import { formatDaysUntilLabel } from "../utils/date";
 import PlacePicker from "./PlacePicker";
 
@@ -8,6 +8,9 @@ interface AnniversaryPlanSheetProps {
   person: Person;
   anniversary: Anniversary;
   occurrenceYear: number;
+  targetKind?: AnniversaryPlanTargetKind;
+  milestoneDay?: number;
+  milestoneLabel?: string;
   targetDate: string;
   daysUntilTarget: number;
   plan?: AnniversaryPlan;
@@ -58,6 +61,15 @@ const planTemplates: PlanTemplate[] = [
     todos: ["查看喜好和雷区", "列出礼物备选", "购买或下单", "准备包装和祝福语"]
   },
   {
+    id: "milestone",
+    label: "节点",
+    title: "天数节点纪念",
+    budget: "小礼物、照片或当天活动预算待定",
+    notes: "适合 100 天、365 天、1000 天这类节点，记录想完成的小仪式和当天回忆。",
+    reminderDaysBefore: [7, 3, 0],
+    todos: ["确认纪念方式", "准备照片或小礼物", "安排当天时间", "当天记录回忆"]
+  },
+  {
     id: "dinner",
     label: "聚餐",
     title: "聚餐安排",
@@ -81,6 +93,9 @@ export default function AnniversaryPlanSheet({
   person,
   anniversary,
   occurrenceYear,
+  targetKind = "annual",
+  milestoneDay,
+  milestoneLabel,
   targetDate,
   daysUntilTarget,
   plan,
@@ -91,7 +106,9 @@ export default function AnniversaryPlanSheet({
   onDelete,
   onCreateMemory
 }: AnniversaryPlanSheetProps) {
-  const [title, setTitle] = useState(plan?.title || `${person.name} · ${anniversary.title}安排`);
+  const targetTitle = milestoneLabel ? `${anniversary.title}${milestoneLabel}` : anniversary.title;
+  const targetMeta = targetKind === "milestone" ? targetDate : String(occurrenceYear);
+  const [title, setTitle] = useState(plan?.title || `${person.name} · ${targetTitle}安排`);
   const [status, setStatus] = useState<AnniversaryPlanStatus>(plan?.status || "todo");
   const [budget, setBudget] = useState(plan?.budget || "");
   const [notes, setNotes] = useState(plan?.notes || "");
@@ -144,7 +161,7 @@ export default function AnniversaryPlanSheet({
   }
 
   function reuseHistoricalPlan(source: AnniversaryPlan) {
-    setTitle(`${person.name} · ${anniversary.title}安排`);
+    setTitle(`${person.name} · ${targetTitle}安排`);
     setStatus("todo");
     setBudget(source.budget);
     setNotes(source.notes);
@@ -184,9 +201,12 @@ export default function AnniversaryPlanSheet({
         anniversaryTitle: anniversary.title,
         anniversaryDate: anniversary.date,
         occurrenceYear,
+        targetKind,
+        milestoneDay: targetKind === "milestone" ? milestoneDay : undefined,
+        milestoneLabel: targetKind === "milestone" ? milestoneLabel : undefined,
         targetDate,
         status,
-        title: title.trim() || `${person.name} · ${anniversary.title}安排`,
+        title: title.trim() || `${person.name} · ${targetTitle}安排`,
         notes: notes.trim(),
         budget: budget.trim(),
         checklist: checklist.filter((item) => item.text.trim()).map((item) => ({ ...item, text: item.text.trim() })),
@@ -213,9 +233,12 @@ export default function AnniversaryPlanSheet({
         anniversaryTitle: anniversary.title,
         anniversaryDate: anniversary.date,
         occurrenceYear,
+        targetKind,
+        milestoneDay: targetKind === "milestone" ? milestoneDay : undefined,
+        milestoneLabel: targetKind === "milestone" ? milestoneLabel : undefined,
         targetDate,
         status,
-        title: title.trim() || `${person.name} · ${anniversary.title}安排`,
+        title: title.trim() || `${person.name} · ${targetTitle}安排`,
         notes: notes.trim(),
         budget: budget.trim(),
         checklist: checklist.filter((item) => item.text.trim()).map((item) => ({ ...item, text: item.text.trim() })),
@@ -258,7 +281,7 @@ export default function AnniversaryPlanSheet({
         <div className="sheet-header">
           <div>
             <p className="date-label">{formatDaysUntilLabel(daysUntilTarget)} · {targetDate}</p>
-            <h2>{anniversary.title}安排</h2>
+            <h2>{targetTitle}安排</h2>
           </div>
           <button className="sheet-close" aria-label="关闭" onClick={onClose}>
             ×
@@ -286,7 +309,7 @@ export default function AnniversaryPlanSheet({
 
           <div className="anniversary-plan-progress">
             <strong>{progress}</strong>
-            <span>{person.name} · {anniversary.title} · {occurrenceYear}</span>
+            <span>{person.name} · {targetTitle} · {targetMeta}</span>
           </div>
 
           {canRunPlan && (

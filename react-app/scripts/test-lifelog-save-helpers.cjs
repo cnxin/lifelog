@@ -36,6 +36,7 @@ function loadTs(relativeFile) {
 const { buildMemoryFromFormData, buildPlaceFromFormData } = loadTs("src/utils/lifelogHelpers.ts");
 const { normalizeState } = loadTs("src/db/database.ts");
 const { normalizeStoredMall } = loadTs("src/utils/placeMeta.ts");
+const { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } = loadTs("src/utils/anniversaryPlans.ts");
 
 const settings = {
   defaultCity: "杭州",
@@ -162,12 +163,56 @@ const normalizedWithPlans = normalizeState({
       reminderDaysBefore: [],
       createdAt: "2026-05-01T00:00:00.000Z",
       updatedAt: "2026-05-01T00:00:00.000Z"
+    },
+    {
+      id: "ap3",
+      personId: "p1",
+      anniversaryTitle: "相识日",
+      anniversaryDate: "2024-05-20",
+      occurrenceYear: 2026,
+      targetKind: "milestone",
+      milestoneDay: 1000,
+      milestoneLabel: "满 1000 天",
+      targetDate: "2027-02-13",
+      status: "todo",
+      title: "1000 天节点安排",
+      notes: "",
+      budget: "",
+      checklist: [],
+      placeIds: [],
+      reminderDaysBefore: [7, 3, 0],
+      createdAt: "2026-05-01T00:00:00.000Z",
+      updatedAt: "2026-05-01T00:00:00.000Z"
     }
   ]
 });
-assertEqual("anniversary plans normalize valid records", normalizedWithPlans.anniversaryPlans.length, 1);
+assertEqual("anniversary plans normalize valid records", normalizedWithPlans.anniversaryPlans.length, 2);
 assertEqual("anniversary plan filters invalid place refs", normalizedWithPlans.anniversaryPlans[0].placeIds, ["l1"]);
 assertEqual("anniversary plan keeps valid memory ref", normalizedWithPlans.anniversaryPlans[0].memoryId, "m1");
+assertEqual("anniversary plan keeps milestone target kind", normalizedWithPlans.anniversaryPlans[1].targetKind, "milestone");
+assertEqual("anniversary plan keeps milestone day", normalizedWithPlans.anniversaryPlans[1].milestoneDay, 1000);
+assertEqual("anniversary plan keeps milestone label", normalizedWithPlans.anniversaryPlans[1].milestoneLabel, "满 1000 天");
+assertEqual("anniversary plan target title formats milestone", formatAnniversaryPlanTargetTitle(normalizedWithPlans.anniversaryPlans[1]), "相识日满 1000 天");
+assertEqual(
+  "annual plan target lookup stays separate",
+  findPlanForAnniversaryTarget(
+    normalizedWithPlans.anniversaryPlans,
+    "p1",
+    { title: "相识日", date: "2024-05-20" },
+    { targetKind: "annual", occurrenceYear: 2026, targetDate: "2026-05-20", daysUntilTarget: 0 }
+  )?.id,
+  "ap1"
+);
+assertEqual(
+  "milestone plan target lookup stays separate",
+  findPlanForAnniversaryTarget(
+    normalizedWithPlans.anniversaryPlans,
+    "p1",
+    { title: "相识日", date: "2024-05-20" },
+    { targetKind: "milestone", occurrenceYear: 2027, targetDate: "2027-02-13", daysUntilTarget: 0, milestoneDay: 1000 }
+  )?.id,
+  "ap3"
+);
 
 const editedPlace = buildPlaceFromFormData(
   makeFormData({

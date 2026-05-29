@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.88`
+当前版本：`0.1.0-test.89`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.88
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.88/lifelog-v0.1.0-test.88.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.88.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.89
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.89/lifelog-v0.1.0-test.89.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.89.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.88.apk`
-- 大小：`3677324` bytes
-- SHA256：`d49cc37b114158a9e54caab9d4a62ecd6e74809b23a31d926d81ebb123b18a95`
+- 文件名：`lifelog-v0.1.0-test.89.apk`
+- 大小：`3681095` bytes
+- SHA256：`fbafdd8d06ce7c4e384d1544554eec7f598716b0e3eb473b23175859be742f35`
 
 App 内检查更新会同时读取 Gitee API 清单、GitHub raw 清单、jsDelivr CDN 清单和 GitHub latest Release。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -48,6 +48,8 @@ App 内检查更新会同时读取 Gitee API 清单、GitHub raw 清单、jsDeli
 - 喜好档案和禁忌雷区可在人物列表和人物详情中独立编辑。
 - 人物详情展示关系摘要、关系温度、共同回忆、常出现地点和回忆时间线。
 - 纪念日支持安排计划、待办、预算、提醒日期、关联地点、往年安排和复用历史安排。
+- 纪念日可配置天数节点，例如情侣 100 / 200 / 500 / 1000 天、宝宝百日、目标 7 / 21 / 30 / 100 天，也支持自定义节点。
+- 天数节点可单独建立安排、待办、关联地点和回忆，不会和年度纪念日安排混在一起。
 - 完成纪念日安排后可以直接打开回忆记录表单，并自动带入人物、日期和关联地点。
 
 ### 地点
@@ -71,6 +73,7 @@ App 内检查更新会同时读取 Gitee API 清单、GitHub raw 清单、jsDeli
 
 - 日历聚合生日、纪念日和回忆。
 - 支持农历、节日、节气和周年显示。
+- 支持纪念日天数节点展示和提醒，例如“满 100 天”“第 365 天”。
 - 提醒支持生日、纪念日、联系提醒和回忆提醒。
 - 提醒中心可查看未来 30 天事项，支持查看、忽略、完成和跳过。
 - Android 端集成本地通知权限检查、提醒权限检查和测试通知。
@@ -258,15 +261,18 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.88` 主要变化：
+`0.1.0-test.89` 主要变化：
 
-- 本地分享新增二维码，Android 支持 `lifelog://share/import#...` 深链扫码导入。
-- 分享记录中心保留分享包、分享链接和导入记录，分享导入支持撤销。
-- 提醒中心可处理今日和逾期纪念日安排，完成后可直接打开回忆记录表单。
-- 地点批量管理支持修改前预览，可补充分类、商场、区域和标签，并可撤销。
-- 首页快速记录保留未提交草稿，今日行动空状态降噪。
+- 纪念日新增天数节点配置，可按情侣、宝宝、目标或自定义模板生成 100 天、365 天、1000 天等节点。
+- 天数节点接入首页纪念日卡片、人物详情、日历和提醒预览。
+- 天数节点安排可独立记录待办、预算、关联地点和回忆，年度安排与节点安排互不覆盖。
+- 备份导入和数据规范化会保留天数节点配置及节点安排目标。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
+
+## 开发中变更
+
+- 暂无未发布变更。
 
 ## 后续方向
 

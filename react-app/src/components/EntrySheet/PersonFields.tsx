@@ -1,7 +1,8 @@
 import { useState, type KeyboardEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import type { Anniversary, Person, PreferenceGroup } from "../../types";
+import type { Anniversary, AnniversaryMilestoneCounting, AnniversaryMilestoneMode, Person, PreferenceGroup } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { ANNIVERSARY_MILESTONE_TEMPLATES, normalizeAnniversaryMilestoneDays } from "../../utils/date";
 import { groupsToText, splitPreferenceItems } from "../../utils/text";
 import DateInput from "../DateInput";
 import SelectPicker from "../SelectPicker";
@@ -157,7 +158,12 @@ function QuickPersonFields({ draftValues }: { draftValues?: DraftFieldMap }) {
 interface AnniversaryRow {
   title: string;
   date: string;
+  milestoneMode: AnniversaryMilestoneMode;
+  milestoneCounting: AnniversaryMilestoneCounting;
+  milestoneDaysText: string;
 }
+
+type DraftAnniversaryRow = Partial<Anniversary> & Partial<AnniversaryRow>;
 
 interface PreferenceEditorRow {
   category: string;
@@ -166,17 +172,23 @@ interface PreferenceEditorRow {
 }
 
 function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Anniversary[]; draftValues?: DraftFieldMap }) {
-  const draftAnniversaries = getDraftJson<AnniversaryRow[] | null>(draftValues, "anniversaries", null);
+  const draftAnniversaries = getDraftJson<DraftAnniversaryRow[] | null>(draftValues, "anniversaries", null);
   const [rows, setRows] = useState<AnniversaryRow[]>(
     draftAnniversaries
       ? draftAnniversaries.map((item) => ({
-        title: item.title,
-        date: item.date
+        title: item.title || "",
+        date: item.date || "",
+        milestoneMode: normalizeMilestoneMode(item.milestoneMode),
+        milestoneCounting: normalizeMilestoneCounting(item.milestoneCounting),
+        milestoneDaysText: normalizeMilestoneDaysText(item.milestoneDaysText || (item.milestoneDays || []).join("、"))
       }))
       : anniversaries?.length
       ? anniversaries.map((item) => ({
         title: item.title,
-        date: item.date
+        date: item.date,
+        milestoneMode: normalizeMilestoneMode(item.milestoneMode),
+        milestoneCounting: normalizeMilestoneCounting(item.milestoneCounting),
+        milestoneDaysText: normalizeMilestoneDaysText((item.milestoneDays || []).join("、"))
       }))
       : []
   );
@@ -186,7 +198,7 @@ function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Ann
   }
 
   function addRow() {
-    setRows((current) => [...current, { title: "", date: "" }]);
+    setRows((current) => [...current, { title: "", date: "", milestoneMode: "off", milestoneCounting: "elapsed", milestoneDaysText: "" }]);
   }
 
   function removeRow(index: number) {
@@ -194,10 +206,7 @@ function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Ann
   }
 
   const payload = rows
-    .map((row) => ({
-      title: row.title.trim(),
-      date: row.date
-    }))
+    .map(buildAnniversaryPayload)
     .filter((row) => row.title && row.date);
 
   const incompleteCount = rows.filter((row) => (row.title.trim() && !row.date) || (!row.title.trim() && row.date)).length;
@@ -235,6 +244,55 @@ function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Ann
             >
               <Trash2 size={16} />
             </button>
+            <div className="anniversary-milestone-config">
+              <div className="anniversary-milestone-head">
+                <span className="pref-field-label">天数节点</span>
+                <div className="anniversary-milestone-tabs">
+                  {(Object.keys(ANNIVERSARY_MILESTONE_TEMPLATES) as AnniversaryMilestoneMode[]).map((mode) => (
+                    <button
+                      type="button"
+                      className={row.milestoneMode === mode ? "active" : ""}
+                      key={mode}
+                      onClick={() => updateRow(index, { milestoneMode: mode, milestoneDaysText: mode === "custom" ? row.milestoneDaysText : "" })}
+                    >
+                      {ANNIVERSARY_MILESTONE_TEMPLATES[mode].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {row.milestoneMode !== "off" && (
+                <div className="anniversary-milestone-body">
+                  <div className="anniversary-counting-tabs">
+                    <button
+                      type="button"
+                      className={row.milestoneCounting === "elapsed" ? "active" : ""}
+                      onClick={() => updateRow(index, { milestoneCounting: "elapsed" })}
+                    >
+                      满 N 天
+                    </button>
+                    <button
+                      type="button"
+                      className={row.milestoneCounting === "ordinal" ? "active" : ""}
+                      onClick={() => updateRow(index, { milestoneCounting: "ordinal" })}
+                    >
+                      第 N 天
+                    </button>
+                  </div>
+                  {row.milestoneMode === "custom" ? (
+                    <input
+                      aria-label="自定义天数节点"
+                      placeholder="例如：100、200、365、1000"
+                      value={row.milestoneDaysText}
+                      onChange={(event) => updateRow(index, { milestoneDaysText: event.target.value })}
+                    />
+                  ) : (
+                    <span className="anniversary-milestone-preview">
+                      {ANNIVERSARY_MILESTONE_TEMPLATES[row.milestoneMode].days.join("、")} 天
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
@@ -248,6 +306,50 @@ function AnniversaryEditor({ anniversaries, draftValues }: { anniversaries?: Ann
       <p className="form-hint">纪念日同样只输入公历日期，详情页会自动显示农历日期。</p>
     </div>
   );
+}
+
+function buildAnniversaryPayload(row: AnniversaryRow): Anniversary {
+  const base: Anniversary = {
+    title: row.title.trim(),
+    date: row.date
+  };
+  if (row.milestoneMode === "off") return base;
+
+  const milestoneDays = normalizeAnniversaryMilestoneDays({
+    milestoneMode: row.milestoneMode,
+    milestoneDays: row.milestoneMode === "custom" ? parseMilestoneDays(row.milestoneDaysText) : undefined
+  });
+  if (!milestoneDays.length) return base;
+
+  return {
+    ...base,
+    milestoneMode: row.milestoneMode,
+    milestoneDays: row.milestoneMode === "custom" ? milestoneDays : undefined,
+    milestoneCounting: row.milestoneCounting
+  };
+}
+
+function parseMilestoneDays(value: string) {
+  return value
+    .split(/[\s,，、;；]+/)
+    .map((item) => Number(item.trim()))
+    .filter((item) => Number.isFinite(item));
+}
+
+function normalizeMilestoneMode(value: unknown): AnniversaryMilestoneMode {
+  return value === "couple" || value === "baby" || value === "goal" || value === "custom" ? value : "off";
+}
+
+function normalizeMilestoneCounting(value: unknown): AnniversaryMilestoneCounting {
+  return value === "ordinal" ? "ordinal" : "elapsed";
+}
+
+function normalizeMilestoneDaysText(value: unknown) {
+  return String(value || "")
+    .split(/[\s,，、;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join("、");
 }
 
 export function PreferenceGroupEditor({

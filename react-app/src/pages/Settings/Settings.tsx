@@ -9,6 +9,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
+import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
@@ -835,6 +836,7 @@ function buildDuePlanItems(plans: AnniversaryPlan[], people: Person[]) {
         title: `${person?.name || "未关联人物"} · ${plan.title}`,
         desc: [
           plan.targetDate < today ? `已到期 ${plan.targetDate}` : "今天执行",
+          normalizeAnniversaryPlanTargetKind(plan) === "milestone" ? formatAnniversaryPlanTargetTitle(plan) : "",
           total ? `待办 ${done}/${total}` : "暂无待办",
           plan.placeIds.length ? `关联地点 ${plan.placeIds.length}` : ""
         ].filter(Boolean).join(" · ")
