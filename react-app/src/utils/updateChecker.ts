@@ -1,7 +1,7 @@
 import { APP_VERSION } from "../constants/version";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/cnxin/lifelog/releases/latest";
-const GITEE_UPDATE_MANIFEST_URL = "https://gitee.com/ysjugg/lifelog/raw/main/update-manifest.json";
+const GITEE_UPDATE_MANIFEST_URL = "https://gitee.com/api/v5/repos/ysjugg/lifelog/contents/update-manifest.json?ref=main";
 const UPDATE_MANIFEST_URL = "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/update-manifest.json";
 const RAW_UPDATE_MANIFEST_URL = "https://raw.githubusercontent.com/cnxin/lifelog/main/update-manifest.json";
 
@@ -53,6 +53,11 @@ interface GitHubReleasePayload {
   body?: string;
   published_at?: string;
   assets?: GitHubReleaseAsset[];
+}
+
+interface GiteeContentPayload {
+  content?: string;
+  encoding?: string;
 }
 
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
@@ -123,12 +128,14 @@ async function fetchLatestRelease() {
 }
 
 async function fetchUpdateManifest(url: string) {
-  const response = await fetch(`${url}?t=${Date.now()}`, {
+  const separator = url.includes("?") ? "&" : "?";
+  const response = await fetch(`${url}${separator}t=${Date.now()}`, {
     cache: "no-store"
   });
   if (!response.ok) return null;
+  const payload = (await response.json()) as UpdateManifestPayload | GiteeContentPayload;
   return {
-    ...((await response.json()) as UpdateManifestPayload),
+    ...normalizeManifestPayload(payload),
     source: formatManifestSource(url)
   } as UpdateManifestPayload & { source: string };
 }
@@ -138,6 +145,26 @@ function formatManifestSource(url: string) {
   if (url.includes("cdn.jsdelivr")) return "CDN 清单";
   if (url.includes("raw.githubusercontent")) return "GitHub raw 清单";
   return "更新清单";
+}
+
+function normalizeManifestPayload(payload: UpdateManifestPayload | GiteeContentPayload): UpdateManifestPayload {
+  if ("content" in payload && payload.content) {
+    const decoded = decodeBase64Json(payload.content);
+    return JSON.parse(decoded) as UpdateManifestPayload;
+  }
+  return payload as UpdateManifestPayload;
+}
+
+function decodeBase64Json(value: string) {
+  const normalized = value.replace(/\s/g, "");
+  if (typeof atob === "function") {
+    return decodeURIComponent(
+      Array.from(atob(normalized))
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+        .join("")
+    );
+  }
+  throw new Error("当前环境无法解析 Gitee 清单");
 }
 
 function updateSourcePriority(source: string) {
