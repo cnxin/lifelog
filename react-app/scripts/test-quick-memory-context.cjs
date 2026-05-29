@@ -32,6 +32,7 @@ function loadTs(relativeFile) {
 const {
   buildDefaultQuickMemoryTitle,
   buildMemoryContentTemplates,
+  buildQuickMemoryTemplateGroups,
   buildQuickMemoryTemplates,
   formatPeopleLabel
 } = loadTs("src/utils/quickMemoryContext.ts");
@@ -65,12 +66,40 @@ const cases = [
   {
     label: "person and place templates",
     actual: buildQuickMemoryTemplates(["小林"], "湖滨银泰"),
-    expected: ["和小林在湖滨银泰", "和小林去了湖滨银泰", "在湖滨银泰和小林聊了聊", "和小林的一次见面"]
+    expected: [
+      "和小林在湖滨银泰",
+      "和小林去了湖滨银泰",
+      "在湖滨银泰和小林聊了聊",
+      "和小林的一次见面",
+      "和小林在湖滨银泰吃了顿饭",
+      "和小林在湖滨银泰看了场电影",
+      "和小林在湖滨银泰逛了逛",
+      "和小林在湖滨银泰买了点东西"
+    ]
   },
   {
-    label: "empty templates",
+    label: "empty templates fall back to common scenes",
     actual: buildQuickMemoryTemplates([], ""),
-    expected: []
+    expected: [
+      "今天吃了一顿不错的饭",
+      "记录一次见面",
+      "去了一家想再来的店",
+      "看了一场电影",
+      "买到一个值得记住的东西",
+      "一次临时的小旅行"
+    ]
+  },
+  {
+    label: "template groups separate context and quick templates",
+    actual: buildQuickMemoryTemplateGroups(["小林"], "湖滨银泰").map((group) => ({
+      title: group.title,
+      first: group.templates[0],
+      count: group.templates.length
+    })),
+    expected: [
+      { title: "当前场景", first: "和小林在湖滨银泰", count: 8 },
+      { title: "快速模板", first: "今天吃了一顿不错的饭", count: 6 }
+    ]
   },
   {
     label: "content templates with person and place",

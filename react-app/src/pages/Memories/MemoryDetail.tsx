@@ -30,6 +30,7 @@ export default function MemoryDetail() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  const [showAllPhotos, setShowAllPhotos] = useState(false);
   const memory = state.memories.find((item) => item.id === memoryId);
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
@@ -37,6 +38,8 @@ export default function MemoryDetail() {
   const placeIds = memory ? getMemoryPlaceIds(memory) : [];
   const places = state.places.filter((item) => placeIds.includes(item.id));
   const linkedPlans = memory ? state.anniversaryPlans.filter((plan) => plan.memoryId === memory.id) : [];
+  const visiblePhotos = showAllPhotos ? photos : photos.slice(0, 9);
+  const hiddenPhotoCount = Math.max(0, photos.length - visiblePhotos.length);
 
   // 加载照片
   useEffect(() => {
@@ -194,13 +197,18 @@ export default function MemoryDetail() {
           </div>
           <GlassCard>
             <PhotoGrid
-              photos={photos}
+              photos={visiblePhotos}
               columns={3}
               onClick={(index) => {
                 setViewerIndex(index);
                 setViewerOpen(true);
               }}
             />
+            {photos.length > 9 && (
+              <button className="photo-expand-button" type="button" onClick={() => setShowAllPhotos((value) => !value)}>
+                {showAllPhotos ? "收起照片" : `展开全部照片（还有 ${hiddenPhotoCount} 张）`}
+              </button>
+            )}
           </GlassCard>
         </section>
       )}

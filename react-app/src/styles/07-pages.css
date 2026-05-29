@@ -2752,6 +2752,11 @@
   gap: 8px;
 }
 
+.quick-template-group {
+  display: grid;
+  gap: 8px;
+}
+
 .quick-context-token,
 .quick-template-chip {
   border-radius: 999px;

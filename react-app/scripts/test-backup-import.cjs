@@ -102,6 +102,44 @@ async function run() {
   assertEqual("repairs photo memoryId from memory photos list", backup.photos[0].memoryId, "memory-current");
   assertEqual("keeps memory photo reference", backup.state.memories[0].photos, ["photo-1"]);
 
+  const unsafePayload = {
+    ...payload,
+    photos: [
+      {
+        id: "broken-photo",
+        memoryId: "memory-current",
+        originalDataUrl: "not-a-data-url",
+        thumbnailDataUrl: "not-a-data-url",
+        width: 1,
+        height: 1,
+        fileSize: 5,
+        mimeType: "text/plain",
+        uploadedAt: "2026-05-26T15:00:00.000Z",
+        order: 0
+      }
+    ],
+    integrity: {
+      people: 0,
+      places: 0,
+      memories: 1,
+      anniversaryPlans: 0,
+      photos: 1
+    }
+  };
+
+  let strictFailed = false;
+  try {
+    await normalizeBackupPayload(unsafePayload);
+  } catch {
+    strictFailed = true;
+  }
+  assertEqual("strict import fails on unreadable photo", strictFailed, true);
+
+  const safeBackup = await normalizeBackupPayload(unsafePayload, { safeMode: true });
+  assertEqual("safe import skips unreadable photo", safeBackup.photos.length, 0);
+  assertEqual("safe import keeps memory without invalid photo", safeBackup.state.memories[0].photos, []);
+  assertEqual("safe import records warnings", safeBackup.warnings.length > 0, true);
+
   if (failures) {
     console.error(`Backup import regression failed: ${failures} mismatch(es).`);
     process.exit(1);

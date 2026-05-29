@@ -90,6 +90,7 @@ type DeletedEntrySnapshot =
   | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
 
 type BackupExportResult = BackupExportTarget;
+type BackupImportOptions = { safeMode?: boolean };
 type PlaceBulkPatch = Partial<Pick<Place, "category" | "mall" | "area">> & { appendTags?: string[] };
 type PlaceBulkSnapshot = Pick<Place, "id" | "category" | "mall" | "area" | "tags">;
 
@@ -112,7 +113,7 @@ interface LifeLogContextValue {
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   restoreDeletedEntry: (snapshot: DeletedEntrySnapshot) => Promise<void>;
   getDeleteSnapshot: (type: EntryType, id: string) => Promise<DeletedEntrySnapshot | null>;
-  importData: (file: File) => Promise<void>;
+  importData: (file: File, options?: BackupImportOptions) => Promise<string[]>;
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
   duplicatePlaceGroups: PlaceDuplicateGroup[];
@@ -553,7 +554,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }));
     }
 
-    async function importData(file: File) {
+    async function importData(file: File, options: BackupImportOptions = {}) {
       const text = await file.text();
       let parsed: unknown;
       try {
@@ -565,12 +566,13 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
       }
 
-      const backup = await normalizeBackupPayload(parsed);
+      const backup = await normalizeBackupPayload(parsed, options);
       const next = await replaceAllBackupData(backup);
       setState(next);
       setSettings(backup.settings);
       setReminderSettings(backup.reminderSettings);
       setPlaceMergeHistory(backup.placeMergeHistory);
+      return backup.warnings;
     }
 
     function getPersonName(id: string) {

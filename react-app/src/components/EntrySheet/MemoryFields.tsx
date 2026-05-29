@@ -4,7 +4,7 @@ import type { MemoryEvent, Photo } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { inferQuickMemory } from "../../utils/memoryInference";
 import { deriveMemorySummary } from "../../utils/memoryDisplay";
-import { buildDefaultQuickMemoryTitle, buildMemoryContentTemplates, buildQuickMemoryTemplates } from "../../utils/quickMemoryContext";
+import { buildDefaultQuickMemoryTitle, buildMemoryContentTemplates, buildQuickMemoryTemplateGroups } from "../../utils/quickMemoryContext";
 import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
 import PlacePicker from "../PlacePicker";
@@ -110,7 +110,7 @@ export function MemoryFields({
   const previewPlaces = resolvePlaceNames(previewPlaceIds, places);
   const previewPlace = previewPlaces.join("、");
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
-  const quickTemplates = buildQuickMemoryTemplates(previewPeople, previewPlace);
+  const quickTemplateGroups = buildQuickMemoryTemplateGroups(previewPeople, previewPlace);
   const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlaces);
   const previewTitle =
     deriveMemorySummary(
@@ -134,37 +134,44 @@ export function MemoryFields({
       <>
         <div className="quick-record-intro">
           <strong>先记下来，之后再补细节</strong>
-          <span>{hasQuickContext ? "已带入当前人物或地点，可以直接保存，也可以点模板改成更准确的标题。" : "只需要一句标题，日期和心情会自动带上默认值。"}</span>
+          <span>{hasQuickContext ? "已带入当前人物或地点，可以直接保存，也可以点模板改成更准确的标题。" : "可以直接写一句，也可以点常用模板快速开始。"}</span>
         </div>
-        {hasQuickContext && (
+        {quickTemplateGroups.length > 0 && (
           <div className="quick-context-card">
-            <span className="quick-context-eyebrow">已自动关联</span>
-            <div className="quick-context-list">
-              {previewPeople.map((name) => (
-                <span className="quick-context-token" key={`person-${name}`}>
-                  人物 · {name}
-                </span>
-              ))}
-              {previewPlace && (
-                <span className="quick-context-token">
-                  地点 · {previewPlace}
-                </span>
-              )}
-            </div>
-            {quickTemplates.length > 0 && (
-              <div className="quick-template-grid">
-                {quickTemplates.map((template) => (
-                  <button
-                    type="button"
-                    className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
-                    key={template}
-                    onClick={() => setQuickContent(template)}
-                  >
-                    {template}
-                  </button>
-                ))}
-              </div>
+            {hasQuickContext && (
+              <>
+                <span className="quick-context-eyebrow">已自动关联</span>
+                <div className="quick-context-list">
+                  {previewPeople.map((name) => (
+                    <span className="quick-context-token" key={`person-${name}`}>
+                      人物 · {name}
+                    </span>
+                  ))}
+                  {previewPlace && (
+                    <span className="quick-context-token">
+                      地点 · {previewPlace}
+                    </span>
+                  )}
+                </div>
+              </>
             )}
+            {quickTemplateGroups.map((group) => (
+              <div className="quick-template-group" key={group.title}>
+                <span className="quick-context-eyebrow">{group.title}</span>
+                <div className="quick-template-grid">
+                  {group.templates.map((template) => (
+                    <button
+                      type="button"
+                      className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
+                      key={template}
+                      onClick={() => setQuickContent(template)}
+                    >
+                      {template}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
         <label>

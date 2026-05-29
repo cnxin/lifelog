@@ -112,9 +112,9 @@ export default function AccountDataManagement() {
     importLockRef.current = true;
     setIsImporting(true);
     try {
-      await importData(file);
+      const warnings = await importData(file);
       setImportRecovery(null);
-      notify({ message: "数据导入完成，当前资料已恢复", tone: "success" });
+      notify({ message: warnings.length ? `数据导入完成，跳过 ${warnings.length} 项异常` : "数据导入完成，当前资料已恢复", tone: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "请检查文件格式。";
       setImportRecovery({
@@ -305,6 +305,39 @@ export default function AccountDataManagement() {
   async function retryLastImport() {
     if (!importRecovery?.file) return;
     await handleImport(importRecovery.file);
+  }
+
+  async function recoverLastImportSafely() {
+    if (!importRecovery?.file || importLockRef.current) return;
+    const accepted = await confirm({
+      title: "安全导入备份",
+      message: "安全导入会跳过异常照片和完整性差异，尽量恢复可用的人物、地点、回忆、安排和设置。导入会覆盖当前本地数据，建议先导出当前数据。",
+      confirmText: "安全导入"
+    });
+    if (!accepted) return;
+
+    importLockRef.current = true;
+    setIsImporting(true);
+    try {
+      const warnings = await importData(importRecovery.file, { safeMode: true });
+      setImportRecovery(null);
+      notify({
+        message: warnings.length ? `安全导入完成，跳过 ${warnings.length} 项异常` : "安全导入完成，当前资料已恢复",
+        tone: "success",
+        durationMs: 7000
+      });
+    } catch (error) {
+      await confirm({
+        title: "安全导入失败",
+        message: error instanceof Error ? error.message : "这个备份无法安全恢复，请保留文件等待进一步修复。",
+        confirmText: "知道了",
+        tone: "info"
+      });
+    } finally {
+      importLockRef.current = false;
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function handleMergeStrongDuplicates() {
@@ -561,6 +594,9 @@ export default function AccountDataManagement() {
             <div className="backup-import-recovery-actions">
               <button type="button" onClick={() => void retryLastImport()} disabled={isImporting}>
                 重试这个文件
+              </button>
+              <button type="button" onClick={() => void recoverLastImportSafely()} disabled={isImporting}>
+                安全导入
               </button>
               <button type="button" onClick={() => fileInputRef.current?.click()}>
                 重新选择
