@@ -9,7 +9,7 @@ import FloatingActionButton, { type FloatingAction } from "./FloatingActionButto
 import GlobalSearchPanel from "./GlobalSearchPanel";
 import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
-import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, UserPlus } from "lucide-react";
+import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, QrCode, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -206,6 +206,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     onPlace: () => openSheet("place"),
     onPastePlaceShare: () => void openPlaceShareFromClipboard(),
     onImportLifeLogShare: () => void openLifeLogShareImport(),
+    onScanLifeLogShare: () => navigate("/share/import?scan=1"),
     onMemoryForPerson: (personId) => openSheet("memory", "quick", { personIds: [personId] }),
     onEditPerson: (personId) => openSheet("person", "full", { itemId: personId }),
     onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
@@ -265,6 +266,7 @@ function buildFloatingActions({
   onPlace,
   onPastePlaceShare,
   onImportLifeLogShare,
+  onScanLifeLogShare,
   onMemoryForPerson,
   onEditPerson,
   onMemoryForPlace,
@@ -277,6 +279,7 @@ function buildFloatingActions({
   onPlace: () => void;
   onPastePlaceShare: () => void;
   onImportLifeLogShare: () => void;
+  onScanLifeLogShare: () => void;
   onMemoryForPerson: (personId: string) => void;
   onEditPerson: (personId: string) => void;
   onMemoryForPlace: (placeId: string) => void;
@@ -424,6 +427,7 @@ function buildFloatingActions({
       onClick: onPlace
     },
     lifeLogShareAction(onImportLifeLogShare),
+    scanShareAction(onScanLifeLogShare),
     placeShareAction(onPastePlaceShare)
   ];
 }
@@ -455,6 +459,16 @@ function lifeLogShareAction(onClick: () => void): FloatingAction {
     label: "导入分享",
     desc: "读取 LifeLog 分享链接",
     icon: <Link2 />,
+    onClick
+  };
+}
+
+function scanShareAction(onClick: () => void): FloatingAction {
+  return {
+    id: "scan-lifelog-share",
+    label: "扫描二维码",
+    desc: "扫描 LifeLog 分享二维码",
+    icon: <QrCode />,
     onClick
   };
 }

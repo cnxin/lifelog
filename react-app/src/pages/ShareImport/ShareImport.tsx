@@ -1,7 +1,8 @@
-import { ArrowLeft, CheckCircle2, Link2, Upload } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Link2, QrCode, Upload } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
+import QrScannerPanel from "../../components/QrScannerPanel";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { buildShareImportPreview, normalizeLifeLogSharePayload, type LifeLogShareImportPreview, type LifeLogSharePayload } from "../../utils/lifelogShare";
@@ -18,6 +19,7 @@ export default function ShareImport() {
   const [isImporting, setIsImporting] = useState(false);
   const [doneText, setDoneText] = useState("");
   const [manualLink, setManualLink] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(() => new URLSearchParams(window.location.search).get("scan") === "1");
 
   useEffect(() => {
     let active = true;
@@ -134,6 +136,26 @@ export default function ShareImport() {
     }
   }
 
+  async function handleScannedText(text: string) {
+    const hash = extractLifeLogShareHashFromText(text);
+    if (!hash) {
+      setPayload(null);
+      setError("二维码里没有识别到 LifeLog 分享链接。");
+      return;
+    }
+    setManualLink(text);
+    try {
+      const parsed = await parseLifeLogShareLinkHash(hash);
+      setPayload(normalizeLifeLogSharePayload(parsed));
+      setError("");
+      setDoneText("");
+      window.history.replaceState(null, "", `/share/import#${hash}`);
+    } catch (err) {
+      setPayload(null);
+      setError(err instanceof Error ? err.message : "分享链接无法解析。");
+    }
+  }
+
   return (
     <section className="section share-import-page">
       <div className="section-header">
@@ -172,6 +194,12 @@ export default function ShareImport() {
               onChange={(event) => setManualLink(event.target.value)}
             />
           </label>
+          <div className="share-import-action-row">
+            <button className="ghost-btn share-import-scan" type="button" onClick={() => setScannerOpen(true)}>
+              <QrCode size={16} />
+              扫描二维码
+            </button>
+          </div>
           <button className="primary-btn share-import-submit" type="button" onClick={() => void handleManualParse()}>
             <Upload size={16} />
             解析分享链接
@@ -228,6 +256,12 @@ export default function ShareImport() {
           )}
         </GlassCard>
       )}
+      <QrScannerPanel
+        open={scannerOpen}
+        title="扫描分享二维码"
+        onDetected={(text) => void handleScannedText(text)}
+        onClose={() => setScannerOpen(false)}
+      />
     </section>
   );
 }

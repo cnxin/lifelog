@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Heart, MapPin, Share2, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Calendar, Heart, MapPin, QrCode, Share2, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -25,7 +25,6 @@ export default function MemoryDetail() {
   const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
-  const [addingRelated, setAddingRelated] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
@@ -56,10 +55,6 @@ export default function MemoryDetail() {
       setEditing(true);
       setSearchParams({}, { replace: true });
       return;
-    }
-    if (searchParams.get("add") === "related") {
-      setAddingRelated(true);
-      setSearchParams({}, { replace: true });
     }
   }, [memory, searchParams, setSearchParams]);
 
@@ -131,14 +126,25 @@ export default function MemoryDetail() {
               <button className="category-pill active" onClick={() => setEditing(true)}>
                 编辑回忆
               </button>
-              <button className="category-pill" onClick={() => setAddingRelated(true)}>
-                再记一条相关回忆
-              </button>
-              <button className="category-pill" onClick={() => setShareOpen(true)}>
-                <Share2 size={14} /> 分享
-              </button>
             </div>
           </div>
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <GlassCard className="detail-share-card">
+          <div className="detail-share-copy">
+            <span className="detail-share-icon">
+              <Share2 />
+            </span>
+            <div>
+              <strong>分享这条回忆</strong>
+              <span>可选择正文、人物、地点和照片是否公开，支持链接、二维码或分享包。</span>
+            </div>
+          </div>
+          <button className="detail-share-button" type="button" onClick={() => setShareOpen(true)}>
+            <QrCode /> 打开分享
+          </button>
         </GlassCard>
       </section>
 
@@ -275,10 +281,8 @@ export default function MemoryDetail() {
         groupedMemories={groupedRelatedMemories}
         getPersonName={getPersonName}
         getPlaceName={getPlaceName}
-        onAddMemory={() => setAddingRelated(true)}
         emptyTitle="还没有找到相关回忆"
         emptyDesc="同人物、同地点或同标签的记录会自动出现在这里。"
-        emptyAction="再记一条相关回忆"
         renderMeta={(relatedMemory, ctx, showContentLine) => (
           <>
             <p className="memory-desc memory-meta-line">
@@ -298,13 +302,6 @@ export default function MemoryDetail() {
       )}
 
       <EntrySheet type={editing ? "memory" : null} itemId={memory.id} onClose={() => setEditing(false)} />
-      <EntrySheet
-        type={addingRelated ? "memory" : null}
-        initialPersonIds={personIds}
-        initialPlaceIds={placeIds}
-        memoryMode="quick"
-        onClose={() => setAddingRelated(false)}
-      />
       <LocalShareSheet
         target={
           shareOpen

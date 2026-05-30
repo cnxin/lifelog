@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, Share2, Star, Store, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, QrCode, Share2, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
@@ -108,11 +108,25 @@ export default function PlaceDetail() {
               <button className="category-pill active" onClick={() => setEditing(true)}>
                 编辑地点
               </button>
-              <button className="category-pill" onClick={() => setShareOpen(true)}>
-                <Share2 size={14} /> 分享
-              </button>
             </div>
           </div>
+        </GlassCard>
+      </section>
+
+      <section className="section">
+        <GlassCard className="detail-share-card">
+          <div className="detail-share-copy">
+            <span className="detail-share-icon">
+              <Share2 />
+            </span>
+            <div>
+              <strong>分享这个地点</strong>
+              <span>可选择地址、定位、外部链接和图片是否公开，支持链接、二维码或分享包。</span>
+            </div>
+          </div>
+          <button className="detail-share-button" type="button" onClick={() => setShareOpen(true)}>
+            <QrCode /> 打开分享
+          </button>
         </GlassCard>
       </section>
 

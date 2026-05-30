@@ -10,10 +10,10 @@ interface MemoryTimelineSectionProps {
   groupedMemories: Array<{ month: string; memories: MemoryEvent[] }>;
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
-  onAddMemory: () => void;
+  onAddMemory?: () => void;
   emptyTitle: string;
   emptyDesc: string;
-  emptyAction: string;
+  emptyAction?: string;
   /** 自定义每张卡片的 meta 行渲染（默认显示地点） */
   renderMeta?: (memory: MemoryEvent, ctx: MemoryDisplayContext, showContentLine: boolean) => ReactNode;
 }
@@ -35,9 +35,11 @@ export default function MemoryTimelineSection({
     <section className="section person-detail-section">
       <div className="section-header">
         <h2>{title}</h2>
-        <button className="see-all" onClick={onAddMemory}>
-          新增
-        </button>
+        {onAddMemory && (
+          <button className="see-all" onClick={onAddMemory}>
+            新增
+          </button>
+        )}
       </div>
       {groupedMemories.length ? (
         <div className="timeline-list">
@@ -72,7 +74,7 @@ export default function MemoryTimelineSection({
         <GlassCard className="empty detail-empty-action">
           <strong>{emptyTitle}</strong>
           <span>{emptyDesc}</span>
-          <button onClick={onAddMemory}>{emptyAction}</button>
+          {onAddMemory && emptyAction && <button onClick={onAddMemory}>{emptyAction}</button>}
         </GlassCard>
       )}
     </section>

@@ -231,6 +231,75 @@
   font-weight: 800;
 }
 
+.detail-share-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+}
+
+.detail-share-copy {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.detail-share-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.detail-share-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.detail-share-copy div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.detail-share-copy strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.detail-share-copy span:not(.detail-share-icon) {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.detail-share-button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.detail-share-button svg {
+  width: 16px;
+  height: 16px;
+}
+
 .memory-mood-pill {
   display: inline-flex;
   align-items: center;
@@ -1255,6 +1324,16 @@ button.person-pref-line {
 .category-pill.active {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+@media (max-width: 430px) {
+  .detail-share-card {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-share-button {
+    width: 100%;
+  }
 }
 
 .page-segment-nav {
