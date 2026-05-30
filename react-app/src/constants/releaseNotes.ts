@@ -19,6 +19,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.91",
+    date: "2026-05-31",
+    title: "分享入口和二维码导入优化",
+    highlights: [
+      "回忆详情和地点详情新增更明显的分享操作卡，分享入口不再藏在头部胶囊按钮里。",
+      "首页快捷新增加入扫描二维码，可直接进入 LifeLog 分享二维码导入。",
+      "分享导入页新增扫码入口，支持用相机扫描 LifeLog 分享二维码，不支持扫码的环境会提示改用粘贴链接。",
+      "移除回忆详情和保存回忆提示里的再记一条相关回忆入口，相关回忆区只负责回看已有记录。"
+    ]
+  },
+  {
     version: "0.1.0-test.90",
     date: "2026-05-29",
     title: "导入恢复、照片展示和快速记录优化",
