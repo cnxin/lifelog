@@ -19,21 +19,21 @@ import { buildLifeLogShareImportPathFromUrl, extractLifeLogShareHashFromText } f
 import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
-  "/": { title: "下午好", subtitle: "今天有新的回忆值得记录" },
-  "/people": { title: "人物", subtitle: "记录喜好、禁忌和纪念日" },
-  "/places": { title: "地点", subtitle: "餐厅、酒店、景点和电影院" },
-  "/memories": { title: "回忆", subtitle: "把人物和地点串起来" },
-  "/calendar": { title: "日历", subtitle: "生日、纪念日和回忆时间线" },
+  "/": { title: "下午好", subtitle: "从今天的一件小事开始" },
+  "/people": { title: "人物", subtitle: "记住重要的人和相处细节" },
+  "/places": { title: "地点", subtitle: "收藏想再去的地方" },
+  "/memories": { title: "回忆", subtitle: "回看那些值得留下的瞬间" },
+  "/calendar": { title: "日历", subtitle: "重要日子和想提前准备的事" },
   "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
   "/account": { title: "设置", subtitle: "账号、应用、数据和关于" }
 };
 
 function getPageMeta(pathname: string) {
   if (pageMeta[pathname]) return pageMeta[pathname];
-  if (pathname.startsWith("/people/")) return { title: "人物详情", subtitle: "查看完整档案和相关回忆" };
-  if (pathname.startsWith("/places/malls/")) return { title: "商场详情", subtitle: "查看商场里的店铺和关联回忆" };
-  if (pathname.startsWith("/places/")) return { title: "地点详情", subtitle: "定位、链接、评价和回忆" };
-  if (pathname.startsWith("/memories/")) return { title: "回忆详情", subtitle: "查看一次经历的完整记录" };
+  if (pathname.startsWith("/people/")) return { title: "人物详情", subtitle: "和 TA 有关的细节都在这里" };
+  if (pathname.startsWith("/places/malls/")) return { title: "商场详情", subtitle: "这里去过的店和发生过的事" };
+  if (pathname.startsWith("/places/")) return { title: "地点详情", subtitle: "适合谁、发生过什么、下次还想不想去" };
+  if (pathname.startsWith("/memories/")) return { title: "回忆详情", subtitle: "这一次经历的完整记录" };
   return pageMeta["/"];
 }
 
@@ -290,16 +290,16 @@ function buildFloatingActions({
     return [
       {
         id: "memory-for-person",
-        label: "记录和 TA 的回忆",
-        desc: "自动关联当前人物",
+        label: "记和 TA 的事",
+        desc: "自动带上这个人",
         icon: <CalendarPlus />,
         primary: true,
         onClick: () => onMemoryForPerson(personId)
       },
       {
         id: "edit-person",
-        label: "编辑 TA 的资料",
-        desc: "补充生日、喜好、雷区和纪念日",
+        label: "补 TA 的细节",
+        desc: "生日、喜好、雷区和重要日子",
         icon: <UserPlus />,
         onClick: () => onEditPerson(personId)
       }
@@ -311,16 +311,16 @@ function buildFloatingActions({
     return [
       {
         id: "memory-for-place",
-        label: "记录在这里发生的事",
-        desc: "自动关联当前地点",
+        label: "记这里发生的事",
+        desc: "自动带上这个地方",
         icon: <CalendarPlus />,
         primary: true,
         onClick: () => onMemoryForPlace(placeId)
       },
       {
         id: "new-place",
-        label: "新增地点",
-        desc: "保存另一个店铺或场所",
+        label: "记一个新地方",
+        desc: "保存另一个想记住的地方",
         icon: <MapPinPlus />,
         onClick: onPlace
       },
@@ -332,15 +332,15 @@ function buildFloatingActions({
     return [
       {
         id: "new-person",
-        label: "新增人物",
-        desc: "先记姓名和关系",
+        label: "记一个人",
+        desc: "先记名字和关系",
         icon: <UserPlus />,
         primary: true,
         onClick: onPerson
       },
       {
         id: "memory",
-        label: "记录一次互动",
+        label: "记和 TA 的事",
         desc: "从一句话开始",
         icon: <PenLine />,
         onClick: onQuickMemory
@@ -352,8 +352,8 @@ function buildFloatingActions({
     return [
       {
         id: "new-place",
-        label: "新增地点",
-        desc: "手动填写或粘贴分享",
+        label: "记一个地方",
+        desc: "餐厅、店铺、景点都可以",
         icon: <MapPinPlus />,
         primary: true,
         onClick: onPlace
@@ -361,8 +361,8 @@ function buildFloatingActions({
       placeShareAction(onPastePlaceShare),
       {
         id: "memory-for-place-list",
-        label: "记录到访",
-        desc: "先记一条回忆",
+        label: "记一次到访",
+        desc: "先写一句发生了什么",
         icon: <PenLine />,
         onClick: onQuickMemory
       }
@@ -387,7 +387,7 @@ function buildFloatingActions({
     return [
       {
         id: "memory-for-date",
-        label: "补记选中日期",
+        label: "补记这一天",
         desc: selectedDate,
         icon: <CalendarPlus />,
         primary: true,
@@ -395,8 +395,8 @@ function buildFloatingActions({
       },
       {
         id: "new-person",
-        label: "新增人物",
-        desc: "让生日和纪念日进入日历",
+        label: "记一个人",
+        desc: "让生日和重要日子进入日历",
         icon: <UserPlus />,
         onClick: onPerson
       }
@@ -414,15 +414,15 @@ function buildFloatingActions({
     },
     {
       id: "new-person",
-      label: "新增人物",
-      desc: "先记姓名和关系",
+      label: "记一个人",
+      desc: "生日、喜好、重要日子以后再补",
       icon: <UserPlus />,
       onClick: onPerson
     },
     {
       id: "new-place",
-      label: "新增地点",
-      desc: "手动填写或粘贴分享",
+      label: "记一个地方",
+      desc: "想再去、想推荐、想避雷都可以",
       icon: <MapPinPlus />,
       onClick: onPlace
     },
@@ -435,8 +435,8 @@ function buildFloatingActions({
 function quickMemoryAction(onClick: () => void, primary = false): FloatingAction {
   return {
     id: "quick-memory",
-    label: "快速记回忆",
-    desc: "一句话先保存下来",
+    label: "记一件事",
+    desc: "先写一句今天发生了什么",
     icon: <PenLine />,
     primary,
     onClick
@@ -446,8 +446,8 @@ function quickMemoryAction(onClick: () => void, primary = false): FloatingAction
 function placeShareAction(onClick: () => void): FloatingAction {
   return {
     id: "paste-place-share",
-    label: "粘贴地点分享",
-    desc: "读取剪贴板并预填地点",
+    label: "识别地点分享",
+    desc: "从美团、高德、点评里带入地点",
     icon: <ClipboardPaste />,
     onClick
   };
@@ -456,8 +456,8 @@ function placeShareAction(onClick: () => void): FloatingAction {
 function lifeLogShareAction(onClick: () => void): FloatingAction {
   return {
     id: "import-lifelog-share",
-    label: "导入分享",
-    desc: "读取 LifeLog 分享链接",
+    label: "收下别人分享",
+    desc: "粘贴 LifeLog 分享链接",
     icon: <Link2 />,
     onClick
   };

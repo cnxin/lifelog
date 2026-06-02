@@ -133,8 +133,8 @@ export function MemoryFields({
     return (
       <>
         <div className="quick-record-intro">
-          <strong>先记下来，之后再补细节</strong>
-          <span>{hasQuickContext ? "已带入当前人物或地点，可以直接保存，也可以点模板改成更准确的标题。" : "可以直接写一句，也可以点常用模板快速开始。"}</span>
+          <strong>先留下这一刻</strong>
+          <span>{hasQuickContext ? "已经带上相关人物或地点，可以直接保存；想换一种说法也可以点下面的模板。" : "不知道怎么分类也没关系，先写一句发生了什么。"}</span>
         </div>
         {quickTemplateGroups.length > 0 && (
           <div className="quick-context-card">
@@ -175,26 +175,26 @@ export function MemoryFields({
           </div>
         )}
         <label>
-          回忆标题
+          这件事
           <input
             name="title"
             value={quickContent}
             onChange={(event) => setQuickContent(event.target.value)}
             autoFocus
-            placeholder="例如：和小林在湖边散步"
+            placeholder="例如：和小林在湖边散步，聊到下次去看展"
           />
         </label>
         <label className="inline-field">
-          <span className="inline-field-label">日期</span>
-          <DateInput name="date" label="回忆日期" value={quickDate} onChange={setQuickDate} required />
+          <span className="inline-field-label">发生日期</span>
+          <DateInput name="date" label="发生日期" value={quickDate} onChange={setQuickDate} required />
         </label>
         <label>
-          心情
+          当时感觉
           <input
             name="mood"
             value={mood}
             onChange={(event) => setMood(event.target.value)}
-            placeholder="今天的感觉"
+            placeholder="开心、平静、感动，或自己写一个词"
           />
           <div className="mood-presets">
             {MOOD_PRESETS.map((preset) => (
@@ -210,7 +210,7 @@ export function MemoryFields({
           </div>
         </label>
         <button className="quick-detail-toggle" type="button" onClick={() => setDetailsOpen((open) => !open)}>
-          {detailsOpen ? "收起补充细节" : "补充人物、地点、正文和照片"}
+          {detailsOpen ? "先收起来" : "想多记一点"}
           {detailsOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
         {detailsOpen && (
@@ -239,7 +239,7 @@ export function MemoryFields({
               </div>
             </div>
             <label>
-              正文
+              多写一点
               {quickContentTemplates.length > 0 && (
                 <div className="content-template-grid">
                   {quickContentTemplates.map((template) => (
@@ -258,7 +258,7 @@ export function MemoryFields({
                 name="content"
                 value={quickDetailsContent}
                 onChange={(event) => setQuickDetailsContent(event.target.value)}
-                placeholder="补充发生了什么，或下次要注意什么。"
+                placeholder="可以写发生了什么、当时的感觉、下次想怎么做。"
               />
             </label>
             <div>
@@ -272,19 +272,19 @@ export function MemoryFields({
               />
             </div>
             <label>
-              标签
+              小标签
               <input
                 name="tags"
                 defaultValue={getDraftValue(draftValues, "tags")}
-                placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
+                placeholder="日常、好吃、想再去、值得记住"
               />
             </label>
           </div>
         )}
         <div className="memory-preview" aria-live="polite">
-          <span className="memory-preview-eyebrow">保存预览</span>
+          <span className="memory-preview-eyebrow">会这样留下来</span>
           <div className="memory-preview-row">
-            <strong>标题</strong>
+            <strong>这件事</strong>
             <span>{quickContent.trim() || previewTitle}</span>
           </div>
           <div className="memory-preview-row">
@@ -306,7 +306,7 @@ export function MemoryFields({
         {!detailsOpen && quickPlaceIds.map((placeId) => <input key={placeId} type="hidden" name="placeIds" value={placeId} />)}
         {!detailsOpen && <input type="hidden" name="tags" value="" />}
         <input type="hidden" name="memoryMode" value="quick" />
-        <p className="form-hint">人物、地点和照片都可以先不填，保存后再从回忆详情里慢慢补。</p>
+        <p className="form-hint">人物、地点和照片都可以先不管，之后想起来再补也可以。</p>
       </>
     );
   }

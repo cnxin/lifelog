@@ -36,9 +36,9 @@ interface EntrySheetProps {
 }
 
 const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: string; redirect: string }> = {
-  person: { addTitle: "新增人物", editTitle: "编辑人物", kicker: "记录一个重要的人", redirect: "/people" },
-  place: { addTitle: "新增地点", editTitle: "编辑地点", kicker: "保存一个值得记住的地点", redirect: "/places" },
-  memory: { addTitle: "新增回忆", editTitle: "编辑回忆", kicker: "把人物和地点连接起来", redirect: "/memories" }
+  person: { addTitle: "记一个人", editTitle: "编辑人物", kicker: "先留下名字，细节以后慢慢补", redirect: "/people" },
+  place: { addTitle: "记一个地方", editTitle: "编辑地点", kicker: "想再去、想推荐、想避雷都可以", redirect: "/places" },
+  memory: { addTitle: "记一件事", editTitle: "编辑回忆", kicker: "先写一句，之后再整理", redirect: "/memories" }
 };
 
 export default function EntrySheet({
@@ -135,7 +135,7 @@ export default function EntrySheet({
 
   const entryType = type;
   const current = meta[entryType];
-  const submitText = !itemId && (entryType === "person" || entryType === "place") ? "创建" : "保存";
+  const submitText = getSubmitText(entryType, Boolean(itemId));
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -447,6 +447,13 @@ function getSaveFeedback(type: EntryType, isEditing: boolean) {
   if (type === "person") return isEditing ? "人物资料已更新" : "人物已保存";
   if (type === "place") return isEditing ? "地点资料已更新" : "地点已保存";
   return isEditing ? "回忆已更新" : "回忆已保存";
+}
+
+function getSubmitText(type: EntryType, isEditing: boolean) {
+  if (isEditing) return "保存";
+  if (type === "person") return "记下这个人";
+  if (type === "place") return "记下这个地方";
+  return "留下这件事";
 }
 
 function validateForm(type: EntryType, formData: FormData) {

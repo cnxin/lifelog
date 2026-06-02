@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.91",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.91",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.91/lifelog-v0.1.0-test.91.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.91.apk",
-    "apkName":  "lifelog-v0.1.0-test.91.apk",
-    "apkSize":  3685607,
-    "apkSha256":  "e1d3b5d0c66197a1cb7deea844f230fb97b8b41e653828b835b0aef87297b925",
-    "publishedAt":  "2026-05-30T18:11:54Z",
-    "body":  "- 回忆详情和地点详情新增更明显的分享操作卡，分享入口不再藏在头部胶囊按钮里。\n- 首页快捷新增加入扫描二维码，可直接进入 LifeLog 分享二维码导入。\n- 分享导入页新增扫码入口，支持用相机扫描 LifeLog 分享二维码，不支持扫码的环境会提示改用粘贴链接。\n- 移除回忆详情和保存回忆提示里的再记一条相关回忆入口，相关回忆区只负责回看已有记录。"
+    "version":  "0.1.0-test.92",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.92",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.92/lifelog-v0.1.0-test.92.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.92.apk",
+    "apkName":  "lifelog-v0.1.0-test.92.apk",
+    "apkSize":  3686395,
+    "apkSha256":  "4bf6da1ce86d6cbd6960e201f8d75c47aa2fbffdfa028bbcc28a4c4c0e3cda90",
+    "publishedAt":  "2026-06-02T03:03:32Z",
+    "body":  "- 首页首屏新增生活场景入口，可直接选择记一件事、记一个人、记一个地方或准备一个日子。\n- 快速回忆表单改为更生活化的表达，从先留下这一刻、这件事、当时感觉开始，降低分类和字段压力。\n- 全局新增面板和详情页快捷操作改为当前页面语境，例如记和 TA 的事、记这里发生的事。\n- 首页快速记录收件箱和待补全提示改为先记后补的表达，减少数据管理感。"
 }

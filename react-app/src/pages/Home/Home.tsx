@@ -1,4 +1,4 @@
-import { Calendar, Clock, Heart, History, Inbox, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, Clock, Gift, Heart, History, Inbox, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -146,14 +146,47 @@ export default function Home() {
       </section>
 
       <section className="section">
+        <div className="life-scene-grid">
+          <button className="life-scene-card primary" type="button" onClick={() => openQuickMemory()}>
+            <span>
+              <PenLine />
+            </span>
+            <strong>记一件事</strong>
+            <small>先写一句今天发生了什么</small>
+          </button>
+          <button className="life-scene-card" type="button" onClick={() => setEntrySheetType("person")}>
+            <span>
+              <Heart />
+            </span>
+            <strong>记一个人</strong>
+            <small>喜好、生日、重要日子以后再补</small>
+          </button>
+          <button className="life-scene-card" type="button" onClick={() => setEntrySheetType("place")}>
+            <span>
+              <MapPin />
+            </span>
+            <strong>记一个地方</strong>
+            <small>想再去、想推荐、想避雷都可以</small>
+          </button>
+          <button className="life-scene-card" type="button" onClick={() => navigate("/calendar")}>
+            <span>
+              <Gift />
+            </span>
+            <strong>准备一个日子</strong>
+            <small>生日、纪念日、想提前安排的事</small>
+          </button>
+        </div>
+      </section>
+
+      <section className="section">
         <GlassCard className="quick-inbox-card">
           <div className="quick-inbox-head">
             <span className="quick-memory-icon">
               <Inbox />
             </span>
             <div>
-              <strong>快速记录收件箱</strong>
-              <span>先把一句话放进来，保存后再慢慢整理人物、地点和标签。</span>
+              <strong>先放一句话</strong>
+              <span>不确定人物、地点或标签也没关系，先把当下的感觉留下来。</span>
             </div>
           </div>
           <div className="quick-inbox-input">
@@ -164,7 +197,7 @@ export default function Home() {
             />
             <button type="button" onClick={openInboxMemory}>
               <PenLine />
-              {inboxText.trim() ? "整理成回忆" : "快速记录"}
+              {inboxText.trim() ? "存成回忆" : "写一条回忆"}
             </button>
           </div>
         </GlassCard>
@@ -263,7 +296,7 @@ export default function Home() {
         <section className="section">
           <div className="section-header">
             <h2>
-              <Sparkles /> 待补全
+              <Sparkles /> 可以顺手补
             </h2>
           </div>
           <div className="task-grid">
