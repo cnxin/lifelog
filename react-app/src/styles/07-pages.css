@@ -208,6 +208,7 @@
 
 .flashback-list,
 .person-action-grid,
+.place-use-grid,
 .privacy-setting-list {
   display: grid;
   gap: 10px;
@@ -244,11 +245,13 @@
   line-height: 1.45;
 }
 
-.person-action-grid {
+.person-action-grid,
+.place-use-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.person-action-card {
+.person-action-card,
+.place-use-card {
   min-height: 116px;
   display: grid;
   gap: 7px;
@@ -260,7 +263,8 @@
   text-align: left;
 }
 
-.person-action-card>span {
+.person-action-card>span,
+.place-use-card>span {
   width: 34px;
   height: 34px;
   border-radius: 13px;
@@ -270,26 +274,34 @@
   background: var(--soft-purple);
 }
 
-.person-action-card>span svg {
+.person-action-card>span svg,
+.place-use-card>span svg {
   width: 17px;
   height: 17px;
 }
 
-.person-action-card.warm>span {
+.person-action-card.warm>span,
+.place-use-card.warm>span {
   color: var(--danger);
   background: var(--danger-soft);
 }
 
-.person-action-card strong {
+.person-action-card strong,
+.place-use-card strong {
   color: var(--text-main);
   font-size: 13px;
   line-height: 1.35;
 }
 
-.person-action-card small {
+.person-action-card small,
+.place-use-card small {
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.4;
+}
+
+.place-use-card {
+  min-height: 112px;
 }
 
 .privacy-setting-row {
@@ -2801,6 +2813,39 @@
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 56%),
     var(--card-bg);
+}
+
+.quick-scene-strip {
+  display: flex;
+  gap: 8px;
+  margin: -2px -2px 0;
+  padding: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quick-scene-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-scene-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(45, 52, 54, 0.06);
+}
+
+.quick-scene-chip.active {
+  border-color: transparent;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
 .quick-context-eyebrow {

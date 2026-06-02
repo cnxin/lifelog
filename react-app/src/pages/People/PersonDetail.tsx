@@ -96,7 +96,13 @@ export default function PersonDetail() {
     relatedMemories,
     relatedPlaces,
     anniversaryPlans: state.anniversaryPlans,
-    getPlaceName
+    getPlaceName,
+    onRecordMemory: () => setAddingMemory(true),
+    onOpenAnniversaries: () => {
+      document.getElementById("person-anniversaries")?.scrollIntoView({ behavior: "smooth" });
+    },
+    onOpenPlace: (placeId) => navigate(`/places/${placeId}`),
+    onEditPreference: (mode) => setEditingPreferenceMode(mode)
   });
   const selectedAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planningTarget?.anniversaryKey);
   const selectedOccurrence = selectedAnniversary ? buildAnniversaryOccurrence(selectedAnniversary.date) : null;
@@ -240,10 +246,10 @@ export default function PersonDetail() {
       <section className="section person-detail-section">
         <div className="section-header">
           <h2>
-            <MessageCircle /> 行动中心
+            <MessageCircle /> 相处小抄
           </h2>
           <button className="see-all" onClick={() => setAddingMemory(true)}>
-            记录
+            记一件事
           </button>
         </div>
         <div className="person-action-grid">
@@ -474,13 +480,21 @@ function buildPersonActionCenter({
   relatedMemories,
   relatedPlaces,
   anniversaryPlans,
-  getPlaceName
+  getPlaceName,
+  onRecordMemory,
+  onOpenAnniversaries,
+  onOpenPlace,
+  onEditPreference
 }: {
   person: { id: string; name: string; birthday?: string; anniversaries: Anniversary[]; preferences: Array<{ category: string; items: string[] }>; dislikes: Array<{ category: string; items: string[] }> };
   relatedMemories: Array<{ id: string; date: string }>;
   relatedPlaces: string[];
   anniversaryPlans: AnniversaryPlan[];
   getPlaceName: (id: string) => string;
+  onRecordMemory: () => void;
+  onOpenAnniversaries: () => void;
+  onOpenPlace: (placeId: string) => void;
+  onEditPreference: (mode: PersonPreferenceMode) => void;
 }) {
   const latestMemory = relatedMemories[0];
   const daysSince = latestMemory ? daysSinceDate(latestMemory.date) : null;
@@ -497,15 +511,16 @@ function buildPersonActionCenter({
     ...person.preferences.flatMap((group) => group.items),
     ...person.dislikes.flatMap((group) => group.items).map((item) => `避开 ${item}`)
   ].slice(0, 4);
+  const hasDislikeHints = person.dislikes.some((group) => group.items.length > 0);
 
   return [
     {
       id: "contact",
       icon: <MessageCircle />,
-      title: daysSince === null ? "还没有共同回忆" : daysSince >= 21 ? `${daysSince} 天没记录互动` : "近期有互动记录",
-      desc: daysSince === null ? "可以从第一次相处开始记录。" : latestMemory ? `上次记录：${formatMonthDay(latestMemory.date)}` : "",
+      title: daysSince === null ? "从第一次相处开始" : daysSince >= 21 ? `${daysSince} 天没记录互动` : "近期有互动记录",
+      desc: daysSince === null ? "点这里先记一件和 TA 有关的小事。" : latestMemory ? `上次记录：${formatMonthDay(latestMemory.date)}，可以继续补一条。` : "",
       tone: daysSince === null || (daysSince ?? 0) >= 21 ? "warm" : "cool",
-      onClick: () => undefined
+      onClick: onRecordMemory
     },
     {
       id: "anniversary",
@@ -521,25 +536,23 @@ function buildPersonActionCenter({
           : "还没有安排，可以提前准备。"
         : "补充生日或纪念日后会自动提醒。",
       tone: nextAnniversary && !nextPlan ? "warm" : "cool",
-      onClick: () => {
-        document.getElementById("person-anniversaries")?.scrollIntoView({ behavior: "smooth" });
-      }
+      onClick: onOpenAnniversaries
     },
     {
       id: "places",
       icon: <MapPin />,
       title: relatedPlaces.length ? `一起去过 ${relatedPlaces.length} 个地点` : "还没有共同地点",
-      desc: relatedPlaces.length ? relatedPlaces.slice(0, 3).map(getPlaceName).join("、") : "记录回忆时关联地点后会自动汇总。",
+      desc: relatedPlaces.length ? `${relatedPlaces.slice(0, 3).map(getPlaceName).join("、")}，点开常去地点。` : "记录回忆时关联地点后会自动汇总。",
       tone: "cool",
-      onClick: () => undefined
+      onClick: relatedPlaces[0] ? () => onOpenPlace(relatedPlaces[0]) : onRecordMemory
     },
     {
       id: "hints",
       icon: giftHints.length ? <Gift /> : <CheckCircle2 />,
       title: giftHints.length ? "送礼和避雷线索" : "还没有偏好线索",
-      desc: giftHints.length ? giftHints.join("、") : "补充喜好和雷区后，安排纪念日更省心。",
+      desc: giftHints.length ? `${giftHints.join("、")}，点这里继续整理。` : "补充喜好和雷区后，安排纪念日更省心。",
       tone: giftHints.length ? "cool" : "warm",
-      onClick: () => undefined
+      onClick: () => onEditPreference(hasDislikeHints ? "dislikes" : "preferences")
     }
   ];
 }

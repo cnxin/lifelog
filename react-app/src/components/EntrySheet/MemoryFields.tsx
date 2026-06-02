@@ -17,6 +17,56 @@ import {
 } from "./draftValues";
 
 const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
+const QUICK_SCENE_PRESETS = [
+  {
+    id: "meal",
+    label: "吃饭",
+    title: "今天吃了一顿不错的饭",
+    mood: "开心",
+    content: "吃了什么：\n\n谁一起：\n\n下次想点：",
+    tags: "吃饭、好吃、想再去"
+  },
+  {
+    id: "date",
+    label: "约会",
+    title: "一次值得记住的见面",
+    mood: "开心",
+    content: "一起做了什么：\n\n印象最深的是：\n\n下次可以：",
+    tags: "约会、见面、值得记住"
+  },
+  {
+    id: "shopping",
+    label: "逛街",
+    title: "今天逛到一个不错的地方",
+    mood: "平静",
+    content: "逛了哪里：\n\n看到/买到：\n\n下次想去：",
+    tags: "逛街、想再去"
+  },
+  {
+    id: "chat",
+    label: "聊天",
+    title: "今天聊到一些值得记住的话",
+    mood: "感动",
+    content: "聊到的事：\n\nTA 的想法：\n\n我想记住：",
+    tags: "聊天、相处"
+  },
+  {
+    id: "trip",
+    label: "出行",
+    title: "一次小出行",
+    mood: "开心",
+    content: "去了哪里：\n\n路线/体验：\n\n下次注意：",
+    tags: "出行、旅行"
+  },
+  {
+    id: "gift",
+    label: "礼物",
+    title: "记录一个礼物线索",
+    mood: "期待",
+    content: "TA 提到/喜欢：\n\n适合的礼物：\n\n需要避开：",
+    tags: "礼物、喜好"
+  }
+];
 const STRUCTURED_MEMORY_TEMPLATES = [
   {
     label: "三段记录",
@@ -88,6 +138,8 @@ export function MemoryFields({
       : "")
   );
   const [quickDetailsContent, setQuickDetailsContent] = useState(getDraftValue(draftValues, "content"));
+  const [quickTags, setQuickTags] = useState(getDraftValue(draftValues, "tags"));
+  const [activeSceneId, setActiveSceneId] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(() => hasRestoredQuickDetails(draftValues));
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => selectedPersonIds);
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
@@ -174,6 +226,24 @@ export function MemoryFields({
             ))}
           </div>
         )}
+        <div className="quick-scene-strip" aria-label="快速记录场景">
+          {QUICK_SCENE_PRESETS.map((scene) => (
+            <button
+              type="button"
+              className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
+              key={scene.id}
+              onClick={() => {
+                setActiveSceneId(scene.id);
+                setQuickContent(scene.title);
+                setMood(scene.mood);
+                setQuickTags(scene.tags);
+                setQuickDetailsContent((current) => current.trim() ? current : scene.content);
+              }}
+            >
+              {scene.label}
+            </button>
+          ))}
+        </div>
         <label>
           这件事
           <input
@@ -275,7 +345,8 @@ export function MemoryFields({
               小标签
               <input
                 name="tags"
-                defaultValue={getDraftValue(draftValues, "tags")}
+                value={quickTags}
+                onChange={(event) => setQuickTags(event.target.value)}
                 placeholder="日常、好吃、想再去、值得记住"
               />
             </label>
@@ -304,7 +375,7 @@ export function MemoryFields({
         {!detailsOpen && quickPersonIds.map((personId) => <input key={personId} type="hidden" name="personIds" value={personId} />)}
         {!detailsOpen && <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />}
         {!detailsOpen && quickPlaceIds.map((placeId) => <input key={placeId} type="hidden" name="placeIds" value={placeId} />)}
-        {!detailsOpen && <input type="hidden" name="tags" value="" />}
+        {!detailsOpen && <input type="hidden" name="tags" value={quickTags} />}
         <input type="hidden" name="memoryMode" value="quick" />
         <p className="form-hint">人物、地点和照片都可以先不管，之后想起来再补也可以。</p>
       </>

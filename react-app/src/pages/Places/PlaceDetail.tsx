@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, ExternalLink, MapPin, Navigation, QrCode, Share2, Star, Store, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, Heart, MapPin, Navigation, PenLine, QrCode, Share2, Sparkles, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
@@ -58,6 +58,19 @@ export default function PlaceDetail() {
   const photos = (place.photos || []).slice(0, 3);
   const platformLinks = normalizePlacePlatformLinks(place.platformLinks);
   const referenceUrl = getPlaceReferenceUrl(place);
+  const nextUseCards = buildPlaceNextUseCards({
+    place,
+    topPeople,
+    visitStats,
+    hasMap: Boolean(place.mapUrl || (place.latitude && place.longitude)),
+    hasReference: Boolean(referenceUrl || platformLinks.length),
+    onRecordMemory: () => setAddingMemory(true),
+    onEditPlace: () => setEditing(true),
+    onOpenMap: () => {
+      void openPlaceMap(place);
+    },
+    onOpenPerson: (personId) => navigate(`/people/${personId}`)
+  });
   const completionTips: CompletionTip[] = [
     {
       id: "mapLink",
@@ -168,6 +181,26 @@ export default function PlaceDetail() {
       </section>
 
       <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
+
+      <section className="section">
+        <div className="section-header">
+          <h2>
+            <Sparkles /> 下次怎么用
+          </h2>
+          <button className="see-all" type="button" onClick={() => setAddingMemory(true)}>
+            记到访
+          </button>
+        </div>
+        <div className="place-use-grid">
+          {nextUseCards.map((card) => (
+            <button className={`place-use-card glass-card ${card.tone}`} type="button" key={card.id} onClick={card.onClick}>
+              <span>{card.icon}</span>
+              <strong>{card.title}</strong>
+              <small>{card.desc}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="section">
         <div className="section-header">
@@ -336,4 +369,78 @@ export default function PlaceDetail() {
       />
     </>
   );
+}
+
+function buildPlaceNextUseCards({
+  place,
+  topPeople,
+  visitStats,
+  hasMap,
+  hasReference,
+  onRecordMemory,
+  onEditPlace,
+  onOpenMap,
+  onOpenPerson
+}: {
+  place: {
+    category: string;
+    rating: number;
+    desc: string;
+    tags: string[];
+  };
+  topPeople: Array<{ id: string; label: string; count: number }>;
+  visitStats: { visitCount: number; latestLabel: string };
+  hasMap: boolean;
+  hasReference: boolean;
+  onRecordMemory: () => void;
+  onEditPlace: () => void;
+  onOpenMap: () => void;
+  onOpenPerson: (personId: string) => void;
+}) {
+  const category = place.category || "地点";
+  const peopleHint = topPeople.length ? `适合和 ${topPeople.map((item) => item.label).join("、")} 再来。` : "下次记录到访时可以顺手关联人物。";
+  const tagHint = place.tags.length ? place.tags.slice(0, 3).join("、") : place.desc || "还没有推荐点，可以下次到访后补一句。";
+
+  return [
+    {
+      id: "occasion",
+      icon: <Heart />,
+      title: getPlaceOccasionTitle(category),
+      desc: peopleHint,
+      tone: "warm",
+      onClick: topPeople[0] ? () => onOpenPerson(topPeople[0].id) : onRecordMemory
+    },
+    {
+      id: "recommend",
+      icon: <Sparkles />,
+      title: place.rating ? `评分 ${place.rating}` : "补一个推荐点",
+      desc: tagHint,
+      tone: place.tags.length || place.desc ? "cool" : "warm",
+      onClick: onEditPlace
+    },
+    {
+      id: "route",
+      icon: hasMap ? <Navigation /> : <MapPin />,
+      title: hasMap ? "可以直接导航" : "还缺地图入口",
+      desc: hasMap ? "下次出门前可以从这里打开地图或店铺链接。" : "补充地图链接后，下次不用重新搜索。",
+      tone: hasMap ? "cool" : "warm",
+      onClick: hasMap ? onOpenMap : onEditPlace
+    },
+    {
+      id: "record",
+      icon: <PenLine />,
+      title: visitStats.visitCount ? `已经去过 ${visitStats.visitCount} 次` : "还没有到访回忆",
+      desc: visitStats.visitCount ? `${visitStats.latestLabel}，下次可以补充点单、体验或避雷。` : hasReference ? "点这里记录第一次到访。" : "先记录一次到访，让这个地点更有故事。",
+      tone: visitStats.visitCount ? "cool" : "warm",
+      onClick: onRecordMemory
+    }
+  ];
+}
+
+function getPlaceOccasionTitle(category: string) {
+  if (/餐|饭|咖啡|茶|甜|酒|火锅|烤|料理|小吃/.test(category)) return "适合约饭";
+  if (/酒店|民宿|住宿/.test(category)) return "适合住一晚";
+  if (/景点|公园|展|馆|影院|电影|剧场/.test(category)) return "适合安排活动";
+  if (/商场|店|购物|买/.test(category)) return "适合逛一逛";
+  return "适合下次再来";
 }

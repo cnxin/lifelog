@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.92",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.92",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.92/lifelog-v0.1.0-test.92.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.92.apk",
-    "apkName":  "lifelog-v0.1.0-test.92.apk",
-    "apkSize":  3686395,
-    "apkSha256":  "4bf6da1ce86d6cbd6960e201f8d75c47aa2fbffdfa028bbcc28a4c4c0e3cda90",
-    "publishedAt":  "2026-06-02T03:03:32Z",
-    "body":  "- 首页首屏新增生活场景入口，可直接选择记一件事、记一个人、记一个地方或准备一个日子。\n- 快速回忆表单改为更生活化的表达，从先留下这一刻、这件事、当时感觉开始，降低分类和字段压力。\n- 全局新增面板和详情页快捷操作改为当前页面语境，例如记和 TA 的事、记这里发生的事。\n- 首页快速记录收件箱和待补全提示改为先记后补的表达，减少数据管理感。"
+    "version":  "0.1.0-test.93",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.93",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.93/lifelog-v0.1.0-test.93.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.93.apk",
+    "apkName":  "lifelog-v0.1.0-test.93.apk",
+    "apkSize":  3688275,
+    "apkSha256":  "fc74fa56c63a0da10d52ca55889603cba7139a23bfe2ebb46bd927dd45f3c831",
+    "publishedAt":  "2026-06-02T04:46:17Z",
+    "body":  "- 快速回忆新增吃饭、约会、逛街、聊天、出行、礼物等场景模板，可一键预填标题、心情、标签和补充提纲。\n- 人物详情行动中心改为相处小抄，支持直接记录互动、跳转纪念日、打开常去地点和编辑喜好或雷区。\n- 地点详情新增下次怎么用，根据地点类型、常关联人物、评分、标签和地图信息给出下一次使用建议。\n- 人物和地点详情的建议卡片都接入实际操作，减少看得到但不能直接行动的入口。"
 }
