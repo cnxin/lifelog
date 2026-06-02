@@ -6,10 +6,11 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
+import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanTargetKind } from "../../types";
-import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
+import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind, type AnniversaryPlanTarget } from "../../utils/anniversaryPlans";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
@@ -20,11 +21,15 @@ import { useEffect, useRef, useState } from "react";
 interface PlanningTarget {
   anniversaryKey: string;
   targetKind: AnniversaryPlanTargetKind;
+  planId?: string;
 }
 
 interface HistoryTarget {
   anniversaryKey: string;
-  targetKind: AnniversaryPlanTargetKind;
+}
+
+interface PlanListTarget {
+  anniversaryKey: string;
 }
 
 export default function PersonDetail() {
@@ -32,6 +37,7 @@ export default function PersonDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const confirm = useConfirm();
   const { state, getPersonName, getPlaceName, saveAnniversaryPlan, deleteAnniversaryPlan, updatePersonProfile } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
@@ -40,6 +46,7 @@ export default function PersonDetail() {
   const [memoryInitialPlaceIds, setMemoryInitialPlaceIds] = useState<string[]>([]);
   const [planningTarget, setPlanningTarget] = useState<PlanningTarget | null>(null);
   const [historyTarget, setHistoryTarget] = useState<HistoryTarget | null>(null);
+  const [planListTarget, setPlanListTarget] = useState<PlanListTarget | null>(null);
   const [memoryPlanId, setMemoryPlanId] = useState<string | undefined>();
   const [editingPreferenceMode, setEditingPreferenceMode] = useState<PersonPreferenceMode | null>(null);
   const anniversariesRef = useRef<HTMLElement>(null);
@@ -105,31 +112,31 @@ export default function PersonDetail() {
     onEditPreference: (mode) => setEditingPreferenceMode(mode)
   });
   const selectedAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planningTarget?.anniversaryKey);
-  const selectedOccurrence = selectedAnniversary ? buildAnniversaryOccurrence(selectedAnniversary.date) : null;
-  const selectedMilestone = selectedAnniversary ? buildNextAnniversaryMilestone(selectedAnniversary) : null;
-  const selectedPlanTarget = selectedAnniversary && planningTarget?.targetKind === "milestone"
-    ? selectedMilestone
-      ? buildMilestonePlanTarget(selectedMilestone)
-      : null
-    : selectedOccurrence
-    ? buildAnnualPlanTarget(selectedOccurrence)
-    : null;
-  const selectedPlan = selectedAnniversary && selectedPlanTarget
-    ? findPlanForAnniversaryTarget(state.anniversaryPlans, person.id, selectedAnniversary, selectedPlanTarget)
+  const selectedExistingPlan = planningTarget?.planId
+    ? state.anniversaryPlans.find((item) => item.id === planningTarget.planId && item.personId === person.id)
     : undefined;
+  const selectedPlanTarget = selectedAnniversary
+    ? buildPlanningTargetForSheet(selectedAnniversary, planningTarget, selectedExistingPlan)
+    : null;
+  const selectedPlan = selectedExistingPlan || (selectedAnniversary && selectedPlanTarget
+    ? findPlanForAnniversaryTarget(state.anniversaryPlans, person.id, selectedAnniversary, selectedPlanTarget)
+    : undefined);
   const selectedPlanHistory = selectedAnniversary && selectedPlanTarget?.targetKind === "annual"
     ? findAnnualPlanHistory(state.anniversaryPlans, person.id, selectedAnniversary, selectedPlanTarget.occurrenceYear)
     : [];
+  const selectedListAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === planListTarget?.anniversaryKey);
+  const selectedListPlans = selectedListAnniversary ? buildAnniversaryPlanList(state.anniversaryPlans, person.id, selectedListAnniversary) : [];
   const selectedHistoryAnniversary = person.anniversaries.find((item) => getAnniversaryKey(item) === historyTarget?.anniversaryKey);
   const selectedHistoryOccurrence = selectedHistoryAnniversary ? buildAnniversaryOccurrence(selectedHistoryAnniversary.date) : null;
   const selectedHistoryMilestone = selectedHistoryAnniversary ? buildNextAnniversaryMilestone(selectedHistoryAnniversary) : null;
-  const selectedHistoryPlans = selectedHistoryAnniversary && selectedHistoryOccurrence
-    ? historyTarget?.targetKind === "milestone"
-      ? findMilestonePlanHistory(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryMilestone ? {
-          targetDate: selectedHistoryMilestone.date,
-          milestoneDay: selectedHistoryMilestone.milestoneDay
-        } : undefined)
-      : findAnnualPlanHistory(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryOccurrence.year)
+  const selectedAnnualHistoryPlans = selectedHistoryAnniversary && selectedHistoryOccurrence
+    ? findAnnualPlanHistory(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryOccurrence.year)
+    : [];
+  const selectedMilestoneHistoryPlans = selectedHistoryAnniversary
+    ? findMilestonePlanHistory(state.anniversaryPlans, person.id, selectedHistoryAnniversary, selectedHistoryMilestone ? {
+        targetDate: selectedHistoryMilestone.date,
+        milestoneDay: selectedHistoryMilestone.milestoneDay
+      } : undefined)
     : [];
   const completionTips: CompletionTip[] = [
     {
@@ -306,6 +313,8 @@ export default function PersonDetail() {
               targetDate: milestone.date,
               milestoneDay: milestone.milestoneDay
             } : undefined);
+            const allPlans = buildAnniversaryPlanList(state.anniversaryPlans, person.id, item);
+            const historyCount = historyPlans.length + milestoneHistoryPlans.length;
             return (
               <GlassCard className="anniversary-detail-card" key={`${item.title}-${item.date}`}>
                 <div className="anniversary-detail-head">
@@ -328,19 +337,11 @@ export default function PersonDetail() {
                 )}
                 <AnniversaryPlanSummary plan={plan} />
                 <div className="anniversary-plan-actions">
-                  <button type="button" onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "annual" })}>
-                    {plan ? "查看安排" : "添加安排"}
+                  <button type="button" onClick={() => setPlanListTarget({ anniversaryKey: getAnniversaryKey(item) })}>
+                    {allPlans.length ? `安排 ${allPlans.length}` : "添加安排"}
                   </button>
-                  {milestone && (
-                    <button type="button" onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "milestone" })}>
-                      {milestonePlan ? "查看节点安排" : "添加节点安排"}
-                    </button>
-                  )}
-                  <button type="button" onClick={() => setHistoryTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "annual" })}>
-                    {historyPlans.length ? `往年安排 ${historyPlans.length}` : "往年安排"}
-                  </button>
-                  <button type="button" onClick={() => setHistoryTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "milestone" })}>
-                    {milestoneHistoryPlans.length ? `节点历史 ${milestoneHistoryPlans.length}` : "节点历史"}
+                  <button type="button" onClick={() => setHistoryTarget({ anniversaryKey: getAnniversaryKey(item) })}>
+                    {historyCount ? `历史 ${historyCount}` : "历史"}
                   </button>
                   {plan?.memoryId && (
                     <button type="button" onClick={() => navigate(`/memories/${plan.memoryId}`)}>
@@ -446,6 +447,12 @@ export default function PersonDetail() {
             await saveAnniversaryPlan(plan);
           }}
           onDelete={async (planId) => {
+            const accepted = await confirm({
+              title: "删除纪念日安排",
+              message: "确认删除这条安排？待办、预算、地点和关联回忆信息都会从安排中移除。",
+              confirmText: "删除"
+            });
+            if (!accepted) return;
             await deleteAnniversaryPlan(planId);
             setPlanningTarget(null);
           }}
@@ -458,13 +465,58 @@ export default function PersonDetail() {
           }}
         />
       )}
+      {selectedListAnniversary && (
+        <AnniversaryPlanListSheet
+          person={person}
+          anniversary={selectedListAnniversary}
+          plans={selectedListPlans}
+          onClose={() => setPlanListTarget(null)}
+          onCreateAnnual={() => {
+            setPlanListTarget(null);
+            setPlanningTarget({ anniversaryKey: getAnniversaryKey(selectedListAnniversary), targetKind: "annual" });
+          }}
+          onCreateMilestone={() => {
+            setPlanListTarget(null);
+            setPlanningTarget({ anniversaryKey: getAnniversaryKey(selectedListAnniversary), targetKind: "milestone" });
+          }}
+          onEditPlan={(plan) => {
+            setPlanListTarget(null);
+            setPlanningTarget({
+              anniversaryKey: getAnniversaryKey(selectedListAnniversary),
+              targetKind: normalizeAnniversaryPlanTargetKind(plan),
+              planId: plan.id
+            });
+          }}
+          onDeletePlan={async (plan) => {
+            const accepted = await confirm({
+              title: "删除纪念日安排",
+              message: `确认删除「${plan.title}」？待办、预算、地点和关联回忆信息都会从安排中移除。`,
+              confirmText: "删除"
+            });
+            if (!accepted) return;
+            await deleteAnniversaryPlan(plan.id);
+          }}
+          onOpenMemory={(memoryId) => {
+            setPlanListTarget(null);
+            navigate(`/memories/${memoryId}`);
+          }}
+        />
+      )}
       {selectedHistoryAnniversary && (
         <AnniversaryPlanHistorySheet
           person={person}
           anniversary={selectedHistoryAnniversary}
-          targetKind={historyTarget?.targetKind || "annual"}
-          plans={selectedHistoryPlans}
+          annualPlans={selectedAnnualHistoryPlans}
+          milestonePlans={selectedMilestoneHistoryPlans}
           onClose={() => setHistoryTarget(null)}
+          onEditPlan={(plan) => {
+            setHistoryTarget(null);
+            setPlanningTarget({
+              anniversaryKey: getAnniversaryKey(selectedHistoryAnniversary),
+              targetKind: normalizeAnniversaryPlanTargetKind(plan),
+              planId: plan.id
+            });
+          }}
           onOpenMemory={(memoryId) => {
             setHistoryTarget(null);
             navigate(`/memories/${memoryId}`);
@@ -591,64 +643,299 @@ function daysSinceDate(date: string) {
   return Math.floor((today.getTime() - target.getTime()) / 86400000);
 }
 
-function AnniversaryPlanHistorySheet({
+function buildPlanningTargetForSheet(
+  anniversary: Anniversary,
+  planningTarget: PlanningTarget | null,
+  existingPlan?: AnniversaryPlan
+): AnniversaryPlanTarget | null {
+  if (existingPlan) return planToTarget(existingPlan);
+
+  const occurrence = buildAnniversaryOccurrence(anniversary.date);
+  if (planningTarget?.targetKind === "milestone") {
+    const milestone = buildNextAnniversaryMilestone(anniversary);
+    return milestone ? buildMilestonePlanTarget(milestone) : null;
+  }
+
+  return buildAnnualPlanTarget(occurrence);
+}
+
+function planToTarget(plan: AnniversaryPlan): AnniversaryPlanTarget {
+  const targetKind = normalizeAnniversaryPlanTargetKind(plan);
+  return {
+    targetKind,
+    occurrenceYear: plan.occurrenceYear,
+    targetDate: plan.targetDate,
+    daysUntilTarget: daysUntilDateValue(plan.targetDate),
+    milestoneDay: targetKind === "milestone" ? plan.milestoneDay : undefined,
+    milestoneLabel: targetKind === "milestone" ? plan.milestoneLabel : undefined
+  };
+}
+
+function buildAnniversaryPlanList(plans: AnniversaryPlan[], personId: string, anniversary: Anniversary) {
+  return plans
+    .filter((plan) =>
+      plan.personId === personId &&
+      plan.anniversaryTitle === anniversary.title &&
+      plan.anniversaryDate === anniversary.date
+    )
+    .sort((left, right) =>
+      right.targetDate.localeCompare(left.targetDate) ||
+      Number(normalizeAnniversaryPlanTargetKind(right) === "milestone") - Number(normalizeAnniversaryPlanTargetKind(left) === "milestone") ||
+      (right.milestoneDay || 0) - (left.milestoneDay || 0)
+    );
+}
+
+function daysUntilDateValue(date: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${date}T00:00:00`);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
+function AnniversaryPlanListSheet({
   person,
   anniversary,
-  targetKind,
   plans,
   onClose,
+  onCreateAnnual,
+  onCreateMilestone,
+  onEditPlan,
+  onDeletePlan,
   onOpenMemory
 }: {
   person: { name: string };
   anniversary: Anniversary;
-  targetKind: AnniversaryPlanTargetKind;
   plans: AnniversaryPlan[];
   onClose: () => void;
+  onCreateAnnual: () => void;
+  onCreateMilestone: () => void;
+  onEditPlan: (plan: AnniversaryPlan) => void;
+  onDeletePlan: (plan: AnniversaryPlan) => Promise<void>;
   onOpenMemory: (memoryId: string) => void;
 }) {
-  const isMilestone = targetKind === "milestone";
+  const hasMilestone = Boolean(buildNextAnniversaryMilestone(anniversary));
+  const annualPlans = plans.filter((plan) => normalizeAnniversaryPlanTargetKind(plan) === "annual");
+  const milestonePlans = plans.filter((plan) => normalizeAnniversaryPlanTargetKind(plan) === "milestone");
 
   return (
-    <div className="sheet anniversary-plan-history-sheet">
-      <button className="sheet-backdrop" type="button" aria-label={isMilestone ? "关闭节点历史" : "关闭往年安排"} onClick={onClose} />
+    <div className="sheet anniversary-plan-list-sheet">
+      <button className="sheet-backdrop" type="button" aria-label="关闭全部安排" onClick={onClose} />
       <section className="sheet-panel">
         <div className="sheet-handle" />
         <div className="sheet-header">
           <div>
             <p className="date-label">{person.name} · {anniversary.title}</p>
-            <h2>{isMilestone ? "节点历史" : "往年安排"}</h2>
+            <h2>管理安排</h2>
           </div>
           <button className="sheet-close" aria-label="关闭" onClick={onClose}>
             ×
           </button>
         </div>
+        <div className="plan-list-actions">
+          <button type="button" onClick={onCreateAnnual}>添加年度安排</button>
+          {hasMilestone && <button type="button" onClick={onCreateMilestone}>添加节点安排</button>}
+        </div>
         {plans.length ? (
-          <div className="plan-history-list expanded">
-            {plans.map((plan) => (
-              <div className={`plan-history-item ${plan.status}`} key={plan.id}>
-                <div className="plan-history-meta">
-                  <strong>{isMilestone ? (plan.milestoneLabel || "节点") : plan.occurrenceYear}</strong>
-                  <span>{planStatusLabel(plan.status)} · {plan.targetDate}</span>
-                </div>
-                <div className="plan-history-main">
-                  <strong>{plan.title}</strong>
-                  <span>
-                    {formatPlanProgress(plan)}
-                    {plan.budget ? ` · ${plan.budget}` : ""}
-                  </span>
-                </div>
-                {plan.memoryId && (
-                  <button type="button" className="plan-history-action" onClick={() => onOpenMemory(plan.memoryId!)}>
-                    查看回忆
-                  </button>
-                )}
-              </div>
-            ))}
+          <div className="plan-list-groups">
+            <PlanListGroup
+              title={`年度安排 ${annualPlans.length}`}
+              emptyText="还没有年度安排"
+              plans={annualPlans}
+              onEditPlan={onEditPlan}
+              onDeletePlan={onDeletePlan}
+              onOpenMemory={onOpenMemory}
+            />
+            <PlanListGroup
+              title={`节点安排 ${milestonePlans.length}`}
+              emptyText="还没有节点安排"
+              plans={milestonePlans}
+              onEditPlan={onEditPlan}
+              onDeletePlan={onDeletePlan}
+              onOpenMemory={onOpenMemory}
+            />
           </div>
         ) : (
-          <GlassCard className="empty">{isMilestone ? "还没有节点历史" : "还没有往年安排"}</GlassCard>
+          <GlassCard className="empty">还没有保存过安排，可以先添加年度安排或节点安排。</GlassCard>
         )}
       </section>
+    </div>
+  );
+}
+
+function PlanListGroup({
+  title,
+  emptyText,
+  plans,
+  onEditPlan,
+  onDeletePlan,
+  onOpenMemory
+}: {
+  title: string;
+  emptyText: string;
+  plans: AnniversaryPlan[];
+  onEditPlan: (plan: AnniversaryPlan) => void;
+  onDeletePlan: (plan: AnniversaryPlan) => Promise<void>;
+  onOpenMemory: (memoryId: string) => void;
+}) {
+  return (
+    <div className="plan-list-group">
+      <strong>{title}</strong>
+      {plans.length ? (
+        <div className="plan-history-list expanded">
+          {plans.map((plan) => (
+            <PlanListItem
+              plan={plan}
+              key={plan.id}
+              onEdit={() => onEditPlan(plan)}
+              onDelete={() => void onDeletePlan(plan)}
+              onOpenMemory={onOpenMemory}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="plan-list-empty">{emptyText}</div>
+      )}
+    </div>
+  );
+}
+
+function PlanListItem({
+  plan,
+  onEdit,
+  onDelete,
+  onOpenMemory
+}: {
+  plan: AnniversaryPlan;
+  onEdit: () => void;
+  onDelete?: () => void;
+  onOpenMemory: (memoryId: string) => void;
+}) {
+  const isMilestone = normalizeAnniversaryPlanTargetKind(plan) === "milestone";
+
+  return (
+    <div className={`plan-history-item plan-list-item ${plan.status}`}>
+      <button type="button" className="plan-list-open" onClick={onEdit}>
+        <div className="plan-history-meta">
+          <strong>{isMilestone ? (plan.milestoneLabel || "节点") : plan.occurrenceYear}</strong>
+          <span>{planStatusLabel(plan.status)} · {plan.targetDate}</span>
+        </div>
+        <div className="plan-history-main">
+          <strong>{plan.title}</strong>
+          <span>
+            {formatPlanProgress(plan)}
+            {plan.budget ? ` · ${plan.budget}` : ""}
+          </span>
+        </div>
+      </button>
+      <div className="plan-list-row-actions">
+        {plan.memoryId && (
+          <button type="button" className="plan-history-action" onClick={() => onOpenMemory(plan.memoryId!)}>
+            回忆
+          </button>
+        )}
+        <button type="button" className="plan-history-action" onClick={onEdit}>
+          编辑
+        </button>
+        {onDelete && (
+          <button type="button" className="plan-history-action danger" onClick={onDelete}>
+            删除
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AnniversaryPlanHistorySheet({
+  person,
+  anniversary,
+  annualPlans,
+  milestonePlans,
+  onClose,
+  onEditPlan,
+  onOpenMemory
+}: {
+  person: { name: string };
+  anniversary: Anniversary;
+  annualPlans: AnniversaryPlan[];
+  milestonePlans: AnniversaryPlan[];
+  onClose: () => void;
+  onEditPlan: (plan: AnniversaryPlan) => void;
+  onOpenMemory: (memoryId: string) => void;
+}) {
+  const hasPlans = annualPlans.length > 0 || milestonePlans.length > 0;
+
+  return (
+    <div className="sheet anniversary-plan-history-sheet">
+      <button className="sheet-backdrop" type="button" aria-label="关闭安排历史" onClick={onClose} />
+      <section className="sheet-panel">
+        <div className="sheet-handle" />
+        <div className="sheet-header">
+          <div>
+            <p className="date-label">{person.name} · {anniversary.title}</p>
+            <h2>安排历史</h2>
+          </div>
+          <button className="sheet-close" aria-label="关闭" onClick={onClose}>
+            ×
+          </button>
+        </div>
+        {hasPlans ? (
+          <div className="plan-list-groups">
+            <PlanHistoryGroup
+              title={`往年安排 ${annualPlans.length}`}
+              emptyText="还没有往年安排"
+              plans={annualPlans}
+              onEditPlan={onEditPlan}
+              onOpenMemory={onOpenMemory}
+            />
+            <PlanHistoryGroup
+              title={`节点历史 ${milestonePlans.length}`}
+              emptyText="还没有节点历史"
+              plans={milestonePlans}
+              onEditPlan={onEditPlan}
+              onOpenMemory={onOpenMemory}
+            />
+          </div>
+        ) : (
+          <GlassCard className="empty">还没有历史安排</GlassCard>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function PlanHistoryGroup({
+  title,
+  emptyText,
+  plans,
+  onEditPlan,
+  onOpenMemory
+}: {
+  title: string;
+  emptyText: string;
+  plans: AnniversaryPlan[];
+  onEditPlan: (plan: AnniversaryPlan) => void;
+  onOpenMemory: (memoryId: string) => void;
+}) {
+  return (
+    <div className="plan-list-group">
+      <strong>{title}</strong>
+      {plans.length ? (
+        <div className="plan-history-list expanded">
+          {plans.map((plan) => (
+            <PlanListItem
+              plan={plan}
+              key={plan.id}
+              onEdit={() => onEditPlan(plan)}
+              onDelete={undefined}
+              onOpenMemory={onOpenMemory}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="plan-list-empty">{emptyText}</div>
+      )}
     </div>
   );
 }

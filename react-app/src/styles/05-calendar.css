@@ -134,6 +134,53 @@
   background: var(--switch-knob);
 }
 
+.calendar-selected-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calendar-selected-title h2 {
+  min-width: 0;
+}
+
+.calendar-relative-pill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.calendar-relative-pill.today {
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 12%, transparent);
+}
+
+.calendar-relative-pill.past {
+  color: color-mix(in srgb, var(--text-sub) 88%, var(--text-main));
+  background: rgba(99, 110, 114, 0.1);
+}
+
+.calendar-relative-pill.future {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.calendar-empty-hint {
+  max-width: 100%;
+  margin-top: -8px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .calendar-item {
   border: 1px solid var(--line);
   display: grid;

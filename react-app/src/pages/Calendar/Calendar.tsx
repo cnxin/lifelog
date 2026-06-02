@@ -45,6 +45,7 @@ export default function Calendar() {
   const itemsByDate = useMemo(() => groupCalendarItemsByDate(items), [items]);
   const selectedItems = itemsByDate[selectedDate] || [];
   const selectedLunar = getLunarDateInfo(selectedDate);
+  const selectedRelative = getRelativeDateInfo(selectedDate, todayKey);
 
   function setSelectedDate(dateKey: string) {
     setSelectedDateState(dateKey);
@@ -140,7 +141,10 @@ export default function Calendar() {
 
       <section className="section">
         <div className="section-header">
-          <h2>{formatMonthDay(selectedDate)} 的记录</h2>
+          <div className="calendar-selected-title">
+            <h2>{formatMonthDay(selectedDate)} 的记录</h2>
+            <span className={`calendar-relative-pill ${selectedRelative.tone}`}>{selectedRelative.label}</span>
+          </div>
           <button className="see-all" onClick={() => setAddingMemory(true)}>
             补记
           </button>
@@ -171,6 +175,7 @@ export default function Calendar() {
           {!selectedItems.length && (
             <GlassCard className="empty empty-cta">
               <p>这一天还没有记录</p>
+              <span className="calendar-empty-hint">{selectedRelative.emptyHint}</span>
               <button className="primary-btn" onClick={() => setAddingMemory(true)}>
                 <PenLine size={16} /> 补记这一天
               </button>
@@ -186,4 +191,40 @@ export default function Calendar() {
       />
     </>
   );
+}
+
+function getRelativeDateInfo(dateKey: string, todayKey: string) {
+  const delta = diffCalendarDays(dateKey, todayKey);
+  if (delta === 0) {
+    return {
+      label: "今天",
+      emptyHint: "今天还没有记录，可以先留下一件小事。",
+      tone: "today"
+    };
+  }
+
+  if (delta > 0) {
+    return {
+      label: `${delta} 天后`,
+      emptyHint: `距离今天 ${delta} 天后，可以提前安排或补记。`,
+      tone: "future"
+    };
+  }
+
+  const daysAgo = Math.abs(delta);
+  return {
+    label: `${daysAgo} 天前`,
+    emptyHint: `这是 ${daysAgo} 天前，可以补上当时发生的事。`,
+    tone: "past"
+  };
+}
+
+function diffCalendarDays(targetDateKey: string, baseDateKey: string) {
+  return Math.round((dateKeyToUtcTime(targetDateKey) - dateKeyToUtcTime(baseDateKey)) / 86400000);
+}
+
+function dateKeyToUtcTime(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return 0;
+  return Date.UTC(year, month - 1, day);
 }
