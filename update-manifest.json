@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.93",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.93",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.93/lifelog-v0.1.0-test.93.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.93.apk",
-    "apkName":  "lifelog-v0.1.0-test.93.apk",
-    "apkSize":  3688275,
-    "apkSha256":  "fc74fa56c63a0da10d52ca55889603cba7139a23bfe2ebb46bd927dd45f3c831",
-    "publishedAt":  "2026-06-02T04:46:17Z",
-    "body":  "- 快速回忆新增吃饭、约会、逛街、聊天、出行、礼物等场景模板，可一键预填标题、心情、标签和补充提纲。\n- 人物详情行动中心改为相处小抄，支持直接记录互动、跳转纪念日、打开常去地点和编辑喜好或雷区。\n- 地点详情新增下次怎么用，根据地点类型、常关联人物、评分、标签和地图信息给出下一次使用建议。\n- 人物和地点详情的建议卡片都接入实际操作，减少看得到但不能直接行动的入口。"
+    "version":  "0.1.0-test.94",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.94",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.94/lifelog-v0.1.0-test.94.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.94.apk",
+    "apkName":  "lifelog-v0.1.0-test.94.apk",
+    "apkSize":  3689019,
+    "apkSha256":  "61a5a12b1525bd80b8f27f455a2cc2ed44196a04e56d44191496ccb8ecaa950a",
+    "publishedAt":  "2026-06-02T05:47:46Z",
+    "body":  "- 回忆详情首屏新增故事回看卡，优先展示这件事、日期心情、人物地点、照片和标签摘要。\n- 故事卡提供补充细节、查看关联人物或地点、再记一件相关回忆和分享入口，减少字段式详情带来的割裂感。\n- 从回忆详情再记一件时会自动带入当前关联人物和地点，方便连续记录同一次关系或场景。\n- 原有内容、标签、照片、人物、地点和相关回忆区保留在下方，兼顾快速回看和完整整理。"
 }

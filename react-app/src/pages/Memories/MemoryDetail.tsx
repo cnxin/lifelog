@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Heart, MapPin, QrCode, Share2, Sparkles, Tag, Users, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Calendar, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -30,6 +30,7 @@ export default function MemoryDetail() {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [addingRelatedMemory, setAddingRelatedMemory] = useState(false);
   const memory = state.memories.find((item) => item.id === memoryId);
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
@@ -99,6 +100,12 @@ export default function MemoryDetail() {
   const relatedMemoryMatches = buildRelatedMemoryMatches(memory, state.memories);
   const relatedReasonById = new Map(relatedMemoryMatches.map((item) => [item.memory.id, item.reason]));
   const groupedRelatedMemories = groupMemoriesByMonth(relatedMemoryMatches.map((item) => item.memory));
+  const memoryCtx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+  const memoryTitle = getMemoryDisplayTitle(memory, memoryCtx);
+  const storyFacts = buildMemoryStoryFacts(memory, memoryCtx, photoIds.length, linkedPlans.length);
+  const storyText = buildMemoryStoryText(memory, memoryCtx);
+  const firstPersonId = personIds[0];
+  const firstPlaceId = placeIds[0];
 
   return (
     <>
@@ -109,7 +116,7 @@ export default function MemoryDetail() {
               <ArrowLeft /> 返回回忆
             </button>
             <strong className="detail-compact-title">
-              {getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}
+              {memoryTitle}
             </strong>
           </div>
           <div className="detail-profile-body">
@@ -118,7 +125,7 @@ export default function MemoryDetail() {
             </div>
             <div className="profile-main">
               <div className="profile-title">
-                <h2>{getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName))}</h2>
+                <h2>{memoryTitle}</h2>
               </div>
               <p>
                 {formatMonthDay(memory.date)} · {memory.mood}
@@ -132,19 +139,46 @@ export default function MemoryDetail() {
       </section>
 
       <section className="section">
-        <GlassCard className="detail-share-card">
-          <div className="detail-share-copy">
-            <span className="detail-share-icon">
-              <Share2 />
+        <GlassCard className="memory-story-card">
+          <div className="memory-story-head">
+            <span className="memory-story-icon">
+              <Heart />
             </span>
             <div>
-              <strong>分享这条回忆</strong>
-              <span>可选择正文、人物、地点和照片是否公开，支持链接、二维码或分享包。</span>
+              <span>{formatMonthDay(memory.date)} · {memory.mood || "日常"}</span>
+              <strong>{memoryTitle}</strong>
             </div>
           </div>
-          <button className="detail-share-button" type="button" onClick={() => setShareOpen(true)}>
-            <QrCode /> 打开分享
-          </button>
+          <p>{storyText}</p>
+          <div className="memory-story-facts">
+            {storyFacts.map((fact) => (
+              <span key={fact}>{fact}</span>
+            ))}
+          </div>
+          <div className="memory-story-actions">
+            <button type="button" onClick={() => setEditing(true)}>
+              <PenLine /> {memory.content.trim() ? "补充细节" : "写下发生了什么"}
+            </button>
+            {firstPersonId ? (
+              <button type="button" onClick={() => navigate(`/people/${firstPersonId}`)}>
+                <Users /> 看 TA
+              </button>
+            ) : firstPlaceId ? (
+              <button type="button" onClick={() => navigate(`/places/${firstPlaceId}`)}>
+                <MapPin /> 看地点
+              </button>
+            ) : (
+              <button type="button" onClick={() => setEditing(true)}>
+                <Sparkles /> 补关联
+              </button>
+            )}
+            <button type="button" onClick={() => setAddingRelatedMemory(true)}>
+              <Heart /> 再记一件
+            </button>
+            <button type="button" onClick={() => setShareOpen(true)}>
+              <QrCode /> 分享
+            </button>
+          </div>
         </GlassCard>
       </section>
 
@@ -195,7 +229,7 @@ export default function MemoryDetail() {
       </section>
 
       {photos.length > 0 && (
-        <section className="section">
+        <section className="section" id="memory-photos">
           <div className="section-header">
             <h2>
               <ImageIcon /> 照片 ({photos.length})
@@ -302,13 +336,20 @@ export default function MemoryDetail() {
       )}
 
       <EntrySheet type={editing ? "memory" : null} itemId={memory.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={addingRelatedMemory ? "memory" : null}
+        memoryMode="quick"
+        initialPersonIds={personIds}
+        initialPlaceIds={placeIds}
+        onClose={() => setAddingRelatedMemory(false)}
+      />
       <LocalShareSheet
         target={
           shareOpen
             ? {
                 type: "memory",
                 memoryId: memory.id,
-                title: getMemoryDisplayTitle(memory, buildMemoryDisplayContext(memory, getPersonName, getPlaceName)),
+                title: memoryTitle,
                 photoCount: photoIds.length
               }
             : null
@@ -332,6 +373,27 @@ function formatLinkedPlanStatus(status: AnniversaryPlan["status"]) {
   if (status === "done") return "已完成";
   if (status === "skipped") return "已跳过";
   return "未开始";
+}
+
+function buildMemoryStoryText(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>) {
+  const content = memory.content.trim();
+  if (content) return content.length > 120 ? `${content.slice(0, 120)}...` : content;
+  const people = ctx.personNames.join("、");
+  const places = ctx.placeNames.join("、");
+  if (people && places) return `这是一段和 ${people} 在 ${places} 发生的回忆。`;
+  if (people) return `这是一段和 ${people} 有关的回忆。`;
+  if (places) return `这是一段发生在 ${places} 的回忆。`;
+  return "这条回忆还很轻，可以先保留，也可以补一句发生了什么。";
+}
+
+function buildMemoryStoryFacts(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>, photoCount: number, planCount: number) {
+  return [
+    ctx.personNames.length ? `${ctx.personNames.length} 位人物` : "未关联人物",
+    ctx.placeNames.length ? `${ctx.placeNames.length} 个地点` : "未关联地点",
+    photoCount ? `${photoCount} 张照片` : "暂无照片",
+    memory.tags.length ? `${memory.tags.slice(0, 2).join("、")}${memory.tags.length > 2 ? "..." : ""}` : "未加标签",
+    planCount ? `${planCount} 个安排来源` : ""
+  ].filter(Boolean);
 }
 
 function formatPlaceAddressLine(place: {
