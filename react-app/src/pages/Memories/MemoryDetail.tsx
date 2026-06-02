@@ -10,6 +10,7 @@ import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import { buildPlanAnniversaryPath } from "../../utils/anniversaryLinks";
 import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
@@ -262,7 +263,7 @@ export default function MemoryDetail() {
           </div>
           <div className="linked-plan-list">
             {linkedPlans.map((plan) => (
-              <button className="linked-plan-card glass-card" type="button" key={plan.id} onClick={() => navigate(`/people/${plan.personId}#anniversaries`)}>
+              <button className="linked-plan-card glass-card" type="button" key={plan.id} onClick={() => navigate(buildPlanAnniversaryPath(plan))}>
                 <div>
                   <strong>{getPersonName(plan.personId)} · {formatAnniversaryPlanTargetTitle(plan)}</strong>
                   <span>{formatLinkedPlanMeta(plan)}</span>

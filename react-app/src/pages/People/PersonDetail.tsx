@@ -10,6 +10,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanTargetKind } from "../../types";
+import { getAnniversaryKey } from "../../utils/anniversaryLinks";
 import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind, type AnniversaryPlanTarget } from "../../utils/anniversaryPlans";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
@@ -50,15 +51,19 @@ export default function PersonDetail() {
   const [memoryPlanId, setMemoryPlanId] = useState<string | undefined>();
   const [editingPreferenceMode, setEditingPreferenceMode] = useState<PersonPreferenceMode | null>(null);
   const anniversariesRef = useRef<HTMLElement>(null);
+  const anniversaryCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const selectedAnniversaryKey = searchParams.get("anniversary") || "";
 
   useEffect(() => {
     if (location.hash !== "#anniversaries" || !anniversariesRef.current) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
     const frameId = requestAnimationFrame(() => {
-      anniversariesRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" });
+      const target = selectedAnniversaryKey ? anniversaryCardRefs.current[selectedAnniversaryKey] : null;
+      scrollDetailTarget(target || anniversariesRef.current, behavior);
     });
     return () => cancelAnimationFrame(frameId);
-  }, [location.hash, personId]);
+  }, [location.hash, personId, selectedAnniversaryKey]);
 
   useEffect(() => {
     const planId = searchParams.get("recordPlan");
@@ -106,7 +111,7 @@ export default function PersonDetail() {
     getPlaceName,
     onRecordMemory: () => setAddingMemory(true),
     onOpenAnniversaries: () => {
-      document.getElementById("person-anniversaries")?.scrollIntoView({ behavior: "smooth" });
+      scrollDetailTarget(anniversariesRef.current, "smooth");
     },
     onOpenPlace: (placeId) => navigate(`/places/${placeId}`),
     onEditPreference: (mode) => setEditingPreferenceMode(mode)
@@ -315,46 +320,57 @@ export default function PersonDetail() {
             } : undefined);
             const allPlans = buildAnniversaryPlanList(state.anniversaryPlans, person.id, item);
             const historyCount = historyPlans.length + milestoneHistoryPlans.length;
+            const anniversaryKey = getAnniversaryKey(item);
+            const isSelectedAnniversary = anniversaryKey === selectedAnniversaryKey;
             return (
-              <GlassCard className="anniversary-detail-card" key={`${item.title}-${item.date}`}>
-                <div className="anniversary-detail-head">
-                  <strong>{item.title}</strong>
-                  <span className="anniversary-detail-date">{item.date}</span>
-                </div>
-                <div className="anniversary-detail-meta">
-                  {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? birthdayAgeLabel(item.date) : anniversaryYearLabel(item.date)}
-                </div>
-                {milestone && (
-                  <button
-                    className={`anniversary-milestone-line ${milestonePlan ? "has-plan" : ""}`}
-                    type="button"
-                    onClick={() => setPlanningTarget({ anniversaryKey: getAnniversaryKey(item), targetKind: "milestone" })}
-                  >
-                    <span>{milestone.label}</span>
-                    <strong>{milestonePlan ? planStatusLabel(milestonePlan.status) : formatDaysUntilLabel(milestone.days)}</strong>
-                    <small>{milestone.date}</small>
-                  </button>
-                )}
-                <AnniversaryPlanSummary plan={plan} />
-                <div className="anniversary-plan-actions">
-                  <button type="button" onClick={() => setPlanListTarget({ anniversaryKey: getAnniversaryKey(item) })}>
-                    {allPlans.length ? `安排 ${allPlans.length}` : "添加安排"}
-                  </button>
-                  <button type="button" onClick={() => setHistoryTarget({ anniversaryKey: getAnniversaryKey(item) })}>
-                    {historyCount ? `历史 ${historyCount}` : "历史"}
-                  </button>
-                  {plan?.memoryId && (
-                    <button type="button" onClick={() => navigate(`/memories/${plan.memoryId}`)}>
-                      已记录回忆
+              <div
+                className="anniversary-card-anchor"
+                id={`person-anniversary-${encodeURIComponent(anniversaryKey)}`}
+                key={`${item.title}-${item.date}`}
+                ref={(node) => {
+                  anniversaryCardRefs.current[anniversaryKey] = node;
+                }}
+              >
+                <GlassCard className={`anniversary-detail-card ${isSelectedAnniversary ? "targeted" : ""}`}>
+                  <div className="anniversary-detail-head">
+                    <strong>{item.title}</strong>
+                    <span className="anniversary-detail-date">{item.date}</span>
+                  </div>
+                  <div className="anniversary-detail-meta">
+                    {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? birthdayAgeLabel(item.date) : anniversaryYearLabel(item.date)}
+                  </div>
+                  {milestone && (
+                    <button
+                      className={`anniversary-milestone-line ${milestonePlan ? "has-plan" : ""}`}
+                      type="button"
+                      onClick={() => setPlanningTarget({ anniversaryKey, targetKind: "milestone" })}
+                    >
+                      <span>{milestone.label}</span>
+                      <strong>{milestonePlan ? planStatusLabel(milestonePlan.status) : formatDaysUntilLabel(milestone.days)}</strong>
+                      <small>{milestone.date}</small>
                     </button>
                   )}
-                  {milestonePlan?.memoryId && (
-                    <button type="button" onClick={() => navigate(`/memories/${milestonePlan.memoryId}`)}>
-                      已记录节点回忆
+                  <AnniversaryPlanSummary plan={plan} />
+                  <div className="anniversary-plan-actions">
+                    <button type="button" onClick={() => setPlanListTarget({ anniversaryKey })}>
+                      {allPlans.length ? `安排 ${allPlans.length}` : "添加安排"}
                     </button>
-                  )}
-                </div>
-              </GlassCard>
+                    <button type="button" onClick={() => setHistoryTarget({ anniversaryKey })}>
+                      {historyCount ? `历史 ${historyCount}` : "历史"}
+                    </button>
+                    {plan?.memoryId && (
+                      <button type="button" onClick={() => navigate(`/memories/${plan.memoryId}`)}>
+                        已记录回忆
+                      </button>
+                    )}
+                    {milestonePlan?.memoryId && (
+                      <button type="button" onClick={() => navigate(`/memories/${milestonePlan.memoryId}`)}>
+                        已记录节点回忆
+                      </button>
+                    )}
+                  </div>
+                </GlassCard>
+              </div>
             );
           })}
           {!person.anniversaries.length && (
@@ -994,12 +1010,34 @@ function buildAnniversaryOccurrence(date: string) {
   };
 }
 
-function getAnniversaryKey(anniversary: Anniversary) {
-  return `${anniversary.title}|${anniversary.date}`;
-}
-
 function formatDateValue(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function scrollDetailTarget(element: HTMLElement | null, behavior: ScrollBehavior) {
+  if (!element) return;
+  const scrollRoot = document.querySelector<HTMLElement>(".main-content");
+  if (!scrollRoot) {
+    element.scrollIntoView({ behavior, block: "start" });
+    return;
+  }
+
+  requestAnimationFrame(() => alignDetailTarget(element, scrollRoot, behavior));
+}
+
+function alignDetailTarget(element: HTMLElement, scrollRoot: HTMLElement, behavior: ScrollBehavior) {
+  const rootRect = scrollRoot.getBoundingClientRect();
+  const targetRect = element.getBoundingClientRect();
+  scrollRoot.scrollTo({
+    top: scrollRoot.scrollTop + targetRect.top - rootRect.top - getDetailScrollOffset(scrollRoot),
+    behavior
+  });
+}
+
+function getDetailScrollOffset(scrollRoot: HTMLElement | null) {
+  const detailHeader = scrollRoot?.querySelector<HTMLElement>(".detail-hero-section");
+  const headerHeight = detailHeader?.getBoundingClientRect().height || 76;
+  return Math.min(Math.max(headerHeight + 50, 124), 220);
 }
 
 function planStatusLabel(status: AnniversaryPlan["status"]) {

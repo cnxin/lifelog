@@ -1,5 +1,6 @@
 import type { AnniversaryPlan, ID, LifeLogState, MemoryEvent, Person, Place } from "../types";
 import { formatAnniversaryPlanTargetTitle } from "./anniversaryPlans";
+import { buildPlanAnniversaryPath } from "./anniversaryLinks";
 import { findPlaceDuplicateGroups } from "./placeDedup";
 import { buildPlaceDisplayName } from "./placeMeta";
 import { isRecord } from "./lifelogHelpers";
@@ -420,7 +421,7 @@ function buildRecordHealthDetailItems(state: LifeLogState): BackupHealthDetailIt
         id: `plan-empty-${plan.id}`,
         title: `${peopleById.get(plan.personId) || "某人"}的${formatAnniversaryPlanTargetTitle(plan)}安排还没有内容`,
         desc: `${plan.targetDate || plan.occurrenceYear} · 可补充待办、预算、地点或备注。`,
-        path: `/people/${plan.personId}#anniversaries`
+        path: buildPlanAnniversaryPath(plan)
       });
     });
 
@@ -431,7 +432,7 @@ function buildRecordHealthDetailItems(state: LifeLogState): BackupHealthDetailIt
         id: `plan-memory-${plan.id}`,
         title: `${peopleById.get(plan.personId) || "某人"}的${formatAnniversaryPlanTargetTitle(plan)}已完成但未关联回忆`,
         desc: "关联当天回忆后，往年安排回看会更完整。",
-        path: `/people/${plan.personId}#anniversaries`
+        path: buildPlanAnniversaryPath(plan)
       });
     });
 

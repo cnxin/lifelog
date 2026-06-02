@@ -79,6 +79,13 @@ if (!grouped["2026-06-01"]?.some((item) => item.title === "王芳媛 · 订婚 �
   failures.push(`Missing milestone anniversary on 2026-06-01: ${JSON.stringify(grouped["2026-06-01"])}`);
 }
 
+const anniversaryTargets = (grouped["2026-06-01"] || [])
+  .filter((item) => item.type === "person")
+  .map((item) => item.target);
+if (!anniversaryTargets.every((target) => target.includes("anniversary=%E8%AE%A2%E5%A9%9A%7C2025-06-01#anniversaries"))) {
+  failures.push(`Anniversary calendar targets should include the specific anniversary key: ${JSON.stringify(anniversaryTargets)}`);
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);

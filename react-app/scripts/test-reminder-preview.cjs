@@ -134,7 +134,7 @@ if (!futureAnniversaryPreview?.body.includes("还有 6 天") || !futureAnniversa
   failures.push(`Anniversary preview should use target-day distance, got: ${JSON.stringify(futureAnniversaryPreview)}`);
 }
 
-if (futureAnniversaryPreview?.sourcePath !== "/people/p1#anniversaries") {
+if (futureAnniversaryPreview?.sourcePath !== `/people/p1?anniversary=${encodeURIComponent(`相识日|${futureAnniversary}`)}#anniversaries`) {
   failures.push(`Anniversary preview should link to the person's anniversaries, got: ${JSON.stringify(futureAnniversaryPreview)}`);
 }
 
@@ -148,7 +148,7 @@ if (!milestonePreview?.body.includes("还有 3 天") || !milestonePreview.body.i
   failures.push(`Milestone preview should show target-day distance, got: ${JSON.stringify(milestonePreview)}`);
 }
 
-if (milestonePreview?.sourcePath !== "/people/p3#anniversaries") {
+if (milestonePreview?.sourcePath !== `/people/p3?anniversary=${encodeURIComponent(`相识日|${milestoneStart}`)}#anniversaries`) {
   failures.push(`Milestone preview should link to the person's anniversaries, got: ${JSON.stringify(milestonePreview)}`);
 }
 

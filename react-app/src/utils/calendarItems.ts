@@ -1,4 +1,5 @@
 import type { LifeLogState } from "../types";
+import { buildPersonAnniversaryPath } from "./anniversaryLinks";
 import {
   buildAnniversaryMilestoneDate,
   formatCalendarLunarSummary,
@@ -68,7 +69,7 @@ export function buildCalendarItemsForDateRange(
           subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
           subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
           type: "person",
-          target: `/people/${person.id}#anniversaries`
+          target: buildPersonAnniversaryPath(person.id, anniversary)
         });
       }
 
@@ -87,7 +88,7 @@ export function buildCalendarItemsForDateRange(
           subtitle: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean).join(" · "),
           subtitleLines: [summary.ganZhiLine, summary.weekLine, summary.lunarLine].filter(Boolean),
           type: "person",
-          target: `/people/${person.id}#anniversaries`
+          target: buildPersonAnniversaryPath(person.id, anniversary)
         });
       }
       return items;

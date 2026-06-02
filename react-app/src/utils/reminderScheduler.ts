@@ -1,6 +1,7 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import type { Person, MemoryEvent, ReminderSettings } from '../types';
+import { buildPersonAnniversaryPath } from './anniversaryLinks';
 import { daysUntil, anniversaryOccurrenceLabel, birthdayOccurrenceAgeLabel, buildUpcomingAnniversaryMilestones, formatDaysUntilLabel } from './date';
 
 const REMINDER_WINDOW_DAYS = 30;
@@ -181,7 +182,7 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
         previewBody: `${formatDaysUntilLabel(days)}就是 ${person.name} 的生日了，记得准备礼物哦 · 提前 ${settings.birthdayAdvanceDays} 天提醒`,
         sourceKind: "person",
         sourceId: person.id,
-        sourcePath: `/people/${person.id}#anniversaries`,
+        sourcePath: buildPersonAnniversaryPath(person.id, { title: "生日", date: person.birthday }),
         notification: {
           id: generateId('birthday-advance', person.id),
           title: `${person.name}的生日快到了`,
@@ -200,7 +201,7 @@ function generateBirthdayReminders(people: Person[], settings: ReminderSettings)
         leadLabel: "",
         sourceKind: "person",
         sourceId: person.id,
-        sourcePath: `/people/${person.id}#anniversaries`,
+        sourcePath: buildPersonAnniversaryPath(person.id, { title: "生日", date: person.birthday }),
         notification: {
           id: generateId('birthday-today', person.id),
           title: `今天是${person.name}的生日 🎂`,
@@ -235,7 +236,7 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
           previewBody: `${formatDaysUntilLabel(days)} · ${targetYearLabel} · 提前 ${settings.anniversaryAdvanceDays} 天提醒`,
           sourceKind: "person",
           sourceId: person.id,
-          sourcePath: `/people/${person.id}#anniversaries`,
+          sourcePath: buildPersonAnniversaryPath(person.id, anniversary),
           notification: {
             id: generateId('anniversary-advance', person.id, anniversary.title),
             title: `${person.name}的${anniversary.title}快到了`,
@@ -255,7 +256,7 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
           leadLabel: "",
           sourceKind: "person",
           sourceId: person.id,
-          sourcePath: `/people/${person.id}#anniversaries`,
+          sourcePath: buildPersonAnniversaryPath(person.id, anniversary),
           notification: {
             id: generateId('anniversary-today', person.id, anniversary.title),
             title: `今天是${person.name}的${anniversary.title}`,
@@ -284,7 +285,7 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
         previewBody: `${formatDaysUntilLabel(days)} · ${milestone.label} · 提前 ${settings.anniversaryAdvanceDays} 天提醒`,
         sourceKind: "person",
         sourceId: milestone.personId,
-        sourcePath: `/people/${milestone.personId}#anniversaries`,
+        sourcePath: buildPersonAnniversaryPath(milestone.personId, milestone.anniversary),
         notification: {
           id: generateId("anniversary-milestone-advance", milestone.personId, milestone.anniversary.title, String(milestone.milestoneDay)),
           title: `${milestone.personName}的${milestone.anniversary.title}${milestone.label}快到了`,
@@ -302,7 +303,7 @@ function generateAnniversaryReminders(people: Person[], settings: ReminderSettin
         leadLabel: "",
         sourceKind: "person",
         sourceId: milestone.personId,
-        sourcePath: `/people/${milestone.personId}#anniversaries`,
+        sourcePath: buildPersonAnniversaryPath(milestone.personId, milestone.anniversary),
         notification: {
           id: generateId("anniversary-milestone-today", milestone.personId, milestone.anniversary.title, String(milestone.milestoneDay)),
           title: days === 0

@@ -1149,6 +1149,17 @@ button.person-pref-line {
   padding: 14px;
 }
 
+.anniversary-card-anchor {
+  scroll-margin-top: 112px;
+}
+
+.anniversary-detail-card.targeted {
+  border-color: color-mix(in srgb, var(--primary) 42%, var(--line));
+  box-shadow:
+    0 12px 28px color-mix(in srgb, var(--primary) 13%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
 .anniversary-detail-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

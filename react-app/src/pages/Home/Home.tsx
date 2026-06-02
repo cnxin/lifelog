@@ -6,6 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
+import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
 import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
@@ -305,7 +306,7 @@ export default function Home() {
                 <button
                   key={`${item.personId}-${item.title}-${item.kind}-${item.date}-${"milestoneDay" in item ? item.milestoneDay : ""}`}
                   className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""} ${item.kind === "milestone" ? "milestone" : ""}`}
-                  onClick={() => navigate(`/people/${item.personId}#anniversaries`)}
+                  onClick={() => navigate(`/people/${item.personId}${buildPersonAnniversarySuffix(getUpcomingAnniversaryLinkTarget(item))}`)}
                 >
                   <div className="a-title">
                     {item.personName} · {item.title}
@@ -652,7 +653,7 @@ function buildRecordSuggestions({
       desc: `${missingPlan.label} · 先写一个想法，后面再补细节`,
       actionLabel: "去安排",
       tone: missingPlan.days <= 3 ? "warm" : "cool",
-      onClick: () => onOpenPerson(missingPlan.personId, "#anniversaries")
+      onClick: () => onOpenPerson(missingPlan.personId, buildPersonAnniversarySuffix(getUpcomingAnniversaryLinkTarget(missingPlan)))
     });
   }
 
@@ -795,7 +796,10 @@ function buildTodayActions({
       meta: todayPlanAction.meta,
       tone: "warm",
       canDismiss: true,
-      onClick: () => onOpenPerson(todayPlanAction.plan.personId, "#anniversaries")
+      onClick: () => onOpenPerson(todayPlanAction.plan.personId, buildPersonAnniversarySuffix({
+        title: todayPlanAction.plan.anniversaryTitle,
+        date: todayPlanAction.plan.anniversaryDate
+      }))
     });
   }
 
@@ -1022,12 +1026,19 @@ function navigateToReminderSource(
   onOpenPerson: (personId: string, hash?: string) => void,
   onOpenCalendar: () => void
 ) {
-  const personMatch = path.match(/^\/people\/([^#/?]+)(?:#anniversaries)?$/);
+  const personMatch = path.match(/^\/people\/([^#/?]+)((?:\?[^#]*)?)(?:#anniversaries)?$/);
   if (personMatch) {
-    onOpenPerson(personMatch[1], path.includes("#anniversaries") ? "#anniversaries" : "");
+    onOpenPerson(personMatch[1], `${personMatch[2] || ""}${path.includes("#anniversaries") ? "#anniversaries" : ""}`);
     return;
   }
   onOpenCalendar();
+}
+
+function getUpcomingAnniversaryLinkTarget(item: ReturnType<typeof getUpcomingAnniversaries>[number]) {
+  return {
+    title: item.title,
+    date: item.kind === "milestone" ? item.sourceDate : item.date
+  };
 }
 
 function findOnThisDayMemory(memories: MemoryEvent[]) {

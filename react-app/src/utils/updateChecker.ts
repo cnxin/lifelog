@@ -4,6 +4,9 @@ const LATEST_RELEASE_URL = "https://api.github.com/repos/cnxin/lifelog/releases/
 const GITEE_UPDATE_MANIFEST_URL = "https://gitee.com/api/v5/repos/ysjugg/lifelog/contents/update-manifest.json?ref=main";
 const UPDATE_MANIFEST_URL = "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/update-manifest.json";
 const RAW_UPDATE_MANIFEST_URL = "https://raw.githubusercontent.com/cnxin/lifelog/main/update-manifest.json";
+const PRIMARY_CHECK_TIMEOUT_MS = 5200;
+const FALLBACK_CHECK_TIMEOUT_MS = 3500;
+const FIRST_VALID_RESULT_GRACE_MS = 900;
 
 export interface AppUpdateInfo {
   currentVersion: string;
@@ -60,18 +63,45 @@ interface GiteeContentPayload {
   encoding?: string;
 }
 
+interface UpdateSource {
+  name: string;
+  fetcher: () => Promise<UpdateManifestPayload | GitHubReleasePayload | null>;
+}
+
+type UpdateSourceResult =
+  | { source: string; status: "fulfilled"; value: UpdateManifestPayload | GitHubReleasePayload | null }
+  | { source: string; status: "rejected"; reason: unknown }
+  | { source: string; status: "skipped"; reason: string };
+
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
-  const sources = [
-    { name: "Gitee 国内镜像清单", fetcher: () => fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL) },
-    { name: "GitHub raw 清单", fetcher: () => fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL) },
-    { name: "CDN 清单", fetcher: () => fetchUpdateManifest(UPDATE_MANIFEST_URL) },
-    { name: "GitHub Release", fetcher: fetchLatestRelease }
+  const primarySources: UpdateSource[] = [
+    { name: "Gitee 国内镜像清单", fetcher: () => fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL, PRIMARY_CHECK_TIMEOUT_MS) },
+    { name: "CDN 清单", fetcher: () => fetchUpdateManifest(UPDATE_MANIFEST_URL, PRIMARY_CHECK_TIMEOUT_MS) },
+    { name: "GitHub Release", fetcher: () => fetchLatestRelease(PRIMARY_CHECK_TIMEOUT_MS) }
   ];
-  const candidates = await Promise.allSettled(sources.map((source) => source.fetcher()));
-  const diagnostics = buildUpdateDiagnostics(candidates, sources.map((source) => source.name));
-  const updates = candidates
-    .flatMap((candidate) => (candidate.status === "fulfilled" && candidate.value ? [candidate.value] : []))
-    .flatMap((payload) => parseUpdateCandidate(payload, APP_VERSION));
+  const primaryResults = await settleUpdateSources(primarySources, {
+    timeoutMs: PRIMARY_CHECK_TIMEOUT_MS,
+    firstValidGraceMs: FIRST_VALID_RESULT_GRACE_MS
+  });
+  const primaryDiagnostics = buildUpdateDiagnostics(primaryResults);
+  const primaryUpdates = parseUpdateResults(primaryResults, APP_VERSION);
+
+  if (primaryUpdates.length > 0) {
+    return {
+      ...chooseBestAppUpdate(primaryUpdates, APP_VERSION),
+      diagnostics: primaryDiagnostics
+    };
+  }
+
+  const fallbackSources: UpdateSource[] = [
+    { name: "GitHub raw 清单", fetcher: () => fetchUpdateManifest(RAW_UPDATE_MANIFEST_URL, FALLBACK_CHECK_TIMEOUT_MS) }
+  ];
+  const fallbackResults = await settleUpdateSources(fallbackSources, {
+    timeoutMs: FALLBACK_CHECK_TIMEOUT_MS,
+    firstValidGraceMs: 0
+  });
+  const diagnostics = [...primaryDiagnostics, ...buildUpdateDiagnostics(fallbackResults)];
+  const updates = parseUpdateResults(fallbackResults, APP_VERSION);
 
   if (updates.length > 0) {
     return {
@@ -79,8 +109,71 @@ export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
       diagnostics
     };
   }
-
   throw new Error(`没有读取到可用的更新信息：${formatUpdateDiagnostics(diagnostics)}`);
+}
+
+async function settleUpdateSources(
+  sources: UpdateSource[],
+  options: { timeoutMs: number; firstValidGraceMs: number }
+): Promise<UpdateSourceResult[]> {
+  const pending = sources.map((source, index) => {
+    const promise = source.fetcher()
+      .then((value): UpdateSourceResult & { index: number } => ({ index, source: source.name, status: "fulfilled", value }))
+      .catch((reason): UpdateSourceResult & { index: number } => ({ index, source: source.name, status: "rejected", reason }));
+    return {
+      source,
+      promise,
+      settled: false
+    };
+  });
+  const results: Array<UpdateSourceResult | undefined> = [];
+  const startedAt = Date.now();
+  let deadline = startedAt + options.timeoutMs;
+
+  while (pending.some((item) => !item.settled)) {
+    const remainingMs = Math.max(0, deadline - Date.now());
+    if (remainingMs <= 0) break;
+    const active = pending.filter((item) => !item.settled);
+    const settled = await Promise.race([
+      ...active.map((item) => item.promise),
+      delay(remainingMs).then(() => null)
+    ]);
+    if (!settled) break;
+
+    pending[settled.index].settled = true;
+    results[settled.index] = settled;
+
+    if (options.firstValidGraceMs > 0 && hasValidUpdateResult([settled])) {
+      deadline = Math.min(deadline, Date.now() + options.firstValidGraceMs);
+    }
+  }
+
+  pending.forEach((item, index) => {
+    if (item.settled) return;
+    results[index] = {
+      source: item.source.name,
+      status: "skipped",
+      reason: "响应较慢，已跳过"
+    };
+  });
+
+  return results.filter((item): item is UpdateSourceResult => Boolean(item));
+}
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    getTimerHost().setTimeout(resolve, ms);
+  });
+}
+
+function hasValidUpdateResult(results: UpdateSourceResult[]) {
+  return parseUpdateResults(results).length > 0;
+}
+
+function parseUpdateResults(results: UpdateSourceResult[], currentVersion = APP_VERSION) {
+  return results
+    .flatMap((result) => (result.status === "fulfilled" && result.value ? [result.value] : []))
+    .flatMap((payload) => parseUpdateCandidate(payload, currentVersion));
 }
 
 function parseUpdateCandidate(payload: UpdateManifestPayload | GitHubReleasePayload, currentVersion = APP_VERSION) {
@@ -116,28 +209,51 @@ export function chooseBestAppUpdate(updates: AppUpdateInfo[], currentVersion = A
   };
 }
 
-async function fetchLatestRelease() {
-  const response = await fetch(LATEST_RELEASE_URL, {
+async function fetchLatestRelease(timeoutMs: number) {
+  const response = await fetchWithTimeout(LATEST_RELEASE_URL, {
     headers: { Accept: "application/vnd.github+json" },
     cache: "no-store"
-  });
+  }, timeoutMs);
   if (!response.ok) {
     throw new Error(`GitHub 返回 ${response.status}`);
   }
   return (await response.json()) as GitHubReleasePayload;
 }
 
-async function fetchUpdateManifest(url: string) {
+async function fetchUpdateManifest(url: string, timeoutMs: number) {
   const separator = url.includes("?") ? "&" : "?";
-  const response = await fetch(`${url}${separator}t=${Date.now()}`, {
+  const response = await fetchWithTimeout(`${url}${separator}t=${Date.now()}`, {
     cache: "no-store"
-  });
+  }, timeoutMs);
   if (!response.ok) return null;
   const payload = (await response.json()) as UpdateManifestPayload | GiteeContentPayload;
   return {
     ...normalizeManifestPayload(payload),
     source: formatManifestSource(url)
   } as UpdateManifestPayload & { source: string };
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timerHost = getTimerHost();
+  const timeoutId = timerHost.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`超过 ${Math.round(timeoutMs / 1000)} 秒未响应`);
+    }
+    throw error;
+  } finally {
+    timerHost.clearTimeout(timeoutId);
+  }
+}
+
+function getTimerHost(): Pick<Window, "setTimeout" | "clearTimeout"> {
+  return typeof window !== "undefined" ? window : globalThis;
 }
 
 function formatManifestSource(url: string) {
@@ -169,9 +285,9 @@ function decodeBase64Json(value: string) {
 
 function updateSourcePriority(source: string) {
   if (source.includes("Gitee")) return 0;
-  if (source.includes("GitHub raw")) return 1;
-  if (source.includes("CDN")) return 2;
-  if (source.includes("GitHub Release")) return 3;
+  if (source.includes("CDN")) return 1;
+  if (source.includes("GitHub Release")) return 2;
+  if (source.includes("GitHub raw")) return 3;
   return 4;
 }
 
@@ -229,11 +345,18 @@ export function parseGitHubReleasePayload(payload: GitHubReleasePayload, current
 }
 
 function buildUpdateDiagnostics(
-  candidates: PromiseSettledResult<UpdateManifestPayload | GitHubReleasePayload | null>[],
-  names: string[]
+  candidates: UpdateSourceResult[]
 ): UpdateSourceDiagnostic[] {
-  return candidates.map((candidate, index) => {
-    const source = names[index] || "更新来源";
+  return candidates.map((candidate) => {
+    const source = candidate.source || "更新来源";
+    if (candidate.status === "skipped") {
+      return {
+        source,
+        status: "failed",
+        message: candidate.reason
+      };
+    }
+
     if (candidate.status === "rejected") {
       return {
         source,

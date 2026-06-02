@@ -9,6 +9,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
+import { buildPlanAnniversaryPath, buildPlanRecordAnniversaryPath } from "../../utils/anniversaryLinks";
 import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
@@ -206,7 +207,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
       actions: status === "done"
         ? [{
             label: "记录回忆",
-            onClick: () => navigate(`/people/${plan.personId}?recordPlan=${encodeURIComponent(plan.id)}#anniversaries`)
+            onClick: () => navigate(buildPlanRecordAnniversaryPath(plan))
           }]
         : undefined
     });
@@ -399,7 +400,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
                     <small>{item.desc}</small>
                   </div>
                   <div className="reminder-center-actions">
-                    <button className="mini-action" type="button" onClick={() => navigate(`/people/${item.plan.personId}#anniversaries`)}>
+                    <button className="mini-action" type="button" onClick={() => navigate(buildPlanAnniversaryPath(item.plan))}>
                       <ExternalLink size={13} />
                       查看
                     </button>
