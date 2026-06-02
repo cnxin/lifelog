@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.96",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.96",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.96/lifelog-v0.1.0-test.96.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.96.apk",
-    "apkName":  "lifelog-v0.1.0-test.96.apk",
-    "apkSize":  3691479,
-    "apkSha256":  "7d2f1e3224f58b3e76072239817e9314817ea0d7822dcefd0a26dfb56c94c7ca",
-    "publishedAt":  "2026-06-02T12:44:26Z",
-    "body":  "- 日历选中任意日期后会显示今天、几天前或几天后，空状态也会提示相对今天的距离。\n- 人物详情的纪念日安排新增管理入口，可统一查看年度安排和节点安排。\n- 纪念日安排管理支持继续添加、编辑、删除安排，并保留打开关联回忆的操作。\n- 纪念日卡片外层入口收敛为安排和历史，历史页同时展示往年安排与节点历史，减少重复按钮。"
+    "version":  "0.1.0-test.97",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.97",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.97/lifelog-v0.1.0-test.97.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.97.apk",
+    "apkName":  "lifelog-v0.1.0-test.97.apk",
+    "apkSize":  3694083,
+    "apkSha256":  "ee4c195bfe2e8b737d53a4dd43ef553fca54d29616cf5c3b04de8c234ef50d41",
+    "publishedAt":  "2026-06-02T16:46:04Z",
+    "body":  "- 首页新增本地记录建议，会根据纪念日、已完成安排、今日记录、收藏人物和新地点提示下一步可以记录什么。\n- 记录建议点击后可直接进入对应安排、人物详情或快速回忆，并自动带入人物、地点和建议文案。\n- 日历选中日期新增概览卡，集中显示相对今天、农历周次、当天回忆、重要日子、人物和地点数量。\n- 日历支持通过 date 参数直接跳到指定月份，空日期只保留概览和补记入口，减少重复空状态。"
 }

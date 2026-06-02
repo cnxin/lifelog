@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.96`
+当前版本：`0.1.0-test.97`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.96
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.96/lifelog-v0.1.0-test.96.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.96.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.97
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.97/lifelog-v0.1.0-test.97.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.97.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.96.apk`
-- 大小：`3691479` bytes
-- SHA256：`7d2f1e3224f58b3e76072239817e9314817ea0d7822dcefd0a26dfb56c94c7ca`
+- 文件名：`lifelog-v0.1.0-test.97.apk`
+- 大小：`3694083` bytes
+- SHA256：`ee4c195bfe2e8b737d53a4dd43ef553fca54d29616cf5c3b04de8c234ef50d41`
 
 App 内检查更新会同时读取 Gitee API 清单、GitHub raw 清单、jsDelivr CDN 清单和 GitHub latest Release。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -272,12 +272,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.96` 主要变化：
+`0.1.0-test.97` 主要变化：
 
-- 日历选中任意日期后会显示今天、几天前或几天后，空状态也会提示相对今天的距离。
-- 人物详情的纪念日安排新增管理入口，可统一查看年度安排和节点安排。
-- 纪念日安排管理支持继续添加、编辑、删除安排，并保留打开关联回忆的操作。
-- 纪念日卡片外层入口收敛为安排和历史，历史页同时展示往年安排与节点历史，减少重复按钮。
+- 首页新增本地记录建议，会根据纪念日、已完成安排、今日记录、收藏人物和新地点提示下一步可以记录什么。
+- 记录建议点击后可直接进入对应安排、人物详情或快速回忆，并自动带入人物、地点和建议文案。
+- 日历选中日期新增概览卡，集中显示相对今天、农历周次、当天回忆、重要日子、人物和地点数量。
+- 日历支持通过 `date` 参数直接跳到指定月份，空日期只保留概览和补记入口，减少重复空状态。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 

@@ -1,15 +1,18 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Heart, PenLine } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTags from "../../components/MemoryTags";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import { useLifeLog } from "../../context/LifeLogContext";
+import type { MemoryEvent } from "../../types";
 import { formatMonthDay, getLunarDateInfo } from "../../utils/date";
+import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import {
   buildCalendarItemsForDateRange,
   buildCalendarMonthDays,
+  type CalendarItem,
   groupCalendarItemsByDate,
   toCalendarDateKey
 } from "../../utils/calendarItems";
@@ -21,11 +24,13 @@ export default function Calendar() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const today = new Date();
-  const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedDate, setSelectedDateState] = useState(searchParams.get("date") || toCalendarDateKey(today));
+  const todayKey = toCalendarDateKey(today);
+  const selectedDateParam = searchParams.get("date");
+  const initialSelectedDate = normalizeDateKey(selectedDateParam) || todayKey;
+  const [cursor, setCursor] = useState(() => monthCursorFromDateKey(initialSelectedDate) || new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDateState] = useState(initialSelectedDate);
   const [addingMemory, setAddingMemory] = useState(false);
   const [showLunar, setShowLunar] = useState(true);
-  const todayKey = toCalendarDateKey(today);
 
   const monthDays = useMemo(() => buildCalendarMonthDays(cursor), [cursor]);
   const calendarRange = useMemo(
@@ -46,9 +51,31 @@ export default function Calendar() {
   const selectedItems = itemsByDate[selectedDate] || [];
   const selectedLunar = getLunarDateInfo(selectedDate);
   const selectedRelative = getRelativeDateInfo(selectedDate, todayKey);
+  const selectedOverview = buildSelectedDateOverview({
+    selectedDate,
+    selectedItems,
+    memories: state.memories,
+    getPersonName,
+    getPlaceName,
+    selectedLunar,
+    selectedRelative
+  });
+  const firstMemoryItem = selectedItems.find((item) => item.type === "memory");
+  const firstAnniversaryItem = selectedItems.find((item) => item.type === "person");
+
+  useEffect(() => {
+    const nextDate = normalizeDateKey(selectedDateParam);
+    if (!nextDate) return;
+    setSelectedDateState(nextDate);
+    setCursor((current) => isSameCalendarMonth(current, nextDate) ? current : monthCursorFromDateKey(nextDate) || current);
+  }, [selectedDateParam]);
 
   function setSelectedDate(dateKey: string) {
     setSelectedDateState(dateKey);
+    if (!isSameCalendarMonth(cursor, dateKey)) {
+      const nextCursor = monthCursorFromDateKey(dateKey);
+      if (nextCursor) setCursor(nextCursor);
+    }
     setSearchParams({ date: dateKey }, { replace: true });
   }
 
@@ -140,49 +167,107 @@ export default function Calendar() {
       </section>
 
       <section className="section">
-        <div className="section-header">
-          <div className="calendar-selected-title">
-            <h2>{formatMonthDay(selectedDate)} 的记录</h2>
-            <span className={`calendar-relative-pill ${selectedRelative.tone}`}>{selectedRelative.label}</span>
-          </div>
-          <button className="see-all" onClick={() => setAddingMemory(true)}>
-            补记
-          </button>
-        </div>
-        <div className="list">
-          {selectedItems.map((item) => (
-            <button className="calendar-item glass-card" key={item.id} onClick={() => navigate(item.target)}>
-              <strong>{item.title}</strong>
-              {item.subtitleLines ? (
-                <div className="calendar-item-meta">
-                  {item.subtitleLines.map((line) => (
-                    <span key={line}>{line}</span>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {item.subtitle && <span className="memory-meta-line">{item.subtitle}</span>}
-                  {item.content && <p className="memory-desc calendar-memory-content">{item.content}</p>}
-                  {item.mood || item.tagItems?.length ? (
-                    <div className="memory-tags-line calendar-memory-tags">
-                      <MemoryTags mood={item.mood} tags={item.tagItems || []} />
-                    </div>
-                  ) : null}
-                </>
-              )}
+        <GlassCard className="calendar-day-detail-card">
+          <div className="calendar-day-detail-head">
+            <span className="calendar-day-detail-icon">
+              <CalendarDays />
+            </span>
+            <div>
+              <strong>{formatMonthDay(selectedDate)} · {selectedRelative.label}</strong>
+              <small>{selectedOverview.dateLine}</small>
+            </div>
+            <button type="button" onClick={() => setAddingMemory(true)}>
+              <PenLine />
+              补记
             </button>
-          ))}
-          {!selectedItems.length && (
-            <GlassCard className="empty empty-cta">
-              <p>这一天还没有记录</p>
-              <span className="calendar-empty-hint">{selectedRelative.emptyHint}</span>
-              <button className="primary-btn" onClick={() => setAddingMemory(true)}>
-                <PenLine size={16} /> 补记这一天
-              </button>
-            </GlassCard>
+          </div>
+          <div className="calendar-day-metrics">
+            <span>
+              <strong>{selectedOverview.memoryCount}</strong>
+              回忆
+            </span>
+            <span>
+              <strong>{selectedOverview.anniversaryCount}</strong>
+              日子
+            </span>
+            <span>
+              <strong>{selectedOverview.personNames.length}</strong>
+              人物
+            </span>
+            <span>
+              <strong>{selectedOverview.placeNames.length}</strong>
+              地点
+            </span>
+          </div>
+          <div className="calendar-day-brief">
+            <strong>{selectedOverview.title}</strong>
+            <span>{selectedOverview.desc}</span>
+          </div>
+          {selectedOverview.chips.length > 0 && (
+            <div className="calendar-day-chips">
+              {selectedOverview.chips.map((chip) => (
+                <span key={chip}>{chip}</span>
+              ))}
+            </div>
           )}
-        </div>
+          <div className="calendar-day-actions">
+            <button type="button" className="primary" onClick={() => setAddingMemory(true)}>
+              <PenLine />
+              补记这一天
+            </button>
+            {firstMemoryItem && (
+              <button type="button" onClick={() => navigate(firstMemoryItem.target)}>
+                <Heart />
+                打开回忆
+              </button>
+            )}
+            {firstAnniversaryItem && (
+              <button type="button" onClick={() => navigate(firstAnniversaryItem.target)}>
+                <CalendarDays />
+                查看日子
+              </button>
+            )}
+          </div>
+        </GlassCard>
       </section>
+
+      {selectedItems.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <div className="calendar-selected-title">
+              <h2>当天内容</h2>
+              <span className={`calendar-relative-pill ${selectedRelative.tone}`}>{selectedItems.length} 条</span>
+            </div>
+            <button className="see-all" onClick={() => setAddingMemory(true)}>
+              补记
+            </button>
+          </div>
+          <div className="list">
+            {selectedItems.map((item) => (
+              <button className="calendar-item glass-card" key={item.id} onClick={() => navigate(item.target)}>
+                <strong>{item.title}</strong>
+                {item.subtitleLines ? (
+                  <div className="calendar-item-meta">
+                    {item.subtitleLines.map((line) => (
+                      <span key={line}>{line}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {item.subtitle && <span className="memory-meta-line">{item.subtitle}</span>}
+                    {item.content && <p className="memory-desc calendar-memory-content">{item.content}</p>}
+                    {item.mood || item.tagItems?.length ? (
+                      <div className="memory-tags-line calendar-memory-tags">
+                        <MemoryTags mood={item.mood} tags={item.tagItems || []} />
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <EntrySheet
         type={addingMemory ? "memory" : null}
         memoryMode="quick"
@@ -190,6 +275,114 @@ export default function Calendar() {
         onClose={() => setAddingMemory(false)}
       />
     </>
+  );
+}
+
+interface SelectedDateOverview {
+  memoryCount: number;
+  anniversaryCount: number;
+  personNames: string[];
+  placeNames: string[];
+  chips: string[];
+  title: string;
+  desc: string;
+  dateLine: string;
+}
+
+function buildSelectedDateOverview({
+  selectedDate,
+  selectedItems,
+  memories,
+  getPersonName,
+  getPlaceName,
+  selectedLunar,
+  selectedRelative
+}: {
+  selectedDate: string;
+  selectedItems: CalendarItem[];
+  memories: MemoryEvent[];
+  getPersonName: (id: string) => string;
+  getPlaceName: (id: string) => string;
+  selectedLunar: ReturnType<typeof getLunarDateInfo>;
+  selectedRelative: ReturnType<typeof getRelativeDateInfo>;
+}): SelectedDateOverview {
+  const dayMemories = memories.filter((memory) => memory.date === selectedDate);
+  const memoryCount = selectedItems.filter((item) => item.type === "memory").length;
+  const anniversaryCount = selectedItems.filter((item) => item.type === "person").length;
+  const personNames = uniqueLabels(dayMemories.flatMap((memory) => memory.personIds || []).map(getPersonName), "未关联人物");
+  const placeNames = uniqueLabels(dayMemories.flatMap(getMemoryPlaceIds).map(getPlaceName), "未关联地点");
+  const chips = [
+    ...personNames.slice(0, 3).map((name) => `人物 · ${name}`),
+    ...placeNames.slice(0, 3).map((name) => `地点 · ${name}`)
+  ];
+  const dateLine = selectedLunar
+    ? `${selectedLunar.ganZhiZodiacText} · ${selectedLunar.weekText} ${selectedLunar.weekOfYearText} · ${selectedLunar.lunarText}`
+    : "农历转换不可用";
+
+  if (memoryCount && anniversaryCount) {
+    return {
+      memoryCount,
+      anniversaryCount,
+      personNames,
+      placeNames,
+      chips,
+      dateLine,
+      title: "这一天有回忆，也有重要日子",
+      desc: buildSelectedDateContext(personNames, placeNames) || "可以打开当天内容，也可以继续补一条细节。"
+    };
+  }
+
+  if (memoryCount) {
+    return {
+      memoryCount,
+      anniversaryCount,
+      personNames,
+      placeNames,
+      chips,
+      dateLine,
+      title: `${memoryCount} 条回忆在这一天`,
+      desc: buildSelectedDateContext(personNames, placeNames) || "可以打开回忆查看细节，或继续补记当时发生的事。"
+    };
+  }
+
+  if (anniversaryCount) {
+    return {
+      memoryCount,
+      anniversaryCount,
+      personNames,
+      placeNames,
+      chips,
+      dateLine,
+      title: `${anniversaryCount} 个重要日子在这一天`,
+      desc: "可以查看人物详情里的纪念日和安排，也可以补记当天发生的事。"
+    };
+  }
+
+  return {
+    memoryCount,
+    anniversaryCount,
+    personNames,
+    placeNames,
+    chips,
+    dateLine,
+    title: selectedRelative.tone === "future" ? "这一天还没有安排" : "这一天还没有记录",
+    desc: selectedRelative.emptyHint
+  };
+}
+
+function buildSelectedDateContext(personNames: string[], placeNames: string[]) {
+  const people = personNames.length ? `人物：${personNames.slice(0, 3).join("、")}` : "";
+  const places = placeNames.length ? `地点：${placeNames.slice(0, 3).join("、")}` : "";
+  return [people, places].filter(Boolean).join(" · ");
+}
+
+function uniqueLabels(labels: string[], emptyLabel: string) {
+  return Array.from(
+    new Set(
+      labels
+        .map((label) => label.trim())
+        .filter((label) => label && label !== emptyLabel)
+    )
   );
 }
 
@@ -227,4 +420,25 @@ function dateKeyToUtcTime(dateKey: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
   if (!year || !month || !day) return 0;
   return Date.UTC(year, month - 1, day);
+}
+
+function normalizeDateKey(value: string | null) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return "";
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+  return toCalendarDateKey(date);
+}
+
+function monthCursorFromDateKey(dateKey: string) {
+  const [year, month] = dateKey.split("-").map(Number);
+  if (!year || !month) return null;
+  return new Date(year, month - 1, 1);
+}
+
+function isSameCalendarMonth(cursor: Date, dateKey: string) {
+  const next = monthCursorFromDateKey(dateKey);
+  if (!next) return true;
+  return cursor.getFullYear() === next.getFullYear() && cursor.getMonth() === next.getMonth();
 }

@@ -22,13 +22,13 @@ export default function Home() {
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const [inboxText, setInboxText] = useState(() => loadQuickInboxDraft());
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
-  const upcoming = getUpcomingAnniversaries(state.people)
+  const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
-    .slice(0, 4)
     .map((item) => ({
       ...item,
       planStatus: buildUpcomingPlanStatus(state.anniversaryPlans, item)
     }));
+  const upcoming = upcomingWithPlanStatus.slice(0, 4);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
   const featuredPlaces = useMemo(
@@ -50,6 +50,14 @@ export default function Home() {
     setInitialMemoryPersonIds(personIds);
     setInitialMemoryPlaceIds(placeIds);
     setEntrySheetType("memory");
+  }
+
+  function openSuggestedMemory(text: string, personIds: string[] = [], placeIds: string[] = []) {
+    const normalized = text.trim();
+    if (normalized) {
+      window.localStorage.setItem("lifelog:quick-inbox-prefill", normalized);
+    }
+    openQuickMemory(personIds, placeIds);
   }
 
   function openInboxMemory() {
@@ -107,6 +115,16 @@ export default function Home() {
     actionPrefs
   });
   const hasRealTodayActions = todayActions.length > 0;
+  const recordSuggestions = buildRecordSuggestions({
+    state,
+    upcoming: upcomingWithPlanStatus,
+    getPersonName,
+    getPlaceName,
+    onOpenPerson: (personId, hash = "") => navigate(`/people/${personId}${hash}`),
+    onOpenCalendar: () => navigate("/calendar"),
+    onOpenMemory: openSuggestedMemory,
+    todayActionIds: todayActions.map((action) => action.id)
+  });
 
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
@@ -202,6 +220,28 @@ export default function Home() {
           </div>
         </GlassCard>
       </section>
+
+      {recordSuggestions.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 可以这样记
+            </h2>
+          </div>
+          <div className="record-suggestion-list">
+            {recordSuggestions.map((suggestion) => (
+              <button className={`record-suggestion-card ${suggestion.tone || ""}`} type="button" key={suggestion.id} onClick={suggestion.onClick}>
+                <span className="record-suggestion-icon">{suggestion.icon}</span>
+                <span className="record-suggestion-copy">
+                  <strong>{suggestion.title}</strong>
+                  <small>{suggestion.desc}</small>
+                </span>
+                <em>{suggestion.actionLabel}</em>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">
@@ -533,6 +573,195 @@ interface TodayAction {
 }
 
 type TodayActionPrefs = Record<string, number | "dismissed">;
+
+interface RecordSuggestion {
+  id: string;
+  icon: JSX.Element;
+  title: string;
+  desc: string;
+  actionLabel: string;
+  tone?: "warm" | "cool";
+  onClick: () => void;
+}
+
+function buildRecordSuggestions({
+  state,
+  upcoming,
+  getPersonName,
+  getPlaceName,
+  onOpenPerson,
+  onOpenCalendar,
+  onOpenMemory,
+  todayActionIds
+}: {
+  state: ReturnType<typeof useLifeLog>["state"];
+  upcoming: Array<ReturnType<typeof getUpcomingAnniversaries>[number] & { planStatus: { label: string; tone: string } }>;
+  getPersonName: (id: string) => string;
+  getPlaceName: (id: string) => string;
+  onOpenPerson: (personId: string, hash?: string) => void;
+  onOpenCalendar: () => void;
+  onOpenMemory: (text: string, personIds?: string[], placeIds?: string[]) => void;
+  todayActionIds: string[];
+}): RecordSuggestion[] {
+  const suggestions: RecordSuggestion[] = [];
+  const todayActionIdSet = new Set(todayActionIds);
+  const todayKey = toDateKey(new Date());
+  const memoryIds = new Set(state.memories.map((memory) => memory.id));
+  const todayMemoryCount = state.memories.filter((memory) => memory.date === todayKey).length;
+
+  const completedPlan = state.anniversaryPlans
+    .filter((plan) =>
+      plan.status === "done" &&
+      plan.targetDate <= todayKey &&
+      daysBetweenToday(plan.targetDate) <= 45 &&
+      (!plan.memoryId || !memoryIds.has(plan.memoryId))
+    )
+    .sort((left, right) => right.targetDate.localeCompare(left.targetDate) || right.updatedAt.localeCompare(left.updatedAt))[0];
+  if (completedPlan) {
+    const personName = getPersonName(completedPlan.personId);
+    const placeNames = (completedPlan.placeIds || []).map(getPlaceName).filter(Boolean);
+    suggestions.push({
+      id: `plan-memory-${completedPlan.id}`,
+      icon: <Gift />,
+      title: `把 ${personName} 的安排补成回忆`,
+      desc: `${formatAnniversaryPlanTargetTitle(completedPlan)} · ${completedPlan.title}`,
+      actionLabel: "补回忆",
+      tone: "warm",
+      onClick: () => onOpenMemory(
+        `${personName} 的${formatAnniversaryPlanTargetTitle(completedPlan)}：${completedPlan.title}`,
+        [completedPlan.personId],
+        completedPlan.placeIds || []
+      )
+    });
+    if (placeNames.length) {
+      suggestions[0].desc = `${suggestions[0].desc} · ${placeNames.slice(0, 2).join("、")}`;
+    }
+  }
+
+  const missingPlan = upcoming.find((item) =>
+    item.days >= 0 &&
+    item.days <= 14 &&
+    (item.planStatus.tone === "urgent" || item.planStatus.tone === "missing")
+  );
+  if (missingPlan) {
+    const title = buildSuggestionAnniversaryTitle(missingPlan);
+    suggestions.push({
+      id: `anniversary-plan-${missingPlan.personId}-${missingPlan.title}-${missingPlan.date}`,
+      icon: <Calendar />,
+      title: `给 ${missingPlan.personName} 的${title}留个安排`,
+      desc: `${missingPlan.label} · 先写一个想法，后面再补细节`,
+      actionLabel: "去安排",
+      tone: missingPlan.days <= 3 ? "warm" : "cool",
+      onClick: () => onOpenPerson(missingPlan.personId, "#anniversaries")
+    });
+  }
+
+  if (!todayMemoryCount) {
+    suggestions.push({
+      id: "today-memory",
+      icon: <PenLine />,
+      title: "今天还没有留下记录",
+      desc: "不用写很完整，一句话也可以先保存。",
+      actionLabel: "记一句",
+      onClick: () => onOpenMemory("今天值得记下的一件小事：")
+    });
+  }
+
+  const personPrompt = findRecordSuggestionPerson(state.people, state.memories, todayActionIdSet);
+  if (personPrompt) {
+    suggestions.push({
+      id: `person-memory-${personPrompt.personId}`,
+      icon: <Heart />,
+      title: `给 ${personPrompt.name} 补一条近况`,
+      desc: personPrompt.daysSinceContact === null ? "还没有共同回忆，可以先记一次互动。" : `上次相关记录在 ${personPrompt.daysSinceContact} 天前。`,
+      actionLabel: "记互动",
+      tone: "warm",
+      onClick: () => onOpenMemory(`和 ${personPrompt.name} 最近的一次互动：`, [personPrompt.personId])
+    });
+  }
+
+  const placePrompt = findRecordSuggestionPlace(state.places, state.memories);
+  if (placePrompt) {
+    suggestions.push({
+      id: `place-memory-${placePrompt.id}`,
+      icon: <MapPin />,
+      title: `给 ${buildPlaceDisplayName(placePrompt)} 留一次印象`,
+      desc: buildHomePlaceSubtitle(placePrompt),
+      actionLabel: "记地点",
+      tone: "cool",
+      onClick: () => onOpenMemory(`在 ${buildPlaceDisplayName(placePrompt)} 的印象：`, [], [placePrompt.id])
+    });
+  }
+
+  if (!suggestions.length && (state.people.length || state.places.length || state.memories.length)) {
+    suggestions.push({
+      id: "calendar-review",
+      icon: <History />,
+      title: "从日历里找一个日子回看",
+      desc: "按日期回到某一天，再补一条当时没有写下的细节。",
+      actionLabel: "看日历",
+      onClick: onOpenCalendar
+    });
+  }
+
+  return dedupeRecordSuggestions(suggestions).slice(0, 3);
+}
+
+function dedupeRecordSuggestions(suggestions: RecordSuggestion[]) {
+  const seen = new Set<string>();
+  return suggestions.filter((suggestion) => {
+    if (seen.has(suggestion.id)) return false;
+    seen.add(suggestion.id);
+    return true;
+  });
+}
+
+function buildSuggestionAnniversaryTitle(item: ReturnType<typeof getUpcomingAnniversaries>[number]) {
+  if (item.kind === "milestone" && "milestoneLabel" in item) {
+    return `${item.title}${item.milestoneLabel}`;
+  }
+  return item.title;
+}
+
+function findRecordSuggestionPerson(
+  people: Array<{ id: string; name: string; favorite: boolean }>,
+  memories: MemoryEvent[],
+  todayActionIdSet: Set<string>
+) {
+  const candidates = people
+    .filter((person) => person.favorite && !todayActionIdSet.has(`contact-${person.id}`))
+    .map((person) => {
+      const latestMemory = memories
+        .filter((memory) => (memory.personIds || []).includes(person.id))
+        .sort((a, b) => b.date.localeCompare(a.date))[0];
+      const daysSinceContact = latestMemory ? daysBetweenToday(latestMemory.date) : null;
+      return {
+        personId: person.id,
+        name: person.name,
+        daysSinceContact,
+        score: daysSinceContact ?? 365
+      };
+    });
+
+  return candidates
+    .filter((item) => item.daysSinceContact === null || item.daysSinceContact >= 14)
+    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name, "zh-CN"))[0];
+}
+
+function findRecordSuggestionPlace(places: Place[], memories: MemoryEvent[]) {
+  const visitedPlaceIds = new Set<string>();
+  memories.forEach((memory) => {
+    if (memory.placeId) visitedPlaceIds.add(memory.placeId);
+    (memory.placeIds || []).forEach((placeId) => visitedPlaceIds.add(placeId));
+  });
+
+  return places
+    .filter((place) => !visitedPlaceIds.has(place.id))
+    .sort((left, right) =>
+      Number(right.favorite) - Number(left.favorite) ||
+      buildPlaceDisplayName(left).localeCompare(buildPlaceDisplayName(right), "zh-CN")
+    )[0];
+}
 
 function buildTodayActions({
   state,
