@@ -1,4 +1,4 @@
-import { CalendarDays, Heart, Plus, RotateCcw } from "lucide-react";
+import { CalendarDays, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -32,11 +32,14 @@ export default function Memories() {
   const placeFilter = filters.placeFilter;
   const moodFilter = filters.moodFilter;
   const tagFilter = filters.tagFilter;
+  const activeAdvancedFilterCount = [personFilter, placeFilter, moodFilter, tagFilter].filter(Boolean).length;
+  const hasAdvancedFilters = activeAdvancedFilterCount > 0;
+  const [filtersOpen, setFiltersOpen] = useState(hasAdvancedFilters);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
 
   const filterOptions = useMemo(() => buildFilterOptions(state.memories, getPersonName, getPlaceName), [state.memories, getPersonName, getPlaceName]);
-  const hasActiveFilters = Boolean(query.trim() || personFilter || placeFilter || moodFilter || tagFilter);
+  const hasActiveFilters = Boolean(query.trim() || hasAdvancedFilters);
   const activeFilterLabels = buildActiveFilterLabels({
     query: query.trim(),
     person: personFilter ? getPersonName(personFilter) : "",
@@ -101,6 +104,7 @@ export default function Memories() {
 
   function clearFilters() {
     setFilters({ query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" });
+    setFiltersOpen(false);
   }
 
   function updateFilters(patch: Partial<MemoryFilterState>) {
@@ -117,52 +121,67 @@ export default function Memories() {
         ]}
       />
       <SearchBar value={query} placeholder="搜索标题、正文、人物、地点、心情或标签" onChange={(query) => updateFilters({ query })} />
-      <section className="section memory-filter-section">
-        <div className="memory-filter-grid">
-          <SelectPicker
-            label="筛选人物"
-            value={personFilter}
-            onChange={(personFilter) => updateFilters({ personFilter })}
-            placeholder="全部人物"
-            options={[{ value: "", label: "全部人物" }, ...filterOptions.people]}
-          />
-          <SelectPicker
-            label="筛选地点"
-            value={placeFilter}
-            onChange={(placeFilter) => updateFilters({ placeFilter })}
-            placeholder="全部地点"
-            options={[{ value: "", label: "全部地点" }, ...filterOptions.places]}
-          />
-          <SelectPicker
-            label="筛选心情"
-            value={moodFilter}
-            onChange={(moodFilter) => updateFilters({ moodFilter })}
-            placeholder="全部心情"
-            options={[{ value: "", label: "全部心情" }, ...filterOptions.moods]}
-          />
-          <SelectPicker
-            label="筛选标签"
-            value={tagFilter}
-            onChange={(tagFilter) => updateFilters({ tagFilter })}
-            placeholder="全部标签"
-            options={[{ value: "", label: "全部标签" }, ...filterOptions.tags]}
-          />
-        </div>
-        <div className="memory-filter-summary">
-          <span>
-            显示 {memories.length} / {state.memories.length} 条回忆
-          </span>
-          {hasActiveFilters && (
-            <button type="button" onClick={clearFilters}>
-              <RotateCcw /> 清除筛选
+      <section className="section memory-filter-section compact-filter-section">
+        <div className="list-filter-toolbar">
+          <div className="list-filter-summary">
+            <span>
+              显示 {memories.length} / {state.memories.length} 条回忆
+            </span>
+          </div>
+          <div className="list-filter-actions">
+            {hasActiveFilters && (
+              <button className="filter-clear-button" type="button" onClick={clearFilters}>
+                <RotateCcw /> 清除
+              </button>
+            )}
+            <button
+              aria-expanded={filtersOpen}
+              className={`filter-toggle-button ${filtersOpen ? "active" : ""}`}
+              type="button"
+              onClick={() => setFiltersOpen((current) => !current)}
+            >
+              <SlidersHorizontal />
+              筛选{activeAdvancedFilterCount ? ` ${activeAdvancedFilterCount}` : ""}
             </button>
-          )}
+          </div>
         </div>
         {activeFilterLabels.length > 0 && (
           <div className="list-filter-chips">
             {activeFilterLabels.map((label) => (
               <span key={label}>{label}</span>
             ))}
+          </div>
+        )}
+        {filtersOpen && (
+          <div className="advanced-filter-panel memory-filter-grid">
+            <SelectPicker
+              label="筛选人物"
+              value={personFilter}
+              onChange={(personFilter) => updateFilters({ personFilter })}
+              placeholder="全部人物"
+              options={[{ value: "", label: "全部人物" }, ...filterOptions.people]}
+            />
+            <SelectPicker
+              label="筛选地点"
+              value={placeFilter}
+              onChange={(placeFilter) => updateFilters({ placeFilter })}
+              placeholder="全部地点"
+              options={[{ value: "", label: "全部地点" }, ...filterOptions.places]}
+            />
+            <SelectPicker
+              label="筛选心情"
+              value={moodFilter}
+              onChange={(moodFilter) => updateFilters({ moodFilter })}
+              placeholder="全部心情"
+              options={[{ value: "", label: "全部心情" }, ...filterOptions.moods]}
+            />
+            <SelectPicker
+              label="筛选标签"
+              value={tagFilter}
+              onChange={(tagFilter) => updateFilters({ tagFilter })}
+              placeholder="全部标签"
+              options={[{ value: "", label: "全部标签" }, ...filterOptions.tags]}
+            />
           </div>
         )}
       </section>

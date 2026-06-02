@@ -1,4 +1,4 @@
-import { Building2, CheckSquare, GitMerge, MapPin, Plus, RotateCcw, Share2, Square, Star, Store, Users, X } from "lucide-react";
+import { Building2, CheckSquare, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -117,9 +117,11 @@ export default function Places() {
     [duplicatePlaceGroups],
   );
   const normalizedQuery = query.trim().toLowerCase();
-  const hasActiveFilters = Boolean(
-    normalizedQuery || country !== "全部" || province !== "全部" || city !== "全部" || area !== "全部" || category !== "全部"
-  );
+  const isCustomSort = sortMode !== "smart";
+  const activeAdvancedFilterCount = [country !== "全部", province !== "全部", city !== "全部", area !== "全部", category !== "全部", isCustomSort].filter(Boolean).length;
+  const hasAdvancedFilters = activeAdvancedFilterCount > 0;
+  const hasActiveFilters = Boolean(normalizedQuery || hasAdvancedFilters);
+  const [filtersOpen, setFiltersOpen] = useState(hasAdvancedFilters);
 
   const categories = useMemo(() => {
     return ["全部", ...new Set(state.places.map((place) => place.category))];
@@ -305,6 +307,7 @@ export default function Places() {
     setProvince(reset.province);
     setCity(reset.city);
     setArea(reset.area);
+    setFiltersOpen(false);
   }
 
   function updateFilters(patch: Partial<PlaceFilterState>) {
@@ -366,14 +369,18 @@ export default function Places() {
     () => buildPlaceBatchPreview(storePlaceRows.map(({ place }) => place), selectedSharePlaceIds, batchDraft),
     [batchDraft, selectedSharePlaceIds, storePlaceRows]
   );
-  const activeFilterLabels = buildActiveFilterLabels({
-    query: query.trim(),
-    country,
-    province,
-    city,
-    area,
-    category
-  });
+  const currentSortLabel = placeSortOptions.find((option) => option.value === sortMode)?.label || "";
+  const activeFilterLabels = [
+    ...buildActiveFilterLabels({
+      query: query.trim(),
+      country,
+      province,
+      city,
+      area,
+      category
+    }),
+    isCustomSort ? `排序：${currentSortLabel}` : ""
+  ].filter(Boolean);
 
   return (
     <>
@@ -389,67 +396,29 @@ export default function Places() {
         placeholder="搜索地点、区域、城市、标签"
         onChange={(query) => updateFilters({ query })}
       />
-      <div className="location-switcher">
-        <label>
-          国家
-          <SelectPicker
-            label="国家筛选"
-            value={country}
-            onChange={updateCountry}
-            options={countries.map((item) => ({ value: item, label: item }))}
-          />
-        </label>
-        <label>
-          省 / 州
-          <SelectPicker
-            label="省州筛选"
-            value={province}
-            onChange={updateProvince}
-            options={provinceOptions.map((item) => ({ value: item, label: item }))}
-          />
-        </label>
-        <label>
-          城市
-          <SelectPicker
-            label="城市筛选"
-            value={city}
-            onChange={updateCity}
-            options={cityOptions.map((item) => ({ value: item, label: item }))}
-          />
-        </label>
-      </div>
-      <div className="category-row">
-        {areaOptions.map((item) => (
-          <button
-            className={`category-pill ${item === area ? "active" : ""}`}
-            key={item}
-            onClick={() => updateArea(item)}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-      <div className="category-row">
-        {categories.map((item) => (
-          <button
-            className={`category-pill ${item === category ? "active" : ""}`}
-            key={item}
-            onClick={() => updateFilters({ category: item })}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-      <section className="section list-filter-section">
-        <div className="list-filter-summary">
-          <span>
-            显示 {places.length} / {state.places.length} 个地点
-          </span>
-          {hasActiveFilters && (
-            <button type="button" onClick={clearFilters}>
-              <RotateCcw /> 清除筛选
+      <section className="section list-filter-section compact-filter-section">
+        <div className="list-filter-toolbar">
+          <div className="list-filter-summary">
+            <span>
+              显示 {places.length} / {state.places.length} 个地点
+            </span>
+          </div>
+          <div className="list-filter-actions">
+            {hasActiveFilters && (
+              <button className="filter-clear-button" type="button" onClick={clearFilters}>
+                <RotateCcw /> 清除
+              </button>
+            )}
+            <button
+              aria-expanded={filtersOpen}
+              className={`filter-toggle-button ${filtersOpen ? "active" : ""}`}
+              type="button"
+              onClick={() => setFiltersOpen((current) => !current)}
+            >
+              <SlidersHorizontal />
+              筛选{activeAdvancedFilterCount ? ` ${activeAdvancedFilterCount}` : ""}
             </button>
-          )}
+          </div>
         </div>
         {activeFilterLabels.length > 0 && (
           <div className="list-filter-chips">
@@ -458,18 +427,82 @@ export default function Places() {
             ))}
           </div>
         )}
-        <div className="list-sort-control" role="group" aria-label="地点排序">
-          {placeSortOptions.map((option) => (
-            <button
-              type="button"
-              className={option.value === sortMode ? "active" : ""}
-              key={option.value}
-              onClick={() => updateFilters({ sortMode: option.value })}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        {filtersOpen && (
+          <div className="advanced-filter-panel place-advanced-filter-panel">
+            <div className="location-switcher">
+              <label>
+                国家
+                <SelectPicker
+                  label="国家筛选"
+                  value={country}
+                  onChange={updateCountry}
+                  options={countries.map((item) => ({ value: item, label: item }))}
+                />
+              </label>
+              <label>
+                省 / 州
+                <SelectPicker
+                  label="省州筛选"
+                  value={province}
+                  onChange={updateProvince}
+                  options={provinceOptions.map((item) => ({ value: item, label: item }))}
+                />
+              </label>
+              <label>
+                城市
+                <SelectPicker
+                  label="城市筛选"
+                  value={city}
+                  onChange={updateCity}
+                  options={cityOptions.map((item) => ({ value: item, label: item }))}
+                />
+              </label>
+            </div>
+            <div className="filter-subgroup">
+              <strong>区域</strong>
+              <div className="category-row">
+                {areaOptions.map((item) => (
+                  <button
+                    className={`category-pill ${item === area ? "active" : ""}`}
+                    key={item}
+                    onClick={() => updateArea(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="filter-subgroup">
+              <strong>分类</strong>
+              <div className="category-row">
+                {categories.map((item) => (
+                  <button
+                    className={`category-pill ${item === category ? "active" : ""}`}
+                    key={item}
+                    onClick={() => updateFilters({ category: item })}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="filter-subgroup">
+              <strong>排序</strong>
+              <div className="list-sort-control" role="group" aria-label="地点排序">
+                {placeSortOptions.map((option) => (
+                  <button
+                    type="button"
+                    className={option.value === sortMode ? "active" : ""}
+                    key={option.value}
+                    onClick={() => updateFilters({ sortMode: option.value })}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       {duplicatePlaceGroups.length > 0 && (
         <section className="section">

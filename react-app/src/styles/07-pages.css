@@ -3854,6 +3854,91 @@
   gap: 10px;
 }
 
+.compact-filter-section {
+  display: grid;
+  gap: 10px;
+}
+
+.list-filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.list-filter-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.filter-clear-button,
+.filter-toggle-button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.filter-toggle-button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.filter-clear-button svg,
+.filter-toggle-button svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.advanced-filter-panel {
+  margin-top: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 18px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.place-advanced-filter-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.place-advanced-filter-panel .location-switcher,
+.place-advanced-filter-panel .category-row,
+.place-advanced-filter-panel .list-sort-control {
+  margin: 0;
+}
+
+.advanced-filter-panel .list-sort-control {
+  margin-top: 0;
+}
+
+.filter-subgroup {
+  display: grid;
+  gap: 8px;
+}
+
+.filter-subgroup > strong {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .memory-filter-summary {
   display: flex;
   align-items: center;
@@ -3893,8 +3978,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
   color: var(--text-sub);
   font-size: 13px;
+}
+
+.list-filter-summary span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .list-filter-summary button {
@@ -4212,6 +4305,15 @@
 }
 
 @media (max-width: 380px) {
+  .list-filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .list-filter-actions {
+    justify-content: flex-end;
+  }
+
   .memory-filter-grid {
     grid-template-columns: 1fr;
   }

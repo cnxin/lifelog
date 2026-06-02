@@ -1,4 +1,4 @@
-import { MapPin, Plus, RotateCcw, Star, Users } from "lucide-react";
+import { ArrowDownUp, MapPin, Plus, RotateCcw, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -38,6 +38,8 @@ export default function People() {
   const query = filters.query;
   const sortMode = filters.sortMode;
   const normalizedQuery = query.trim().toLowerCase();
+  const isCustomSort = sortMode !== "smart";
+  const [sortOpen, setSortOpen] = useState(isCustomSort);
 
   const peopleRows = useMemo(() => {
     return state.people
@@ -58,6 +60,7 @@ export default function People() {
 
   function clearSearch() {
     setFilters({ query: "", sortMode: "smart" });
+    setSortOpen(false);
   }
 
   function setQuery(query: string) {
@@ -104,29 +107,51 @@ export default function People() {
         ]}
       />
       <SearchBar value={query} placeholder="搜索姓名、喜好、关系" onChange={setQuery} />
-      <section className="section list-filter-section">
-        <div className="list-filter-summary">
-          <span>
-            显示 {peopleRows.length} / {state.people.length} 个人物
-          </span>
-          {normalizedQuery && (
-            <button type="button" onClick={clearSearch}>
-              <RotateCcw /> 清除搜索
-            </button>
-          )}
-        </div>
-        <div className="list-sort-control" role="group" aria-label="人物排序">
-          {peopleSortOptions.map((option) => (
+      <section className="section list-filter-section compact-filter-section">
+        <div className="list-filter-toolbar">
+          <div className="list-filter-summary">
+            <span>
+              显示 {peopleRows.length} / {state.people.length} 个人物
+            </span>
+          </div>
+          <div className="list-filter-actions">
+            {(normalizedQuery || isCustomSort) && (
+              <button className="filter-clear-button" type="button" onClick={clearSearch}>
+                <RotateCcw /> 清除
+              </button>
+            )}
             <button
+              aria-expanded={sortOpen}
+              className={`filter-toggle-button ${sortOpen ? "active" : ""}`}
               type="button"
-              className={option.value === sortMode ? "active" : ""}
-              key={option.value}
-              onClick={() => setSortMode(option.value)}
+              onClick={() => setSortOpen((current) => !current)}
             >
-              {option.label}
+              <ArrowDownUp />
+              排序{isCustomSort ? ` · ${peopleSortOptions.find((option) => option.value === sortMode)?.label || ""}` : ""}
             </button>
-          ))}
+          </div>
         </div>
+        {isCustomSort && (
+          <div className="list-filter-chips">
+            <span>排序：{peopleSortOptions.find((option) => option.value === sortMode)?.label}</span>
+          </div>
+        )}
+        {sortOpen && (
+          <div className="advanced-filter-panel">
+            <div className="list-sort-control" role="group" aria-label="人物排序">
+              {peopleSortOptions.map((option) => (
+                <button
+                  type="button"
+                  className={option.value === sortMode ? "active" : ""}
+                  key={option.value}
+                  onClick={() => setSortMode(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
       <section className="section">
         <div className="list">
