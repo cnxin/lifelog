@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.99",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.99",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.99/lifelog-v0.1.0-test.99.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.99.apk",
-    "apkName":  "lifelog-v0.1.0-test.99.apk",
-    "apkSize":  3696610,
-    "apkSha256":  "6e254084b8973e62e8d00534fb9ebd986ffff0dc1ae09305ce7c623546b6d282",
-    "publishedAt":  "2026-06-03T09:15:09Z",
-    "body":  "- 回忆详情合并重复的故事卡、内容卡和标签卡，首屏改为单一正文阅读卡。\n- 回忆详情恢复折叠头部，并为正文卡预留安全缓冲，减少折叠时遮挡正文和心情标签。\n- 关联人物和关联地点搜索支持多关键词与去空格匹配，地点搜索会按店名、商场、城市和地址排序。\n- 检查更新增加检查中来源提示，慢源会标记为已跳过，减少用户误以为卡住。"
+    "version":  "0.1.0-test.100",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.100",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.100/lifelog-v0.1.0-test.100.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.100.apk",
+    "apkName":  "lifelog-v0.1.0-test.100.apk",
+    "apkSize":  3699862,
+    "apkSha256":  "3ca678df308ede7519ace3123d89f71da02d2f2f8be2246161bc3239cebfd033",
+    "publishedAt":  "2026-06-03T16:17:26Z",
+    "body":  "- 分享面板中的二维码支持点击放大，单独弹窗展示更适合扫码和确认。\n- 二维码弹窗新增保存到相册和分享图片，Android 可调用系统相册与系统分享面板转发到微信等应用。\n- LifeLog 分享链接改为更紧凑的二维码编码格式，同时保留旧链接解析兼容。\n- 二维码生成降低纠错密度，内容较少时二维码更清爽；大内容仍建议使用分享包。"
 }

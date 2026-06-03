@@ -1,9 +1,10 @@
-import { Copy, Download, Share2, X } from "lucide-react";
+import { Copy, Download, QrCode, Share2, X } from "lucide-react";
 import { useState } from "react";
 import QRCode from "qrcode";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { copyTextToClipboard } from "../utils/diagnostics";
+import { saveImageToGallery, shareImageFile } from "../utils/imageShare";
 import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
 import { buildLifeLogShareLink, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
 import type { MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
@@ -46,6 +47,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   const [isCopyingLink, setIsCopyingLink] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [qrImage, setQrImage] = useState("");
+  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
   const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>({
     includeContent: true,
     peopleMode: "public",
@@ -156,7 +158,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
         : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
       const link = await buildLifeLogShareLink(payload);
       setShareLink(link);
-      setQrImage(await QRCode.toDataURL(link, { width: 220, margin: 2, errorCorrectionLevel: "M" }));
+      setQrImage(await QRCode.toDataURL(link, { width: 320, margin: 2, errorCorrectionLevel: "L" }));
+      setQrPreviewOpen(true);
       const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
       addShareHistoryEntry({
         direction: "export",
@@ -176,6 +179,35 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
       notify({ message, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
     } finally {
       setIsCopyingLink(false);
+    }
+  }
+
+  async function handleSaveQrImage() {
+    if (!target || !qrImage) return;
+    try {
+      const result = await saveImageToGallery(buildQrFileName(target.title), qrImage);
+      notify({
+        message: `二维码已保存到相册：${result.fileName}`,
+        tone: "success",
+        durationMs: 3600
+      });
+    } catch {
+      const opened = window.open(qrImage, "_blank");
+      notify({
+        message: opened ? "当前环境无法直接保存，已打开二维码图片，可长按保存。" : "保存失败，请长按二维码图片保存。",
+        tone: "info",
+        durationMs: 4200
+      });
+    }
+  }
+
+  async function handleShareQrImage() {
+    if (!target || !qrImage) return;
+    try {
+      await shareImageFile(buildQrFileName(target.title), qrImage, "分享 LifeLog 二维码");
+      notify({ message: "已打开系统分享面板", tone: "success", durationMs: 2600 });
+    } catch {
+      notify({ message: "当前环境无法分享图片，已保留二维码可长按保存。", tone: "info", durationMs: 3600 });
     }
   }
 
@@ -263,8 +295,16 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           )}
           {shareLink && (
             <div className="local-share-qr">
-              {qrImage && <img src={qrImage} alt="LifeLog 分享二维码" />}
-              <span>让对方扫码打开分享导入页面。二维码在本机生成；内容较多时建议改用分享包。</span>
+              {qrImage && (
+                <button className="local-share-qr-button" type="button" onClick={() => setQrPreviewOpen(true)}>
+                  <img src={qrImage} alt="LifeLog 分享二维码" />
+                  <span>
+                    <QrCode size={14} />
+                    点击放大
+                  </span>
+                </button>
+              )}
+              <span>让对方扫码打开分享导入页面。已使用精简链接生成；内容较多时建议改用分享包。</span>
             </div>
           )}
         </div>
@@ -287,8 +327,45 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           </button>
         </div>
       </section>
+      {qrPreviewOpen && qrImage && (
+        <section className="qr-preview-modal" role="dialog" aria-modal="true" aria-label="分享二维码">
+          <button className="qr-preview-backdrop" type="button" aria-label="关闭二维码预览" onClick={() => setQrPreviewOpen(false)} />
+          <div className="qr-preview-panel">
+            <div className="qr-preview-head">
+              <div>
+                <strong>分享二维码</strong>
+                <span>{target.title}</span>
+              </div>
+              <button type="button" aria-label="关闭" onClick={() => setQrPreviewOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <img className="qr-preview-image" src={qrImage} alt="LifeLog 分享二维码" />
+            <p>对方用 LifeLog 扫码后可预览并添加内容。二维码只包含分享链接，不会上传到云端。</p>
+            <div className="qr-preview-actions">
+              <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
+                <Copy size={16} />
+                复制链接
+              </button>
+              <button className="ghost-btn" type="button" onClick={() => void handleSaveQrImage()}>
+                <Download size={16} />
+                保存到相册
+              </button>
+              <button className="primary-btn" type="button" onClick={() => void handleShareQrImage()}>
+                <Share2 size={16} />
+                分享图片
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
+}
+
+function buildQrFileName(title: string) {
+  const slug = title.replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 24) || "lifelog-share";
+  return `lifelog-qr-${slug}.png`;
 }
 
 function ShareSwitch({

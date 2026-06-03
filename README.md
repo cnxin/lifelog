@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.99`
+当前版本：`0.1.0-test.100`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.99
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.99/lifelog-v0.1.0-test.99.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.99.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.100
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.100/lifelog-v0.1.0-test.100.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.100.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.99.apk`
-- 大小：`3696610` bytes
-- SHA256：`6e254084b8973e62e8d00534fb9ebd986ffff0dc1ae09305ce7c623546b6d282`
+- 文件名：`lifelog-v0.1.0-test.100.apk`
+- 大小：`3699862` bytes
+- SHA256：`3ca678df308ede7519ace3123d89f71da02d2f2f8be2246161bc3239cebfd033`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -82,14 +82,15 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 ### 分享与导入
 
 - 回忆和地点支持生成本地分享包 JSON。
-- 支持生成 LifeLog 分享链接和二维码。
+- 支持生成 LifeLog 分享链接和二维码，二维码可点击放大查看。
 - 回忆详情和地点详情提供独立分享操作卡，可直接打开分享面板。
 - 首页快捷新增和分享导入页支持扫描 LifeLog 分享二维码。
 - Android 支持 `lifelog://share/import#...` 深链，真机扫码可直达分享导入页。
+- Android 支持把分享二维码保存到相册，也可调用系统分享面板转发到微信等应用。
 - 分享导入会先预览内容，再确认导入。
 - 导入分享后可撤销本次新增的人物、地点、回忆和照片。
 - 数据管理页保留分享历史，支持再次复制分享链接和查看导入结果。
-- 二维码适合不含照片的小体积分享；包含照片或内容较多时建议使用分享包。
+- 二维码使用精简链接编码，适合不含照片的小体积分享；包含照片或内容较多时建议使用分享包。
 
 ### 备份与数据管理
 
@@ -272,12 +273,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.99` 主要变化：
+`0.1.0-test.100` 主要变化：
 
-- 回忆详情合并重复的故事卡、内容卡和标签卡，首屏改为单一正文阅读卡。
-- 回忆详情恢复折叠头部，并为正文卡预留安全缓冲，减少折叠时遮挡正文和心情标签。
-- 关联人物和关联地点搜索支持多关键词与去空格匹配，地点搜索会按店名、商场、城市和地址排序。
-- 检查更新增加检查中来源提示，慢源会标记为已跳过，减少用户误以为卡住。
+- 分享面板中的二维码支持点击放大，单独弹窗展示更适合扫码和确认。
+- 二维码弹窗新增保存到相册和分享图片，Android 可调用系统相册与系统分享面板转发到微信等应用。
+- LifeLog 分享链接改为更紧凑的二维码编码格式，同时保留旧链接解析兼容。
+- 二维码生成降低纠错密度，内容较少时二维码更清爽；大内容仍建议使用分享包。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 

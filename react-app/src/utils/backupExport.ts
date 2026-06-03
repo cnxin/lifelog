@@ -1,7 +1,11 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
 interface NativeBackupFilePlugin {
-  save(options: { fileName: string; content: string }): Promise<{ fileName?: string; path?: string; size?: number }>;
+  save(options: {
+    fileName: string;
+    content: string;
+    mimeType?: string;
+  }): Promise<{ fileName?: string; path?: string; size?: number }>;
 }
 
 export interface BackupExportTarget {
@@ -49,7 +53,8 @@ export async function saveReadableFile(fileName: string, content: string, mimeTy
   if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android") {
     const result = await NativeBackupFile.save({
       fileName,
-      content
+      content,
+      mimeType
     });
     const savedName = result.fileName || fileName;
     return {

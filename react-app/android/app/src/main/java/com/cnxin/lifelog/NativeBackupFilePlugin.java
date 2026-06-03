@@ -28,7 +28,7 @@ public class NativeBackupFilePlugin extends Plugin {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        intent.setType("application/json");
+        intent.setType(call.getString("mimeType", "application/json"));
         intent.putExtra(Intent.EXTRA_TITLE, fileName);
         startActivityForResult(call, intent, "saveBackupResult");
     }

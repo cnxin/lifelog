@@ -3,6 +3,8 @@ import type { LifeLogSharePayload } from "./lifelogShare";
 const SHARE_LINK_VERSION = "v1";
 const MAX_SHARE_LINK_LENGTH = 6200;
 const APP_SHARE_ORIGIN = "lifelog://share";
+const COMPACT_GZIP_PREFIX = "g1.";
+const COMPACT_BASE64_PREFIX = "b1.";
 
 interface ShareLinkEnvelope {
   version: typeof SHARE_LINK_VERSION;
@@ -19,8 +21,7 @@ export class ShareLinkTooLargeError extends Error {
 
 export async function buildLifeLogShareLink(payload: LifeLogSharePayload, origin = getDefaultShareOrigin()) {
   const json = JSON.stringify(payload);
-  const envelope = await encodeShareEnvelope(json);
-  const hash = encodeURIComponent(JSON.stringify(envelope));
+  const hash = await encodeShareHash(json);
   const link = `${origin.replace(/\/$/, "")}/import#${hash}`;
   if (link.length > MAX_SHARE_LINK_LENGTH) {
     throw new ShareLinkTooLargeError(link.length);
@@ -31,6 +32,15 @@ export async function buildLifeLogShareLink(payload: LifeLogSharePayload, origin
 export async function parseLifeLogShareLinkHash(hash: string): Promise<LifeLogSharePayload> {
   const raw = hash.replace(/^#/, "").trim();
   if (!raw) throw new Error("分享链接缺少导入数据。");
+
+  if (raw.startsWith(COMPACT_GZIP_PREFIX)) {
+    return JSON.parse(await decodeCompressed(raw.slice(COMPACT_GZIP_PREFIX.length))) as LifeLogSharePayload;
+  }
+
+  if (raw.startsWith(COMPACT_BASE64_PREFIX)) {
+    return JSON.parse(decodeBase64UrlToText(raw.slice(COMPACT_BASE64_PREFIX.length))) as LifeLogSharePayload;
+  }
+
   let envelope: ShareLinkEnvelope;
   try {
     envelope = JSON.parse(decodeURIComponent(raw)) as ShareLinkEnvelope;
@@ -79,6 +89,12 @@ function getDefaultShareOrigin() {
 function isLifeLogShareImportUrl(url: URL) {
   if (url.protocol === "lifelog:" && url.hostname === "share" && url.pathname === "/import") return true;
   return url.pathname === "/share/import";
+}
+
+async function encodeShareHash(json: string) {
+  const envelope = await encodeShareEnvelope(json);
+  const prefix = envelope.encoding === "gzip-base64url" ? COMPACT_GZIP_PREFIX : COMPACT_BASE64_PREFIX;
+  return `${prefix}${envelope.payload}`;
 }
 
 async function encodeShareEnvelope(json: string): Promise<ShareLinkEnvelope> {
