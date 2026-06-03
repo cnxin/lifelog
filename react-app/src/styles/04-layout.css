@@ -187,7 +187,7 @@
   gap: 8px;
 }
 
-.memory-story-card {
+.memory-reader-card {
   display: grid;
   gap: 14px;
   padding: 16px;
@@ -196,63 +196,73 @@
     var(--card-bg);
 }
 
-.memory-story-head {
+.memory-reader-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: center;
+  align-items: start;
 }
 
-.memory-story-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: white;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-}
-
-.memory-story-icon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.memory-story-head div {
+.memory-reader-head div {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 5px;
 }
 
-.memory-story-head span {
+.memory-reader-head span {
   color: var(--text-sub);
   font-size: 12px;
   font-weight: 700;
 }
 
-.memory-story-head strong {
+.memory-reader-head h2 {
+  margin: 0;
   min-width: 0;
   color: var(--text-main);
-  font-size: 17px;
-  line-height: 1.35;
-}
-
-.memory-story-card p {
-  margin: 0;
-  color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: 20px;
+  line-height: 1.28;
   overflow-wrap: anywhere;
 }
 
-.memory-story-facts,
-.memory-story-actions {
+.memory-reader-share {
+  min-height: 36px;
+  border: 0;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.memory-reader-share svg {
+  width: 15px;
+  height: 15px;
+}
+
+.memory-reader-body {
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.72;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.memory-reader-body.empty {
+  color: var(--text-sub);
+}
+
+.memory-reader-facts,
+.memory-reader-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.memory-story-facts span {
+.memory-reader-facts span {
   border-radius: 999px;
   padding: 6px 9px;
   color: var(--primary);
@@ -261,12 +271,12 @@
   font-weight: 800;
 }
 
-.memory-story-actions {
+.memory-reader-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.memory-story-actions button {
+.memory-reader-actions button {
   min-width: 0;
   min-height: 40px;
   border: 0;
@@ -283,12 +293,12 @@
   font-weight: 800;
 }
 
-.memory-story-actions button:first-child {
+.memory-reader-actions button:first-child {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
-.memory-story-actions svg {
+.memory-reader-actions svg {
   flex: 0 0 auto;
   width: 15px;
   height: 15px;
@@ -731,6 +741,35 @@ button.person-pref-line {
   margin: 0;
 }
 
+.memory-detail-hero-section {
+  margin-bottom: 14px;
+}
+
+.memory-detail-profile-card .detail-profile-body {
+  gap: 12px;
+}
+
+.memory-detail-profile-card .profile-photo {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+}
+
+.memory-detail-profile-card .profile-main {
+  display: grid;
+  gap: 5px;
+}
+
+.memory-detail-profile-card .profile-title h2 {
+  font-size: 18px;
+  line-height: 1.22;
+}
+
+.memory-detail-profile-card .profile-main>p {
+  margin: 0;
+}
+
 .person-birthday-summary {
   display: grid;
   gap: 2px;
@@ -782,6 +821,11 @@ button.person-pref-line {
   opacity: 0;
   transform: translateY(-12px);
   pointer-events: none;
+}
+
+.memory-detail-hero-section + .section {
+  margin-top: -72px;
+  padding-top: 72px;
 }
 
 
@@ -1332,6 +1376,40 @@ button.person-pref-line {
   background: var(--soft-purple);
   font-size: 11px;
   font-weight: 800;
+}
+
+.memory-related-object-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.memory-related-object-group {
+  display: grid;
+  gap: 8px;
+}
+
+.memory-related-object-group > strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.memory-related-place-list {
+  display: grid;
+  gap: 8px;
+}
+
+.memory-related-object-card .memory-place-row {
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+  box-shadow: none;
+}
+
+.memory-related-empty {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .action-grid {

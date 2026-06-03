@@ -436,7 +436,7 @@ export function MemoryFields({
           includeEmptyMarker
         />
         <input type="hidden" name="placeId" value={fullPlaceIds[0] || ""} />
-        <p className="form-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
+        <p className="form-hint memory-place-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
       </div>
       <label>
         内容

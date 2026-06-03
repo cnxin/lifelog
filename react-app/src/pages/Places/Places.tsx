@@ -623,7 +623,7 @@ export default function Places() {
                   setBatchDraft({ category: "", mall: "", area: "", tags: "" });
                 }}
               >
-                {batchShareMode ? "取消" : "批量管理"}
+                {batchShareMode ? "取消" : "批量 / 分享"}
               </button>
             )}
             {!mallGroups.length && (

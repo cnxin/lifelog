@@ -43,11 +43,13 @@ export default function PlacePicker({
   );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const tokens = normalizePickerTokens(query);
     return places
       .filter((place) => !selected.includes(place.id))
-      .filter((place) => (q ? getPlaceSearchText(place).includes(q) : true))
-      .sort((left, right) => scorePlaceOption(right, q) - scorePlaceOption(left, q) || left.name.localeCompare(right.name, "zh-CN"))
+      .map((place) => ({ place, score: scorePlaceOption(place, tokens) }))
+      .filter((item) => !tokens.length || item.score > 0)
+      .sort((left, right) => right.score - left.score || left.place.name.localeCompare(right.place.name, "zh-CN"))
+      .map((item) => item.place)
       .slice(0, 12);
   }, [places, selected, query]);
 
@@ -125,7 +127,7 @@ export default function PlacePicker({
               onKeyDown={(event) => {
                 if (event.key === "Escape") setIsOpen(false);
               }}
-              placeholder={selected.length ? "继续添加地点" : "搜索地点、商场、地址"}
+              placeholder={selected.length ? "继续添加地点" : "搜索店名、商场、城市或地址"}
               aria-label="搜索地点"
             />
           </div>
@@ -180,8 +182,8 @@ function getPlaceSearchText(place: PickerPlace) {
     .toLowerCase();
 }
 
-function scorePlaceOption(place: PickerPlace, query: string) {
-  if (!query) return 0;
+function scorePlaceOption(place: PickerPlace, tokens: string[]) {
+  if (!tokens.length) return 0;
 
   const fields = [
     { value: place.name, score: 80 },
@@ -192,11 +194,40 @@ function scorePlaceOption(place: PickerPlace, query: string) {
     { value: place.address, score: 20 }
   ];
 
-  return fields.reduce((score, field) => {
-    const value = field.value?.toLowerCase() || "";
-    if (!value.includes(query)) return score;
-    return score + field.score + (value.startsWith(query) ? 10 : 0);
+  const compactSearch = normalizePickerText(getPlaceSearchText(place));
+  const tokenScore = tokens.reduce((score, token) => {
+    if (!compactSearch.includes(token)) return score;
+    return score + 8;
   }, 0);
+
+  if (!tokenScore) return 0;
+
+  return fields.reduce((score, field) => {
+    const value = normalizePickerText(field.value || "");
+    if (!value) return score;
+    const fieldScore = tokens.reduce((sum, token) => {
+      if (!value.includes(token)) return sum;
+      return sum + field.score + (value.startsWith(token) ? 14 : 0) + (value === token ? 24 : 0);
+    }, 0);
+    return score + fieldScore;
+  }, tokenScore);
+}
+
+function normalizePickerText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function normalizePickerTokens(value: string) {
+  const compact = normalizePickerText(value);
+  const loose = value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return Array.from(new Set([compact, ...loose].filter(Boolean)));
 }
 
 function formatPlaceOptionTitle(place: PickerPlace) {

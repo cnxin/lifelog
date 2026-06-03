@@ -210,16 +210,20 @@ export default function AccountAbout() {
             <div>
               <span>版本更新</span>
               <strong>
-                {latestUpdate
+                {isChecking
+                  ? "正在检查更新"
+                  : latestUpdate
                   ? latestUpdate.hasUpdate
                     ? `发现 ${latestUpdate.latestVersion}`
                     : "当前已是最新"
                   : "检查最新版本"}
               </strong>
               <small>
-                {latestUpdate
+                {isChecking
+                  ? "优先检查 Gitee、CDN 和 GitHub Release，慢源会自动跳过。"
+                  : latestUpdate
                   ? `当前版本 ${latestUpdate.currentVersion} · 最新版本 ${latestUpdate.latestVersion}`
-                  : "同时读取 Gitee 镜像清单、GitHub raw 清单、CDN 清单和 GitHub Release。"}
+                  : "优先读取 Gitee、CDN 和 GitHub Release；GitHub raw 仅作为兜底。"}
               </small>
             </div>
             <button className="mini-action add" type="button" onClick={() => void handleCheckUpdate()} disabled={isChecking}>
@@ -227,6 +231,17 @@ export default function AccountAbout() {
               {isChecking ? "检查中" : "检查"}
             </button>
           </div>
+          {isChecking && (
+            <div className="update-checking-flow">
+              {["Gitee 镜像", "CDN 清单", "GitHub Release"].map((source) => (
+                <span key={source}>
+                  <RefreshCw size={12} />
+                  {source}
+                </span>
+              ))}
+              <em>raw 兜底</em>
+            </div>
+          )}
           {latestUpdate && (
             <div className="update-check-meta">
               <span>
@@ -570,6 +585,7 @@ function formatDiagnosticText(item: UpdateSourceDiagnostic) {
   if (item.status === "ok") return `${version}${item.message}`;
   if (item.status === "empty") return "无可用数据";
   if (item.status === "invalid") return `解析失败：${item.message}`;
+  if (item.message.includes("响应较慢")) return "响应较慢，已跳过";
   return `失败：${item.message}`;
 }
 

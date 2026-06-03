@@ -35,10 +35,13 @@ export default function PersonPicker({
   );
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const tokens = normalizePickerTokens(query);
     return people
       .filter((person) => !selected.includes(person.id))
-      .filter((person) => (q ? person.name.toLowerCase().includes(q) : true))
+      .map((person) => ({ person, score: scorePersonOption(person, tokens) }))
+      .filter((item) => !tokens.length || item.score > 0)
+      .sort((left, right) => right.score - left.score || left.person.name.localeCompare(right.person.name, "zh-CN"))
+      .map((item) => item.person)
       .slice(0, 12);
   }, [people, selected, query]);
 
@@ -115,7 +118,7 @@ export default function PersonPicker({
               onKeyDown={(event) => {
                 if (event.key === "Escape") setIsOpen(false);
               }}
-              placeholder={selected.length ? "继续添加人物" : "搜索人物名字"}
+              placeholder={selected.length ? "继续添加人物" : "搜索姓名、昵称或多个关键词"}
               aria-label="搜索人物"
             />
           </div>
@@ -148,4 +151,30 @@ export default function PersonPicker({
       )}
     </div>
   );
+}
+
+function normalizePickerText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function normalizePickerTokens(value: string) {
+  const compact = normalizePickerText(value);
+  const loose = value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return Array.from(new Set([compact, ...loose].filter(Boolean)));
+}
+
+function scorePersonOption(person: { name: string }, tokens: string[]) {
+  if (!tokens.length) return 0;
+  const name = normalizePickerText(person.name);
+  return tokens.reduce((score, token) => {
+    if (!name.includes(token)) return score;
+    return score + 40 + (name.startsWith(token) ? 20 : 0) + (name === token ? 40 : 0);
+  }, 0);
 }

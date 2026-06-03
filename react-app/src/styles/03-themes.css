@@ -629,6 +629,7 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   overflow-x: hidden;
   padding: 0 24px 25vh;
   overscroll-behavior-x: none;
+  overflow-anchor: none;
   scroll-behavior: smooth;
 }
 

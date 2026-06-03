@@ -1037,7 +1037,11 @@ function alignDetailTarget(element: HTMLElement, scrollRoot: HTMLElement, behavi
 function getDetailScrollOffset(scrollRoot: HTMLElement | null) {
   const detailHeader = scrollRoot?.querySelector<HTMLElement>(".detail-hero-section");
   const headerHeight = detailHeader?.getBoundingClientRect().height || 76;
-  return Math.min(Math.max(headerHeight + 50, 124), 220);
+  const navHeight = detailHeader?.querySelector<HTMLElement>(".detail-profile-nav")?.getBoundingClientRect().height || 36;
+
+  // The sticky profile header shrinks while the target scroll is running.
+  // Capping this value too low lets the final card title slide under the collapsed back bar.
+  return Math.max(headerHeight + 34, navHeight + 58, 112);
 }
 
 function planStatusLabel(status: AnniversaryPlan["status"]) {

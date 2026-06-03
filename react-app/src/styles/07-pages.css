@@ -541,6 +541,38 @@
   line-height: 1;
 }
 
+.update-checking-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.update-checking-flow span,
+.update-checking-flow em {
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.update-checking-flow svg {
+  width: 12px;
+  height: 12px;
+  animation: spin 1s linear infinite;
+}
+
+.update-checking-flow em {
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.08);
+}
+
 .update-check-meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

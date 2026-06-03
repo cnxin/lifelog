@@ -104,14 +104,13 @@ export default function MemoryDetail() {
   const memoryCtx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
   const memoryTitle = getMemoryDisplayTitle(memory, memoryCtx);
   const storyFacts = buildMemoryStoryFacts(memory, memoryCtx, photoIds.length, linkedPlans.length);
-  const storyText = buildMemoryStoryText(memory, memoryCtx);
   const firstPersonId = personIds[0];
   const firstPlaceId = placeIds[0];
 
   return (
     <>
-      <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className="profile-card detail-profile-card">
+      <section className={`section detail-hero-section memory-detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
+        <GlassCard className="profile-card detail-profile-card memory-detail-profile-card">
           <div className="detail-profile-nav">
             <button className="back-button" type="button" onClick={() => navigate("/memories")}>
               <ArrowLeft /> 返回回忆
@@ -140,23 +139,26 @@ export default function MemoryDetail() {
       </section>
 
       <section className="section">
-        <GlassCard className="memory-story-card">
-          <div className="memory-story-head">
-            <span className="memory-story-icon">
-              <Heart />
-            </span>
+        <GlassCard className="memory-reader-card">
+          <div className="memory-reader-head">
             <div>
               <span>{formatMonthDay(memory.date)} · {memory.mood || "日常"}</span>
-              <strong>{memoryTitle}</strong>
+              <h2>{memoryTitle}</h2>
             </div>
+            <button className="memory-reader-share" type="button" onClick={() => setShareOpen(true)}>
+              <QrCode /> 分享
+            </button>
           </div>
-          <p>{storyText}</p>
-          <div className="memory-story-facts">
+          <div className={`memory-reader-body ${memory.content.trim() ? "" : "empty"}`}>
+            {memory.content.trim() || "还没有记录内容，可以补充发生了什么、当时的感受，或者下次要注意的事。"}
+          </div>
+          <MemoryTags mood={memory.mood} tags={tags} />
+          <div className="memory-reader-facts">
             {storyFacts.map((fact) => (
               <span key={fact}>{fact}</span>
             ))}
           </div>
-          <div className="memory-story-actions">
+          <div className="memory-reader-actions">
             <button type="button" onClick={() => setEditing(true)}>
               <PenLine /> {memory.content.trim() ? "补充细节" : "写下发生了什么"}
             </button>
@@ -173,59 +175,7 @@ export default function MemoryDetail() {
                 <Sparkles /> 补关联
               </button>
             )}
-            <button type="button" onClick={() => setAddingRelatedMemory(true)}>
-              <Heart /> 再记一件
-            </button>
-            <button type="button" onClick={() => setShareOpen(true)}>
-              <QrCode /> 分享
-            </button>
           </div>
-        </GlassCard>
-      </section>
-
-      {completionTips.length > 0 && (
-        <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 建议补充
-            </h2>
-            <button className="see-all" onClick={() => setEditing(true)}>
-              去编辑
-            </button>
-          </div>
-          <div className="completion-list">
-            {completionTips.map((tip) => (
-              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
-                <div className="task-icon">{tip.icon}</div>
-                <div>
-                  <strong>{tip.title}</strong>
-                  <span>{tip.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Calendar /> 内容
-          </h2>
-        </div>
-        <GlassCard className="pref-block memory-content-block">
-          <p className="memory-desc">{memory.content || "还没有记录内容"}</p>
-        </GlassCard>
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Tag /> 心情和标签
-          </h2>
-        </div>
-        <GlassCard className="pref-block memory-tag-block">
-          <MemoryTags mood={memory.mood} tags={tags} />
         </GlassCard>
       </section>
 
@@ -278,46 +228,72 @@ export default function MemoryDetail() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <Users /> 关联人物
+            <Users /> 相关对象
           </h2>
         </div>
-        <div className="tap-chip-row">
-          {personIds.map((personId) => (
-            <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
-              {getPersonName(personId)}
-            </button>
-          ))}
-          {!personIds.length && <GlassCard className="empty">未关联人物</GlassCard>}
-        </div>
+        <GlassCard className="memory-related-object-card">
+          <div className="memory-related-object-group">
+            <strong>人物</strong>
+            <div className="tap-chip-row">
+              {personIds.map((personId) => (
+                <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
+                  {getPersonName(personId)}
+                </button>
+              ))}
+              {!personIds.length && <span className="memory-related-empty">未关联人物</span>}
+            </div>
+          </div>
+          <div className="memory-related-object-group">
+            <strong>地点</strong>
+            {places.length ? (
+              <div className="memory-related-place-list">
+                {places.map((place) => (
+                  <button className="memory-place-row detail-button" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
+                    <strong className="truncate-text">{getPlaceName(place.id)}</strong>
+                    <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="memory-related-empty">未关联地点，点击“编辑回忆”可以补充。</span>
+            )}
+          </div>
+        </GlassCard>
       </section>
 
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <MapPin /> 关联地点
-          </h2>
-        </div>
-        {places.length ? (
-          <>
-            {places.map((place) => (
-              <button className="memory-place-row detail-button glass-card" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
-                <strong className="truncate-text">{getPlaceName(place.id)}</strong>
-                <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
+      {completionTips.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Sparkles /> 建议补充
+            </h2>
+            <button className="see-all" onClick={() => setEditing(true)}>
+              去编辑
+            </button>
+          </div>
+          <div className="completion-list">
+            {completionTips.map((tip) => (
+              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
+                <div className="task-icon">{tip.icon}</div>
+                <div>
+                  <strong>{tip.title}</strong>
+                  <span>{tip.desc}</span>
+                </div>
               </button>
             ))}
-          </>
-        ) : (
-          <GlassCard className="empty">未关联地点，点击“编辑回忆”可以补充。</GlassCard>
-        )}
-      </section>
+          </div>
+        </section>
+      )}
 
       <MemoryTimelineSection
         title="相关回忆"
         groupedMemories={groupedRelatedMemories}
         getPersonName={getPersonName}
         getPlaceName={getPlaceName}
+        onAddMemory={() => setAddingRelatedMemory(true)}
         emptyTitle="还没有找到相关回忆"
         emptyDesc="同人物、同地点或同标签的记录会自动出现在这里。"
+        emptyAction="记录相关回忆"
         renderMeta={(relatedMemory, ctx, showContentLine) => (
           <>
             <p className="memory-desc memory-meta-line">
@@ -374,17 +350,6 @@ function formatLinkedPlanStatus(status: AnniversaryPlan["status"]) {
   if (status === "done") return "已完成";
   if (status === "skipped") return "已跳过";
   return "未开始";
-}
-
-function buildMemoryStoryText(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>) {
-  const content = memory.content.trim();
-  if (content) return content.length > 120 ? `${content.slice(0, 120)}...` : content;
-  const people = ctx.personNames.join("、");
-  const places = ctx.placeNames.join("、");
-  if (people && places) return `这是一段和 ${people} 在 ${places} 发生的回忆。`;
-  if (people) return `这是一段和 ${people} 有关的回忆。`;
-  if (places) return `这是一段发生在 ${places} 的回忆。`;
-  return "这条回忆还很轻，可以先保留，也可以补一句发生了什么。";
 }
 
 function buildMemoryStoryFacts(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>, photoCount: number, planCount: number) {

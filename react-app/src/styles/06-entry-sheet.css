@@ -601,6 +601,13 @@
   line-height: 1.5;
 }
 
+.memory-place-hint {
+  margin-top: 7px;
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
 .share-import {
   display: grid;
   gap: 10px;
