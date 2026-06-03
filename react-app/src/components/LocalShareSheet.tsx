@@ -6,7 +6,7 @@ import { useToast } from "../context/ToastContext";
 import { copyTextToClipboard } from "../utils/diagnostics";
 import { saveImageToGallery, shareImageFile } from "../utils/imageShare";
 import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
-import { buildLifeLogShareLink, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
+import { buildLifeLogShareLink, buildLifeLogShareQrCode, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
 import type { MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
 
 type ShareTarget =
@@ -48,6 +48,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   const [shareLink, setShareLink] = useState("");
   const [qrImage, setQrImage] = useState("");
   const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
+  const [qrSaveStatus, setQrSaveStatus] = useState("");
   const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>({
     includeContent: true,
     peopleMode: "public",
@@ -109,8 +110,18 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
     setIsCopyingLink(true);
     try {
       const payload = target.type === "memory"
-        ? await buildMemoryShare(target.memoryId, { ...memoryOptions, includePhotos: false })
-        : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
+        ? await buildMemoryShare(target.memoryId, {
+            includeContent: false,
+            peopleMode: memoryOptions.peopleMode,
+            placeMode: memoryOptions.placeMode === "hidden" ? "hidden" : "name",
+            includePhotos: false
+          })
+        : await buildPlacesShare(target.placeIds, {
+            includeAddress: false,
+            includePreciseLocation: false,
+            includeLinks: false,
+            includePhotos: false
+          });
       const link = await buildLifeLogShareLink(payload);
       const copied = await copyTextToClipboard(link);
       const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
@@ -156,9 +167,10 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
       const payload = target.type === "memory"
         ? await buildMemoryShare(target.memoryId, { ...memoryOptions, includePhotos: false })
         : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
-      const link = await buildLifeLogShareLink(payload);
-      setShareLink(link);
-      setQrImage(await QRCode.toDataURL(link, { width: 320, margin: 2, errorCorrectionLevel: "L" }));
+      const qrCode = await buildLifeLogShareQrCode(payload);
+      setShareLink(qrCode.link);
+      setQrSaveStatus("");
+      setQrImage(await QRCode.toDataURL(qrCode.qrSegments, { width: 320, margin: 2, errorCorrectionLevel: "L" }));
       setQrPreviewOpen(true);
       const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
       addShareHistoryEntry({
@@ -166,8 +178,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
         method: "link",
         status: "created",
         title: target.title,
-        summary: formatShareHistoryCounts(counts) || "二维码分享链接",
-        shareLink: link,
+        summary: formatShareHistoryCounts(counts) || "精简二维码分享",
+        shareLink: qrCode.link,
         counts
       });
     } catch (error) {
@@ -186,6 +198,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
     if (!target || !qrImage) return;
     try {
       const result = await saveImageToGallery(buildQrFileName(target.title), qrImage);
+      setQrSaveStatus(`已保存到相册：${result.fileName}`);
       notify({
         message: `二维码已保存到相册：${result.fileName}`,
         tone: "success",
@@ -205,6 +218,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
     if (!target || !qrImage) return;
     try {
       await shareImageFile(buildQrFileName(target.title), qrImage, "分享 LifeLog 二维码");
+      setQrSaveStatus("已打开系统分享面板");
       notify({ message: "已打开系统分享面板", tone: "success", durationMs: 2600 });
     } catch {
       notify({ message: "当前环境无法分享图片，已保留二维码可长按保存。", tone: "info", durationMs: 3600 });
@@ -304,7 +318,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
                   </span>
                 </button>
               )}
-              <span>让对方扫码打开分享导入页面。已使用精简链接生成；内容较多时建议改用分享包。</span>
+              <span>二维码默认生成精简版，扫码后可导入标题、日期、人物和地点名称；完整内容请复制链接或用分享包。</span>
             </div>
           )}
         </div>
@@ -341,7 +355,12 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               </button>
             </div>
             <img className="qr-preview-image" src={qrImage} alt="LifeLog 分享二维码" />
-            <p>对方用 LifeLog 扫码后可预览并添加内容。二维码只包含分享链接，不会上传到云端。</p>
+            <p>二维码使用精简版，便于扫码和保存。完整正文、地址、链接和照片请用复制链接或分享包。</p>
+            {qrSaveStatus && (
+              <div className="qr-preview-status" role="status">
+                {qrSaveStatus}
+              </div>
+            )}
             <div className="qr-preview-actions">
               <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
                 <Copy size={16} />

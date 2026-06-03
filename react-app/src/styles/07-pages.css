@@ -1177,6 +1177,17 @@
   text-align: center;
 }
 
+.qr-preview-status {
+  border-radius: 14px;
+  padding: 9px 11px;
+  color: #2f7d54;
+  background: rgba(46, 204, 113, 0.13);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .qr-preview-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

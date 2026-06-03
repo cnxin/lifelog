@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.100`
+当前版本：`0.1.0-test.101`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.100
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.100/lifelog-v0.1.0-test.100.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.100.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.101
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.101/lifelog-v0.1.0-test.101.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.101.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.100.apk`
-- 大小：`3699862` bytes
-- SHA256：`3ca678df308ede7519ace3123d89f71da02d2f2f8be2246161bc3239cebfd033`
+- 文件名：`lifelog-v0.1.0-test.101.apk`
+- 大小：`3700746` bytes
+- SHA256：`ac8b2171e3754a112ad9894ce567dc770e4d106212e437d0b7ca01c26d7cdfa7`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -86,11 +86,11 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 - 回忆详情和地点详情提供独立分享操作卡，可直接打开分享面板。
 - 首页快捷新增和分享导入页支持扫描 LifeLog 分享二维码。
 - Android 支持 `lifelog://share/import#...` 深链，真机扫码可直达分享导入页。
-- Android 支持把分享二维码保存到相册，也可调用系统分享面板转发到微信等应用。
+- Android 支持把分享二维码保存到相册，也可调用系统分享面板转发到微信等应用；保存成功后会在弹窗内显示提示。
 - 分享导入会先预览内容，再确认导入。
 - 导入分享后可撤销本次新增的人物、地点、回忆和照片。
 - 数据管理页保留分享历史，支持再次复制分享链接和查看导入结果。
-- 二维码使用精简链接编码，适合不含照片的小体积分享；包含照片或内容较多时建议使用分享包。
+- 二维码使用专用低密度编码，并默认生成精简版分享；完整正文、地址、链接、照片或内容较多时建议使用复制链接或分享包。
 
 ### 备份与数据管理
 
@@ -273,12 +273,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.100` 主要变化：
+`0.1.0-test.101` 主要变化：
 
-- 分享面板中的二维码支持点击放大，单独弹窗展示更适合扫码和确认。
-- 二维码弹窗新增保存到相册和分享图片，Android 可调用系统相册与系统分享面板转发到微信等应用。
-- LifeLog 分享链接改为更紧凑的二维码编码格式，同时保留旧链接解析兼容。
-- 二维码生成降低纠错密度，内容较少时二维码更清爽；大内容仍建议使用分享包。
+- 分享二维码改为专用低密度编码，扫码内容默认使用精简版，减少二维码密集程度。
+- 精简二维码保留标题、日期、人物和地点名称，完整正文、地址、链接和照片继续使用复制链接或分享包。
+- Android 新增 `lifelog://q` 深链识别，外部扫码也能唤起 LifeLog 导入精简分享。
+- 保存二维码到相册成功后，二维码弹窗内会持续显示保存成功提示，避免错过 Toast。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 

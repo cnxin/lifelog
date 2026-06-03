@@ -92,7 +92,7 @@ public class MainActivity extends BridgeActivity {
         }
 
         String url = intent.getData().toString();
-        if (url.startsWith("lifelog://share/import")) {
+        if (url.startsWith("lifelog://share/import") || url.startsWith("lifelog://q/")) {
             pendingDeepLink = url;
         }
     }
