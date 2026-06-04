@@ -250,6 +250,11 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               <span>生成 `.lifelog-share.json`，接收方可在 LifeLog 中预览后添加。</span>
             </div>
           </div>
+          <div className="local-share-mode-grid" aria-label="分享方式说明">
+            <ShareModeCard title="二维码" desc="当面扫码，内容最精简" />
+            <ShareModeCard title="复制链接" desc="适合聊天发送，保留基础信息" />
+            <ShareModeCard title="分享包" desc="适合完整迁移，可包含更多内容" />
+          </div>
 
           {target.type === "memory" ? (
             <>
@@ -385,6 +390,15 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
 function buildQrFileName(title: string) {
   const slug = title.replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 24) || "lifelog-share";
   return `lifelog-qr-${slug}.png`;
+}
+
+function ShareModeCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div>
+      <strong>{title}</strong>
+      <span>{desc}</span>
+    </div>
+  );
 }
 
 function ShareSwitch({

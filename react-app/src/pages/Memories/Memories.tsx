@@ -1,6 +1,6 @@
 import { CalendarDays, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState, type CSSProperties } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -22,6 +22,9 @@ export default function Memories() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const importedMemoryIds = useMemo(() => parseImportedIds(searchParams.get("imported")), [searchParams]);
+  const importedMemoryIdSet = useMemo(() => new Set(importedMemoryIds), [importedMemoryIds]);
   const [filters, setFilters] = usePersistentState<MemoryFilterState>(
     "lifelog:filters:memories",
     { query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" },
@@ -54,6 +57,7 @@ export default function Memories() {
     return [...state.memories]
       .sort((a, b) => b.date.localeCompare(a.date))
       .filter((memory) => {
+        if (importedMemoryIdSet.size && !importedMemoryIdSet.has(memory.id)) return false;
         const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
         const content = [
           memory.title,
@@ -72,9 +76,10 @@ export default function Memories() {
         if (tagFilter && !(memory.tags || []).includes(tagFilter)) return false;
         return true;
       });
-  }, [getPersonName, getPlaceName, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter]);
+  }, [getPersonName, getPlaceName, importedMemoryIdSet, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter]);
   const groupedMemories = useMemo(() => groupMemoriesByMonth(memories), [memories]);
   const yearAnchors = useMemo(() => buildYearAnchors(groupedMemories), [groupedMemories]);
+  const yearMapItems = useMemo(() => buildYearMapItems(groupedMemories), [groupedMemories]);
 
   async function handleDelete(id: string) {
     const accepted = await confirm({
@@ -111,6 +116,12 @@ export default function Memories() {
     setFilters({ ...filters, ...patch });
   }
 
+  function clearImportedView() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("imported");
+    setSearchParams(next, { replace: true });
+  }
+
   return (
     <>
       <PageSegmentNav
@@ -121,6 +132,19 @@ export default function Memories() {
         ]}
       />
       <SearchBar value={query} placeholder="搜索标题、正文、人物、地点、心情或标签" onChange={(query) => updateFilters({ query })} />
+      {importedMemoryIds.length > 0 && (
+        <section className="section imported-focus-section">
+          <GlassCard className="imported-focus-card">
+            <div>
+              <strong>刚导入的回忆</strong>
+              <span>已临时筛出 {memories.length} 条刚添加的回忆，便于检查内容。</span>
+            </div>
+            <button className="mini-action" type="button" onClick={clearImportedView}>
+              查看全部
+            </button>
+          </GlassCard>
+        </section>
+      )}
       <section className="section memory-filter-section compact-filter-section">
         <div className="list-filter-toolbar">
           <div className="list-filter-summary">
@@ -186,13 +210,25 @@ export default function Memories() {
         )}
       </section>
       <section className="section">
-        {yearAnchors.length > 1 && (
-          <div className="memory-year-jump">
-            {yearAnchors.map((anchor) => (
-              <a href={`#memory-year-${anchor}`} key={anchor}>
-                {anchor}
-              </a>
-            ))}
+        {yearMapItems.length > 0 && (
+          <div className="memory-time-map" aria-label="回忆时间地图">
+            <div className="memory-time-map-head">
+              <strong>时间地图</strong>
+              <span>{yearMapItems.length} 个年份 · {memories.length} 条</span>
+            </div>
+            <div className="memory-time-map-track">
+              {yearMapItems.map((item) => (
+                <a
+                  href={`#memory-year-${item.year}`}
+                  key={item.year}
+                  style={{ "--density": item.density } as CSSProperties}
+                  title={`${item.year} · ${item.count} 条回忆`}
+                >
+                  <span />
+                  <em>{item.year}</em>
+                </a>
+              ))}
+            </div>
           </div>
         )}
         <div className="memory-timeline-list">
@@ -270,6 +306,21 @@ function buildYearAnchors(groups: Array<{ month: string; memories: MemoryEvent[]
   return Array.from(new Set(groups.map((group) => extractYear(group.month)).filter(Boolean)));
 }
 
+function buildYearMapItems(groups: Array<{ month: string; memories: MemoryEvent[] }>) {
+  const counts = new Map<string, number>();
+  groups.forEach((group) => {
+    const year = extractYear(group.month);
+    if (!year) return;
+    counts.set(year, (counts.get(year) || 0) + group.memories.length);
+  });
+  const max = Math.max(...counts.values(), 1);
+  return buildYearAnchors(groups).map((year) => ({
+    year,
+    count: counts.get(year) || 0,
+    density: Math.max(0.18, (counts.get(year) || 0) / max)
+  }));
+}
+
 function extractYear(monthLabel: string) {
   const match = monthLabel.match(/\d{4}/);
   return match?.[0] || monthLabel;
@@ -294,6 +345,13 @@ function buildActiveFilterLabels(filters: {
     filters.mood ? `心情：${filters.mood}` : "",
     filters.tag ? `标签：${filters.tag}` : ""
   ].filter(Boolean);
+}
+
+function parseImportedIds(value: string | null) {
+  return (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function buildFilterOptions(memories: MemoryEvent[], getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {

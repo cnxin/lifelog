@@ -11,9 +11,9 @@ export function getShareImportViewTarget(result: LifeLogShareImportResult): Shar
   const personIds = result.createdPersonIds || [];
 
   if (memoryIds.length === 1) return { label: "查看回忆", path: `/memories/${memoryIds[0]}` };
-  if (memoryIds.length > 1) return { label: "查看回忆", path: "/memories" };
+  if (memoryIds.length > 1) return { label: "查看回忆", path: `/memories?imported=${encodeURIComponent(memoryIds.join(","))}` };
   if (placeIds.length === 1) return { label: "查看地点", path: `/places/${placeIds[0]}` };
-  if (placeIds.length > 1) return { label: "查看地点", path: "/places" };
+  if (placeIds.length > 1) return { label: "查看地点", path: `/places?imported=${encodeURIComponent(placeIds.join(","))}` };
   if (personIds.length === 1) return { label: "查看人物", path: `/people/${personIds[0]}` };
   if (personIds.length > 1) return { label: "查看人物", path: "/people" };
 

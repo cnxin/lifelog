@@ -7,8 +7,20 @@ const APP_SHARE_ORIGIN = "lifelog://share";
 const COMPACT_GZIP_PREFIX = "g1.";
 const COMPACT_BASE64_PREFIX = "b1.";
 const QR_GZIP_PREFIX = "Q1.";
+const QR_MINI_GZIP_PREFIX = "Q2.";
 const QR_SHARE_ORIGIN = "lifelog://q";
 const QR_BASE43_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$*+-./:";
+
+interface LifeLogQrMiniPayload {
+  v: 1;
+  k: "m" | "p";
+  t: string;
+  d?: string;
+  o?: string;
+  g?: string[];
+  p?: string[];
+  l?: Array<string | [string, string?, string?, string?]>;
+}
 
 interface ShareLinkEnvelope {
   version: typeof SHARE_LINK_VERSION;
@@ -40,8 +52,7 @@ export async function buildLifeLogShareLink(payload: LifeLogSharePayload, origin
 }
 
 export async function buildLifeLogShareQrCode(payload: LifeLogSharePayload): Promise<LifeLogShareQrCode> {
-  const json = JSON.stringify(payload);
-  const qrHash = await encodeQrShareHash(json);
+  const qrHash = await encodeQrMiniShareHash(JSON.stringify(buildQrMiniPayload(payload)));
   if (qrHash) {
     const link = `${APP_SHARE_ORIGIN}/import#${qrHash}`;
     const qrPrefix = `${QR_SHARE_ORIGIN}/`;
@@ -66,6 +77,11 @@ export async function buildLifeLogShareQrCode(payload: LifeLogSharePayload): Pro
 export async function parseLifeLogShareLinkHash(hash: string): Promise<LifeLogSharePayload> {
   const raw = hash.replace(/^#/, "").trim();
   if (!raw) throw new Error("分享链接缺少导入数据。");
+
+  if (raw.startsWith(QR_MINI_GZIP_PREFIX)) {
+    const decoded = JSON.parse(await decodeCompressedBytes(base43ToBytes(raw.slice(QR_MINI_GZIP_PREFIX.length)))) as unknown;
+    return inflateQrMiniPayload(decoded);
+  }
 
   if (raw.startsWith(QR_GZIP_PREFIX)) {
     return JSON.parse(await decodeCompressedBytes(base43ToBytes(raw.slice(QR_GZIP_PREFIX.length)))) as LifeLogSharePayload;
@@ -100,21 +116,22 @@ export function extractLifeLogShareHashFromText(text: string) {
   const trimmed = text.trim();
   if (!trimmed) return "";
   if (trimmed.startsWith("#")) return trimmed.slice(1);
-  if (trimmed.startsWith(QR_GZIP_PREFIX)) return trimmed;
+  if (isQrShareHash(trimmed)) return trimmed;
 
   try {
     const url = new URL(trimmed);
     const opaquePath = url.pathname.replace(/^\/+/, "");
-    if (url.protocol === "lifelog:" && opaquePath.startsWith(QR_GZIP_PREFIX)) return opaquePath;
-    if (url.protocol === "lifelog:" && url.hostname === "q" && url.pathname.startsWith(`/${QR_GZIP_PREFIX}`)) {
-      return url.pathname.slice(1);
+    if (url.protocol === "lifelog:" && isQrShareHash(opaquePath)) return opaquePath;
+    if (url.protocol === "lifelog:" && url.hostname === "q") {
+      const qrHash = url.pathname.replace(/^\/+/, "");
+      if (isQrShareHash(qrHash)) return qrHash;
     }
     if (isLifeLogShareImportUrl(url) && url.hash) return url.hash.slice(1);
   } catch {
     // Continue with loose text matching below.
   }
 
-  const qrMatch = trimmed.match(/lifelog:\/\/q\/(Q1\.[0-9A-Z$*+\-./:]+)/);
+  const qrMatch = trimmed.match(/lifelog:\/\/q\/((?:Q1|Q2)\.[0-9A-Z$*+\-./:]+)/);
   if (qrMatch) return qrMatch[1];
 
   const match = trimmed.match(/(?:\/share\/import|lifelog:\/\/share\/import)#([^\s"'<>]+)/);
@@ -144,13 +161,237 @@ async function encodeShareHash(json: string) {
   return `${prefix}${envelope.payload}`;
 }
 
-async function encodeQrShareHash(json: string) {
+async function encodeQrMiniShareHash(json: string) {
   if (!supportsCompressionStream()) return "";
   try {
-    return `${QR_GZIP_PREFIX}${bytesToBase43(await encodeCompressedBytes(json))}`;
+    return `${QR_MINI_GZIP_PREFIX}${bytesToBase43(await encodeCompressedBytes(json))}`;
   } catch {
     return "";
   }
+}
+
+function buildQrMiniPayload(payload: LifeLogSharePayload): LifeLogQrMiniPayload {
+  if (payload.shareType === "places") {
+    return {
+      v: 1,
+      k: "p",
+      t: cleanQrText(payload.title || "地点分享", 48),
+      l: payload.data.places
+        .map((place) => compactPlaceTuple(
+          cleanQrText(place.name || place.storeName || "分享地点", 36),
+          cleanQrText(place.city, 18),
+          cleanQrText(place.mall, 28),
+          cleanQrText(place.category, 16)
+        ))
+        .filter((place): place is string | [string, string?, string?, string?] => Boolean(place))
+        .slice(0, 12)
+    };
+  }
+
+  const memory = payload.data.memories[0];
+  const personIds = new Set(readIdList(memory, "personIds", "people"));
+  const placeIds = new Set(readIdList(memory, "placeIds", "places", "placeId"));
+  const people = payload.data.people
+    .filter((person) => !personIds.size || personIds.has(person.id))
+    .map((person) => cleanQrText(person.name, 24))
+    .filter(Boolean)
+    .slice(0, 8);
+  const places = payload.data.places
+    .filter((place) => !placeIds.size || placeIds.has(place.id))
+    .map((place) => cleanQrText(place.name || place.storeName, 32))
+    .filter(Boolean)
+    .slice(0, 8);
+
+  return {
+    v: 1,
+    k: "m",
+    t: cleanQrText(memory?.title || payload.title || "回忆分享", 48),
+    d: normalizeQrDate(memory?.date || ""),
+    o: cleanQrText(memory?.mood || "", 12),
+    g: Array.isArray(memory?.tags) ? memory.tags.map((tag) => cleanQrText(tag, 12)).filter(Boolean).slice(0, 6) : [],
+    p: people,
+    l: places
+  };
+}
+
+function inflateQrMiniPayload(value: unknown): LifeLogSharePayload {
+  if (!isQrMiniPayload(value)) {
+    throw new Error("分享二维码格式不正确。");
+  }
+
+  if (value.k === "p") {
+    const places = (value.l || [])
+      .map((item, index) => inflateQrMiniPlace(item, index))
+      .filter((place): place is LifeLogSharePayload["data"]["places"][number] => Boolean(place));
+    return buildInflatedSharePayload({
+      shareType: "places",
+      title: value.t || (places.length === 1 ? places[0]?.name || "地点分享" : `地点分享（${places.length} 个）`),
+      options: {
+        place: {
+          includeAddress: false,
+          includePreciseLocation: false,
+          includeLinks: false,
+          includePhotos: false
+        }
+      },
+      data: {
+        people: [],
+        places,
+        memories: [],
+        photos: []
+      }
+    });
+  }
+
+  const people = (value.p || [])
+    .map((name, index) => inflateQrMiniPerson(name, index))
+    .filter((person): person is LifeLogSharePayload["data"]["people"][number] => Boolean(person));
+  const places = (value.l || [])
+    .map((item, index) => inflateQrMiniPlace(item, index))
+    .filter((place): place is LifeLogSharePayload["data"]["places"][number] => Boolean(place));
+  const memory = {
+    id: "qrm1",
+    title: value.t || "分享的回忆",
+    date: normalizeQrDate(value.d || ""),
+    personIds: people.map((person) => person.id),
+    placeId: places[0]?.id || "",
+    placeIds: places.map((place) => place.id),
+    mood: value.o || "日常",
+    content: "",
+    tags: Array.isArray(value.g) ? value.g.map((tag) => cleanQrText(tag, 16)).filter(Boolean) : [],
+    photos: []
+  };
+
+  return buildInflatedSharePayload({
+    shareType: "memory",
+    title: memory.title,
+    options: {
+      memory: {
+        includeContent: false,
+        peopleMode: people.length ? "public" : "hidden",
+        placeMode: places.length ? "name" : "hidden",
+        includePhotos: false
+      }
+    },
+    data: {
+      people,
+      places,
+      memories: [memory],
+      photos: []
+    }
+  });
+}
+
+function buildInflatedSharePayload({
+  shareType,
+  title,
+  options,
+  data
+}: Pick<LifeLogSharePayload, "shareType" | "title" | "options" | "data">): LifeLogSharePayload {
+  return {
+    schemaVersion: 1,
+    kind: "lifelog-share",
+    shareType,
+    exportedAt: new Date().toISOString(),
+    appVersion: "qr-mini-v1",
+    title,
+    options,
+    data,
+    integrity: {
+      people: data.people.length,
+      places: data.places.length,
+      memories: data.memories.length,
+      photos: data.photos.length
+    }
+  };
+}
+
+function inflateQrMiniPerson(name: string, index: number): LifeLogSharePayload["data"]["people"][number] | null {
+  const safeName = cleanQrText(name, 24);
+  if (!safeName) return null;
+  return {
+    id: `qrp${index + 1}`,
+    name: safeName,
+    nickname: "",
+    relationship: "分享人物",
+    birthday: "",
+    birthdayIsLunar: false,
+    favorite: false,
+    preferences: [],
+    dislikes: [],
+    anniversaries: [],
+    notes: ""
+  };
+}
+
+function inflateQrMiniPlace(item: string | [string, string?, string?, string?], index: number): LifeLogSharePayload["data"]["places"][number] | null {
+  const tuple = Array.isArray(item) ? item : [item];
+  const name = cleanQrText(tuple[0], 36);
+  if (!name) return null;
+  return {
+    id: `qrl${index + 1}`,
+    name,
+    country: "中国",
+    province: "",
+    city: cleanQrText(tuple[1] || "", 18),
+    area: "",
+    mall: cleanQrText(tuple[2] || "", 28),
+    storeName: name,
+    category: cleanQrText(tuple[3] || "其他", 16) || "其他",
+    rating: 0,
+    address: "",
+    latitude: undefined,
+    longitude: undefined,
+    mapUrl: "",
+    sourceUrl: "",
+    platformLinks: [],
+    photos: [],
+    desc: "",
+    tags: [],
+    favorite: false
+  };
+}
+
+function compactPlaceTuple(name: string, city: string, mall: string, category: string): string | [string, string?, string?, string?] {
+  if (!name) return "";
+  if (!city && !mall && !category) return name;
+  const tuple: [string, string?, string?, string?] = [name];
+  if (city || mall || category) tuple[1] = city || "";
+  if (mall || category) tuple[2] = mall || "";
+  if (category) tuple[3] = category;
+  return tuple;
+}
+
+function isQrMiniPayload(value: unknown): value is LifeLogQrMiniPayload {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Partial<LifeLogQrMiniPayload>;
+  return record.v === 1 && (record.k === "m" || record.k === "p") && typeof record.t === "string";
+}
+
+function isQrShareHash(value: string) {
+  return value.startsWith(QR_GZIP_PREFIX) || value.startsWith(QR_MINI_GZIP_PREFIX);
+}
+
+function readIdList(source: unknown, ...keys: string[]) {
+  if (!source || typeof source !== "object") return [];
+  const record = source as Record<string, unknown>;
+  return keys.flatMap((key) => {
+    const value = record[key];
+    if (Array.isArray(value)) return value.map(String);
+    if (typeof value === "string" && value) return [value];
+    return [];
+  });
+}
+
+function cleanQrText(value: unknown, maxLength: number) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function normalizeQrDate(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : new Date().toISOString().slice(0, 10);
 }
 
 async function encodeShareEnvelope(json: string): Promise<ShareLinkEnvelope> {

@@ -1,7 +1,7 @@
 import { Building2, CheckSquare, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -67,6 +67,9 @@ export default function Places() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const importedPlaceIds = useMemo(() => parseImportedIds(searchParams.get("imported")), [searchParams]);
+  const importedPlaceIdSet = useMemo(() => new Set(importedPlaceIds), [importedPlaceIds]);
   const [filters, setFilters] = usePersistentState<PlaceFilterState>(
     "lifelog:filters:places",
     {
@@ -129,6 +132,7 @@ export default function Places() {
 
   const places = useMemo(() => {
     return state.places.filter((place) => {
+      if (importedPlaceIdSet.size && !importedPlaceIdSet.has(place.id)) return false;
       const inCategory = category === "全部" || place.category === category;
       const content = [
         place.name,
@@ -149,7 +153,7 @@ export default function Places() {
         content.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [category, matchesLocation, normalizedQuery, state.places]);
+  }, [category, importedPlaceIdSet, matchesLocation, normalizedQuery, state.places]);
 
   const mallGroups = useMemo(() => {
     const groups = new Map<
@@ -310,6 +314,12 @@ export default function Places() {
     setFiltersOpen(false);
   }
 
+  function clearImportedView() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("imported");
+    setSearchParams(next, { replace: true });
+  }
+
   function updateFilters(patch: Partial<PlaceFilterState>) {
     setFilters({ ...filters, ...patch });
   }
@@ -396,6 +406,19 @@ export default function Places() {
         placeholder="搜索地点、区域、城市、标签"
         onChange={(query) => updateFilters({ query })}
       />
+      {importedPlaceIds.length > 0 && (
+        <section className="section imported-focus-section">
+          <GlassCard className="imported-focus-card">
+            <div>
+              <strong>刚导入的地点</strong>
+              <span>已临时筛出 {places.length} 个刚添加的地点，便于检查和补充信息。</span>
+            </div>
+            <button className="mini-action" type="button" onClick={clearImportedView}>
+              查看全部
+            </button>
+          </GlassCard>
+        </section>
+      )}
       <section className="section list-filter-section compact-filter-section">
         <div className="list-filter-toolbar">
           <div className="list-filter-summary">
@@ -1048,6 +1071,13 @@ function buildActiveFilterLabels(filters: {
     filters.area !== "全部" ? `区域：${filters.area}` : "",
     filters.category !== "全部" ? `分类：${filters.category}` : ""
   ].filter(Boolean);
+}
+
+function parseImportedIds(value: string | null) {
+  return (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function DuplicateGroupList({

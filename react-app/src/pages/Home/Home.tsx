@@ -41,7 +41,7 @@ export default function Home() {
     [getPersonName, state.memories, state.places]
   );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(state.memories);
-  const flashbacks = buildFlashbacks(state.memories, getPersonName, getPlaceName).slice(0, 4);
+  const onThisDayMemories = buildOnThisDayMemories(state.memories, getPersonName, getPlaceName).slice(0, 3);
 
   useEffect(() => {
     saveQuickInboxDraft(inboxText);
@@ -290,6 +290,31 @@ export default function Home() {
         </div>
       </section>
 
+      {onThisDayMemories.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <History /> 历年今日
+            </h2>
+            <button className="see-all" onClick={() => navigate("/memories")}>
+              时间线
+            </button>
+          </div>
+          <div className="on-this-day-list">
+            {onThisDayMemories.map((item) => (
+              <button className="on-this-day-card glass-card" type="button" key={item.memory.id} onClick={() => navigate(`/memories/${item.memory.id}`)}>
+                <span className="on-this-day-year">{item.badge}</span>
+                <span className="on-this-day-copy">
+                  <strong>{item.title}</strong>
+                  <small>{item.desc}</small>
+                </span>
+                <em>{formatMonthDay(item.memory.date)}</em>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="section">
         <div className="section-header">
           <h2>
@@ -467,27 +492,6 @@ export default function Home() {
         )}
       </section>
 
-      {flashbacks.length > 0 && (
-        <section className="section">
-          <div className="section-header">
-            <h2>
-              <History /> 回忆闪回
-            </h2>
-            <button className="see-all" onClick={() => navigate("/memories")}>
-              全部
-            </button>
-          </div>
-          <div className="flashback-list">
-            {flashbacks.map((item) => (
-              <button className="flashback-card glass-card" type="button" key={`${item.kind}-${item.memory.id}`} onClick={() => navigate(`/memories/${item.memory.id}`)}>
-                <span>{item.badge}</span>
-                <strong>{item.title}</strong>
-                <small>{item.desc}</small>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
       <EntrySheet
         type={entrySheetType}
         memoryMode={entrySheetType === "memory" ? "quick" : "full"}
@@ -511,7 +515,7 @@ interface FlashbackItem {
   memory: MemoryEvent;
 }
 
-function buildFlashbacks(
+function buildOnThisDayMemories(
   memories: MemoryEvent[],
   getPersonName: (id: string) => string,
   getPlaceName: (id: string) => string
@@ -520,41 +524,23 @@ function buildFlashbacks(
   const month = today.getMonth();
   const day = today.getDate();
   const currentYear = today.getFullYear();
-  const byKey = new Map<string, FlashbackItem>();
 
-  memories
+  return memories
     .filter((memory) => {
       const date = new Date(`${memory.date}T00:00:00`);
       return date.getFullYear() < currentYear && date.getMonth() === month && date.getDate() === day;
     })
     .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 2)
-    .forEach((memory) => {
+    .map((memory) => {
       const years = currentYear - new Date(`${memory.date}T00:00:00`).getFullYear();
-      byKey.set(memory.id, {
+      return {
         kind: "on-this-day",
         badge: `${years} 年前`,
         title: memory.title || "往年今日",
         desc: buildMemoryContextLine(memory, getPersonName, getPlaceName) || memory.content || "有一条旧回忆可以回看。",
         memory
-      });
+      };
     });
-
-  [...memories]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(3, 16)
-    .forEach((memory) => {
-      if (byKey.size >= 4 || byKey.has(memory.id)) return;
-      byKey.set(memory.id, {
-        kind: "recent-context",
-        badge: formatMonthDay(memory.date),
-        title: memory.title || "最近的旧回忆",
-        desc: buildMemoryContextLine(memory, getPersonName, getPlaceName) || memory.content || "可以重新打开看看细节。",
-        memory
-      });
-    });
-
-  return Array.from(byKey.values());
 }
 
 function buildMemoryContextLine(memory: MemoryEvent, getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {

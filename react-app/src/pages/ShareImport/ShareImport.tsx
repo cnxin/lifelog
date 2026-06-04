@@ -18,6 +18,7 @@ export default function ShareImport() {
   const [error, setError] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [doneText, setDoneText] = useState("");
+  const [doneTarget, setDoneTarget] = useState<{ label: string; path: string } | null>(null);
   const [manualLink, setManualLink] = useState("");
   const [scannerOpen, setScannerOpen] = useState(() => new URLSearchParams(window.location.search).get("scan") === "1");
 
@@ -53,6 +54,7 @@ export default function ShareImport() {
     if (!payload) return null;
     return buildShareImportPreview(payload, state);
   }, [payload, state]);
+  const isQrMiniShare = payload?.appVersion === "qr-mini-v1";
 
   async function handleImport() {
     if (!payload) return;
@@ -82,6 +84,7 @@ export default function ShareImport() {
         }
       });
       setDoneText(message);
+      setDoneTarget(viewTarget);
       notify({
         message,
         tone: "success",
@@ -129,6 +132,7 @@ export default function ShareImport() {
       setPayload(normalizeLifeLogSharePayload(parsed));
       setError("");
       setDoneText("");
+      setDoneTarget(null);
       window.history.replaceState(null, "", `/share/import#${hash}`);
     } catch (err) {
       setPayload(null);
@@ -149,6 +153,7 @@ export default function ShareImport() {
       setPayload(normalizeLifeLogSharePayload(parsed));
       setError("");
       setDoneText("");
+      setDoneTarget(null);
       window.history.replaceState(null, "", `/share/import#${hash}`);
     } catch (err) {
       setPayload(null);
@@ -218,6 +223,12 @@ export default function ShareImport() {
               <small>{preview.shareType === "memory" ? "回忆分享" : "地点分享"} · {formatShareDate(preview.exportedAt)}</small>
             </div>
           </div>
+          {isQrMiniShare && (
+            <div className="share-import-note">
+              <QrCode size={15} />
+              <span>这是二维码精简版，只包含标题、日期、标签、人物和地点名称；完整正文、地址、链接和照片需要对方发送分享包或完整链接。</span>
+            </div>
+          )}
           <div className="share-import-metrics">
             <Metric label="人物" value={preview.incoming.people} />
             <Metric label="地点" value={preview.incoming.places} />
@@ -247,6 +258,11 @@ export default function ShareImport() {
               <button className="mini-action" type="button" onClick={() => setDoneText("")}>
                 继续导入
               </button>
+              {doneTarget && (
+                <button className="mini-action primary" type="button" onClick={() => navigate(doneTarget.path)}>
+                  {doneTarget.label}
+                </button>
+              )}
             </div>
           ) : (
             <button className="primary-btn share-import-submit" type="button" onClick={() => void handleImport()} disabled={isImporting}>
