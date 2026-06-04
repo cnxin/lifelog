@@ -1,21 +1,12 @@
 import { Camera, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createQrBarcodeDetector, isQrCodeDetectionSupported } from "../utils/qrCodeReader";
 
 interface QrScannerPanelProps {
   open: boolean;
   title?: string;
   onDetected: (text: string) => void;
   onClose: () => void;
-}
-
-type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => {
-  detect: (source: CanvasImageSource) => Promise<Array<{ rawValue?: string }>>;
-};
-
-declare global {
-  interface Window {
-    BarcodeDetector?: BarcodeDetectorConstructor;
-  }
 }
 
 export default function QrScannerPanel({
@@ -32,10 +23,10 @@ export default function QrScannerPanel({
     if (!open) return;
     let active = true;
     let frameHandle = 0;
-    let detector: InstanceType<BarcodeDetectorConstructor> | null = null;
+    let detector: ReturnType<typeof createQrBarcodeDetector> | null = null;
 
     async function startScanner() {
-      if (!window.BarcodeDetector) {
+      if (!isQrCodeDetectionSupported()) {
         setStatus("当前 WebView 不支持直接扫码，请改用粘贴分享链接。");
         return;
       }
@@ -45,7 +36,7 @@ export default function QrScannerPanel({
       }
 
       try {
-        detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+        detector = createQrBarcodeDetector();
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: "environment" } },
           audio: false

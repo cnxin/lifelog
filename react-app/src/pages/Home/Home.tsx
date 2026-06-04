@@ -1,4 +1,4 @@
-import { Calendar, Clock, Gift, Heart, History, Inbox, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -115,7 +115,6 @@ export default function Home() {
     },
     actionPrefs
   });
-  const hasRealTodayActions = todayActions.length > 0;
   const recordSuggestions = buildRecordSuggestions({
     state,
     upcoming: upcomingWithPlanStatus,
@@ -126,6 +125,19 @@ export default function Home() {
     onOpenMemory: openSuggestedMemory,
     todayActionIds: todayActions.map((action) => action.id)
   });
+  const dailyFocus = buildDailyFocus({
+    todayActions,
+    recordSuggestions,
+    fallback: {
+      id: "daily-focus-record",
+      icon: <PenLine />,
+      title: inboxText.trim() ? "把刚才那句话存成回忆" : "今天先记一件小事",
+      desc: inboxText.trim() ? "草稿已经在这里，保存后可以再补人物、地点和照片。" : "不用写完整，一句话也能成为今天的记录。",
+      actionLabel: inboxText.trim() ? "存成回忆" : "写一句",
+      onClick: inboxText.trim() ? openInboxMemory : () => openQuickMemory()
+    }
+  });
+  const secondaryTodayActions = todayActions.filter((action) => action.id !== dailyFocus.id).slice(0, 2);
 
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
@@ -165,50 +177,17 @@ export default function Home() {
       </section>
 
       <section className="section">
-        <div className="life-scene-grid">
-          <button className="life-scene-card primary" type="button" onClick={() => openQuickMemory()}>
-            <span>
-              <PenLine />
-            </span>
-            <strong>记一件事</strong>
-            <small>先写一句今天发生了什么</small>
-          </button>
-          <button className="life-scene-card" type="button" onClick={() => setEntrySheetType("person")}>
-            <span>
-              <Heart />
-            </span>
-            <strong>记一个人</strong>
-            <small>喜好、生日、重要日子以后再补</small>
-          </button>
-          <button className="life-scene-card" type="button" onClick={() => setEntrySheetType("place")}>
-            <span>
-              <MapPin />
-            </span>
-            <strong>记一个地方</strong>
-            <small>想再去、想推荐、想避雷都可以</small>
-          </button>
-          <button className="life-scene-card" type="button" onClick={() => navigate("/calendar")}>
-            <span>
-              <Gift />
-            </span>
-            <strong>准备一个日子</strong>
-            <small>生日、纪念日、想提前安排的事</small>
-          </button>
-        </div>
-      </section>
-
-      <section className="section">
-        <GlassCard className="quick-inbox-card">
-          <div className="quick-inbox-head">
-            <span className="quick-memory-icon">
-              <Inbox />
-            </span>
+        <GlassCard className={`daily-focus-card ${dailyFocus.tone || ""}`}>
+          <button className="daily-focus-main" type="button" onClick={dailyFocus.onClick}>
+            <span className="daily-focus-icon">{dailyFocus.icon}</span>
             <div>
-              <strong>先放一句话</strong>
-              <span>不确定人物、地点或标签也没关系，先把当下的感觉留下来。</span>
+              <small>今天先做这件事</small>
+              <strong>{dailyFocus.title}</strong>
+              <span>{dailyFocus.desc}</span>
             </div>
-          </div>
-          <div className="quick-inbox-input">
+            <em>{dailyFocus.actionLabel}</em>
+          </button>
+          <div className="daily-focus-inbox">
             <textarea
               value={inboxText}
               onChange={(event) => setInboxText(event.target.value)}
@@ -216,79 +195,66 @@ export default function Home() {
             />
             <button type="button" onClick={openInboxMemory}>
               <PenLine />
-              {inboxText.trim() ? "存成回忆" : "写一条回忆"}
+              {inboxText.trim() ? "保存" : "写一句"}
+            </button>
+          </div>
+          <div className="daily-focus-shortcuts">
+            <button type="button" onClick={() => openQuickMemory()}>
+              <PenLine />
+              记回忆
+            </button>
+            <button type="button" onClick={() => setEntrySheetType("person")}>
+              <Heart />
+              记人物
+            </button>
+            <button type="button" onClick={() => setEntrySheetType("place")}>
+              <MapPin />
+              记地点
+            </button>
+            <button type="button" onClick={() => navigate("/calendar")}>
+              <Gift />
+              看日历
             </button>
           </div>
         </GlassCard>
       </section>
 
-      {recordSuggestions.length > 0 && (
+      {secondaryTodayActions.length > 0 && (
         <section className="section">
           <div className="section-header">
             <h2>
-              <Sparkles /> 可以这样记
+              <Sparkles /> 待处理
             </h2>
+            <button className="see-all" onClick={() => openQuickMemory()}>
+              记录
+            </button>
           </div>
-          <div className="record-suggestion-list">
-            {recordSuggestions.map((suggestion) => (
-              <button className={`record-suggestion-card ${suggestion.tone || ""}`} type="button" key={suggestion.id} onClick={suggestion.onClick}>
-                <span className="record-suggestion-icon">{suggestion.icon}</span>
-                <span className="record-suggestion-copy">
-                  <strong>{suggestion.title}</strong>
-                  <small>{suggestion.desc}</small>
-                </span>
-                <em>{suggestion.actionLabel}</em>
-              </button>
+          <div className="today-action-list compact">
+            {secondaryTodayActions.map((action) => (
+              <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
+                <button className="today-action-main" type="button" onClick={action.onClick}>
+                  <span className="today-action-icon">{action.icon}</span>
+                  <span className="today-action-copy">
+                    <strong>{action.title}</strong>
+                    <small>{action.desc}</small>
+                  </span>
+                  {action.meta && <em>{action.meta}</em>}
+                </button>
+                {action.canDismiss && (
+                  <span className="today-action-tools">
+                    <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "snooze"))}>
+                      稍后
+                    </button>
+                    <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "dismiss"))}>
+                      今天忽略
+                    </button>
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </section>
       )}
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Sparkles /> 今日行动
-          </h2>
-          {hasRealTodayActions ? (
-            <button className="see-all" onClick={() => openQuickMemory()}>
-              记录
-            </button>
-          ) : (
-            <button className="see-all" onClick={() => navigate("/calendar")}>
-              日历
-            </button>
-          )}
-        </div>
-        <div className={hasRealTodayActions ? "today-action-list" : "today-action-empty"}>
-          {hasRealTodayActions ? todayActions.map((action) => (
-            <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
-              <button className="today-action-main" type="button" onClick={action.onClick}>
-                <span className="today-action-icon">{action.icon}</span>
-                <span className="today-action-copy">
-                  <strong>{action.title}</strong>
-                  <small>{action.desc}</small>
-                </span>
-                {action.meta && <em>{action.meta}</em>}
-              </button>
-              {action.canDismiss && (
-                <span className="today-action-tools">
-                  <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "snooze"))}>
-                    稍后
-                  </button>
-                  <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "dismiss"))}>
-                    今天忽略
-                  </button>
-                </span>
-              )}
-            </div>
-          )) : (
-            <GlassCard className="home-empty-card compact">
-              <strong>今天没有必须处理的事项</strong>
-              <span>提醒、联系和纪念日安排都暂时不用处理。可以直接记录新回忆，或去日历看看未来安排。</span>
-            </GlassCard>
-          )}
-        </div>
-      </section>
 
       {onThisDayMemories.length > 0 && (
         <section className="section">
@@ -561,6 +527,10 @@ interface TodayAction {
 
 type TodayActionPrefs = Record<string, number | "dismissed">;
 
+type DailyFocusItem = Pick<TodayAction, "id" | "icon" | "title" | "desc" | "tone" | "onClick"> & {
+  actionLabel: string;
+};
+
 interface RecordSuggestion {
   id: string;
   icon: JSX.Element;
@@ -569,6 +539,44 @@ interface RecordSuggestion {
   actionLabel: string;
   tone?: "warm" | "cool";
   onClick: () => void;
+}
+
+function buildDailyFocus({
+  todayActions,
+  recordSuggestions,
+  fallback
+}: {
+  todayActions: TodayAction[];
+  recordSuggestions: RecordSuggestion[];
+  fallback: DailyFocusItem;
+}): DailyFocusItem {
+  const action = todayActions[0];
+  if (action) {
+    return {
+      id: action.id,
+      icon: action.icon,
+      title: action.title,
+      desc: action.desc,
+      tone: action.tone,
+      actionLabel: action.meta || "处理",
+      onClick: action.onClick
+    };
+  }
+
+  const suggestion = recordSuggestions[0];
+  if (suggestion) {
+    return {
+      id: suggestion.id,
+      icon: suggestion.icon,
+      title: suggestion.title,
+      desc: suggestion.desc,
+      tone: suggestion.tone,
+      actionLabel: suggestion.actionLabel,
+      onClick: suggestion.onClick
+    };
+  }
+
+  return fallback;
 }
 
 function buildRecordSuggestions({

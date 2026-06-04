@@ -68,6 +68,15 @@ export interface LifeLogShareImportPreview {
     places: number;
   };
   skippedMemories: number;
+  detail: {
+    createPeople: string[];
+    reusePeople: string[];
+    createPlaces: string[];
+    reusePlaces: string[];
+    createMemories: string[];
+    skipMemories: string[];
+    missingFields: string[];
+  };
 }
 
 export interface LifeLogShareImportResult {
@@ -222,7 +231,8 @@ export function buildShareImportPreview(payloadInput: LifeLogSharePayload, state
       people: analysis.peopleToReuse,
       places: analysis.placesToReuse
     },
-    skippedMemories: analysis.memoriesToSkip
+    skippedMemories: analysis.memoriesToSkip,
+    detail: analysis.detail
   };
 }
 
@@ -547,23 +557,47 @@ function analyzeShareImport(payload: LifeLogSharePayload, state: LifeLogState) {
   let placesToReuse = 0;
   let memoriesToCreate = 0;
   let memoriesToSkip = 0;
+  const detail: LifeLogShareImportPreview["detail"] = {
+    createPeople: [],
+    reusePeople: [],
+    createPlaces: [],
+    reusePlaces: [],
+    createMemories: [],
+    skipMemories: [],
+    missingFields: buildMissingShareFields(payload)
+  };
 
   payload.data.people.forEach((person) => {
-    if (findMatchingPerson(person, state.people)) peopleToReuse += 1;
-    else peopleToCreate += 1;
+    if (findMatchingPerson(person, state.people)) {
+      peopleToReuse += 1;
+      detail.reusePeople.push(person.name);
+    } else {
+      peopleToCreate += 1;
+      detail.createPeople.push(person.name);
+    }
   });
 
   payload.data.places.forEach((place) => {
-    if (findMatchingPlace(place, state.places)) placesToReuse += 1;
-    else placesToCreate += 1;
+    const label = buildPlacePreviewLabel(place);
+    if (findMatchingPlace(place, state.places)) {
+      placesToReuse += 1;
+      detail.reusePlaces.push(label);
+    } else {
+      placesToCreate += 1;
+      detail.createPlaces.push(label);
+    }
   });
 
   payload.data.memories.forEach((memory) => {
     const key = buildMemoryDuplicateKey(memory);
-    if (existingMemoryKeys.has(key)) memoriesToSkip += 1;
+    if (existingMemoryKeys.has(key)) {
+      memoriesToSkip += 1;
+      detail.skipMemories.push(buildMemoryPreviewLabel(memory));
+    }
     else {
       memoriesToCreate += 1;
       existingMemoryKeys.add(key);
+      detail.createMemories.push(buildMemoryPreviewLabel(memory));
     }
   });
 
@@ -573,8 +607,67 @@ function analyzeShareImport(payload: LifeLogSharePayload, state: LifeLogState) {
     placesToCreate,
     placesToReuse,
     memoriesToCreate,
-    memoriesToSkip
+    memoriesToSkip,
+    detail: {
+      createPeople: limitPreviewItems(detail.createPeople),
+      reusePeople: limitPreviewItems(detail.reusePeople),
+      createPlaces: limitPreviewItems(detail.createPlaces),
+      reusePlaces: limitPreviewItems(detail.reusePlaces),
+      createMemories: limitPreviewItems(detail.createMemories),
+      skipMemories: limitPreviewItems(detail.skipMemories),
+      missingFields: detail.missingFields
+    }
   };
+}
+
+function buildMissingShareFields(payload: LifeLogSharePayload) {
+  const missing = new Set<string>();
+  if (payload.appVersion === "qr-mini-v1") {
+    missing.add("完整正文");
+    missing.add("照片");
+    if (payload.data.places.length) {
+      missing.add("详细地址");
+      missing.add("外部链接");
+      missing.add("精确定位");
+    }
+    return Array.from(missing);
+  }
+
+  if (payload.shareType === "memory" && payload.options.memory) {
+    if (!payload.options.memory.includeContent) missing.add("完整正文");
+    if (payload.options.memory.peopleMode === "hidden") missing.add("关联人物");
+    if (payload.options.memory.peopleMode === "anonymous") missing.add("人物真实姓名");
+    if (payload.options.memory.placeMode === "hidden") missing.add("关联地点");
+    if (payload.options.memory.placeMode === "name") {
+      missing.add("地点地址");
+      missing.add("地点链接");
+      missing.add("精确定位");
+    }
+    if (!payload.options.memory.includePhotos) missing.add("照片");
+  }
+
+  if (payload.shareType === "places" && payload.options.place) {
+    if (!payload.options.place.includeAddress) missing.add("详细地址");
+    if (!payload.options.place.includeLinks) missing.add("外部链接");
+    if (!payload.options.place.includePreciseLocation) missing.add("精确定位");
+    if (!payload.options.place.includePhotos) missing.add("照片");
+  }
+
+  return Array.from(missing);
+}
+
+function buildPlacePreviewLabel(place: Place) {
+  return [place.name || place.storeName || "分享地点", place.mall, place.city].filter(Boolean).join(" · ");
+}
+
+function buildMemoryPreviewLabel(memory: MemoryEvent) {
+  return [memory.title || "分享的回忆", normalizeDate(memory.date)].filter(Boolean).join(" · ");
+}
+
+function limitPreviewItems(items: string[], limit = 5) {
+  const unique = Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
+  if (unique.length <= limit) return unique;
+  return [...unique.slice(0, limit), `还有 ${unique.length - limit} 项`];
 }
 
 function findMatchingPerson(incoming: Person, people: Person[]) {

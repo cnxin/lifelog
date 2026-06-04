@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.102",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.102",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.102/lifelog-v0.1.0-test.102.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.102.apk",
-    "apkName":  "lifelog-v0.1.0-test.102.apk",
-    "apkSize":  3703486,
-    "apkSha256":  "0df6698bdace29d7ce18723d4bdf79ab939fd3080e93d6171006042b44525da0",
-    "publishedAt":  "2026-06-04T07:24:16Z",
-    "body":  "- 分享二维码升级为 Q2 精简结构，显著降低二维码密度，同时继续兼容旧 Q1 二维码导入。\n- 分享面板区分二维码、复制链接和分享包，导入二维码精简版时会明确提示内容范围。\n- 分享导入成功后可直接查看新增内容，批量导入地点或回忆会临时筛出刚导入的记录。\n- 首页新增独立的历年今日，回忆页新增按年份密度展示的时间地图，方便回看和跳转。"
+    "version":  "0.1.0-test.103",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.103",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.103/lifelog-v0.1.0-test.103.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.103.apk",
+    "apkName":  "lifelog-v0.1.0-test.103.apk",
+    "apkSize":  3705262,
+    "apkSha256":  "929f5bd59f081a7e99dfe5e6e7e36c5436686fd87b9002da6be01e5151dbe8eb",
+    "publishedAt":  "2026-06-04T09:21:38Z",
+    "body":  "- 分享导入页新增从相册识别 LifeLog 二维码，收到二维码图片时可直接选择图片解析。\n- 分享导入预览会列出将新增、将复用、将跳过和未包含的具体条目，导入前更容易判断影响范围。\n- 首页合并今日行动和记录建议，改为一个“今天先做这件事”主卡，降低首屏重复感。\n- 相机扫码和相册识别共用二维码识别工具，不支持识别的 WebView 会提示改用扫码或粘贴链接。"
 }

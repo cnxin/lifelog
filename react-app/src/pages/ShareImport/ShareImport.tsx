@@ -1,5 +1,5 @@
-import { ArrowLeft, CheckCircle2, Link2, QrCode, Upload } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CheckCircle2, ImageUp, Link2, QrCode, Upload } from "lucide-react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
 import QrScannerPanel from "../../components/QrScannerPanel";
@@ -7,6 +7,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { buildShareImportPreview, normalizeLifeLogSharePayload, type LifeLogShareImportPreview, type LifeLogSharePayload } from "../../utils/lifelogShare";
 import { extractLifeLogShareHashFromText, parseLifeLogShareLinkHash } from "../../utils/lifelogShareLink";
+import { detectQrTextFromImageFile, isQrCodeDetectionSupported } from "../../utils/qrCodeReader";
 import { addShareHistoryEntry, formatShareHistoryCounts, updateShareHistoryEntry } from "../../utils/shareHistory";
 import { getShareImportViewTarget } from "../../utils/shareImportResult";
 
@@ -21,6 +22,8 @@ export default function ShareImport() {
   const [doneTarget, setDoneTarget] = useState<{ label: string; path: string } | null>(null);
   const [manualLink, setManualLink] = useState("");
   const [scannerOpen, setScannerOpen] = useState(() => new URLSearchParams(window.location.search).get("scan") === "1");
+  const [isReadingImage, setIsReadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -121,10 +124,21 @@ export default function ShareImport() {
   }
 
   async function handleManualParse() {
-    const hash = extractLifeLogShareHashFromText(manualLink);
+    await parseShareText(manualLink, {
+      emptyMessage: "没有识别到 LifeLog 分享链接。",
+      fallbackMessage: "分享链接无法解析。",
+      replaceUrl: true
+    });
+  }
+
+  async function parseShareText(
+    text: string,
+    options: { emptyMessage: string; fallbackMessage: string; replaceUrl?: boolean }
+  ) {
+    const hash = extractLifeLogShareHashFromText(text);
     if (!hash) {
       setPayload(null);
-      setError("没有识别到 LifeLog 分享链接。");
+      setError(options.emptyMessage);
       return;
     }
     try {
@@ -133,31 +147,45 @@ export default function ShareImport() {
       setError("");
       setDoneText("");
       setDoneTarget(null);
-      window.history.replaceState(null, "", `/share/import#${hash}`);
+      if (options.replaceUrl) window.history.replaceState(null, "", `/share/import#${hash}`);
     } catch (err) {
       setPayload(null);
-      setError(err instanceof Error ? err.message : "分享链接无法解析。");
+      setError(err instanceof Error ? err.message : options.fallbackMessage);
     }
   }
 
   async function handleScannedText(text: string) {
-    const hash = extractLifeLogShareHashFromText(text);
-    if (!hash) {
-      setPayload(null);
-      setError("二维码里没有识别到 LifeLog 分享链接。");
-      return;
-    }
     setManualLink(text);
+    await parseShareText(text, {
+      emptyMessage: "二维码里没有识别到 LifeLog 分享链接。",
+      fallbackMessage: "分享链接无法解析。",
+      replaceUrl: true
+    });
+  }
+
+  async function handleImageSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setIsReadingImage(true);
     try {
-      const parsed = await parseLifeLogShareLinkHash(hash);
-      setPayload(normalizeLifeLogSharePayload(parsed));
-      setError("");
-      setDoneText("");
-      setDoneTarget(null);
-      window.history.replaceState(null, "", `/share/import#${hash}`);
+      const text = await detectQrTextFromImageFile(file);
+      if (!text) {
+        setPayload(null);
+        setError("这张图片里没有识别到 LifeLog 分享二维码。");
+        return;
+      }
+      setManualLink(text);
+      await parseShareText(text, {
+        emptyMessage: "图片二维码里没有识别到 LifeLog 分享链接。",
+        fallbackMessage: "分享链接无法解析。",
+        replaceUrl: true
+      });
     } catch (err) {
       setPayload(null);
-      setError(err instanceof Error ? err.message : "分享链接无法解析。");
+      setError(err instanceof Error ? err.message : "二维码图片读取失败，请换一张图片或改用粘贴链接。");
+    } finally {
+      setIsReadingImage(false);
     }
   }
 
@@ -204,6 +232,28 @@ export default function ShareImport() {
               <QrCode size={16} />
               扫描二维码
             </button>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(event) => void handleImageSelected(event)}
+            />
+            <button
+              className="ghost-btn share-import-scan"
+              type="button"
+              onClick={() => {
+                if (!isQrCodeDetectionSupported()) {
+                  setError("当前 WebView 不支持从图片识别二维码，请改用相机扫码或粘贴链接。");
+                  return;
+                }
+                imageInputRef.current?.click();
+              }}
+              disabled={isReadingImage}
+            >
+              <ImageUp size={16} />
+              {isReadingImage ? "识别中…" : "从相册识别"}
+            </button>
           </div>
           <button className="primary-btn share-import-submit" type="button" onClick={() => void handleManualParse()}>
             <Upload size={16} />
@@ -249,6 +299,7 @@ export default function ShareImport() {
               <span>没有新内容需要添加</span>
             )}
           </div>
+          <ImportPreviewDetails preview={preview} />
           {doneText ? (
             <div className="share-import-done-row">
               <div className="share-import-done">
@@ -279,6 +330,32 @@ export default function ShareImport() {
         onClose={() => setScannerOpen(false)}
       />
     </section>
+  );
+}
+
+function ImportPreviewDetails({ preview }: { preview: LifeLogShareImportPreview }) {
+  const groups = [
+    { title: "将新增", items: [...preview.detail.createMemories, ...preview.detail.createPlaces, ...preview.detail.createPeople], tone: "create" },
+    { title: "将复用", items: [...preview.detail.reusePlaces, ...preview.detail.reusePeople], tone: "reuse" },
+    { title: "将跳过", items: preview.detail.skipMemories, tone: "skip" },
+    { title: "未包含", items: preview.detail.missingFields, tone: "missing" }
+  ].filter((group) => group.items.length);
+
+  if (!groups.length) return null;
+
+  return (
+    <div className="share-import-detail-list">
+      {groups.map((group) => (
+        <div className={`share-import-detail-group ${group.tone}`} key={group.title}>
+          <strong>{group.title}</strong>
+          <div>
+            {group.items.map((item) => (
+              <span key={`${group.title}-${item}`}>{item}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

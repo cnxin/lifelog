@@ -1438,6 +1438,7 @@
 
 .share-import-action-row {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1466,6 +1467,61 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
+}
+
+.share-import-detail-list {
+  display: grid;
+  gap: 8px;
+}
+
+.share-import-detail-group {
+  display: grid;
+  gap: 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+  border-radius: 14px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--soft-purple) 64%, var(--card-solid));
+}
+
+.share-import-detail-group strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.share-import-detail-group div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.share-import-detail-group span {
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-import-detail-group.create span {
+  color: #2f7d54;
+  background: rgba(46, 204, 113, 0.13);
+}
+
+.share-import-detail-group.reuse span {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.share-import-detail-group.skip span,
+.share-import-detail-group.missing span {
+  color: #9a6b18;
+  background: rgba(255, 193, 7, 0.14);
 }
 
 .qr-scanner-frame {
@@ -1583,7 +1639,8 @@
 
 @media (max-width: 460px) {
   .local-share-mode-grid,
-  .imported-focus-card {
+  .imported-focus-card,
+  .share-import-action-row {
     grid-template-columns: 1fr;
   }
 }

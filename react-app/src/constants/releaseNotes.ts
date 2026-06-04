@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.103",
+    date: "2026-06-04",
+    title: "分享导入预览和首页今日主线",
+    highlights: [
+      "分享导入页新增从相册识别 LifeLog 二维码，收到二维码图片时可直接选择图片解析。",
+      "分享导入预览会列出将新增、将复用、将跳过和未包含的具体条目，导入前更容易判断影响范围。",
+      "首页合并今日行动和记录建议，改为一个“今天先做这件事”主卡，降低首屏重复感。",
+      "相机扫码和相册识别共用二维码识别工具，不支持识别的 WebView 会提示改用扫码或粘贴链接。"
+    ]
+  },
+  {
     version: "0.1.0-test.102",
     date: "2026-06-04",
     title: "二维码分享导入和回忆时间地图",
