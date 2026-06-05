@@ -2160,6 +2160,10 @@
   background: rgba(255, 255, 255, 0.44);
 }
 
+.notion-sync-preview-item {
+  align-content: start;
+}
+
 .notion-sync-preview-item.missing {
   border-color: color-mix(in srgb, var(--danger) 16%, transparent);
   background: color-mix(in srgb, var(--danger) 5%, rgba(255, 255, 255, 0.44));
@@ -2205,6 +2209,12 @@
   color: var(--text-sub);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.notion-sync-preview-item .notion-button {
+  margin-top: 3px;
+  min-width: 0;
+  width: 100%;
 }
 
 .notion-sync-type-grid {

@@ -16,7 +16,7 @@ import {
   type NotionRequestDiagnostic,
   type NotionRuntimeInfo
 } from "../../utils/notionClient";
-import type { NotionSyncSummary, NotionSyncTypeSummary } from "../../utils/notionSync";
+import type { NotionSyncSummary, NotionSyncTarget, NotionSyncTypeSummary } from "../../utils/notionSync";
 
 type DatabaseField = "peopleDatabaseId" | "placesDatabaseId" | "memoriesDatabaseId" | "plansDatabaseId";
 type SetupStepState = "done" | "current" | "waiting" | "failed";
@@ -76,7 +76,7 @@ const NOTION_INTEGRATIONS_URL = "https://www.notion.so/profile/integrations";
 const NOTION_HOME_URL = "https://www.notion.so";
 
 export default function AccountNotionSync() {
-  const { state, notionSettings, notionPageMappings, notionSyncHistory, updateNotionSettings, syncNotionAll, retryFailedNotionItems } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, notionSyncHistory, updateNotionSettings, syncNotionAll, syncNotionTargets, retryFailedNotionItems } = useLifeLog();
   const notify = useToast();
   const [draft, setDraft] = useState(notionSettings);
   const [showToken, setShowToken] = useState(false);
@@ -230,6 +230,29 @@ export default function AccountNotionSync() {
         message: result.failed
           ? `Notion 同步完成，失败 ${result.failed} 条`
           : `Notion 同步完成：新增 ${result.created}，更新 ${result.updated}，跳过 ${result.skipped}`,
+        tone: result.failed ? "error" : "success",
+        durationMs: result.failed ? 7000 : 5200
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
+  async function handleSyncPreviewItem(item: NotionSyncPreviewItem) {
+    if (isSyncing || !draft.token.trim() || !item.databaseId || !item.total) return;
+    setIsSyncing(true);
+    try {
+      const result = await syncNotionTargets(buildTargetsForPreviewItem(item, state), {
+        trigger: "single",
+        targetLabel: `同步${item.label}`,
+        settingsOverride: draft
+      });
+      setLastSync(result);
+      setLastDiagnostic(result.diagnostic || null);
+      notify({
+        message: result.failed
+          ? `${item.label}同步完成，失败 ${result.failed} 条`
+          : `${item.label}同步完成：新增 ${result.created}，更新 ${result.updated}，跳过 ${result.skipped}`,
         tone: result.failed ? "error" : "success",
         durationMs: result.failed ? 7000 : 5200
       });
@@ -404,6 +427,15 @@ export default function AccountNotionSync() {
                 <span>{item.label}</span>
                 <strong>{item.databaseId ? item.total : "未配置"}</strong>
                 <small>{formatSyncPreviewDetail(item)}</small>
+                <button
+                  className="notion-button notion-button-ghost compact"
+                  type="button"
+                  onClick={() => void handleSyncPreviewItem(item)}
+                  disabled={isSyncing || !draft.token.trim() || !item.databaseId || !item.total}
+                >
+                  <RefreshCw className={isSyncing ? "spinning" : ""} />
+                  同步此类
+                </button>
               </div>
             ))}
           </div>
@@ -1020,6 +1052,19 @@ function formatSyncPreviewDetail(item: NotionSyncPreviewItem) {
   if (!item.mapped) return `${item.total} 条会首次写入 Notion。`;
   if (!item.pending) return `${item.mapped} 条已有同步记录，本次会检查更新。`;
   return `${item.mapped} 条已有同步记录，${item.pending} 条可能首次写入。`;
+}
+
+function buildTargetsForPreviewItem(item: NotionSyncPreviewItem, state: LifeLogState): NotionSyncTarget[] {
+  if (item.entityType === "person") {
+    return state.people.map((person) => ({ entityType: "person", entityId: person.id }));
+  }
+  if (item.entityType === "place") {
+    return state.places.map((place) => ({ entityType: "place", entityId: place.id }));
+  }
+  if (item.entityType === "memory") {
+    return state.memories.map((memory) => ({ entityType: "memory", entityId: memory.id }));
+  }
+  return state.anniversaryPlans.map((plan) => ({ entityType: "anniversaryPlan", entityId: plan.id }));
 }
 
 function formatSyncTypeSummary(summary: NotionSyncTypeSummary | undefined) {
