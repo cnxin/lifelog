@@ -1,4 +1,4 @@
-import { CheckCircle2, ChevronDown, Cloud, Copy, Database, ExternalLink, Eye, EyeOff, KeyRound, RefreshCw, Trash2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronDown, Cloud, Copy, Database, ExternalLink, Eye, EyeOff, KeyRound, RefreshCw, Trash2, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -9,16 +9,19 @@ import { openExternalUrl } from "../../utils/externalLinks";
 import { normalizeNotionId } from "../../utils/notionIds";
 import {
   createLifeLogNotionDatabases,
+  getNotionRuntimeInfo,
   testNotionConnection,
   type NotionAutoCreateResult,
   type NotionConnectionResult,
-  type NotionRequestDiagnostic
+  type NotionRequestDiagnostic,
+  type NotionRuntimeInfo
 } from "../../utils/notionClient";
 import type { NotionSyncSummary } from "../../utils/notionSync";
 
 type DatabaseField = "peopleDatabaseId" | "placesDatabaseId" | "memoriesDatabaseId" | "plansDatabaseId";
 type SetupStepState = "done" | "current" | "waiting" | "failed";
 type SetupPrimaryAction = "focus-token" | "focus-parent" | "create-databases" | "test-connection" | "sync-all";
+type PreflightTone = "ok" | "warning" | "blocked" | "idle";
 
 interface SetupStep {
   id: string;
@@ -40,6 +43,14 @@ interface SetupState {
   primaryDisabled: boolean;
   primaryBusy: boolean;
   steps: SetupStep[];
+}
+
+interface NotionPreflightItem {
+  id: string;
+  label: string;
+  value: string;
+  detail: string;
+  tone: PreflightTone;
 }
 
 const databaseFields: Array<{ key: DatabaseField; label: string; placeholder: string }> = [
@@ -67,6 +78,7 @@ export default function AccountNotionSync() {
   const [lastDiagnostic, setLastDiagnostic] = useState<NotionRequestDiagnostic | null>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const parentInputRef = useRef<HTMLInputElement>(null);
+  const runtimeInfo = useMemo(() => getNotionRuntimeInfo(), []);
 
   useEffect(() => {
     setDraft(notionSettings);
@@ -76,6 +88,10 @@ export default function AccountNotionSync() {
   const setup = useMemo(
     () => buildNotionSetupState({ settings: draft, lastResult, lastCreate, lastSync, isCreating, isTesting, isSyncing }),
     [draft, isCreating, isSyncing, isTesting, lastCreate, lastResult, lastSync]
+  );
+  const preflight = useMemo(
+    () => buildNotionPreflight({ settings: draft, lastResult, lastDiagnostic, runtimeInfo }),
+    [draft, lastDiagnostic, lastResult, runtimeInfo]
   );
 
   function patchDraft(patch: Partial<NotionSettings>) {
@@ -116,27 +132,31 @@ export default function AccountNotionSync() {
     notify({ message: "Notion 配置已保存", tone: "success" });
   }
 
-  async function handleTestConnection() {
+  async function handleTestConnection(settingsOverride?: NotionSettings, options?: { successMessage?: string; failurePrefix?: string; silent?: boolean }) {
     if (isTesting) return;
+    const settingsToTest = settingsOverride || draft;
     setIsTesting(true);
     try {
-      const result = await testNotionConnection(draft);
+      const result = await testNotionConnection(settingsToTest);
       setLastResult(result);
       setLastDiagnostic(extractConnectionDiagnostic(result));
       await updateNotionSettings({
-        ...draft,
-        enabled: result.ok && Boolean(draft.enabled || draft.token.trim()),
+        ...settingsToTest,
+        enabled: result.ok && Boolean(settingsToTest.enabled || settingsToTest.token.trim()),
         workspaceName: result.workspaceName,
         workspaceBotName: result.workspaceBotName,
         lastConnectionTestAt: new Date().toISOString(),
         lastConnectionStatus: result.ok ? "connected" : "failed",
         lastConnectionMessage: result.message
       });
-      notify({
-        message: result.ok ? "Notion 连接测试通过" : result.message,
-        tone: result.ok ? "success" : "error",
-        durationMs: result.ok ? 3600 : 6200
-      });
+      if (!options?.silent) {
+        notify({
+          message: result.ok ? options?.successMessage || "Notion 连接测试通过" : `${options?.failurePrefix || ""}${result.message}`,
+          tone: result.ok ? "success" : "error",
+          durationMs: result.ok ? 3600 : 6200
+        });
+      }
+      return result;
     } finally {
       setIsTesting(false);
     }
@@ -158,6 +178,13 @@ export default function AccountNotionSync() {
         };
         setDraft(next);
         await updateNotionSettings(next);
+        if (result.ok) {
+          await handleTestConnection(next, {
+            successMessage: "Notion 数据库已创建，连接测试通过",
+            failurePrefix: "数据库已创建，但连接测试未通过："
+          });
+          return;
+        }
       }
       notify({
         message: result.message,
@@ -309,6 +336,25 @@ export default function AccountNotionSync() {
           ))}
         </div>
 
+        <div className="notion-preflight-panel">
+          <div className="notion-preflight-head">
+            <strong>连接体检</strong>
+            <span>{summarizePreflight(preflight)}</span>
+          </div>
+          <div className="notion-preflight-grid">
+            {preflight.map((item) => (
+              <div className={`notion-preflight-item ${item.tone}`} key={item.id}>
+                <span>
+                  {item.tone === "ok" ? <CheckCircle2 /> : item.tone === "blocked" ? <XCircle /> : <AlertCircle />}
+                  {item.label}
+                </span>
+                <strong>{item.value}</strong>
+                <small>{item.detail}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="notion-input-panel">
           <label className="notion-field">
             <span>
@@ -422,9 +468,19 @@ export default function AccountNotionSync() {
                 {lastDiagnostic.platform}{lastDiagnostic.native ? " · 原生" : " · Web"}
               </span>
               <span>
+                <strong>传输</strong>
+                {formatNotionTransport(lastDiagnostic.transport)}
+              </span>
+              <span>
                 <strong>请求</strong>
                 {lastDiagnostic.method} {lastDiagnostic.path}
               </span>
+              {typeof lastDiagnostic.durationMs === "number" ? (
+                <span>
+                  <strong>耗时</strong>
+                  {lastDiagnostic.durationMs} ms
+                </span>
+              ) : null}
               {lastDiagnostic.status ? (
                 <span>
                   <strong>状态</strong>
@@ -700,6 +756,112 @@ function countConfiguredDatabases(settings: NotionSettings) {
   return databaseFields.filter((field) => normalizeNotionId(String(settings[field.key] || ""))).length;
 }
 
+function buildNotionPreflight({
+  settings,
+  lastResult,
+  lastDiagnostic,
+  runtimeInfo
+}: {
+  settings: NotionSettings;
+  lastResult: NotionConnectionResult | null;
+  lastDiagnostic: NotionRequestDiagnostic | null;
+  runtimeInfo: NotionRuntimeInfo;
+}): NotionPreflightItem[] {
+  const token = settings.token.trim();
+  const parentPageId = normalizeNotionId(settings.parentPageId);
+  const databaseCount = countConfiguredDatabases(settings);
+  const tokenLooksValid = isLikelyNotionToken(token);
+  const parentLooksValid = isLikelyNotionId(parentPageId);
+  const connectionOk = Boolean(lastResult?.ok || settings.lastConnectionStatus === "connected");
+  const connectionFailed = Boolean(lastResult && !lastResult.ok);
+
+  return [
+    {
+      id: "token",
+      label: "Token",
+      value: token ? (tokenLooksValid ? "已填写" : "格式待确认") : "未填写",
+      detail: token
+        ? tokenLooksValid
+          ? "已识别为 Notion Integration Secret。"
+          : "仍可测试，但建议确认是否复制了完整 Secret。"
+        : "先复制 Internal Integration Secret。",
+      tone: token ? (tokenLooksValid ? "ok" : "warning") : "blocked"
+    },
+    {
+      id: "parent",
+      label: "父页面",
+      value: parentPageId ? (parentLooksValid ? "已识别" : "格式待确认") : "未填写",
+      detail: parentPageId
+        ? parentLooksValid
+          ? "已提取 32 位页面 ID。"
+          : "建议直接粘贴 Notion 页面链接或标准页面 ID。"
+        : "需要一个已分享给 Integration 的 Notion 页面。",
+      tone: parentPageId ? (parentLooksValid ? "ok" : "warning") : "blocked"
+    },
+    {
+      id: "databases",
+      label: "数据库",
+      value: `${databaseCount}/4`,
+      detail: databaseCount === databaseFields.length
+        ? "人物、地点、回忆和安排数据库都已配置。"
+        : databaseCount
+          ? "已部分配置，建议点击自动创建补齐。"
+          : "可由 LifeLog 自动创建中文字段数据库。",
+      tone: databaseCount === databaseFields.length ? "ok" : databaseCount ? "warning" : "idle"
+    },
+    {
+      id: "connection",
+      label: "连接测试",
+      value: connectionOk ? "已通过" : connectionFailed ? "未通过" : "待测试",
+      detail: connectionOk
+        ? "Notion 权限已通过最近一次验证。"
+        : connectionFailed
+          ? lastResult?.message || "请根据请求诊断修正配置。"
+          : "数据库准备好后测试一次，确认权限可用。",
+      tone: connectionOk ? "ok" : connectionFailed ? "blocked" : "idle"
+    },
+    {
+      id: "runtime",
+      label: "连接环境",
+      value: formatNotionTransport(runtimeInfo.transport),
+      detail: runtimeInfo.detail,
+      tone: runtimeInfo.corsRisk ? "warning" : "ok"
+    },
+    {
+      id: "request",
+      label: "最近请求",
+      value: lastDiagnostic
+        ? lastDiagnostic.status
+          ? `HTTP ${lastDiagnostic.status}`
+          : lastDiagnostic.durationMs
+            ? `${lastDiagnostic.durationMs} ms`
+            : "有诊断"
+        : "暂无",
+      detail: lastDiagnostic
+        ? lastDiagnostic.hint || `${lastDiagnostic.method} ${lastDiagnostic.path}`
+        : "失败时这里会显示网络层、状态码和排查方向。",
+      tone: lastDiagnostic ? "warning" : "idle"
+    }
+  ];
+}
+
+function summarizePreflight(items: NotionPreflightItem[]) {
+  const blocked = items.filter((item) => item.tone === "blocked").length;
+  const warning = items.filter((item) => item.tone === "warning").length;
+  if (blocked) return `${blocked} 项需要处理`;
+  if (warning) return `${warning} 项建议确认`;
+  return "连接条件正常";
+}
+
+function isLikelyNotionToken(value: string) {
+  if (!value) return false;
+  return /^(secret|ntn)_[\w-]{12,}$/i.test(value);
+}
+
+function isLikelyNotionId(value: string) {
+  return /^[0-9a-f]{32}$/i.test(value);
+}
+
 function extractConnectionDiagnostic(result: NotionConnectionResult) {
   if (result.ok) return null;
   return result.diagnostic || result.databases.find((item) => !item.ok && item.diagnostic)?.diagnostic || null;
@@ -716,14 +878,22 @@ function formatNotionDiagnostic(diagnostic: NotionRequestDiagnostic) {
     "",
     `时间：${diagnostic.at}`,
     `平台：${diagnostic.platform}${diagnostic.native ? "（原生）" : "（Web）"}`,
+    `传输：${formatNotionTransport(diagnostic.transport)}`,
     `请求：${diagnostic.method} ${diagnostic.path}`,
     `地址：${diagnostic.url}`,
+    typeof diagnostic.durationMs === "number" ? `耗时：${diagnostic.durationMs} ms` : "",
     diagnostic.status ? `状态：HTTP ${diagnostic.status}` : "",
     diagnostic.errorName ? `错误类型：${diagnostic.errorName}` : "",
     diagnostic.errorMessage ? `错误消息：${diagnostic.errorMessage}` : "",
     diagnostic.hint ? `提示：${diagnostic.hint}` : "",
     diagnostic.errorStack ? ["", "Stack:", diagnostic.errorStack].join("\n") : ""
   ].filter(Boolean).join("\n");
+}
+
+function formatNotionTransport(transport: NotionRuntimeInfo["transport"]) {
+  if (transport === "capacitor-http") return "Android 原生";
+  if (transport === "vite-proxy") return "Web 代理";
+  return "Web 直连";
 }
 
 function formatTestTime(value: string) {

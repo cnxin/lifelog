@@ -58,14 +58,25 @@ export interface NotionRequestDiagnostic {
   at: string;
   platform: string;
   native: boolean;
+  transport: NotionRuntimeInfo["transport"];
   method: string;
   path: string;
   url: string;
+  durationMs?: number;
   status?: number;
   errorName?: string;
   errorMessage?: string;
   errorStack?: string;
   hint?: string;
+}
+
+export interface NotionRuntimeInfo {
+  platform: string;
+  native: boolean;
+  transport: "capacitor-http" | "vite-proxy" | "browser-fetch";
+  apiBase: string;
+  corsRisk: boolean;
+  detail: string;
 }
 
 export interface NotionFetchResponseLike {
@@ -170,9 +181,10 @@ export async function notionRequest<T = unknown>(
     body: init.json === undefined ? init.body : JSON.stringify(init.json)
   };
   delete (requestInit as RequestInit & { json?: unknown }).json;
+  const requestUrl = buildNotionRequestUrl(path);
+  const startedAt = nowMs();
 
   try {
-    const requestUrl = buildNotionRequestUrl(path);
     const response = await fetcher(requestUrl, requestInit);
     let data: unknown = null;
     try {
@@ -184,6 +196,7 @@ export async function notionRequest<T = unknown>(
     if (!response.ok) {
       const errorMessage = getApiMessage(data) || `HTTP ${response.status}`;
       const diagnostic = buildNotionRequestDiagnostic(path, requestUrl, requestInit, {
+        durationMs: elapsedMs(startedAt),
         status: response.status,
         errorName: "NotionHttpError",
         errorMessage,
@@ -206,7 +219,8 @@ export async function notionRequest<T = unknown>(
     };
   } catch (error) {
     const errorDetail = normalizeErrorDetail(error);
-    const diagnostic = buildNotionRequestDiagnostic(path, buildNotionRequestUrl(path), requestInit, {
+    const diagnostic = buildNotionRequestDiagnostic(path, requestUrl, requestInit, {
+      durationMs: elapsedMs(startedAt),
       errorName: errorDetail.name,
       errorMessage: errorDetail.message,
       errorStack: errorDetail.stack,
@@ -220,6 +234,39 @@ export async function notionRequest<T = unknown>(
       diagnostic
     };
   }
+}
+
+export function getNotionRuntimeInfo(): NotionRuntimeInfo {
+  const native = getIsNativePlatform();
+  const devProxy = shouldUseNotionDevProxy();
+  if (native) {
+    return {
+      platform: getRuntimePlatform(native),
+      native,
+      transport: "capacitor-http",
+      apiBase: NOTION_API_BASE,
+      corsRisk: false,
+      detail: "Android 真机会通过 Capacitor 原生网络请求访问 Notion API。"
+    };
+  }
+  if (devProxy) {
+    return {
+      platform: getRuntimePlatform(native),
+      native,
+      transport: "vite-proxy",
+      apiBase: NOTION_DEV_PROXY_BASE,
+      corsRisk: false,
+      detail: "Web 测试会通过本地 Vite 代理访问 Notion API，避免浏览器 CORS 拦截。"
+    };
+  }
+  return {
+    platform: getRuntimePlatform(native),
+    native,
+    transport: "browser-fetch",
+    apiBase: NOTION_API_BASE,
+    corsRisk: true,
+    detail: "当前 Web 环境会直连 Notion API，浏览器可能因为 CORS 拦截导致请求失败。"
+  };
 }
 
 export async function probeNotionDataTarget(
@@ -379,13 +426,14 @@ function buildNotionRequestDiagnostic(
   path: string,
   url: string,
   init: RequestInit,
-  detail: Partial<Pick<NotionRequestDiagnostic, "status" | "errorName" | "errorMessage" | "errorStack" | "hint">>
+  detail: Partial<Pick<NotionRequestDiagnostic, "durationMs" | "status" | "errorName" | "errorMessage" | "errorStack" | "hint">>
 ): NotionRequestDiagnostic {
-  const native = getIsNativePlatform();
+  const runtime = getNotionRuntimeInfo();
   return {
     at: new Date().toISOString(),
-    platform: getRuntimePlatform(native),
-    native,
+    platform: runtime.platform,
+    native: runtime.native,
+    transport: runtime.transport,
     method: String(init.method || "GET").toUpperCase(),
     path,
     url,
@@ -469,6 +517,15 @@ function getRuntimePlatform(native: boolean) {
 
 function truncateText(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
+}
+
+function nowMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") return performance.now();
+  return Date.now();
+}
+
+function elapsedMs(startedAt: number) {
+  return Math.max(0, Math.round(nowMs() - startedAt));
 }
 
 function getConfiguredDatabases(settings: NotionSettings): NotionDatabaseTarget[] {
