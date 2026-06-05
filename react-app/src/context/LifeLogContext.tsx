@@ -135,7 +135,7 @@ interface LifeLogContextValue {
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   updateNotionSettings: (patch: Partial<NotionSettings>) => Promise<void>;
-  syncNotionAll: () => Promise<NotionSyncSummary>;
+  syncNotionAll: (settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
   exportData: () => Promise<BackupExportResult>;
   buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
   buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
@@ -735,10 +735,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    async function syncNotionAll() {
+    async function syncNotionAll(settingsOverride?: NotionSettings) {
+      const activeNotionSettings = settingsOverride || notionSettings;
       const result = await syncLifeLogToNotion({
         state,
-        settings: notionSettings,
+        settings: activeNotionSettings,
         mappings: notionPageMappings
       });
       if (result.mappings.length) {
@@ -747,9 +748,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }
       const syncedAt = new Date().toISOString();
       const nextSettings = {
-        ...notionSettings,
-        workspaceName: result.workspaceName || notionSettings.workspaceName,
-        workspaceBotName: result.workspaceBotName || notionSettings.workspaceBotName,
+        ...activeNotionSettings,
+        workspaceName: result.workspaceName || activeNotionSettings.workspaceName,
+        workspaceBotName: result.workspaceBotName || activeNotionSettings.workspaceBotName,
         lastFullSyncAt: syncedAt,
         lastConnectionStatus: result.failed ? "failed" as const : "connected" as const,
         lastConnectionMessage: result.failed

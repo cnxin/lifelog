@@ -1,11 +1,12 @@
 import { CheckCircle2, ChevronDown, Cloud, Copy, Database, ExternalLink, Eye, EyeOff, KeyRound, RefreshCw, Trash2, XCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import type { NotionSettings } from "../../types";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openExternalUrl } from "../../utils/externalLinks";
+import { normalizeNotionId } from "../../utils/notionIds";
 import {
   createLifeLogNotionDatabases,
   testNotionConnection,
@@ -16,6 +17,30 @@ import {
 import type { NotionSyncSummary } from "../../utils/notionSync";
 
 type DatabaseField = "peopleDatabaseId" | "placesDatabaseId" | "memoriesDatabaseId" | "plansDatabaseId";
+type SetupStepState = "done" | "current" | "waiting" | "failed";
+type SetupPrimaryAction = "focus-token" | "focus-parent" | "create-databases" | "test-connection" | "sync-all";
+
+interface SetupStep {
+  id: string;
+  index: string;
+  title: string;
+  desc: string;
+  state: SetupStepState;
+  actionLabel?: string;
+  actionUrl?: string;
+}
+
+interface SetupState {
+  tone: "idle" | "connected" | "failed";
+  badge: string;
+  title: string;
+  desc: string;
+  primaryLabel: string;
+  primaryAction: SetupPrimaryAction;
+  primaryDisabled: boolean;
+  primaryBusy: boolean;
+  steps: SetupStep[];
+}
 
 const databaseFields: Array<{ key: DatabaseField; label: string; placeholder: string }> = [
   { key: "peopleDatabaseId", label: "人物数据库", placeholder: "People database ID" },
@@ -40,15 +65,47 @@ export default function AccountNotionSync() {
   const [lastCreate, setLastCreate] = useState<NotionAutoCreateResult | null>(null);
   const [lastSync, setLastSync] = useState<NotionSyncSummary | null>(null);
   const [lastDiagnostic, setLastDiagnostic] = useState<NotionRequestDiagnostic | null>(null);
+  const tokenInputRef = useRef<HTMLInputElement>(null);
+  const parentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDraft(notionSettings);
   }, [notionSettings]);
 
   const status = useMemo(() => getNotionStatus(draft, lastResult), [draft, lastResult]);
+  const setup = useMemo(
+    () => buildNotionSetupState({ settings: draft, lastResult, lastCreate, lastSync, isCreating, isTesting, isSyncing }),
+    [draft, isCreating, isSyncing, isTesting, lastCreate, lastResult, lastSync]
+  );
 
   function patchDraft(patch: Partial<NotionSettings>) {
-    setDraft((current) => ({ ...current, ...patch }));
+    const shouldResetResult = [
+      "token",
+      "parentPageId",
+      "peopleDatabaseId",
+      "placesDatabaseId",
+      "memoriesDatabaseId",
+      "plansDatabaseId"
+    ].some((key) => Object.prototype.hasOwnProperty.call(patch, key));
+    setDraft((current) => ({
+      ...current,
+      ...patch,
+      ...(shouldResetResult
+        ? {
+            workspaceName: "",
+            workspaceBotName: "",
+            lastConnectionStatus: "idle" as const,
+            lastConnectionMessage: "",
+            lastConnectionTestAt: undefined
+          }
+        : {})
+    }));
+    if (shouldResetResult) {
+      setLastResult(null);
+      setLastCreate(null);
+      setLastSync(null);
+      setLastDiagnostic(null);
+    }
   }
 
   async function handleSave() {
@@ -95,7 +152,9 @@ export default function AccountNotionSync() {
       if (Object.keys(result.settingsPatch).length) {
         const next = {
           ...draft,
-          ...result.settingsPatch
+          ...result.settingsPatch,
+          lastConnectionStatus: "idle" as const,
+          lastConnectionMessage: ""
         };
         setDraft(next);
         await updateNotionSettings(next);
@@ -114,11 +173,14 @@ export default function AccountNotionSync() {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      await updateNotionSettings({
+      const nextSettings = {
         ...draft,
         enabled: Boolean(draft.enabled && draft.token.trim())
+      };
+      await updateNotionSettings({
+        ...nextSettings
       });
-      const result = await syncNotionAll();
+      const result = await syncNotionAll(nextSettings);
       setLastSync(result);
       setLastDiagnostic(result.diagnostic || null);
       notify({
@@ -131,6 +193,26 @@ export default function AccountNotionSync() {
     } finally {
       setIsSyncing(false);
     }
+  }
+
+  async function handlePrimarySetupAction() {
+    if (setup.primaryAction === "focus-token") {
+      tokenInputRef.current?.focus();
+      return;
+    }
+    if (setup.primaryAction === "focus-parent") {
+      parentInputRef.current?.focus();
+      return;
+    }
+    if (setup.primaryAction === "create-databases") {
+      await handleCreateDatabases();
+      return;
+    }
+    if (setup.primaryAction === "test-connection") {
+      await handleTestConnection();
+      return;
+    }
+    await handleSyncAll();
   }
 
   async function handleClearToken() {
@@ -190,86 +272,85 @@ export default function AccountNotionSync() {
           <span>实验版在线同步。只需要 Token 和一个父页面 ID，LifeLog 会自动创建中文数据库，再把本地记录单向同步到 Notion。</span>
         </div>
 
-        <div className="notion-guide-card">
-          <div className="notion-guide-head">
-            <strong>按这 4 步连接 Notion</strong>
-            <span>第一次使用按顺序点，不需要自己建数据库。</span>
+        <div className={`notion-setup-panel ${setup.tone}`}>
+          <div className="notion-setup-current">
+            <span>{setup.badge}</span>
+            <strong>{setup.title}</strong>
+            <p>{setup.desc}</p>
           </div>
-          <div className="notion-guide-steps">
-            <div className="notion-guide-step">
-              <em>1</em>
-              <div>
-                <strong>创建 Integration</strong>
-                <span>打开 Notion 集成页面，新建 Internal Integration，复制 Secret。</span>
-              </div>
-              <button className="mini-action" type="button" onClick={() => void openExternalUrl(NOTION_INTEGRATIONS_URL)}>
-                <ExternalLink />
-                打开
-              </button>
-            </div>
-            <div className="notion-guide-step">
-              <em>2</em>
-              <div>
-                <strong>新建一个空页面</strong>
-                <span>在 Notion 新建页面，例如 LifeLog，同步数据库会放在这里。</span>
-              </div>
-              <button className="mini-action" type="button" onClick={() => void openExternalUrl(NOTION_HOME_URL)}>
-                <ExternalLink />
-                打开
-              </button>
-            </div>
-            <div className="notion-guide-step">
-              <em>3</em>
-              <div>
-                <strong>分享页面给 Integration</strong>
-                <span>页面右上角 Share / Invite，选择刚刚创建的 Integration。</span>
-              </div>
-            </div>
-            <div className="notion-guide-step">
-              <em>4</em>
-              <div>
-                <strong>复制页面链接到下方</strong>
-                <span>填入 Token 和页面链接后，点击“自动创建”。</span>
-              </div>
-            </div>
-          </div>
+          <button
+            className="notion-button notion-button-primary notion-setup-primary"
+            type="button"
+            onClick={() => void handlePrimarySetupAction()}
+            disabled={setup.primaryDisabled}
+          >
+            <RefreshCw className={setup.primaryBusy ? "spinning" : ""} />
+            {setup.primaryLabel}
+          </button>
         </div>
 
-        <label className="notion-field">
-          <span>
-            <KeyRound /> Internal Integration Token
-          </span>
-          <div className="notion-token-input">
-            <input
-              type={showToken ? "text" : "password"}
-              value={draft.token}
-              placeholder="secret_xxx"
-              autoComplete="off"
-              onChange={(event) => patchDraft({ token: event.target.value })}
-            />
-            <button type="button" onClick={() => setShowToken((current) => !current)} aria-label={showToken ? "隐藏 Token" : "显示 Token"}>
-              {showToken ? <EyeOff /> : <Eye />}
-            </button>
-          </div>
-        </label>
+        <div className="notion-setup-steps" aria-label="Notion 连接步骤">
+          {setup.steps.map((step) => (
+            <div className={`notion-setup-step ${step.state}`} key={step.id}>
+              <div className="notion-step-marker">
+                {step.state === "done" ? <CheckCircle2 /> : step.state === "failed" ? <XCircle /> : <em>{step.index}</em>}
+              </div>
+              <div className="notion-step-body">
+                <strong>{step.title}</strong>
+                <span>{step.desc}</span>
+              </div>
+              {step.actionLabel && step.actionUrl ? (
+                <button className="notion-button notion-button-link" type="button" onClick={() => void openExternalUrl(step.actionUrl!)}>
+                  <ExternalLink />
+                  {step.actionLabel}
+                </button>
+              ) : null}
+            </div>
+          ))}
+        </div>
 
-        <label className="notion-field">
-          <span>
-            <Database /> Notion 父页面 ID
-          </span>
-          <input
-            value={draft.parentPageId}
-            placeholder="粘贴已分享给 Integration 的 Notion 页面链接或页面 ID"
-            onChange={(event) => patchDraft({ parentPageId: event.target.value })}
-          />
-        </label>
+        <div className="notion-input-panel">
+          <label className="notion-field">
+            <span>
+              <KeyRound /> Internal Integration Token
+            </span>
+            <div className="notion-token-input">
+              <input
+                ref={tokenInputRef}
+                type={showToken ? "text" : "password"}
+                value={draft.token}
+                placeholder="secret_xxx"
+                autoComplete="off"
+                onChange={(event) => patchDraft({ token: event.target.value })}
+              />
+              <button type="button" onClick={() => setShowToken((current) => !current)} aria-label={showToken ? "隐藏 Token" : "显示 Token"}>
+                {showToken ? <EyeOff /> : <Eye />}
+              </button>
+            </div>
+            <small className="notion-field-hint">从 Notion Integration 的 Internal Integration Secret 复制，建议只保存在本机。</small>
+          </label>
+
+          <label className="notion-field">
+            <span>
+              <Database /> Notion 父页面
+            </span>
+            <input
+              ref={parentInputRef}
+              value={draft.parentPageId}
+              placeholder="粘贴已分享给 Integration 的 Notion 页面链接或页面 ID"
+              onChange={(event) => patchDraft({ parentPageId: event.target.value })}
+            />
+            <small className="notion-field-hint">可以直接粘贴完整页面链接，LifeLog 会自动提取页面 ID。</small>
+          </label>
+        </div>
 
         <div className="notion-auto-create-card">
           <div>
             <strong>自动准备 Notion 数据库</strong>
             <span>在父页面下创建中文字段的人物、地点、回忆和纪念日安排数据库，并自动保存 ID。</span>
+            {normalizeNotionId(draft.parentPageId) ? <small>已识别页面 ID：{normalizeNotionId(draft.parentPageId)}</small> : null}
           </div>
-          <button className="mini-action add" type="button" onClick={() => void handleCreateDatabases()} disabled={isCreating || !draft.token.trim() || !draft.parentPageId.trim()}>
+          <button className="notion-button notion-button-primary compact" type="button" onClick={() => void handleCreateDatabases()} disabled={isCreating || !draft.token.trim() || !draft.parentPageId.trim()}>
             <RefreshCw className={isCreating ? "spinning" : ""} />
             {isCreating ? "创建中" : "自动创建"}
           </button>
@@ -330,7 +411,7 @@ export default function AccountNotionSync() {
           <div className="notion-diagnostic-card">
             <div className="notion-diagnostic-head">
               <strong>请求诊断</strong>
-              <button className="mini-action" type="button" onClick={() => void handleCopyDiagnostic()}>
+              <button className="notion-button notion-button-ghost compact" type="button" onClick={() => void handleCopyDiagnostic()}>
                 <Copy />
                 复制
               </button>
@@ -393,29 +474,25 @@ export default function AccountNotionSync() {
           </div>
         )}
 
-        <div className="notion-sync-actions">
-          <div className="notion-sync-primary-actions">
-            <button className="mini-action add" type="button" onClick={() => void handleSyncAll()} disabled={isSyncing || !draft.token.trim()}>
-              <RefreshCw className={isSyncing ? "spinning" : ""} />
-              <span>{isSyncing ? "同步中" : "同步全部"}</span>
+        <div className="notion-sync-actions notion-utility-actions">
+          <button className="notion-button notion-button-ghost" type="button" onClick={() => void handleSave()}>
+            <CheckCircle2 />
+            <span>保存配置</span>
+          </button>
+          <button className="notion-button notion-button-ghost" type="button" onClick={() => void handleTestConnection()} disabled={isTesting || !draft.token.trim()}>
+            <RefreshCw className={isTesting ? "spinning" : ""} />
+            <span>{isTesting ? "测试中" : "测试连接"}</span>
+          </button>
+          <button className="notion-button notion-button-primary" type="button" onClick={() => void handleSyncAll()} disabled={isSyncing || !draft.token.trim()}>
+            <RefreshCw className={isSyncing ? "spinning" : ""} />
+            <span>{isSyncing ? "同步中" : "同步全部"}</span>
+          </button>
+          {draft.token && (
+            <button className="notion-button notion-button-danger" type="button" onClick={() => void handleClearToken()}>
+              <Trash2 />
+              <span>清空 Token</span>
             </button>
-            <button className="mini-action" type="button" onClick={() => void handleTestConnection()} disabled={isTesting}>
-              <RefreshCw className={isTesting ? "spinning" : ""} />
-              <span>{isTesting ? "测试中" : "测试连接"}</span>
-            </button>
-          </div>
-          <div className="notion-sync-secondary-actions">
-            <button className="mini-action" type="button" onClick={() => void handleSave()}>
-              <CheckCircle2 />
-              <span>保存配置</span>
-            </button>
-            {draft.token && (
-              <button className="mini-action danger" type="button" onClick={() => void handleClearToken()}>
-                <Trash2 />
-                <span>清空 Token</span>
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </GlassCard>
     </section>
@@ -461,6 +538,166 @@ function getNotionStatus(settings: NotionSettings, lastResult: NotionConnectionR
     title: "连接 Notion",
     desc: "填写 Token 和父页面 ID 后，一键创建数据库并开始同步。"
   } as const;
+}
+
+function buildNotionSetupState({
+  settings,
+  lastResult,
+  lastCreate,
+  lastSync,
+  isCreating,
+  isTesting,
+  isSyncing
+}: {
+  settings: NotionSettings;
+  lastResult: NotionConnectionResult | null;
+  lastCreate: NotionAutoCreateResult | null;
+  lastSync: NotionSyncSummary | null;
+  isCreating: boolean;
+  isTesting: boolean;
+  isSyncing: boolean;
+}): SetupState {
+  const hasToken = Boolean(settings.token.trim());
+  const hasParentPage = Boolean(normalizeNotionId(settings.parentPageId));
+  const databaseCount = countConfiguredDatabases(settings);
+  const hasAllDatabases = databaseCount === databaseFields.length;
+  const createFailed = Boolean(lastCreate && !lastCreate.ok);
+  const testFailed = Boolean(lastResult && !lastResult.ok);
+  const testPassed = Boolean(lastResult?.ok || settings.lastConnectionStatus === "connected");
+  const syncDone = Boolean(lastSync && !lastSync.failed && lastSync.synced + lastSync.skipped > 0);
+  const currentStep = !hasToken
+    ? "token"
+    : !hasParentPage
+      ? "parent"
+      : !hasAllDatabases
+        ? "database"
+        : !testPassed
+          ? "test"
+          : "sync";
+
+  const steps: SetupStep[] = [
+    {
+      id: "integration",
+      index: "1",
+      title: "创建 Integration",
+      desc: hasToken ? "Token 已填写。" : "打开 Notion 集成页面，新建 Internal Integration，并复制 Secret。",
+      state: hasToken ? "done" : currentStep === "token" ? "current" : "waiting",
+      actionLabel: hasToken ? undefined : "打开",
+      actionUrl: hasToken ? undefined : NOTION_INTEGRATIONS_URL
+    },
+    {
+      id: "parent",
+      index: "2",
+      title: "准备父页面",
+      desc: hasParentPage ? "父页面已填写。" : "在 Notion 新建空页面，把页面分享给刚创建的 Integration，再复制页面链接。",
+      state: hasParentPage ? "done" : currentStep === "parent" ? "current" : "waiting",
+      actionLabel: hasParentPage ? undefined : "打开",
+      actionUrl: hasParentPage ? undefined : NOTION_HOME_URL
+    },
+    {
+      id: "database",
+      index: "3",
+      title: "自动创建数据库",
+      desc: hasAllDatabases
+        ? `4 个数据库已配置。`
+        : databaseCount
+          ? `已配置 ${databaseCount}/4 个数据库，建议继续自动补齐。`
+          : "LifeLog 会在父页面下创建人物、地点、回忆和纪念日安排数据库。",
+      state: hasAllDatabases ? "done" : createFailed ? "failed" : currentStep === "database" ? "current" : "waiting"
+    },
+    {
+      id: "test",
+      index: "4",
+      title: "测试连接",
+      desc: testPassed ? "连接可用，可以开始同步。" : testFailed ? lastResult?.message || "连接失败，请按诊断修正。" : "确认 Token、页面和数据库权限都可读取。",
+      state: testPassed ? "done" : testFailed ? "failed" : currentStep === "test" ? "current" : "waiting"
+    },
+    {
+      id: "sync",
+      index: "5",
+      title: "同步本地记录",
+      desc: syncDone
+        ? `最近同步：${lastSync?.synced || 0} 条已同步，${lastSync?.skipped || 0} 条跳过。`
+        : "把本机人物、地点、回忆和纪念日安排单向写入 Notion。",
+      state: syncDone ? "done" : currentStep === "sync" ? "current" : "waiting"
+    }
+  ];
+
+  if (!hasToken) {
+    return {
+      tone: "idle",
+      badge: "第 1 步",
+      title: "先填写 Notion Token",
+      desc: "点击打开 Notion 集成页面，复制 Internal Integration Secret 后粘贴到下方。",
+      primaryLabel: "填写 Token",
+      primaryAction: "focus-token",
+      primaryDisabled: false,
+      primaryBusy: false,
+      steps
+    };
+  }
+
+  if (!hasParentPage) {
+    return {
+      tone: "idle",
+      badge: "第 2 步",
+      title: "填写 Notion 父页面",
+      desc: "把一个空页面分享给 Integration，然后粘贴页面链接。数据库会自动建在这个页面下。",
+      primaryLabel: "填写父页面",
+      primaryAction: "focus-parent",
+      primaryDisabled: false,
+      primaryBusy: false,
+      steps
+    };
+  }
+
+  if (!hasAllDatabases) {
+    return {
+      tone: createFailed ? "failed" : "idle",
+      badge: "第 3 步",
+      title: createFailed ? "自动创建失败" : "自动创建 Notion 数据库",
+      desc: createFailed
+        ? lastCreate?.message || "请检查父页面是否已分享给 Integration。"
+        : "不需要在 Notion 手动建表，点击后会生成中文字段数据库并保存 ID。",
+      primaryLabel: isCreating ? "创建中" : "自动创建",
+      primaryAction: "create-databases",
+      primaryDisabled: isCreating,
+      primaryBusy: isCreating,
+      steps
+    };
+  }
+
+  if (!testPassed) {
+    return {
+      tone: testFailed ? "failed" : "idle",
+      badge: "第 4 步",
+      title: testFailed ? "连接测试未通过" : "测试 Notion 连接",
+      desc: testFailed ? lastResult?.message || "请按诊断信息修正权限。" : "确认 Integration、父页面和 4 个数据库都能正常访问。",
+      primaryLabel: isTesting ? "测试中" : "测试连接",
+      primaryAction: "test-connection",
+      primaryDisabled: isTesting,
+      primaryBusy: isTesting,
+      steps
+    };
+  }
+
+  return {
+    tone: lastSync?.failed ? "failed" : "connected",
+    badge: "第 5 步",
+    title: lastSync ? "可以继续同步" : "连接已就绪",
+    desc: lastSync
+      ? `上次同步：新增 ${lastSync.created}，更新 ${lastSync.updated}，跳过 ${lastSync.skipped}，失败 ${lastSync.failed}。`
+      : "现在可以把本地数据单向同步到 Notion。",
+    primaryLabel: isSyncing ? "同步中" : "同步全部",
+    primaryAction: "sync-all",
+    primaryDisabled: isSyncing,
+    primaryBusy: isSyncing,
+    steps
+  };
+}
+
+function countConfiguredDatabases(settings: NotionSettings) {
+  return databaseFields.filter((field) => normalizeNotionId(String(settings[field.key] || ""))).length;
 }
 
 function extractConnectionDiagnostic(result: NotionConnectionResult) {
