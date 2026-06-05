@@ -2090,6 +2090,138 @@
   background: color-mix(in srgb, var(--card-solid) 90%, var(--primary) 2%);
 }
 
+.notion-sync-preview {
+  display: grid;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, #12b886 15%, transparent);
+  border-radius: 15px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #12b886 7%, transparent), transparent 64%),
+    color-mix(in srgb, var(--card-solid) 90%, #12b886 2%);
+}
+
+.notion-sync-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notion-sync-preview-head div {
+  min-width: 0;
+}
+
+.notion-sync-preview-head strong,
+.notion-sync-preview-head span,
+.notion-sync-preview-head em {
+  display: block;
+  line-height: 1.35;
+}
+
+.notion-sync-preview-head strong {
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.notion-sync-preview-head span {
+  margin-top: 2px;
+  color: var(--text-sub);
+  font-size: 12px;
+}
+
+.notion-sync-preview-head em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 8px;
+  color: #0ca678;
+  background: color-mix(in srgb, #12b886 10%, transparent);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.notion-sync-preview-grid,
+.notion-sync-type-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.notion-sync-preview-item,
+.notion-sync-type-item {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, #12b886 14%, transparent);
+  border-radius: 12px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.notion-sync-preview-item.missing {
+  border-color: color-mix(in srgb, var(--danger) 16%, transparent);
+  background: color-mix(in srgb, var(--danger) 5%, rgba(255, 255, 255, 0.44));
+}
+
+.notion-sync-preview-item.empty {
+  border-color: color-mix(in srgb, var(--text-sub) 10%, transparent);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.notion-sync-preview-item span,
+.notion-sync-preview-item strong,
+.notion-sync-preview-item small,
+.notion-sync-type-item span,
+.notion-sync-type-item strong {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.notion-sync-preview-item span,
+.notion-sync-type-item span {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.notion-sync-preview-item strong {
+  color: var(--text-main);
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notion-sync-preview-item.missing strong {
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.notion-sync-preview-item small {
+  color: var(--text-sub);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.notion-sync-type-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notion-sync-type-item {
+  border-color: color-mix(in srgb, var(--primary) 11%, transparent);
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.notion-sync-type-item strong {
+  color: var(--text-main);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .notion-preflight-panel {
   display: grid;
   gap: 10px;
@@ -3551,6 +3683,11 @@
   }
 
   .notion-preflight-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notion-sync-preview-grid,
+  .notion-sync-type-grid {
     grid-template-columns: 1fr;
   }
 

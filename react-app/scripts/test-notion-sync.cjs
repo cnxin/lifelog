@@ -165,6 +165,8 @@ async function run() {
   const createFetcher = buildFetcher();
   const first = await syncLifeLogToNotion({ state, settings, mappings: [], fetcher: createFetcher });
   assert(first.synced === 1 && first.created === 1 && first.failed === 0, "first sync summary", JSON.stringify(first));
+  assert(first.byType.person.total === 1 && first.byType.person.created === 1, "first sync type summary", JSON.stringify(first.byType));
+  assert(first.byType.place.total === 0 && first.byType.memory.total === 0, "unconfigured type summary", JSON.stringify(first.byType));
   assert(first.mappings[0].notionPageId === "new-page", "mapping page id", JSON.stringify(first.mappings[0]));
   assert(createFetcher.calls.some((call) => call.url.endsWith("/pages") && call.init.method === "POST"), "create call", JSON.stringify(createFetcher.calls));
   const createBody = createFetcher.calls.find((call) => call.url.endsWith("/pages")).body;
@@ -174,6 +176,7 @@ async function run() {
 
   const skip = await syncLifeLogToNotion({ state, settings, mappings: first.mappings, fetcher: buildFetcher() });
   assert(skip.synced === 0 && skip.skipped === 1, "skip unchanged", JSON.stringify(skip));
+  assert(skip.byType.person.total === 1 && skip.byType.person.skipped === 1, "skip type summary", JSON.stringify(skip.byType));
 
   const rebuildFetcher = buildFetcher({ page404: true, createdPageId: "rebuilt-page" });
   const rebuild = await syncLifeLogToNotion({
@@ -183,6 +186,7 @@ async function run() {
     fetcher: rebuildFetcher
   });
   assert(rebuild.created === 1 && rebuild.mappings[0].notionPageId === "rebuilt-page", "rebuild deleted page", JSON.stringify(rebuild));
+  assert(rebuild.byType.person.created === 1 && rebuild.byType.person.failed === 0, "rebuild type summary", JSON.stringify(rebuild.byType));
 
   const schemaNetwork = await syncLifeLogToNotion({
     state,
@@ -194,6 +198,7 @@ async function run() {
     }
   });
   assert(schemaNetwork.failed === 1 && schemaNetwork.diagnostic?.path === "/databases/db_people", "schema diagnostic", JSON.stringify(schemaNetwork));
+  assert(schemaNetwork.byType.person.total === 0 && schemaNetwork.byType.person.failed === 0, "preflight failure type summary", JSON.stringify(schemaNetwork.byType));
 
   if (failures) {
     console.error(`Notion sync regression failed: ${failures} mismatch(es).`);

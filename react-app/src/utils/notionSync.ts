@@ -21,11 +21,21 @@ export interface NotionSyncSummary {
   updated: number;
   skipped: number;
   failed: number;
+  byType: Record<NotionEntityType, NotionSyncTypeSummary>;
   messages: string[];
   mappings: NotionPageMapping[];
   workspaceName: string;
   workspaceBotName: string;
   diagnostic?: NotionRequestDiagnostic;
+}
+
+export interface NotionSyncTypeSummary {
+  total: number;
+  synced: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
 }
 
 type NotionPropertyValue = Record<string, unknown>;
@@ -100,15 +110,19 @@ export async function syncLifeLogToNotion({
     const mappingId = buildNotionMappingId(item.entityType, item.entityId);
     const previousMapping = mappingById.get(mappingId);
     const hash = buildSyncHash(item.properties);
+    const typeSummary = nextSummary.byType[item.entityType];
+    typeSummary.total += 1;
 
     if (previousMapping?.notionPageId && previousMapping.lastSyncHash === hash && previousMapping.dataSourceId === item.databaseId) {
       nextSummary.skipped += 1;
+      typeSummary.skipped += 1;
       continue;
     }
 
     const schemaResult = await getDatabaseSchema(settings, item.databaseId, schemaCache, fetcher);
     if (!schemaResult.schema) {
       nextSummary.failed += 1;
+      typeSummary.failed += 1;
       if (!nextSummary.diagnostic) nextSummary.diagnostic = schemaResult.diagnostic;
       nextSummary.messages.push(`${item.label}：${schemaResult.message || "数据库不可读取。"}`);
       continue;
@@ -117,6 +131,7 @@ export async function syncLifeLogToNotion({
     const properties = filterProperties(item.properties, schemaResult.schema.properties);
     if (!Object.keys(properties).length) {
       nextSummary.failed += 1;
+      typeSummary.failed += 1;
       nextSummary.messages.push(`${item.label}：Notion 数据库缺少可写字段。`);
       continue;
     }
@@ -131,6 +146,7 @@ export async function syncLifeLogToNotion({
 
     if (!syncResult.ok) {
       nextSummary.failed += 1;
+      typeSummary.failed += 1;
       if (!nextSummary.diagnostic) nextSummary.diagnostic = syncResult.diagnostic;
       nextSummary.messages.push(`${item.label}：${syncResult.message}`);
       nextSummary.mappings.push({
@@ -148,8 +164,14 @@ export async function syncLifeLogToNotion({
 
     const now = new Date().toISOString();
     nextSummary.synced += 1;
-    if (syncResult.created) nextSummary.created += 1;
-    else nextSummary.updated += 1;
+    typeSummary.synced += 1;
+    if (syncResult.created) {
+      nextSummary.created += 1;
+      typeSummary.created += 1;
+    } else {
+      nextSummary.updated += 1;
+      typeSummary.updated += 1;
+    }
     nextSummary.mappings.push({
       id: mappingId,
       entityType: item.entityType,
@@ -505,10 +527,31 @@ function buildEmptySummary(): NotionSyncSummary {
     updated: 0,
     skipped: 0,
     failed: 0,
+    byType: buildEmptyTypeSummaries(),
     messages: [],
     mappings: [],
     workspaceName: "",
     workspaceBotName: ""
+  };
+}
+
+function buildEmptyTypeSummaries(): Record<NotionEntityType, NotionSyncTypeSummary> {
+  return {
+    person: buildEmptyTypeSummary(),
+    place: buildEmptyTypeSummary(),
+    memory: buildEmptyTypeSummary(),
+    anniversaryPlan: buildEmptyTypeSummary()
+  };
+}
+
+function buildEmptyTypeSummary(): NotionSyncTypeSummary {
+  return {
+    total: 0,
+    synced: 0,
+    created: 0,
+    updated: 0,
+    skipped: 0,
+    failed: 0
   };
 }
 

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
-import type { NotionSettings } from "../../types";
+import type { LifeLogState, NotionEntityType, NotionPageMapping, NotionSettings } from "../../types";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openExternalUrl } from "../../utils/externalLinks";
 import { normalizeNotionId } from "../../utils/notionIds";
@@ -16,12 +16,13 @@ import {
   type NotionRequestDiagnostic,
   type NotionRuntimeInfo
 } from "../../utils/notionClient";
-import type { NotionSyncSummary } from "../../utils/notionSync";
+import type { NotionSyncSummary, NotionSyncTypeSummary } from "../../utils/notionSync";
 
 type DatabaseField = "peopleDatabaseId" | "placesDatabaseId" | "memoriesDatabaseId" | "plansDatabaseId";
 type SetupStepState = "done" | "current" | "waiting" | "failed";
 type SetupPrimaryAction = "focus-token" | "focus-parent" | "create-databases" | "test-connection" | "sync-all";
 type PreflightTone = "ok" | "warning" | "blocked" | "idle";
+type SyncPreviewTone = "ready" | "missing" | "empty";
 
 interface SetupStep {
   id: string;
@@ -53,6 +54,17 @@ interface NotionPreflightItem {
   tone: PreflightTone;
 }
 
+interface NotionSyncPreviewItem {
+  entityType: NotionEntityType;
+  label: string;
+  databaseLabel: string;
+  total: number;
+  mapped: number;
+  pending: number;
+  databaseId: string;
+  tone: SyncPreviewTone;
+}
+
 const databaseFields: Array<{ key: DatabaseField; label: string; placeholder: string }> = [
   { key: "peopleDatabaseId", label: "人物数据库", placeholder: "People database ID" },
   { key: "placesDatabaseId", label: "地点数据库", placeholder: "Places database ID" },
@@ -64,7 +76,7 @@ const NOTION_INTEGRATIONS_URL = "https://www.notion.so/profile/integrations";
 const NOTION_HOME_URL = "https://www.notion.so";
 
 export default function AccountNotionSync() {
-  const { notionSettings, updateNotionSettings, syncNotionAll } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, updateNotionSettings, syncNotionAll } = useLifeLog();
   const notify = useToast();
   const [draft, setDraft] = useState(notionSettings);
   const [showToken, setShowToken] = useState(false);
@@ -92,6 +104,10 @@ export default function AccountNotionSync() {
   const preflight = useMemo(
     () => buildNotionPreflight({ settings: draft, lastResult, lastDiagnostic, runtimeInfo }),
     [draft, lastDiagnostic, lastResult, runtimeInfo]
+  );
+  const syncPreview = useMemo(
+    () => buildNotionSyncPreview({ settings: draft, mappings: notionPageMappings, state }),
+    [draft, notionPageMappings, state]
   );
 
   function patchDraft(patch: Partial<NotionSettings>) {
@@ -355,6 +371,25 @@ export default function AccountNotionSync() {
           </div>
         </div>
 
+        <div className="notion-sync-preview">
+          <div className="notion-sync-preview-head">
+            <div>
+              <strong>同步预览</strong>
+              <span>{formatSyncPreviewSummary(syncPreview)}</span>
+            </div>
+            {notionSettings.lastFullSyncAt ? <em>上次同步 {formatTestTime(notionSettings.lastFullSyncAt)}</em> : null}
+          </div>
+          <div className="notion-sync-preview-grid">
+            {syncPreview.map((item) => (
+              <div className={`notion-sync-preview-item ${item.tone}`} key={item.entityType}>
+                <span>{item.label}</span>
+                <strong>{item.databaseId ? item.total : "未配置"}</strong>
+                <small>{formatSyncPreviewDetail(item)}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="notion-input-panel">
           <label className="notion-field">
             <span>
@@ -527,6 +562,14 @@ export default function AccountNotionSync() {
                 <li key={message}>{message}</li>
               ))}
             </ul>
+            <div className="notion-sync-type-grid">
+              {syncPreview.map((item) => (
+                <div className="notion-sync-type-item" key={item.entityType}>
+                  <span>{item.label}</span>
+                  <strong>{formatSyncTypeSummary(lastSync.byType[item.entityType])}</strong>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -843,6 +886,97 @@ function buildNotionPreflight({
       tone: lastDiagnostic ? "warning" : "idle"
     }
   ];
+}
+
+function buildNotionSyncPreview({
+  settings,
+  mappings,
+  state
+}: {
+  settings: NotionSettings;
+  mappings: NotionPageMapping[];
+  state: LifeLogState;
+}): NotionSyncPreviewItem[] {
+  const mappedByType = countMappingsByType(mappings);
+  const definitions: Array<{
+    entityType: NotionEntityType;
+    label: string;
+    databaseLabel: string;
+    databaseId: string;
+    total: number;
+  }> = [
+    {
+      entityType: "person",
+      label: "人物",
+      databaseLabel: "人物数据库",
+      databaseId: normalizeNotionId(settings.peopleDatabaseId),
+      total: state.people.length
+    },
+    {
+      entityType: "place",
+      label: "地点",
+      databaseLabel: "地点数据库",
+      databaseId: normalizeNotionId(settings.placesDatabaseId),
+      total: state.places.length
+    },
+    {
+      entityType: "memory",
+      label: "回忆",
+      databaseLabel: "回忆数据库",
+      databaseId: normalizeNotionId(settings.memoriesDatabaseId),
+      total: state.memories.length
+    },
+    {
+      entityType: "anniversaryPlan",
+      label: "安排",
+      databaseLabel: "安排数据库",
+      databaseId: normalizeNotionId(settings.plansDatabaseId),
+      total: state.anniversaryPlans.length
+    }
+  ];
+
+  return definitions.map((item) => {
+    const mapped = Math.min(mappedByType[item.entityType] || 0, item.total);
+    return {
+      ...item,
+      mapped,
+      pending: Math.max(0, item.total - mapped),
+      tone: !item.databaseId ? "missing" : item.total ? "ready" : "empty"
+    };
+  });
+}
+
+function countMappingsByType(mappings: NotionPageMapping[]) {
+  return mappings.reduce<Record<NotionEntityType, number>>(
+    (acc, mapping) => {
+      if (mapping.notionPageId && !mapping.lastError) acc[mapping.entityType] += 1;
+      return acc;
+    },
+    { person: 0, place: 0, memory: 0, anniversaryPlan: 0 }
+  );
+}
+
+function formatSyncPreviewSummary(items: NotionSyncPreviewItem[]) {
+  const configured = items.filter((item) => item.databaseId).length;
+  const total = items.filter((item) => item.databaseId).reduce((sum, item) => sum + item.total, 0);
+  const missing = items.length - configured;
+  if (!configured) return "还没有配置可同步数据库";
+  if (missing) return `${configured}/4 个数据库已配置，预计同步 ${total} 条`;
+  return `4 个数据库已配置，预计同步 ${total} 条`;
+}
+
+function formatSyncPreviewDetail(item: NotionSyncPreviewItem) {
+  if (!item.databaseId) return `${item.databaseLabel} 未配置，暂不会同步。`;
+  if (!item.total) return "本地暂无内容，配置已就绪。";
+  if (!item.mapped) return `${item.total} 条会首次写入 Notion。`;
+  if (!item.pending) return `${item.mapped} 条已有同步记录，本次会检查更新。`;
+  return `${item.mapped} 条已有同步记录，${item.pending} 条可能首次写入。`;
+}
+
+function formatSyncTypeSummary(summary: NotionSyncTypeSummary | undefined) {
+  if (!summary || !summary.total) return "无同步内容";
+  if (summary.failed) return `成功 ${summary.synced}，失败 ${summary.failed}`;
+  return `新增 ${summary.created}，更新 ${summary.updated}，跳过 ${summary.skipped}`;
 }
 
 function summarizePreflight(items: NotionPreflightItem[]) {
