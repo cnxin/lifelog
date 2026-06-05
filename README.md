@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.104`
+当前版本：`0.1.0-test.105`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.104
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.104/lifelog-v0.1.0-test.104.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.104.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.105
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.105/lifelog-v0.1.0-test.105.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.105.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.104.apk`
-- 大小：`3715994` bytes
-- SHA256：`a09b662669c683131dbbb3b0e265a147b20e33cf6c6f667f8019a4568f389caa`
+- 文件名：`lifelog-v0.1.0-test.105.apk`
+- 大小：`3718274` bytes
+- SHA256：`426d331ef4cf72c870049da4d2139c2054553233d83b322085c3baf39920b2af`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -104,7 +104,7 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 
 ### Notion 联动
 
-- 设置页的“实验”入口新增 Notion 同步试验功能，可保存 Internal Integration Token 和父页面 ID。
+- 设置页的“实验”入口新增 Notion 同步试验功能，可保存 Internal Integration Token 和父页面 ID，并通过 5 步向导完成连接。
 - 支持在父页面下自动创建人物、地点、回忆、纪念日安排数据库，并把数据库 ID 自动写回设置。
 - 支持测试连接，分别提示 Token 无效、权限不足、数据库不存在、网络失败和连接成功。
 - 支持手动同步全部，把 LifeLog 本地数据单向写入 Notion。
@@ -120,6 +120,7 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 4. 复制该页面链接，在 LifeLog 的 设置 -> 实验 -> Notion 同步 中填写 Token 和父页面链接 / ID。
 5. 点“自动创建”，LifeLog 会创建 4 个数据库并自动保存 ID。
 6. 点“测试连接”，通过后再点“同步全部”。
+7. 页面顶部主按钮会根据当前状态自动提示下一步。
 
 ### 设置与关于
 
@@ -294,12 +295,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.104` 主要变化：
+`0.1.0-test.105` 主要变化：
 
-- 设置页新增“实验”入口，Notion 同步作为试验功能单独进入，避免和常规数据管理混在一起。
-- 支持保存 Internal Integration Token 和父页面 ID，并可在父页面下自动创建人物、地点、回忆、纪念日安排四类中文字段数据库。
-- Notion 同步会保存本地页面映射，重复同步不会重复创建页面，Notion 页面被删除后可自动重新创建。
-- Web 开发环境新增 Notion 代理和请求诊断，连接失败时可复制诊断信息，方便区分 CORS、网络和权限问题。
+- Notion 同步页改成 5 步连接向导，按 Token、父页面、自动建库、测试连接和同步数据逐步引导。
+- 顶部主操作会根据当前状态自动切换为填写 Token、填写父页面、自动创建、测试连接或同步全部。
+- Notion 按钮重新分层为主按钮、外链胶囊、辅助按钮和危险按钮，移动端也会自动换行排布。
+- 修改 Token、父页面或数据库 ID 后会清空旧连接状态，同步时也会使用刚保存的最新配置。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
