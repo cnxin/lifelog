@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.106",
+    date: "2026-06-06",
+    title: "Notion 同步预览和失败重试",
+    highlights: [
+      "Notion 同步页新增连接体检和同步预览，可提前看到 Token、父页面、数据库、连接环境和各类数据同步数量。",
+      "自动创建 Notion 数据库成功后会直接测试连接，减少一次手动点击。",
+      "同步结果新增人物、地点、回忆和安排的分类型统计，并保留最近同步历史。",
+      "同步失败会记录具体失败项，历史记录中可一键重试失败内容，也支持只同步某一类数据。"
+    ]
+  },
+  {
     version: "0.1.0-test.105",
     date: "2026-06-05",
     title: "Notion 连接向导和按钮体验",

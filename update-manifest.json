@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.105",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.105",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.105/lifelog-v0.1.0-test.105.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.105.apk",
-    "apkName":  "lifelog-v0.1.0-test.105.apk",
-    "apkSize":  3718274,
-    "apkSha256":  "426d331ef4cf72c870049da4d2139c2054553233d83b322085c3baf39920b2af",
-    "publishedAt":  "2026-06-05T06:22:12Z",
-    "body":  "- Notion 同步页改成 5 步连接向导，按 Token、父页面、自动建库、测试连接和同步数据逐步引导。\n- 顶部主操作会根据当前状态自动切换为填写 Token、填写父页面、自动创建、测试连接或同步全部。\n- Notion 按钮重新分层为主按钮、外链胶囊、辅助按钮和危险按钮，移动端也会自动换行排布。\n- 修改 Token、父页面或数据库 ID 后会清空旧连接状态，同步时也会使用刚保存的最新配置。"
+    "version":  "0.1.0-test.106",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.106",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.106/lifelog-v0.1.0-test.106.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.106.apk",
+    "apkName":  "lifelog-v0.1.0-test.106.apk",
+    "apkSize":  3722474,
+    "apkSha256":  "bb9d5636951a03d6013ed2ab5b6b55169af19416bbd86f35f41818586d729dc1",
+    "publishedAt":  "2026-06-05T18:42:13Z",
+    "body":  "- Notion 同步页新增连接体检和同步预览，可提前看到 Token、父页面、数据库、连接环境和各类数据同步数量。\n- 自动创建 Notion 数据库成功后会直接测试连接，减少一次手动点击。\n- 同步结果新增人物、地点、回忆和安排的分类型统计，并保留最近同步历史。\n- 同步失败会记录具体失败项，历史记录中可一键重试失败内容，也支持只同步某一类数据。"
 }
