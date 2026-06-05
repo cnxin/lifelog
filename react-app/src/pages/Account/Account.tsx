@@ -1,12 +1,13 @@
-import { CloudOff, Crown, Database, Info, KeyRound, Settings, UserRound } from "lucide-react";
+import { CloudOff, Crown, Database, FlaskConical, Info, KeyRound, Settings, UserRound } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { AppSettingsPanel, DataOrganizePanel } from "../Settings/Settings";
 import AccountAbout from "./AccountAbout";
 import AccountDataManagement from "./AccountDataManagement";
 import AccountFeedback from "./AccountFeedback";
+import AccountNotionSync from "./AccountNotionSync";
 
-type AccountTab = "account" | "app" | "data" | "about";
+type AccountTab = "account" | "app" | "data" | "labs" | "about";
 
 export default function Account() {
   const [activeTab, setActiveTab] = useState<AccountTab>("account");
@@ -82,6 +83,8 @@ export default function Account() {
         </>
       )}
 
+      {activeTab === "labs" && <AccountNotionSync />}
+
       {activeTab === "about" && (
         <>
           <AccountAbout />
@@ -96,5 +99,6 @@ const managementTabs: Array<{ id: AccountTab; label: string; icon: typeof UserRo
   { id: "account", label: "账号", icon: UserRound },
   { id: "app", label: "应用", icon: Settings },
   { id: "data", label: "数据", icon: Database },
+  { id: "labs", label: "实验", icon: FlaskConical },
   { id: "about", label: "关于", icon: Info }
 ];

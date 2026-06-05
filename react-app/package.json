@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.103",
+  "version": "0.1.0-test.104",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,9 @@
     "test:quick-memory": "node scripts/test-quick-memory-context.cjs",
     "test:release-notes": "node scripts/test-release-notes.cjs",
     "test:update-checker": "node scripts/test-update-checker.cjs",
+    "test:notion-ids": "node scripts/test-notion-ids.cjs",
+    "test:notion": "node scripts/test-notion-connection.cjs",
+    "test:notion-sync": "node scripts/test-notion-sync.cjs",
     "test:calendar-items": "node scripts/test-calendar-items.cjs",
     "test:diagnostics": "node scripts/test-diagnostics.cjs",
     "test:backup-health": "node scripts/test-backup-health.cjs",

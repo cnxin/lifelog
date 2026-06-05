@@ -10,6 +10,8 @@ import {
   loadAppSettings,
   loadPlaceMergeHistory,
   loadLifeLogState,
+  loadNotionSettings,
+  loadNotionPageMappings,
   loadPhotosByIds,
   loadPhotosByMemoryId,
   loadReminderSettings,
@@ -28,6 +30,8 @@ import {
   savePlaceRecords,
   savePhotoRecords,
   saveReminderSettings,
+  saveNotionSettings,
+  saveNotionPageMappings,
   deletePhotosByMemoryId
 } from "../db/database";
 import type {
@@ -36,6 +40,8 @@ import type {
   EntryType,
   LifeLogState,
   MemoryEvent,
+  NotionPageMapping,
+  NotionSettings,
   Person,
   Photo,
   Place,
@@ -46,7 +52,7 @@ import type {
   PlaceSaveOptions,
   ReminderSettings
 } from "../types";
-import { defaultAppSettings, defaultReminderSettings } from "../types";
+import { defaultAppSettings, defaultNotionSettings, defaultReminderSettings } from "../types";
 import { buildPlaceDisplayName } from "../utils/placeMeta";
 import {
   buildGroupMergePreview,
@@ -83,6 +89,7 @@ import {
 } from "../utils/lifelogShare";
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
 import { saveBackupFile, type BackupExportTarget } from "../utils/backupExport";
+import { syncLifeLogToNotion, type NotionSyncSummary } from "../utils/notionSync";
 
 type DeletedEntrySnapshot =
   | { type: "person"; person: Person; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
@@ -98,6 +105,8 @@ interface LifeLogContextValue {
   state: LifeLogState;
   settings: AppSettings;
   reminderSettings: ReminderSettings;
+  notionSettings: NotionSettings;
+  notionPageMappings: NotionPageMapping[];
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
@@ -125,6 +134,8 @@ interface LifeLogContextValue {
   undoLatestPlaceMerge: () => Promise<boolean>;
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
+  updateNotionSettings: (patch: Partial<NotionSettings>) => Promise<void>;
+  syncNotionAll: () => Promise<NotionSyncSummary>;
   exportData: () => Promise<BackupExportResult>;
   buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
   buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
@@ -149,6 +160,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LifeLogState>(emptyState);
   const [settings, setSettings] = useState<AppSettings>(defaultAppSettings);
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(defaultReminderSettings);
+  const [notionSettings, setNotionSettings] = useState<NotionSettings>(defaultNotionSettings);
+  const [notionPageMappings, setNotionPageMappings] = useState<NotionPageMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
   const favoritePendingRef = useRef({ people: new Set<string>(), places: new Set<string>() });
@@ -160,10 +173,14 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       .then(async (nextState) => {
         const nextSettings = await loadAppSettings();
         const nextReminderSettings = await loadReminderSettings();
+        const nextNotionSettings = await loadNotionSettings();
+        const nextNotionPageMappings = await loadNotionPageMappings();
         const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
         if (active) setSettings(nextSettings);
         if (active) setReminderSettings(nextReminderSettings);
+        if (active) setNotionSettings(nextNotionSettings);
+        if (active) setNotionPageMappings(nextNotionPageMappings);
         if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
@@ -705,6 +722,45 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       setReminderSettings(next);
     }
 
+    async function updateNotionSettings(patch: Partial<NotionSettings>) {
+      const next: NotionSettings = {
+        ...notionSettings,
+        ...patch
+      };
+      await saveNotionSettings(next);
+      setNotionSettings({
+        ...defaultNotionSettings,
+        ...next,
+        enabled: Boolean(next.enabled && next.token.trim())
+      });
+    }
+
+    async function syncNotionAll() {
+      const result = await syncLifeLogToNotion({
+        state,
+        settings: notionSettings,
+        mappings: notionPageMappings
+      });
+      if (result.mappings.length) {
+        await saveNotionPageMappings(result.mappings);
+        setNotionPageMappings((current) => mergeById(current, result.mappings));
+      }
+      const syncedAt = new Date().toISOString();
+      const nextSettings = {
+        ...notionSettings,
+        workspaceName: result.workspaceName || notionSettings.workspaceName,
+        workspaceBotName: result.workspaceBotName || notionSettings.workspaceBotName,
+        lastFullSyncAt: syncedAt,
+        lastConnectionStatus: result.failed ? "failed" as const : "connected" as const,
+        lastConnectionMessage: result.failed
+          ? `Notion 同步完成，失败 ${result.failed} 条。`
+          : `Notion 同步完成，成功 ${result.synced} 条。`
+      };
+      await saveNotionSettings(nextSettings);
+      setNotionSettings(nextSettings);
+      return result;
+    }
+
     async function exportData(): Promise<BackupExportResult> {
       const photos = await loadAllPhotos();
       const photoOwnerById = new Map<string, string>();
@@ -844,6 +900,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       state,
       settings,
       reminderSettings,
+      notionSettings,
+      notionPageMappings,
       isLoading,
       savePerson,
       updatePersonProfile,
@@ -871,6 +929,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       undoLatestPlaceMerge,
       updateSettings,
       updateReminderSettings,
+      updateNotionSettings,
+      syncNotionAll,
       exportData,
       buildMemoryShare,
       buildPlacesShare,
@@ -881,7 +941,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       resetDemo,
       loadMemoryPhotos
     };
-  }, [duplicatePlaceGroups, isLoading, placeMergeHistory, settings, reminderSettings, state]);
+  }, [duplicatePlaceGroups, isLoading, notionPageMappings, notionSettings, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }

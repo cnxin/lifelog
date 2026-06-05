@@ -162,6 +162,56 @@ export const defaultAppSettings: AppSettings = {
   hidePhotoThumbnails: false
 };
 
+export type NotionAuthMode = "manual-token" | "oauth";
+export type NotionConnectionStatus = "idle" | "connected" | "failed";
+
+export interface NotionSettings {
+  enabled: boolean;
+  mode: NotionAuthMode;
+  token: string;
+  workspaceName: string;
+  workspaceBotName: string;
+  parentPageId: string;
+  peopleDatabaseId: string;
+  placesDatabaseId: string;
+  memoriesDatabaseId: string;
+  plansDatabaseId: string;
+  apiVersion: string;
+  lastConnectionTestAt?: string;
+  lastConnectionStatus?: NotionConnectionStatus;
+  lastConnectionMessage?: string;
+  lastFullSyncAt?: string;
+}
+
+export const defaultNotionSettings: NotionSettings = {
+  enabled: false,
+  mode: "manual-token",
+  token: "",
+  workspaceName: "",
+  workspaceBotName: "",
+  parentPageId: "",
+  peopleDatabaseId: "",
+  placesDatabaseId: "",
+  memoriesDatabaseId: "",
+  plansDatabaseId: "",
+  apiVersion: "2022-06-28",
+  lastConnectionStatus: "idle",
+  lastConnectionMessage: ""
+};
+
+export type NotionEntityType = "person" | "place" | "memory" | "anniversaryPlan";
+
+export interface NotionPageMapping {
+  id: string;
+  entityType: NotionEntityType;
+  entityId: ID;
+  notionPageId?: string;
+  dataSourceId: string;
+  lastSyncedAt?: string;
+  lastSyncHash?: string;
+  lastError?: string;
+}
+
 export type EntryType = "person" | "place" | "memory";
 
 export type PlaceDuplicateStrength = "strong" | "weak";

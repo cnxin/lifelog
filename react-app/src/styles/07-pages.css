@@ -18,7 +18,7 @@
 
 .management-tab-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--line));
   border-radius: 18px;
@@ -41,6 +41,7 @@
   font: inherit;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
 }
 
 .management-tab-row button.active {
@@ -52,6 +53,7 @@
 .management-tab-row svg {
   width: 15px;
   height: 15px;
+  flex: 0 0 auto;
 }
 
 .management-card-grid {
@@ -1816,6 +1818,493 @@
   gap: 12px;
 }
 
+.section-chip {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notion-sync-card {
+  display: grid;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 7%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
+.notion-sync-card.connected {
+  border-color: color-mix(in srgb, #12b886 24%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #12b886 8%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
+.notion-sync-card.failed {
+  border-color: color-mix(in srgb, var(--danger) 22%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--danger) 7%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
+.notion-sync-head,
+.notion-sync-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notion-sync-head {
+  justify-content: space-between;
+}
+
+.notion-sync-title {
+  min-width: 0;
+}
+
+.notion-sync-title > svg {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+}
+
+.notion-sync-card.connected .notion-sync-title > svg {
+  color: #0ca678;
+}
+
+.notion-sync-card.failed .notion-sync-title > svg {
+  color: var(--danger);
+}
+
+.notion-sync-title strong,
+.notion-sync-title span,
+.notion-sync-note span,
+.notion-last-message {
+  display: block;
+}
+
+.notion-sync-title strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.notion-sync-title span,
+.notion-sync-note span,
+.notion-last-message {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notion-sync-note {
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.notion-guide-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-radius: 15px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--card-solid) 90%, var(--primary) 2%);
+}
+
+.notion-guide-head {
+  display: grid;
+  gap: 3px;
+}
+
+.notion-guide-head strong {
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.notion-guide-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notion-guide-steps {
+  display: grid;
+  gap: 9px;
+}
+
+.notion-guide-step {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  border-radius: 13px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.notion-guide-step em {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.notion-guide-step strong,
+.notion-guide-step span {
+  display: block;
+}
+
+.notion-guide-step strong {
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.notion-guide-step span {
+  margin-top: 2px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.notion-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.notion-field > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.notion-field > span svg {
+  width: 14px;
+  height: 14px;
+}
+
+.notion-field input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--control-border);
+  border-radius: 14px;
+  outline: 0;
+  padding: 0 12px;
+  color: var(--text-main);
+  background:
+    var(--control-tint),
+    var(--card-bg);
+  box-shadow: var(--control-shadow);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notion-field input:focus {
+  border-color: var(--primary-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 0 0 3px var(--focus-ring);
+}
+
+.notion-token-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+}
+
+.notion-token-input button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--control-border);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--card-bg);
+}
+
+.notion-token-input svg {
+  width: 17px;
+  height: 17px;
+}
+
+.notion-database-grid,
+.notion-probe-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notion-auto-create-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 14px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 62%),
+    color-mix(in srgb, var(--card-solid) 88%, var(--primary) 3%);
+}
+
+.notion-auto-create-card strong,
+.notion-auto-create-card span {
+  display: block;
+}
+
+.notion-auto-create-card strong {
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.notion-auto-create-card span {
+  margin-top: 3px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notion-advanced-toggle {
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--card-solid) 92%, var(--primary) 2%);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.notion-advanced-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
+  transition: transform 0.2s ease;
+}
+
+.notion-advanced-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.notion-probe-item {
+  display: grid;
+  gap: 3px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 12px;
+  padding: 10px 11px;
+  background: color-mix(in srgb, var(--card-solid) 88%, var(--primary) 3%);
+}
+
+.notion-probe-item.failed {
+  border-color: color-mix(in srgb, var(--danger) 18%, transparent);
+  background: color-mix(in srgb, var(--danger) 6%, var(--card-solid));
+}
+
+.notion-probe-item strong,
+.notion-probe-item span {
+  display: block;
+}
+
+.notion-probe-item strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.notion-probe-item span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.notion-sync-result {
+  display: grid;
+  gap: 9px;
+  border: 1px solid color-mix(in srgb, #12b886 20%, transparent);
+  border-radius: 14px;
+  padding: 11px;
+  background: color-mix(in srgb, #12b886 6%, var(--card-solid));
+}
+
+.notion-sync-result.failed {
+  border-color: color-mix(in srgb, var(--danger) 20%, transparent);
+  background: color-mix(in srgb, var(--danger) 6%, var(--card-solid));
+}
+
+.notion-sync-result-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.notion-sync-result-metrics span {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  border-radius: 10px;
+  padding: 7px 4px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.46);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.notion-sync-result-metrics strong {
+  color: var(--text-main);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.notion-sync-result ul {
+  margin: 0;
+  padding-left: 17px;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notion-diagnostic-card {
+  display: grid;
+  gap: 9px;
+  border: 1px solid color-mix(in srgb, var(--danger) 17%, transparent);
+  border-radius: 14px;
+  padding: 11px;
+  background: color-mix(in srgb, var(--danger) 5%, var(--card-solid));
+}
+
+.notion-diagnostic-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notion-diagnostic-head strong {
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.notion-diagnostic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.notion-diagnostic-grid span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border-radius: 10px;
+  padding: 7px 8px;
+  color: var(--text-sub);
+  background: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.notion-diagnostic-grid strong {
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.notion-diagnostic-card p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notion-sync-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.notion-sync-primary-actions,
+.notion-sync-secondary-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.notion-sync-primary-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notion-sync-secondary-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notion-sync-actions .mini-action,
+.notion-auto-create-card .mini-action,
+.notion-guide-step .mini-action,
+.notion-diagnostic-card .mini-action {
+  width: 100%;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.notion-sync-actions .mini-action span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.notion-sync-card .mini-action svg,
+.notion-auto-create-card .mini-action svg,
+.notion-guide-step .mini-action svg,
+.notion-diagnostic-card .mini-action svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.mini-action.danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
 .data-management-intro {
   display: grid;
   gap: 6px;
@@ -2619,6 +3108,43 @@
 }
 
 @media (max-width: 360px) {
+  .management-tab-row {
+    gap: 3px;
+  }
+
+  .management-tab-row button {
+    min-height: 40px;
+    gap: 3px;
+    font-size: 11px;
+  }
+
+  .management-tab-row svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .notion-guide-step {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .notion-guide-step .mini-action {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  .notion-auto-create-card {
+    grid-template-columns: 1fr;
+  }
+
+  .notion-sync-primary-actions,
+  .notion-sync-secondary-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .notion-diagnostic-grid {
+    grid-template-columns: 1fr;
+  }
+
   .settings-control-demo-grid {
     grid-template-columns: 1fr;
   }

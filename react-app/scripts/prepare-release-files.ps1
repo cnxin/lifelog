@@ -5,6 +5,7 @@ $repoRoot = Split-Path -Parent $projectRoot
 $packageJsonPath = Join-Path $projectRoot "package.json"
 $sourceApkPath = Join-Path $projectRoot "android\app\build\outputs\apk\release\app-release.apk"
 $manifestPath = Join-Path $repoRoot "update-manifest.json"
+$changelogPath = Join-Path $repoRoot "CHANGELOG.md"
 
 function Write-Utf8NoBom($path, $content) {
   $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
@@ -39,6 +40,37 @@ $manifest.apkName = $apkName
 $manifest.apkSize = $apk.Length
 $manifest.apkSha256 = $sha256
 $manifest.publishedAt = $publishedAt
+
+if (Test-Path $changelogPath) {
+  $changelog = Get-Content $changelogPath -Raw -Encoding UTF8
+  $versionHeading = [regex]::Escape("## v$version")
+  $releaseMatch = [regex]::Match($changelog, "(?ms)^$versionHeading[^\r\n]*(?<section>.*?)(?=^## v|\z)")
+  if ($releaseMatch.Success) {
+    $section = $releaseMatch.Groups["section"].Value
+    $capturingFirstSection = $false
+    $hasCapturedSection = $false
+    $bodyLines = @()
+    foreach ($line in ($section -split "`r?`n")) {
+      if ($line -match '^###\s+') {
+        if ($hasCapturedSection) {
+          break
+        }
+        $capturingFirstSection = $true
+        $hasCapturedSection = $true
+        continue
+      }
+      if ($capturingFirstSection -and $line -match '^- ') {
+        $bodyLines += $line
+      }
+    }
+    if ($bodyLines.Count -eq 0) {
+      $bodyLines = @($section -split "`r?`n" | Where-Object { $_ -match '^- ' })
+    }
+    if ($bodyLines.Count -gt 0) {
+      $manifest.body = [string]::Join("`n", $bodyLines)
+    }
+  }
+}
 Write-Utf8NoBom $manifestPath (($manifest | ConvertTo-Json -Depth 8) + "`n")
 
 Write-Host "Prepared release files for $version"

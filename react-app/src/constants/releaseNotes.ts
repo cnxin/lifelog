@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-06-04",
+  date: "2026-06-05",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -15,6 +15,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 };
 
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.104",
+    date: "2026-06-05",
+    title: "Notion 同步试验入口",
+    highlights: [
+      "设置页新增“实验”入口，Notion 同步作为试验功能单独进入，避免和常规数据管理混在一起。",
+      "支持保存 Internal Integration Token 和父页面 ID，并可在父页面下自动创建人物、地点、回忆、纪念日安排四类中文字段数据库。",
+      "Notion 同步会保存本地页面映射，重复同步不会重复创建页面，Notion 页面被删除后可自动重新创建。",
+      "Web 开发环境新增 Notion 代理和请求诊断，连接失败时可复制诊断信息，方便区分 CORS、网络和权限问题。"
+    ]
+  },
   {
     version: "0.1.0-test.103",
     date: "2026-06-04",

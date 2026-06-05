@@ -2,10 +2,21 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import packageJson from "./package.json";
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   define: {
-    __APP_VERSION__: JSON.stringify(packageJson.version)
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __NOTION_DEV_PROXY__: JSON.stringify(command === "serve")
+  },
+  server: {
+    proxy: {
+      "/api/notion": {
+        target: "https://api.notion.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/notion/, "")
+      }
+    }
   },
   build: {
     target: "es2020",
@@ -40,4 +51,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

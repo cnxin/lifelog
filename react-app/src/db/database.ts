@@ -5,6 +5,8 @@ import type {
   AppSettings,
   LifeLogState,
   MemoryEvent,
+  NotionPageMapping,
+  NotionSettings,
   Person,
   Photo,
   Place,
@@ -12,8 +14,9 @@ import type {
   PreferenceGroup,
   ReminderSettings
 } from "../types";
-import { defaultAppSettings, defaultReminderSettings } from "../types";
+import { defaultAppSettings, defaultNotionSettings, defaultReminderSettings } from "../types";
 import { normalizePlacePlatformLinks } from "../utils/placeLinks";
+import { normalizeNotionId } from "../utils/notionIds";
 import { removeMemoryPlaceId, getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { inferProvince, normalizeCityName, normalizeStoredMall } from "../utils/placeMeta";
 import { isDateValue, normalizeAnniversary } from "../utils/lifelogHelpers";
@@ -29,6 +32,8 @@ class LifeLogDatabase extends Dexie {
   appSettings!: Table<{ key: string; value: AppSettings }, string>;
   photos!: Table<Photo, string>;
   reminderSettings!: Table<{ key: string; value: ReminderSettings }, string>;
+  notionSettings!: Table<{ key: string; value: NotionSettings }, string>;
+  notionPageMappings!: Table<NotionPageMapping, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -118,6 +123,29 @@ class LifeLogDatabase extends Dexie {
       photos: "id, memoryId, uploadedAt, order",
       reminderSettings: "key"
     });
+    this.version(10).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *placeIds, *personIds",
+      anniversaryPlans: "id, personId, targetDate, status, occurrenceYear",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key",
+      notionSettings: "key"
+    });
+    this.version(11).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *placeIds, *personIds",
+      anniversaryPlans: "id, personId, targetDate, status, occurrenceYear",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key",
+      notionSettings: "key",
+      notionPageMappings: "id, entityType, entityId, [entityType+entityId]"
+    });
   }
 }
 
@@ -164,6 +192,39 @@ export async function saveReminderSettings(settings: ReminderSettings) {
       ...settings
     }
   });
+}
+
+export async function loadNotionSettings(): Promise<NotionSettings> {
+  await initializeDatabase();
+  const entry = await db.notionSettings.get("notion");
+  return normalizeNotionSettings(entry?.value);
+}
+
+export async function saveNotionSettings(settings: NotionSettings) {
+  await db.notionSettings.put({
+    key: "notion",
+    value: normalizeNotionSettings(settings)
+  });
+}
+
+export async function loadNotionPageMappings(): Promise<NotionPageMapping[]> {
+  await initializeDatabase();
+  return db.notionPageMappings.toArray();
+}
+
+export async function saveNotionPageMapping(mapping: NotionPageMapping) {
+  await db.notionPageMappings.put(mapping);
+}
+
+export async function saveNotionPageMappings(mappings: NotionPageMapping[]) {
+  if (!mappings.length) return;
+  await db.notionPageMappings.bulkPut(mappings);
+}
+
+export async function loadNotionPageMapping(entityType: NotionPageMapping["entityType"], entityId: string) {
+  await initializeDatabase();
+  const id = buildNotionMappingId(entityType, entityId);
+  return db.notionPageMappings.get(id);
 }
 
 export async function savePersonRecord(person: Person) {
@@ -397,6 +458,10 @@ async function initializeDatabase() {
   await replaceAllData(legacy || seedData);
 }
 
+export function buildNotionMappingId(entityType: NotionPageMapping["entityType"], entityId: string) {
+  return `${entityType}:${entityId}`;
+}
+
 async function readAll(): Promise<LifeLogState> {
   const [people, places, memories, anniversaryPlans] = await Promise.all([
     db.people.toArray(),
@@ -417,6 +482,32 @@ function readLegacyState(): Partial<LifeLogState> | null {
   } catch {
     return null;
   }
+}
+
+function normalizeNotionSettings(value: Partial<NotionSettings> | undefined): NotionSettings {
+  const next = {
+    ...defaultNotionSettings,
+    ...(value || {})
+  };
+  return {
+    enabled: Boolean(next.enabled && next.token),
+    mode: next.mode === "oauth" ? "oauth" : "manual-token",
+    token: String(next.token || "").trim(),
+    workspaceName: String(next.workspaceName || "").trim(),
+    workspaceBotName: String(next.workspaceBotName || "").trim(),
+    parentPageId: normalizeNotionId(next.parentPageId),
+    peopleDatabaseId: normalizeNotionId(next.peopleDatabaseId),
+    placesDatabaseId: normalizeNotionId(next.placesDatabaseId),
+    memoriesDatabaseId: normalizeNotionId(next.memoriesDatabaseId),
+    plansDatabaseId: normalizeNotionId(next.plansDatabaseId),
+    apiVersion: String(next.apiVersion || defaultNotionSettings.apiVersion).trim(),
+    lastConnectionTestAt: next.lastConnectionTestAt,
+    lastConnectionStatus: ["idle", "connected", "failed"].includes(String(next.lastConnectionStatus))
+      ? next.lastConnectionStatus
+      : "idle",
+    lastConnectionMessage: String(next.lastConnectionMessage || ""),
+    lastFullSyncAt: next.lastFullSyncAt
+  };
 }
 
 function normalizeGroups(value: unknown, fallbackCategory: string): PreferenceGroup[] {

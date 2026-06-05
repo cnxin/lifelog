@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.103",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.103",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.103/lifelog-v0.1.0-test.103.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.103.apk",
-    "apkName":  "lifelog-v0.1.0-test.103.apk",
-    "apkSize":  3705262,
-    "apkSha256":  "929f5bd59f081a7e99dfe5e6e7e36c5436686fd87b9002da6be01e5151dbe8eb",
-    "publishedAt":  "2026-06-04T09:21:38Z",
-    "body":  "- 分享导入页新增从相册识别 LifeLog 二维码，收到二维码图片时可直接选择图片解析。\n- 分享导入预览会列出将新增、将复用、将跳过和未包含的具体条目，导入前更容易判断影响范围。\n- 首页合并今日行动和记录建议，改为一个“今天先做这件事”主卡，降低首屏重复感。\n- 相机扫码和相册识别共用二维码识别工具，不支持识别的 WebView 会提示改用扫码或粘贴链接。"
+    "version":  "0.1.0-test.104",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.104",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.104/lifelog-v0.1.0-test.104.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.104.apk",
+    "apkName":  "lifelog-v0.1.0-test.104.apk",
+    "apkSize":  3715994,
+    "apkSha256":  "a09b662669c683131dbbb3b0e265a147b20e33cf6c6f667f8019a4568f389caa",
+    "publishedAt":  "2026-06-05T04:14:47Z",
+    "body":  "- 设置页新增“实验”入口，Notion 同步作为试验功能单独进入，避免和常规数据管理混在一起。\n- 支持保存 Internal Integration Token 和父页面 ID，并可在父页面下自动创建人物、地点、回忆、纪念日安排四类中文字段数据库。\n- Notion 同步会保存本地页面映射，重复同步不会重复创建页面，Notion 页面被删除后可自动重新创建。\n- Web 开发环境新增 Notion 代理和请求诊断，连接失败时可复制诊断信息，方便区分 CORS、网络和权限问题。\n- 新增 Notion 连接与同步 mock 回归脚本，覆盖权限错误、网络失败、字段过滤、跳过未变更和页面重建。"
 }

@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.103`
+当前版本：`0.1.0-test.104`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.103
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.103/lifelog-v0.1.0-test.103.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.103.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.104
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.104/lifelog-v0.1.0-test.104.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.104.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.103.apk`
-- 大小：`3705262` bytes
-- SHA256：`929f5bd59f081a7e99dfe5e6e7e36c5436686fd87b9002da6be01e5151dbe8eb`
+- 文件名：`lifelog-v0.1.0-test.104.apk`
+- 大小：`3715994` bytes
+- SHA256：`a09b662669c683131dbbb3b0e265a147b20e33cf6c6f667f8019a4568f389caa`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -102,9 +102,28 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 - 支持可读导出，用于把本地数据生成便于人工查看的文本 / HTML 内容。
 - 支持重置演示数据。
 
+### Notion 联动
+
+- 设置页的“实验”入口新增 Notion 同步试验功能，可保存 Internal Integration Token 和父页面 ID。
+- 支持在父页面下自动创建人物、地点、回忆、纪念日安排数据库，并把数据库 ID 自动写回设置。
+- 支持测试连接，分别提示 Token 无效、权限不足、数据库不存在、网络失败和连接成功。
+- 支持手动同步全部，把 LifeLog 本地数据单向写入 Notion。
+- 同步会保存本地页面映射，重复同步不会重复创建；Notion 页面被删除后会自动重新创建。
+- 当前不上传图片，只同步照片数量；人物、地点关系先以文本字段写入，关系字段和自动建库放到后续阶段。
+- Notion 同步属于未来云端高级能力方向，本地人物、地点、回忆、提醒、备份和分享功能继续免费。
+
+使用步骤：
+
+1. 在 Notion 创建 Internal Integration，复制 Secret。
+2. 在 Notion 新建一个空页面，例如 `LifeLog`。
+3. 打开该页面右上角 Share / Invite，把页面分享给刚创建的 Integration。
+4. 复制该页面链接，在 LifeLog 的 设置 -> 实验 -> Notion 同步 中填写 Token 和父页面链接 / ID。
+5. 点“自动创建”，LifeLog 会创建 4 个数据库并自动保存 ID。
+6. 点“测试连接”，通过后再点“同步全部”。
+
 ### 设置与关于
 
-- 设置页分为账号、应用、数据、关于几个入口。
+- 设置页分为账号、应用、数据、实验、关于几个入口。
 - 应用设置包含视觉风格、提醒设置、隐私模式、默认城市、默认关系、默认心情。
 - 关于页显示当前版本、最新版本、安装权限、提醒权限、应用能力和更新诊断。
 - 内置升级展示下载来源、速度、剩余时间和校验信息，主源失败时会重试备用源。
@@ -228,6 +247,8 @@ npm.cmd run test:reminders
 npm.cmd run test:memory
 npm.cmd run test:display
 npm.cmd run test:location
+npm.cmd run test:notion
+npm.cmd run test:notion-sync
 ```
 
 发布前需要确认：
@@ -273,12 +294,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.103` 主要变化：
+`0.1.0-test.104` 主要变化：
 
-- 分享导入页新增从相册识别 LifeLog 二维码，收到二维码图片时可直接选择图片解析。
-- 分享导入预览会列出将新增、将复用、将跳过和未包含的具体条目，导入前更容易判断影响范围。
-- 首页合并今日行动和记录建议，改为一个“今天先做这件事”主卡，降低首屏重复感。
-- 相机扫码和相册识别共用二维码识别工具，不支持识别的 WebView 会提示改用扫码或粘贴链接。
+- 设置页新增“实验”入口，Notion 同步作为试验功能单独进入，避免和常规数据管理混在一起。
+- 支持保存 Internal Integration Token 和父页面 ID，并可在父页面下自动创建人物、地点、回忆、纪念日安排四类中文字段数据库。
+- Notion 同步会保存本地页面映射，重复同步不会重复创建页面，Notion 页面被删除后可自动重新创建。
+- Web 开发环境新增 Notion 代理和请求诊断，连接失败时可复制诊断信息，方便区分 CORS、网络和权限问题。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 
