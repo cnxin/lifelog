@@ -102,6 +102,20 @@ const settings = {
 
 let failures = 0;
 
+const peopleSchema = {
+  id: "db_people",
+  title: [{ plain_text: "People" }],
+  properties: {
+    Name: { type: "title" },
+    "LifeLog ID": { type: "rich_text" },
+    Relationship: { type: "select" },
+    Favorite: { type: "checkbox" },
+    Preferences: { type: "rich_text" },
+    Notes: { type: "rich_text" },
+    "Updated At": { type: "date" }
+  }
+};
+
 function assert(condition, label, detail) {
   if (condition) return;
   failures += 1;
@@ -120,26 +134,13 @@ function response(status, body) {
 
 function buildFetcher(options = {}) {
   const calls = [];
-  const schema = {
-    id: "db_people",
-    title: [{ plain_text: "People" }],
-    properties: {
-      Name: { type: "title" },
-      "LifeLog ID": { type: "rich_text" },
-      Relationship: { type: "select" },
-      Favorite: { type: "checkbox" },
-      Preferences: { type: "rich_text" },
-      Notes: { type: "rich_text" },
-      "Updated At": { type: "date" }
-    }
-  };
   const fetcher = async (url, init) => {
     calls.push({ url, init, body: init.body ? JSON.parse(init.body) : null });
     if (url.endsWith("/users/me")) {
       return response(200, { name: "LifeLog Bot", bot: { workspace_name: "Test Space" } });
     }
     if (url.includes("/databases/db_people")) {
-      return response(200, schema);
+      return response(200, peopleSchema);
     }
     if (url.includes("/pages/old-page")) {
       return options.page404 ? response(404, { message: "not found" }) : response(200, { id: "old-page" });
@@ -199,6 +200,37 @@ async function run() {
   });
   assert(schemaNetwork.failed === 1 && schemaNetwork.diagnostic?.path === "/databases/db_people", "schema diagnostic", JSON.stringify(schemaNetwork));
   assert(schemaNetwork.byType.person.total === 0 && schemaNetwork.byType.person.failed === 0, "preflight failure type summary", JSON.stringify(schemaNetwork.byType));
+
+  const targetedFetcher = buildFetcher();
+  const targeted = await syncLifeLogToNotion({
+    state,
+    settings,
+    mappings: [],
+    options: { targets: [{ entityType: "person", entityId: "p1" }] },
+    fetcher: targetedFetcher
+  });
+  assert(targeted.total === 1 && targeted.byType.person.total === 1, "targeted sync total", JSON.stringify(targeted));
+  assert(targeted.byType.place.total === 0 && targeted.byType.memory.total === 0, "targeted sync excludes other types", JSON.stringify(targeted.byType));
+
+  const itemFailure = await syncLifeLogToNotion({
+    state,
+    settings,
+    mappings: [],
+    fetcher: async (url, init) => {
+      if (url.endsWith("/users/me")) return response(200, { name: "LifeLog Bot", bot: { workspace_name: "Test Space" } });
+      if (url.includes("/databases/db_people")) {
+        return response(200, {
+          id: "db_people",
+          title: [{ plain_text: "People" }],
+          properties: peopleSchema.properties
+        });
+      }
+      if (url.endsWith("/pages") && init.method === "POST") return response(403, { message: "create blocked" });
+      return response(404, { message: "unexpected url" });
+    }
+  });
+  assert(itemFailure.failed === 1 && itemFailure.failedItems.length === 1, "failed item captured", JSON.stringify(itemFailure));
+  assert(itemFailure.failedItems[0].entityType === "person" && itemFailure.failedItems[0].message.includes("create blocked"), "failed item detail", JSON.stringify(itemFailure.failedItems));
 
   if (failures) {
     console.error(`Notion sync regression failed: ${failures} mismatch(es).`);

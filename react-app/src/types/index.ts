@@ -200,6 +200,17 @@ export const defaultNotionSettings: NotionSettings = {
 };
 
 export type NotionEntityType = "person" | "place" | "memory" | "anniversaryPlan";
+export type NotionSyncTrigger = "manual" | "single" | "retry";
+export type NotionSyncHistoryStatus = "success" | "partial" | "failed";
+
+export interface NotionSyncTypeStats {
+  total: number;
+  synced: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+}
 
 export interface NotionPageMapping {
   id: string;
@@ -210,6 +221,34 @@ export interface NotionPageMapping {
   lastSyncedAt?: string;
   lastSyncHash?: string;
   lastError?: string;
+}
+
+export interface NotionSyncFailedItem {
+  id: string;
+  entityType: NotionEntityType;
+  entityId: ID;
+  label: string;
+  message: string;
+  dataSourceId?: string;
+  notionPageId?: string;
+}
+
+export interface NotionSyncHistoryEntry {
+  id: string;
+  startedAt: string;
+  finishedAt: string;
+  trigger: NotionSyncTrigger;
+  status: NotionSyncHistoryStatus;
+  targetLabel?: string;
+  total: number;
+  synced: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
+  byType: Record<NotionEntityType, NotionSyncTypeStats>;
+  messages: string[];
+  failedItems: NotionSyncFailedItem[];
 }
 
 export type EntryType = "person" | "place" | "memory";

@@ -12,6 +12,7 @@ import {
   loadLifeLogState,
   loadNotionSettings,
   loadNotionPageMappings,
+  loadNotionSyncHistory,
   loadPhotosByIds,
   loadPhotosByMemoryId,
   loadReminderSettings,
@@ -32,6 +33,7 @@ import {
   saveReminderSettings,
   saveNotionSettings,
   saveNotionPageMappings,
+  saveNotionSyncHistoryEntry,
   deletePhotosByMemoryId
 } from "../db/database";
 import type {
@@ -42,6 +44,9 @@ import type {
   MemoryEvent,
   NotionPageMapping,
   NotionSettings,
+  NotionSyncFailedItem,
+  NotionSyncHistoryEntry,
+  NotionSyncTrigger,
   Person,
   Photo,
   Place,
@@ -89,7 +94,7 @@ import {
 } from "../utils/lifelogShare";
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
 import { saveBackupFile, type BackupExportTarget } from "../utils/backupExport";
-import { syncLifeLogToNotion, type NotionSyncSummary } from "../utils/notionSync";
+import { syncLifeLogToNotion, type NotionSyncSummary, type NotionSyncTarget } from "../utils/notionSync";
 
 type DeletedEntrySnapshot =
   | { type: "person"; person: Person; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
@@ -107,6 +112,7 @@ interface LifeLogContextValue {
   reminderSettings: ReminderSettings;
   notionSettings: NotionSettings;
   notionPageMappings: NotionPageMapping[];
+  notionSyncHistory: NotionSyncHistoryEntry[];
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
@@ -136,6 +142,8 @@ interface LifeLogContextValue {
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   updateNotionSettings: (patch: Partial<NotionSettings>) => Promise<void>;
   syncNotionAll: (settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
+  syncNotionTargets: (targets: NotionSyncTarget[], options?: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings }) => Promise<NotionSyncSummary>;
+  retryFailedNotionItems: (items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
   exportData: () => Promise<BackupExportResult>;
   buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
   buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
@@ -162,6 +170,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(defaultReminderSettings);
   const [notionSettings, setNotionSettings] = useState<NotionSettings>(defaultNotionSettings);
   const [notionPageMappings, setNotionPageMappings] = useState<NotionPageMapping[]>([]);
+  const [notionSyncHistory, setNotionSyncHistory] = useState<NotionSyncHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
   const favoritePendingRef = useRef({ people: new Set<string>(), places: new Set<string>() });
@@ -175,12 +184,14 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         const nextReminderSettings = await loadReminderSettings();
         const nextNotionSettings = await loadNotionSettings();
         const nextNotionPageMappings = await loadNotionPageMappings();
+        const nextNotionSyncHistory = await loadNotionSyncHistory();
         const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
         if (active) setSettings(nextSettings);
         if (active) setReminderSettings(nextReminderSettings);
         if (active) setNotionSettings(nextNotionSettings);
         if (active) setNotionPageMappings(nextNotionPageMappings);
+        if (active) setNotionSyncHistory(nextNotionSyncHistory);
         if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
@@ -736,17 +747,35 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     }
 
     async function syncNotionAll(settingsOverride?: NotionSettings) {
-      const activeNotionSettings = settingsOverride || notionSettings;
+      return syncNotionTargets([], { trigger: "manual", targetLabel: "同步全部", settingsOverride });
+    }
+
+    async function syncNotionTargets(
+      targets: NotionSyncTarget[],
+      options: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings } = {}
+    ) {
+      const activeNotionSettings = options.settingsOverride || notionSettings;
+      const startedAt = new Date().toISOString();
       const result = await syncLifeLogToNotion({
         state,
         settings: activeNotionSettings,
-        mappings: notionPageMappings
+        mappings: notionPageMappings,
+        options: targets.length ? { targets } : undefined
       });
       if (result.mappings.length) {
         await saveNotionPageMappings(result.mappings);
         setNotionPageMappings((current) => mergeById(current, result.mappings));
       }
       const syncedAt = new Date().toISOString();
+      const historyEntry = buildNotionSyncHistoryEntry({
+        result,
+        startedAt,
+        finishedAt: syncedAt,
+        trigger: options.trigger || "manual",
+        targetLabel: options.targetLabel
+      });
+      await saveNotionSyncHistoryEntry(historyEntry);
+      setNotionSyncHistory((current) => [historyEntry, ...current.filter((item) => item.id !== historyEntry.id)].slice(0, 20));
       const nextSettings = {
         ...activeNotionSettings,
         workspaceName: result.workspaceName || activeNotionSettings.workspaceName,
@@ -760,6 +789,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       await saveNotionSettings(nextSettings);
       setNotionSettings(nextSettings);
       return result;
+    }
+
+    async function retryFailedNotionItems(items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) {
+      const targets = uniqueNotionTargets(items.map((item) => ({ entityType: item.entityType, entityId: item.entityId })));
+      return syncNotionTargets(targets, {
+        trigger: "retry",
+        targetLabel: `重试失败项 ${targets.length} 条`,
+        settingsOverride
+      });
     }
 
     async function exportData(): Promise<BackupExportResult> {
@@ -903,6 +941,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       reminderSettings,
       notionSettings,
       notionPageMappings,
+      notionSyncHistory,
       isLoading,
       savePerson,
       updatePersonProfile,
@@ -932,6 +971,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       updateReminderSettings,
       updateNotionSettings,
       syncNotionAll,
+      syncNotionTargets,
+      retryFailedNotionItems,
       exportData,
       buildMemoryShare,
       buildPlacesShare,
@@ -942,7 +983,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       resetDemo,
       loadMemoryPhotos
     };
-  }, [duplicatePlaceGroups, isLoading, notionPageMappings, notionSettings, placeMergeHistory, settings, reminderSettings, state]);
+  }, [duplicatePlaceGroups, isLoading, notionPageMappings, notionSettings, notionSyncHistory, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }
@@ -953,6 +994,48 @@ function mergeById<T extends { id: string }>(current: T[], incoming: T[]) {
   const merged = current.map((item) => incomingById.get(item.id) || item);
   const missing = incoming.filter((item) => !current.some((currentItem) => currentItem.id === item.id));
   return [...merged, ...missing];
+}
+
+function uniqueNotionTargets(targets: NotionSyncTarget[]) {
+  const seen = new Set<string>();
+  return targets.filter((target) => {
+    const key = `${target.entityType}:${target.entityId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildNotionSyncHistoryEntry({
+  result,
+  startedAt,
+  finishedAt,
+  trigger,
+  targetLabel
+}: {
+  result: NotionSyncSummary;
+  startedAt: string;
+  finishedAt: string;
+  trigger: NotionSyncTrigger;
+  targetLabel?: string;
+}): NotionSyncHistoryEntry {
+  return {
+    id: uid("notion-sync"),
+    startedAt,
+    finishedAt,
+    trigger,
+    status: result.failed ? (result.synced || result.skipped ? "partial" : "failed") : "success",
+    targetLabel,
+    total: result.total,
+    synced: result.synced,
+    created: result.created,
+    updated: result.updated,
+    skipped: result.skipped,
+    failed: result.failed,
+    byType: result.byType,
+    messages: result.messages.slice(0, 8),
+    failedItems: result.failedItems.slice(0, 20)
+  };
 }
 
 function restoreMemoryList(current: MemoryEvent[], snapshots: MemoryEvent[]) {

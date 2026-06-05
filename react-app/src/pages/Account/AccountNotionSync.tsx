@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
-import type { LifeLogState, NotionEntityType, NotionPageMapping, NotionSettings } from "../../types";
+import type { LifeLogState, NotionEntityType, NotionPageMapping, NotionSettings, NotionSyncHistoryEntry } from "../../types";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openExternalUrl } from "../../utils/externalLinks";
 import { normalizeNotionId } from "../../utils/notionIds";
@@ -76,7 +76,7 @@ const NOTION_INTEGRATIONS_URL = "https://www.notion.so/profile/integrations";
 const NOTION_HOME_URL = "https://www.notion.so";
 
 export default function AccountNotionSync() {
-  const { state, notionSettings, notionPageMappings, updateNotionSettings, syncNotionAll } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, notionSyncHistory, updateNotionSettings, syncNotionAll, retryFailedNotionItems } = useLifeLog();
   const notify = useToast();
   const [draft, setDraft] = useState(notionSettings);
   const [showToken, setShowToken] = useState(false);
@@ -230,6 +230,25 @@ export default function AccountNotionSync() {
         message: result.failed
           ? `Notion 同步完成，失败 ${result.failed} 条`
           : `Notion 同步完成：新增 ${result.created}，更新 ${result.updated}，跳过 ${result.skipped}`,
+        tone: result.failed ? "error" : "success",
+        durationMs: result.failed ? 7000 : 5200
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
+  async function handleRetryFailed(entry: NotionSyncHistoryEntry) {
+    if (isSyncing || !entry.failedItems.length) return;
+    setIsSyncing(true);
+    try {
+      const result = await retryFailedNotionItems(entry.failedItems, draft);
+      setLastSync(result);
+      setLastDiagnostic(result.diagnostic || null);
+      notify({
+        message: result.failed
+          ? `Notion 重试完成，仍失败 ${result.failed} 条`
+          : `Notion 重试完成：新增 ${result.created}，更新 ${result.updated}，跳过 ${result.skipped}`,
         tone: result.failed ? "error" : "success",
         durationMs: result.failed ? 7000 : 5200
       });
@@ -572,6 +591,36 @@ export default function AccountNotionSync() {
             </div>
           </div>
         )}
+
+        {notionSyncHistory.length ? (
+          <div className="notion-history-panel">
+            <div className="notion-history-head">
+              <strong>同步历史</strong>
+              <span>最近 {Math.min(notionSyncHistory.length, 3)} 次</span>
+            </div>
+            <div className="notion-history-list">
+              {notionSyncHistory.slice(0, 3).map((entry) => (
+                <div className={`notion-history-item ${entry.status}`} key={entry.id}>
+                  <div className="notion-history-main">
+                    <strong>{formatHistoryTitle(entry)}</strong>
+                    <span>
+                      {formatTestTime(entry.finishedAt)} · 新增 {entry.created} · 更新 {entry.updated} · 跳过 {entry.skipped} · 失败 {entry.failed}
+                    </span>
+                    {entry.failedItems.length ? (
+                      <small>{entry.failedItems.slice(0, 3).map((item) => `${item.label}：${item.message}`).join("；")}</small>
+                    ) : null}
+                  </div>
+                  {entry.failedItems.length ? (
+                    <button className="notion-button notion-button-ghost compact" type="button" onClick={() => void handleRetryFailed(entry)} disabled={isSyncing || !draft.token.trim()}>
+                      <RefreshCw className={isSyncing ? "spinning" : ""} />
+                      重试
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="notion-sync-actions notion-utility-actions">
           <button className="notion-button notion-button-ghost" type="button" onClick={() => void handleSave()}>
@@ -977,6 +1026,12 @@ function formatSyncTypeSummary(summary: NotionSyncTypeSummary | undefined) {
   if (!summary || !summary.total) return "无同步内容";
   if (summary.failed) return `成功 ${summary.synced}，失败 ${summary.failed}`;
   return `新增 ${summary.created}，更新 ${summary.updated}，跳过 ${summary.skipped}`;
+}
+
+function formatHistoryTitle(entry: NotionSyncHistoryEntry) {
+  const triggerLabel = entry.trigger === "retry" ? "重试失败项" : entry.trigger === "single" ? "单条同步" : "同步全部";
+  const statusLabel = entry.status === "success" ? "成功" : entry.status === "partial" ? "部分成功" : "失败";
+  return `${entry.targetLabel || triggerLabel} · ${statusLabel}`;
 }
 
 function summarizePreflight(items: NotionPreflightItem[]) {

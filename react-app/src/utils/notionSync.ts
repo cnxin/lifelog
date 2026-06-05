@@ -5,6 +5,8 @@ import type {
   NotionEntityType,
   NotionPageMapping,
   NotionSettings,
+  NotionSyncFailedItem,
+  NotionSyncTypeStats,
   Person,
   Place,
   PreferenceGroup
@@ -23,13 +25,26 @@ export interface NotionSyncSummary {
   failed: number;
   byType: Record<NotionEntityType, NotionSyncTypeSummary>;
   messages: string[];
+  failedItems: NotionSyncFailedItem[];
   mappings: NotionPageMapping[];
   workspaceName: string;
   workspaceBotName: string;
   diagnostic?: NotionRequestDiagnostic;
 }
 
-export interface NotionSyncTypeSummary {
+export interface NotionSyncTypeSummary extends NotionSyncTypeStats {
+}
+
+export interface NotionSyncTarget {
+  entityType: NotionEntityType;
+  entityId: string;
+}
+
+export interface NotionSyncOptions {
+  targets?: NotionSyncTarget[];
+}
+
+interface NotionSyncTypeSummaryBase {
   total: number;
   synced: number;
   created: number;
@@ -59,11 +74,13 @@ export async function syncLifeLogToNotion({
   state,
   settings,
   mappings,
+  options,
   fetcher
 }: {
   state: LifeLogState;
   settings: NotionSettings;
   mappings: NotionPageMapping[];
+  options?: NotionSyncOptions;
   fetcher?: NotionFetch;
 }): Promise<NotionSyncSummary> {
   const empty = buildEmptySummary();
@@ -87,7 +104,7 @@ export async function syncLifeLogToNotion({
     };
   }
 
-  const items = buildSyncItems(state, settings);
+  const items = filterSyncItems(buildSyncItems(state, settings), options?.targets);
   const nextSummary: NotionSyncSummary = {
     ...empty,
     total: items.length,
@@ -125,6 +142,7 @@ export async function syncLifeLogToNotion({
       typeSummary.failed += 1;
       if (!nextSummary.diagnostic) nextSummary.diagnostic = schemaResult.diagnostic;
       nextSummary.messages.push(`${item.label}：${schemaResult.message || "数据库不可读取。"}`);
+      nextSummary.failedItems.push(buildFailedItem(item, schemaResult.message || "数据库不可读取。", previousMapping));
       continue;
     }
 
@@ -133,6 +151,7 @@ export async function syncLifeLogToNotion({
       nextSummary.failed += 1;
       typeSummary.failed += 1;
       nextSummary.messages.push(`${item.label}：Notion 数据库缺少可写字段。`);
+      nextSummary.failedItems.push(buildFailedItem(item, "Notion 数据库缺少可写字段。", previousMapping));
       continue;
     }
 
@@ -149,6 +168,7 @@ export async function syncLifeLogToNotion({
       typeSummary.failed += 1;
       if (!nextSummary.diagnostic) nextSummary.diagnostic = syncResult.diagnostic;
       nextSummary.messages.push(`${item.label}：${syncResult.message}`);
+      nextSummary.failedItems.push(buildFailedItem(item, syncResult.message, previousMapping));
       nextSummary.mappings.push({
         id: mappingId,
         entityType: item.entityType,
@@ -198,6 +218,12 @@ export function buildSyncItems(state: LifeLogState, settings: NotionSettings): N
     ...(settings.memoriesDatabaseId ? state.memories.map((memory) => buildMemoryItem(memory, state, settings.memoriesDatabaseId)) : []),
     ...(settings.plansDatabaseId ? state.anniversaryPlans.map((plan) => buildPlanItem(plan, state, settings.plansDatabaseId)) : [])
   ];
+}
+
+function filterSyncItems(items: NotionSyncItem[], targets: NotionSyncTarget[] | undefined) {
+  if (!targets?.length) return items;
+  const targetIds = new Set(targets.map((target) => `${target.entityType}:${target.entityId}`));
+  return items.filter((item) => targetIds.has(`${item.entityType}:${item.entityId}`));
 }
 
 export function buildPersonProperties(person: Person): NotionProperties {
@@ -529,6 +555,7 @@ function buildEmptySummary(): NotionSyncSummary {
     failed: 0,
     byType: buildEmptyTypeSummaries(),
     messages: [],
+    failedItems: [],
     mappings: [],
     workspaceName: "",
     workspaceBotName: ""
@@ -544,7 +571,7 @@ function buildEmptyTypeSummaries(): Record<NotionEntityType, NotionSyncTypeSumma
   };
 }
 
-function buildEmptyTypeSummary(): NotionSyncTypeSummary {
+function buildEmptyTypeSummary(): NotionSyncTypeSummaryBase {
   return {
     total: 0,
     synced: 0,
@@ -557,6 +584,18 @@ function buildEmptyTypeSummary(): NotionSyncTypeSummary {
 
 function buildNotionMappingId(entityType: NotionEntityType, entityId: string) {
   return `${entityType}:${entityId}`;
+}
+
+function buildFailedItem(item: NotionSyncItem, message: string, previousMapping: NotionPageMapping | undefined): NotionSyncFailedItem {
+  return {
+    id: buildNotionMappingId(item.entityType, item.entityId),
+    entityType: item.entityType,
+    entityId: item.entityId,
+    label: item.label,
+    message,
+    dataSourceId: item.databaseId,
+    notionPageId: previousMapping?.notionPageId
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

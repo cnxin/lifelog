@@ -7,6 +7,7 @@ import type {
   MemoryEvent,
   NotionPageMapping,
   NotionSettings,
+  NotionSyncHistoryEntry,
   Person,
   Photo,
   Place,
@@ -34,6 +35,7 @@ class LifeLogDatabase extends Dexie {
   reminderSettings!: Table<{ key: string; value: ReminderSettings }, string>;
   notionSettings!: Table<{ key: string; value: NotionSettings }, string>;
   notionPageMappings!: Table<NotionPageMapping, string>;
+  notionSyncHistory!: Table<NotionSyncHistoryEntry, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -146,6 +148,19 @@ class LifeLogDatabase extends Dexie {
       notionSettings: "key",
       notionPageMappings: "id, entityType, entityId, [entityType+entityId]"
     });
+    this.version(12).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *placeIds, *personIds",
+      anniversaryPlans: "id, personId, targetDate, status, occurrenceYear",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key",
+      notionSettings: "key",
+      notionPageMappings: "id, entityType, entityId, [entityType+entityId]",
+      notionSyncHistory: "id, finishedAt, trigger, status"
+    });
   }
 }
 
@@ -225,6 +240,21 @@ export async function loadNotionPageMapping(entityType: NotionPageMapping["entit
   await initializeDatabase();
   const id = buildNotionMappingId(entityType, entityId);
   return db.notionPageMappings.get(id);
+}
+
+export async function loadNotionSyncHistory(limit = 20): Promise<NotionSyncHistoryEntry[]> {
+  await initializeDatabase();
+  return db.notionSyncHistory.orderBy("finishedAt").reverse().limit(limit).toArray();
+}
+
+export async function saveNotionSyncHistoryEntry(entry: NotionSyncHistoryEntry, limit = 20) {
+  await db.transaction("rw", db.notionSyncHistory, async () => {
+    await db.notionSyncHistory.put(entry);
+    const staleEntries = await db.notionSyncHistory.orderBy("finishedAt").reverse().offset(limit).toArray();
+    if (staleEntries.length) {
+      await db.notionSyncHistory.bulkDelete(staleEntries.map((item) => item.id));
+    }
+  });
 }
 
 export async function savePersonRecord(person: Person) {
