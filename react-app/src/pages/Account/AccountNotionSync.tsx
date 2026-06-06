@@ -3,18 +3,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GlassCard from "../../components/GlassCard";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
-import type { LifeLogState, NotionEntityType, NotionPageMapping, NotionSettings, NotionSyncHistoryEntry } from "../../types";
+import type { LifeLogState, NotionEntityType, NotionPageMapping, NotionSettings, NotionSyncHistoryEntry, NotionSyncQueueItem } from "../../types";
 import { copyTextToClipboard } from "../../utils/diagnostics";
 import { openExternalUrl } from "../../utils/externalLinks";
 import { normalizeNotionId } from "../../utils/notionIds";
 import {
+  checkLifeLogNotionDatabaseSchemas,
   createLifeLogNotionDatabases,
   getNotionRuntimeInfo,
+  repairLifeLogNotionDatabaseSchemas,
   testNotionConnection,
   type NotionAutoCreateResult,
   type NotionConnectionResult,
   type NotionRequestDiagnostic,
-  type NotionRuntimeInfo
+  type NotionRuntimeInfo,
+  type NotionSchemaCheckResult,
+  type NotionSchemaRepairResult
 } from "../../utils/notionClient";
 import type { NotionSyncSummary, NotionSyncTarget, NotionSyncTypeSummary } from "../../utils/notionSync";
 
@@ -76,7 +80,7 @@ const NOTION_INTEGRATIONS_URL = "https://www.notion.so/profile/integrations";
 const NOTION_HOME_URL = "https://www.notion.so";
 
 export default function AccountNotionSync() {
-  const { state, notionSettings, notionPageMappings, notionSyncHistory, updateNotionSettings, syncNotionAll, syncNotionTargets, retryFailedNotionItems } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, notionSyncHistory, notionSyncQueue, updateNotionSettings, syncNotionAll, syncNotionTargets, retryFailedNotionItems, retryNotionQueueItems } = useLifeLog();
   const notify = useToast();
   const [draft, setDraft] = useState(notionSettings);
   const [showToken, setShowToken] = useState(false);
@@ -84,9 +88,13 @@ export default function AccountNotionSync() {
   const [isTesting, setIsTesting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isRetryingQueue, setIsRetryingQueue] = useState(false);
+  const [isCheckingSchema, setIsCheckingSchema] = useState(false);
+  const [isRepairingSchema, setIsRepairingSchema] = useState(false);
   const [lastResult, setLastResult] = useState<NotionConnectionResult | null>(null);
   const [lastCreate, setLastCreate] = useState<NotionAutoCreateResult | null>(null);
   const [lastSync, setLastSync] = useState<NotionSyncSummary | null>(null);
+  const [schemaCheck, setSchemaCheck] = useState<NotionSchemaCheckResult | null>(null);
   const [lastDiagnostic, setLastDiagnostic] = useState<NotionRequestDiagnostic | null>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
   const parentInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +144,7 @@ export default function AccountNotionSync() {
       setLastResult(null);
       setLastCreate(null);
       setLastSync(null);
+      setSchemaCheck(null);
       setLastDiagnostic(null);
     }
   }
@@ -171,6 +180,9 @@ export default function AccountNotionSync() {
           tone: result.ok ? "success" : "error",
           durationMs: result.ok ? 3600 : 6200
         });
+      }
+      if (result.ok) {
+        void handleCheckSchemas({ settingsOverride: settingsToTest, silent: true });
       }
       return result;
     } finally {
@@ -238,6 +250,50 @@ export default function AccountNotionSync() {
     }
   }
 
+  async function handleCheckSchemas(options?: { settingsOverride?: NotionSettings; silent?: boolean }) {
+    if (isCheckingSchema) return;
+    const settingsToCheck = options?.settingsOverride || draft;
+    setIsCheckingSchema(true);
+    try {
+      const result = await checkLifeLogNotionDatabaseSchemas(settingsToCheck);
+      setSchemaCheck(result);
+      setLastDiagnostic(extractSchemaDiagnostic(result));
+      if (!options?.silent) {
+        notify({
+          message: result.message,
+          tone: result.ok ? "success" : result.repairable ? "info" : "error",
+          durationMs: result.ok ? 3600 : 6200
+        });
+      }
+      return result;
+    } finally {
+      setIsCheckingSchema(false);
+    }
+  }
+
+  async function handleRepairSchemas() {
+    if (isRepairingSchema || !draft.token.trim()) return;
+    setIsRepairingSchema(true);
+    try {
+      const result = await repairLifeLogNotionDatabaseSchemas(draft);
+      setSchemaCheck({
+        ok: result.ok,
+        repairable: result.databases.some((item) => item.repairable),
+        message: result.message,
+        databases: result.databases,
+        diagnostic: result.diagnostic
+      });
+      setLastDiagnostic(extractSchemaDiagnostic(result));
+      notify({
+        message: result.message,
+        tone: result.ok ? "success" : "info",
+        durationMs: result.ok ? 4200 : 6800
+      });
+    } finally {
+      setIsRepairingSchema(false);
+    }
+  }
+
   async function handleSyncPreviewItem(item: NotionSyncPreviewItem) {
     if (isSyncing || !draft.token.trim() || !item.databaseId || !item.total) return;
     setIsSyncing(true);
@@ -277,6 +333,29 @@ export default function AccountNotionSync() {
       });
     } finally {
       setIsSyncing(false);
+    }
+  }
+
+  async function handleRetryQueue(ids?: string[]) {
+    if (isRetryingQueue || !draft.token.trim()) return;
+    setIsRetryingQueue(true);
+    try {
+      const result = await retryNotionQueueItems(ids);
+      if (!result) {
+        notify({ message: "没有需要重试的 Notion 队列项", tone: "info" });
+        return;
+      }
+      setLastSync(result);
+      setLastDiagnostic(result.diagnostic || null);
+      notify({
+        message: result.failed
+          ? `Notion 队列重试完成，仍失败 ${result.failed} 条`
+          : `Notion 队列已同步 ${result.synced} 条`,
+        tone: result.failed ? "error" : "success",
+        durationMs: result.failed ? 7000 : 4200
+      });
+    } finally {
+      setIsRetryingQueue(false);
     }
   }
 
@@ -411,6 +490,48 @@ export default function AccountNotionSync() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className={`notion-schema-panel ${schemaCheck?.ok ? "ok" : schemaCheck?.repairable ? "warning" : schemaCheck ? "blocked" : "idle"}`}>
+          <div className="notion-schema-head">
+            <div>
+              <strong>数据库字段体检</strong>
+              <span>{schemaCheck ? schemaCheck.message : "检查 Notion 数据库是否缺少 LifeLog 需要的中文字段。"}</span>
+            </div>
+            <div className="notion-schema-actions">
+              <button
+                className="notion-button notion-button-ghost compact"
+                type="button"
+                onClick={() => void handleCheckSchemas()}
+                disabled={isCheckingSchema || isRepairingSchema || !draft.token.trim()}
+              >
+                <RefreshCw className={isCheckingSchema ? "spinning" : ""} />
+                {isCheckingSchema ? "检查中" : "检查字段"}
+              </button>
+              {schemaCheck?.repairable ? (
+                <button
+                  className="notion-button notion-button-primary compact"
+                  type="button"
+                  onClick={() => void handleRepairSchemas()}
+                  disabled={isCheckingSchema || isRepairingSchema || !draft.token.trim()}
+                >
+                  <RefreshCw className={isRepairingSchema ? "spinning" : ""} />
+                  {isRepairingSchema ? "补齐中" : "一键补齐"}
+                </button>
+              ) : null}
+            </div>
+          </div>
+          {schemaCheck ? (
+            <div className="notion-schema-grid">
+              {schemaCheck.databases.map((item) => (
+                <div className={`notion-schema-item ${item.ok ? "ok" : item.repairable ? "warning" : "blocked"}`} key={item.key}>
+                  <span>{item.label}</span>
+                  <strong>{formatSchemaCheckValue(item)}</strong>
+                  <small>{formatSchemaCheckDetail(item)}</small>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="notion-sync-preview">
@@ -623,6 +744,42 @@ export default function AccountNotionSync() {
             </div>
           </div>
         )}
+
+        {notionSyncQueue.length ? (
+          <div className="notion-queue-panel">
+            <div className="notion-queue-head">
+              <div>
+                <strong>自动同步队列</strong>
+                <span>{formatNotionQueueSummary(notionSyncQueue)}</span>
+              </div>
+              <button
+                className="notion-button notion-button-ghost compact"
+                type="button"
+                onClick={() => void handleRetryQueue()}
+                disabled={isRetryingQueue || !draft.token.trim() || !notionSyncQueue.some((item) => item.status === "pending" || item.status === "failed")}
+              >
+                <RefreshCw className={isRetryingQueue ? "spinning" : ""} />
+                立即同步
+              </button>
+            </div>
+            <div className="notion-queue-list">
+              {notionSyncQueue.slice(0, 5).map((item) => (
+                <div className={`notion-queue-item ${item.status}`} key={item.id}>
+                  <div>
+                    <strong>{item.targetLabel}</strong>
+                    <span>{formatNotionQueueItemMeta(item)}</span>
+                    {item.lastError ? <small>{item.lastError}</small> : null}
+                  </div>
+                  {item.status === "failed" ? (
+                    <button className="notion-button notion-button-ghost compact" type="button" onClick={() => void handleRetryQueue([item.id])} disabled={isRetryingQueue || !draft.token.trim()}>
+                      重试
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {notionSyncHistory.length ? (
           <div className="notion-history-panel">
@@ -1079,6 +1236,23 @@ function formatHistoryTitle(entry: NotionSyncHistoryEntry) {
   return `${entry.targetLabel || triggerLabel} · ${statusLabel}`;
 }
 
+function formatNotionQueueSummary(items: NotionSyncQueueItem[]) {
+  const failed = items.filter((item) => item.status === "failed").length;
+  const syncing = items.filter((item) => item.status === "syncing").length;
+  const pending = items.filter((item) => item.status === "pending").length;
+  return [
+    pending ? `${pending} 条待同步` : "",
+    syncing ? `${syncing} 条同步中` : "",
+    failed ? `${failed} 条失败待重试` : ""
+  ].filter(Boolean).join(" · ") || "队列为空";
+}
+
+function formatNotionQueueItemMeta(item: NotionSyncQueueItem) {
+  const statusLabel = item.status === "failed" ? "失败待重试" : item.status === "syncing" ? "同步中" : "待同步";
+  const attemptLabel = item.attempts ? `第 ${item.attempts} 次尝试` : "尚未尝试";
+  return `${statusLabel} · ${attemptLabel} · ${formatTestTime(item.updatedAt)}`;
+}
+
 function summarizePreflight(items: NotionPreflightItem[]) {
   const blocked = items.filter((item) => item.tone === "blocked").length;
   const warning = items.filter((item) => item.tone === "warning").length;
@@ -1104,6 +1278,35 @@ function extractConnectionDiagnostic(result: NotionConnectionResult) {
 function extractCreateDiagnostic(result: NotionAutoCreateResult) {
   if (result.ok) return null;
   return result.diagnostic || result.databases.find((item) => !item.ok && item.diagnostic)?.diagnostic || null;
+}
+
+function extractSchemaDiagnostic(result: NotionSchemaCheckResult | NotionSchemaRepairResult) {
+  if (result.ok) return null;
+  return result.diagnostic || result.databases.find((item) => !item.ok && item.diagnostic)?.diagnostic || null;
+}
+
+function formatSchemaCheckValue(item: NotionSchemaCheckResult["databases"][number]) {
+  if (!item.configured) return "未配置";
+  if (item.errorKind) return "不可读取";
+  if (item.ok) return "字段完整";
+  if (item.conflicts.length) return `${item.conflicts.length} 个冲突`;
+  if (item.missing.length) return `${item.missing.length} 个缺失`;
+  return "待确认";
+}
+
+function formatSchemaCheckDetail(item: NotionSchemaCheckResult["databases"][number]) {
+  if (!item.configured) return "请先自动创建或手动填写数据库 ID。";
+  if (item.errorKind) return item.message;
+  if (item.ok) return item.title ? `${item.title} 可正常同步。` : "字段结构符合 LifeLog 同步要求。";
+  if (item.conflicts.length) {
+    const names = item.conflicts.slice(0, 3).map((issue) => `${issue.propertyName} 应为 ${issue.expectedType}`).join("、");
+    return `${names}${item.conflicts.length > 3 ? " 等" : ""}；需在 Notion 手动处理。`;
+  }
+  if (item.missing.length) {
+    const names = item.missing.slice(0, 4).map((issue) => issue.propertyName).join("、");
+    return `缺少 ${names}${item.missing.length > 4 ? " 等字段" : ""}，可自动补齐。`;
+  }
+  return item.message;
 }
 
 function formatNotionDiagnostic(diagnostic: NotionRequestDiagnostic) {

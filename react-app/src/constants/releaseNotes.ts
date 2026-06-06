@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.107",
+    date: "2026-06-06",
+    title: "Notion 字段体检和自动同步队列",
+    highlights: [
+      "Notion 同步新增数据库字段体检，可检查 LifeLog 需要的中文字段是否完整，缺失字段支持一键补齐。",
+      "保存人物、地点、回忆和纪念日安排后会进入自动同步队列，连续编辑会去重合并，避免频繁并发请求 Notion。",
+      "设置页新增自动同步队列，可查看待同步、同步中和失败项，并支持立即同步或单条重试。",
+      "人物、地点和回忆列表新增 Notion 同步状态徽标，可直接看到未同步、待同步、同步中、同步失败和已同步状态。"
+    ]
+  },
+  {
     version: "0.1.0-test.106",
     date: "2026-06-06",
     title: "Notion 同步预览和失败重试",

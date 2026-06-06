@@ -2,6 +2,7 @@ import { Heart, Image as ImageIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import GlassCard from "./GlassCard";
 import MemoryTags from "./MemoryTags";
+import NotionSyncBadge from "./NotionSyncBadge";
 import type { MemoryDisplayContext, MemoryEvent } from "../types";
 import { formatMonthDay } from "../utils/date";
 import {
@@ -9,6 +10,7 @@ import {
   getMemoryDisplayTitle,
   isManualTitle
 } from "../utils/memoryDisplay";
+import type { NotionRecordSyncMeta } from "../utils/notionStatus";
 
 interface MemoryCardProps {
   memory: MemoryEvent;
@@ -18,6 +20,7 @@ interface MemoryCardProps {
   renderMeta?: (memory: MemoryEvent, ctx: MemoryDisplayContext, showContentLine: boolean) => ReactNode;
   showPhotoCount?: boolean;
   icon?: ReactNode;
+  syncMeta?: NotionRecordSyncMeta;
 }
 
 export default function MemoryCard({
@@ -27,7 +30,8 @@ export default function MemoryCard({
   actions,
   renderMeta,
   showPhotoCount = false,
-  icon
+  icon,
+  syncMeta
 }: MemoryCardProps) {
   const displayTitle = getMemoryDisplayTitle(memory, ctx);
   const showContentLine = isManualTitle(memory) && Boolean(memory.content.trim());
@@ -42,7 +46,10 @@ export default function MemoryCard({
       <div className="memory-info" onClick={onOpen}>
         <div className="memory-title">
           <span>{displayTitle}</span>
-          <span className="place-rating">{formatMonthDay(memory.date)}</span>
+          <span className="place-title-actions">
+            {syncMeta ? <NotionSyncBadge compact meta={syncMeta} /> : null}
+            <span className="place-rating">{formatMonthDay(memory.date)}</span>
+          </span>
         </div>
         {renderMeta ? (
           renderMeta(memory, ctx, showContentLine)

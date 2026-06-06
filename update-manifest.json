@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.106",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.106",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.106/lifelog-v0.1.0-test.106.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.106.apk",
-    "apkName":  "lifelog-v0.1.0-test.106.apk",
-    "apkSize":  3722474,
-    "apkSha256":  "bb9d5636951a03d6013ed2ab5b6b55169af19416bbd86f35f41818586d729dc1",
-    "publishedAt":  "2026-06-05T18:42:13Z",
-    "body":  "- Notion 同步页新增连接体检和同步预览，可提前看到 Token、父页面、数据库、连接环境和各类数据同步数量。\n- 自动创建 Notion 数据库成功后会直接测试连接，减少一次手动点击。\n- 同步结果新增人物、地点、回忆和安排的分类型统计，并保留最近同步历史。\n- 同步失败会记录具体失败项，历史记录中可一键重试失败内容，也支持只同步某一类数据。"
+    "version":  "0.1.0-test.107",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.107",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.107/lifelog-v0.1.0-test.107.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.107.apk",
+    "apkName":  "lifelog-v0.1.0-test.107.apk",
+    "apkSize":  3727734,
+    "apkSha256":  "49dc60d2a5645d9d06821a018bffcef71c350ae3d69c6783479d6610bfedc815",
+    "publishedAt":  "2026-06-06T15:33:13Z",
+    "body":  "- Notion 同步新增数据库字段体检，可检查 LifeLog 需要的中文字段是否完整，缺失字段支持一键补齐。\n- 保存人物、地点、回忆和纪念日安排后会进入自动同步队列，连续编辑会去重合并，避免频繁并发请求 Notion。\n- 设置页新增自动同步队列，可查看待同步、同步中和失败项，并支持立即同步或单条重试。\n- 人物、地点和回忆列表新增 Notion 同步状态徽标，可直接看到未同步、待同步、同步中、同步失败和已同步状态。"
 }

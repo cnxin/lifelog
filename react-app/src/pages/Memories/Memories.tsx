@@ -16,9 +16,10 @@ import type { MemoryEvent } from "../../types";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
+import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 
 export default function Memories() {
-  const { state, getPersonName, getPlaceName, deleteEntry, getDeleteSnapshot, restoreDeletedEntry } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, notionSyncQueue, getPersonName, getPlaceName, deleteEntry, getDeleteSnapshot, restoreDeletedEntry } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
@@ -250,6 +251,13 @@ export default function Memories() {
                         ctx={ctx}
                         onOpen={() => navigate(`/memories/${memory.id}`)}
                         showPhotoCount
+                        syncMeta={getNotionRecordSyncMeta({
+                          enabled: Boolean(notionSettings.enabled && notionSettings.memoriesDatabaseId),
+                          entityType: "memory",
+                          entityId: memory.id,
+                          mappings: notionPageMappings,
+                          queue: notionSyncQueue
+                        })}
                         actions={<CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />}
                       />
                     );

@@ -30,8 +30,10 @@ function loadTs(relativeFile) {
 
 const {
   buildNotionHeaders,
+  checkLifeLogNotionDatabaseSchemas,
   createLifeLogNotionDatabases,
   getConnectionErrorMessage,
+  repairLifeLogNotionDatabaseSchemas,
   testNotionConnection
 } = loadTs("src/utils/notionClient.ts");
 
@@ -155,6 +157,75 @@ async function run() {
   assert(!parentBlocked.ok && parentBlocked.message.includes("父页面"), "auto create parent blocked", JSON.stringify(parentBlocked));
   assert(parentBlocked.diagnostic?.status === 404, "auto create parent diagnostic status", JSON.stringify(parentBlocked.diagnostic));
   assert(parentBlocked.diagnostic?.path === "/pages/page_parent", "auto create parent diagnostic path", JSON.stringify(parentBlocked.diagnostic));
+
+  const schemaCheck = await checkLifeLogNotionDatabaseSchemas(baseSettings, async (url) => {
+    if (url.includes("/databases/11111111111111111111111111111111")) {
+      return response(200, {
+        title: [{ plain_text: "LifeLog 人物" }],
+        properties: {
+          名称: { type: "title" },
+          "LifeLog ID": { type: "rich_text" },
+          关系: { type: "select" }
+        }
+      });
+    }
+    return response(404, { message: "unexpected url" });
+  });
+  assert(schemaCheck.repairable, "schema repairable", JSON.stringify(schemaCheck));
+  assert(schemaCheck.databases[0].missing.some((issue) => issue.propertyName === "生日"), "schema missing birthday", JSON.stringify(schemaCheck.databases[0]));
+  assert(schemaCheck.message.includes("缺失字段"), "schema missing message", schemaCheck.message);
+
+  const conflictCheck = await checkLifeLogNotionDatabaseSchemas(baseSettings, async (url) => {
+    if (url.includes("/databases/11111111111111111111111111111111")) {
+      return response(200, {
+        title: [{ plain_text: "LifeLog 人物" }],
+        properties: {
+          名称: { type: "rich_text" },
+          "LifeLog ID": { type: "rich_text" }
+        }
+      });
+    }
+    return response(404, { message: "unexpected url" });
+  });
+  assert(conflictCheck.databases[0].conflicts[0]?.propertyName === "名称", "schema conflict property", JSON.stringify(conflictCheck.databases[0]));
+  assert(conflictCheck.databases[0].conflicts[0]?.expectedType === "title", "schema conflict expected", JSON.stringify(conflictCheck.databases[0]));
+
+  const repairCalls = [];
+  let repaired = false;
+  const repair = await repairLifeLogNotionDatabaseSchemas(baseSettings, async (url, init) => {
+    repairCalls.push({ url, init, body: init.body ? JSON.parse(init.body) : null });
+    if (url.includes("/databases/11111111111111111111111111111111") && init.method === "GET") {
+      return response(200, {
+        title: [{ plain_text: "LifeLog 人物" }],
+        properties: repaired
+          ? {
+              名称: { type: "title" },
+              "LifeLog ID": { type: "rich_text" },
+              关系: { type: "select" },
+              生日: { type: "date" },
+              重点关注: { type: "checkbox" },
+              喜好档案: { type: "rich_text" },
+              禁忌雷区: { type: "rich_text" },
+              备注: { type: "rich_text" },
+              更新时间: { type: "date" }
+            }
+          : {
+              名称: { type: "title" },
+              "LifeLog ID": { type: "rich_text" }
+            }
+      });
+    }
+    if (url.includes("/databases/11111111111111111111111111111111") && init.method === "PATCH") {
+      repaired = true;
+      return response(200, { id: "11111111111111111111111111111111" });
+    }
+    return response(404, { message: "unexpected url" });
+  });
+  const patchCall = repairCalls.find((call) => call.init.method === "PATCH");
+  assert(repair.repaired > 0, "schema repair count", JSON.stringify(repair));
+  assert(Boolean(patchCall), "schema repair patch called", JSON.stringify(repairCalls));
+  assert(patchCall.body.properties["生日"].date, "schema repair patch body", JSON.stringify(patchCall.body));
+  assert(!patchCall.body.properties["名称"], "schema repair keeps existing fields", JSON.stringify(patchCall.body));
 
   if (failures) {
     console.error(`Notion connection regression failed: ${failures} mismatch(es).`);

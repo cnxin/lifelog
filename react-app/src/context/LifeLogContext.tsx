@@ -13,6 +13,7 @@ import {
   loadNotionSettings,
   loadNotionPageMappings,
   loadNotionSyncHistory,
+  loadNotionSyncQueue,
   loadPhotosByIds,
   loadPhotosByMemoryId,
   loadReminderSettings,
@@ -34,6 +35,8 @@ import {
   saveNotionSettings,
   saveNotionPageMappings,
   saveNotionSyncHistoryEntry,
+  saveNotionSyncQueueItems,
+  deleteNotionSyncQueueItems,
   deletePhotosByMemoryId
 } from "../db/database";
 import type {
@@ -46,6 +49,7 @@ import type {
   NotionSettings,
   NotionSyncFailedItem,
   NotionSyncHistoryEntry,
+  NotionSyncQueueItem,
   NotionSyncTrigger,
   Person,
   Photo,
@@ -113,6 +117,7 @@ interface LifeLogContextValue {
   notionSettings: NotionSettings;
   notionPageMappings: NotionPageMapping[];
   notionSyncHistory: NotionSyncHistoryEntry[];
+  notionSyncQueue: NotionSyncQueueItem[];
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
@@ -142,8 +147,9 @@ interface LifeLogContextValue {
   updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   updateNotionSettings: (patch: Partial<NotionSettings>) => Promise<void>;
   syncNotionAll: (settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
-  syncNotionTargets: (targets: NotionSyncTarget[], options?: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings }) => Promise<NotionSyncSummary>;
+  syncNotionTargets: (targets: NotionSyncTarget[], options?: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings; stateOverride?: LifeLogState }) => Promise<NotionSyncSummary>;
   retryFailedNotionItems: (items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
+  retryNotionQueueItems: (ids?: string[]) => Promise<NotionSyncSummary | null>;
   exportData: () => Promise<BackupExportResult>;
   buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
   buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
@@ -171,9 +177,13 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   const [notionSettings, setNotionSettings] = useState<NotionSettings>(defaultNotionSettings);
   const [notionPageMappings, setNotionPageMappings] = useState<NotionPageMapping[]>([]);
   const [notionSyncHistory, setNotionSyncHistory] = useState<NotionSyncHistoryEntry[]>([]);
+  const [notionSyncQueue, setNotionSyncQueue] = useState<NotionSyncQueueItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [placeMergeHistory, setPlaceMergeHistory] = useState<PlaceMergeHistoryEntry[]>([]);
   const favoritePendingRef = useRef({ people: new Set<string>(), places: new Set<string>() });
+  const notionQueueTimerRef = useRef<number | null>(null);
+  const notionQueueRunningRef = useRef(false);
+  const notionSyncQueueRef = useRef<NotionSyncQueueItem[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -185,6 +195,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         const nextNotionSettings = await loadNotionSettings();
         const nextNotionPageMappings = await loadNotionPageMappings();
         const nextNotionSyncHistory = await loadNotionSyncHistory();
+        const nextNotionSyncQueue = await loadNotionSyncQueue();
         const mergeHistory = await loadPlaceMergeHistory();
         if (active) setState(nextState);
         if (active) setSettings(nextSettings);
@@ -192,6 +203,10 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         if (active) setNotionSettings(nextNotionSettings);
         if (active) setNotionPageMappings(nextNotionPageMappings);
         if (active) setNotionSyncHistory(nextNotionSyncHistory);
+        if (active) {
+          notionSyncQueueRef.current = nextNotionSyncQueue;
+          setNotionSyncQueue(nextNotionSyncQueue);
+        }
         if (active) setPlaceMergeHistory(mergeHistory);
       })
       .finally(() => {
@@ -203,12 +218,37 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    notionSyncQueueRef.current = notionSyncQueue;
+  }, [notionSyncQueue]);
+
+  useEffect(() => {
+    return () => {
+      if (notionQueueTimerRef.current) {
+        window.clearTimeout(notionQueueTimerRef.current);
+        notionQueueTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const duplicatePlaceGroups = useMemo(
     () => findPlaceDuplicateGroups(state.places),
     [state.places]
   );
 
   const value = useMemo<LifeLogContextValue>(() => {
+    function syncSavedNotionTargets(targets: NotionSyncTarget[], nextState: LifeLogState, targetLabel: string) {
+      const autoTargets = uniqueNotionTargets(
+        targets.filter((target) => canAutoSyncNotionTarget(notionSettings, target.entityType))
+      );
+      if (!autoTargets.length) return;
+      void enqueueNotionSyncTargets(autoTargets, nextState, targetLabel);
+    }
+
+    function syncSavedNotionTarget(target: NotionSyncTarget, nextState: LifeLogState, targetLabel: string) {
+      syncSavedNotionTargets([target], nextState, targetLabel);
+    }
+
     async function savePerson(formData: FormData, id?: string) {
       const existing = state.people.find((person) => person.id === id);
       const birthday = buildDate(
@@ -236,12 +276,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       };
 
       await savePersonRecord(person);
+      const nextState: LifeLogState = {
+        ...state,
+        people: upsertById(state.people, person)
+      };
       setState((current) => ({
         ...current,
-        people: existing
-          ? current.people.map((item) => (item.id === existing.id ? person : item))
-          : [...current.people, person]
+        people: upsertById(current.people, person)
       }));
+      syncSavedNotionTarget({ entityType: "person", entityId: person.id }, nextState, `保存人物：${person.name || "未命名"}`);
 
       return person.id;
     }
@@ -251,13 +294,18 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const person = state.people.find((item) => item.id === id);
       if (!person) return;
       const next: Person = { ...person, favorite: !person.favorite };
+      const nextState: LifeLogState = {
+        ...state,
+        people: upsertById(state.people, next)
+      };
       favoritePendingRef.current.people.add(id);
       setState((current) => ({
         ...current,
-        people: current.people.map((item) => (item.id === id ? next : item))
+        people: upsertById(current.people, next)
       }));
       try {
         await savePersonRecord(next);
+        syncSavedNotionTarget({ entityType: "person", entityId: next.id }, nextState, `更新人物：${next.name || "未命名"}`);
       } finally {
         favoritePendingRef.current.people.delete(id);
       }
@@ -272,10 +320,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         dislikes: patch.dislikes
       };
       await savePersonRecord(next);
+      const nextState: LifeLogState = {
+        ...state,
+        people: upsertById(state.people, next)
+      };
       setState((current) => ({
         ...current,
-        people: current.people.map((item) => (item.id === id ? next : item))
+        people: upsertById(current.people, next)
       }));
+      syncSavedNotionTarget({ entityType: "person", entityId: next.id }, nextState, `更新人物：${next.name || "未命名"}`);
     }
 
     async function togglePlaceFavorite(id: string) {
@@ -283,13 +336,18 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const place = state.places.find((item) => item.id === id);
       if (!place) return;
       const next: Place = { ...place, favorite: !place.favorite };
+      const nextState: LifeLogState = {
+        ...state,
+        places: upsertById(state.places, next)
+      };
       favoritePendingRef.current.places.add(id);
       setState((current) => ({
         ...current,
-        places: current.places.map((item) => (item.id === id ? next : item))
+        places: upsertById(current.places, next)
       }));
       try {
         await savePlaceRecord(next);
+        syncSavedNotionTarget({ entityType: "place", entityId: next.id }, nextState, `更新地点：${buildPlaceDisplayName(next)}`);
       } finally {
         favoritePendingRef.current.places.delete(id);
       }
@@ -347,12 +405,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       }
 
       await savePlaceRecord(place);
+      const nextState: LifeLogState = {
+        ...state,
+        places: upsertById(state.places, place)
+      };
       setState((current) => ({
         ...current,
-        places: existing
-          ? current.places.map((item) => (item.id === existing.id ? place : item))
-          : [...current.places, place]
+        places: upsertById(current.places, place)
       }));
+      syncSavedNotionTarget({ entityType: "place", entityId: place.id }, nextState, `保存地点：${buildPlaceDisplayName(place)}`);
 
       return place.id;
     }
@@ -390,10 +451,19 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       if (!changedPlaces.length) return { count: 0, before: [] };
 
       await savePlaceRecords(changedPlaces);
+      const nextState: LifeLogState = {
+        ...state,
+        places: state.places.map((place) => nextPlaces.find((item) => item.id === place.id) || place)
+      };
       setState((current) => ({
         ...current,
         places: current.places.map((place) => nextPlaces.find((item) => item.id === place.id) || place)
       }));
+      syncSavedNotionTargets(
+        changedPlaces.map((place) => ({ entityType: "place", entityId: place.id })),
+        nextState,
+        `批量更新地点：${changedPlaces.length} 条`
+      );
       return { count: changedPlaces.length, before };
     }
 
@@ -449,6 +519,11 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           ? current.memories.map((item) => (item.id === existing.id ? memory : item))
           : [...current.memories, memory]
       }));
+      const nextState: LifeLogState = {
+        ...state,
+        memories: upsertById(state.memories, memory)
+      };
+      syncSavedNotionTarget({ entityType: "memory", entityId: memory.id }, nextState, `保存回忆：${memory.title || "未命名"}`);
 
       return memory.id;
     }
@@ -492,12 +567,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function saveAnniversaryPlan(plan: AnniversaryPlan) {
       await saveAnniversaryPlanRecord(plan);
+      const nextState: LifeLogState = {
+        ...state,
+        anniversaryPlans: upsertById(state.anniversaryPlans, plan)
+      };
       setState((current) => ({
         ...current,
-        anniversaryPlans: current.anniversaryPlans.some((item) => item.id === plan.id)
-          ? current.anniversaryPlans.map((item) => (item.id === plan.id ? plan : item))
-          : [...current.anniversaryPlans, plan]
+        anniversaryPlans: upsertById(current.anniversaryPlans, plan)
       }));
+      syncSavedNotionTarget({ entityType: "anniversaryPlan", entityId: plan.id }, nextState, `保存安排：${plan.title || plan.anniversaryTitle || "未命名"}`);
       return plan.id;
     }
 
@@ -750,17 +828,48 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return syncNotionTargets([], { trigger: "manual", targetLabel: "同步全部", settingsOverride });
     }
 
+    async function enqueueNotionSyncTargets(targets: NotionSyncTarget[], nextState: LifeLogState, targetLabel: string) {
+      const now = new Date().toISOString();
+      const existingById = new Map(notionSyncQueueRef.current.map((item) => [item.id, item]));
+      const nextItems = targets.map((target) => {
+        const id = buildNotionQueueItemId(target);
+        const existing = existingById.get(id);
+        return {
+          id,
+          entityType: target.entityType,
+          entityId: target.entityId,
+          targetLabel: targets.length === 1 ? targetLabel : formatNotionTargetLabel(target, nextState),
+          status: "pending" as const,
+          attempts: existing?.attempts || 0,
+          queuedAt: existing?.queuedAt || now,
+          updatedAt: now,
+          lastAttemptAt: existing?.lastAttemptAt,
+          lastError: existing?.lastError
+        };
+      });
+      await saveNotionSyncQueueItems(nextItems);
+      const nextQueue = mergeNotionQueueItems(notionSyncQueueRef.current, nextItems);
+      notionSyncQueueRef.current = nextQueue;
+      setNotionSyncQueue(nextQueue);
+      scheduleNotionQueueFlush(
+        nextState,
+        nextQueue.filter((item) => item.status === "pending").map((item) => item.id),
+        900
+      );
+    }
+
     async function syncNotionTargets(
       targets: NotionSyncTarget[],
-      options: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings } = {}
+      options: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings; stateOverride?: LifeLogState } = {}
     ) {
       const activeNotionSettings = options.settingsOverride || notionSettings;
+      const syncState = options.stateOverride || state;
       const startedAt = new Date().toISOString();
       const result = await syncLifeLogToNotion({
-        state,
+        state: syncState,
         settings: activeNotionSettings,
         mappings: notionPageMappings,
-        options: targets.length ? { targets } : undefined
+        options: targets.length ? { targets, connectionMode: "targeted" } : undefined
       });
       if (result.mappings.length) {
         await saveNotionPageMappings(result.mappings);
@@ -791,6 +900,84 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return result;
     }
 
+    async function flushNotionSyncQueue(options: { ids?: string[]; stateOverride?: LifeLogState; immediate?: boolean } = {}) {
+      if (notionQueueRunningRef.current) {
+        if (!options.immediate) scheduleNotionQueueFlush(options.stateOverride || state, options.ids, 1200);
+        return null;
+      }
+      const queueSnapshot = notionSyncQueueRef.current;
+      const sourceQueue = queueSnapshot.filter((item) => item.status === "pending" || item.status === "failed");
+      const idSet = options.ids?.length ? new Set(options.ids) : null;
+      const candidates = sourceQueue.filter((item) => !idSet || idSet.has(item.id));
+      const targets = uniqueNotionTargets(
+        candidates
+          .filter((item) => canAutoSyncNotionTarget(notionSettings, item.entityType))
+          .map((item) => ({ entityType: item.entityType, entityId: item.entityId }))
+      );
+      if (!targets.length) return null;
+
+      const now = new Date().toISOString();
+      const targetIds = new Set(targets.map(buildNotionQueueItemId));
+      const syncingItems = queueSnapshot
+        .filter((item) => targetIds.has(item.id))
+        .map((item) => ({
+          ...item,
+          status: "syncing" as const,
+          attempts: item.attempts + 1,
+          lastAttemptAt: now,
+          updatedAt: now
+      }));
+      await saveNotionSyncQueueItems(syncingItems);
+      const queueWithSyncing = mergeNotionQueueItems(notionSyncQueueRef.current, syncingItems);
+      notionSyncQueueRef.current = queueWithSyncing;
+      setNotionSyncQueue(queueWithSyncing);
+
+      notionQueueRunningRef.current = true;
+      try {
+        const syncState = options.stateOverride || state;
+        const result = await syncNotionTargets(targets, {
+          trigger: "single",
+          targetLabel: targets.length === 1 ? candidates[0]?.targetLabel || "自动同步" : `自动同步 ${targets.length} 条`,
+          stateOverride: syncState
+        });
+        const failedById = new Map(result.failedItems.map((item) => [buildNotionQueueItemId(item), item.message]));
+        const successIds = targets.map(buildNotionQueueItemId).filter((id) => !failedById.has(id));
+        if (successIds.length) {
+          await deleteNotionSyncQueueItems(successIds);
+        }
+        const failedItems = syncingItems
+          .filter((item) => failedById.has(item.id))
+          .map((item) => ({
+            ...item,
+            status: "failed" as const,
+            lastError: failedById.get(item.id) || "Notion 同步失败。",
+            updatedAt: new Date().toISOString()
+          }));
+        if (failedItems.length) {
+          await saveNotionSyncQueueItems(failedItems);
+        }
+        const nextQueue = mergeNotionQueueItems(
+          notionSyncQueueRef.current.filter((item) => !successIds.includes(item.id)),
+          failedItems
+        );
+        notionSyncQueueRef.current = nextQueue;
+        setNotionSyncQueue(nextQueue);
+        return result;
+      } finally {
+        notionQueueRunningRef.current = false;
+      }
+    }
+
+    function scheduleNotionQueueFlush(nextState: LifeLogState, ids?: string[], delayMs = 1000) {
+      if (notionQueueTimerRef.current) window.clearTimeout(notionQueueTimerRef.current);
+      notionQueueTimerRef.current = window.setTimeout(() => {
+        notionQueueTimerRef.current = null;
+        void flushNotionSyncQueue({ ids, stateOverride: nextState }).catch((error) => {
+          console.warn("Notion queue flush failed", error);
+        });
+      }, delayMs);
+    }
+
     async function retryFailedNotionItems(items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) {
       const targets = uniqueNotionTargets(items.map((item) => ({ entityType: item.entityType, entityId: item.entityId })));
       return syncNotionTargets(targets, {
@@ -798,6 +985,15 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         targetLabel: `重试失败项 ${targets.length} 条`,
         settingsOverride
       });
+    }
+
+    async function retryNotionQueueItems(ids?: string[]) {
+      const retryIds = ids?.length
+        ? ids
+        : notionSyncQueueRef.current
+            .filter((item) => item.status === "pending" || item.status === "failed")
+            .map((item) => item.id);
+      return flushNotionSyncQueue({ ids: retryIds, immediate: true });
     }
 
     async function exportData(): Promise<BackupExportResult> {
@@ -942,6 +1138,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       notionSettings,
       notionPageMappings,
       notionSyncHistory,
+      notionSyncQueue,
       isLoading,
       savePerson,
       updatePersonProfile,
@@ -973,6 +1170,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       syncNotionAll,
       syncNotionTargets,
       retryFailedNotionItems,
+      retryNotionQueueItems,
       exportData,
       buildMemoryShare,
       buildPlacesShare,
@@ -983,7 +1181,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       resetDemo,
       loadMemoryPhotos
     };
-  }, [duplicatePlaceGroups, isLoading, notionPageMappings, notionSettings, notionSyncHistory, placeMergeHistory, settings, reminderSettings, state]);
+  }, [duplicatePlaceGroups, isLoading, notionPageMappings, notionSettings, notionSyncHistory, notionSyncQueue, placeMergeHistory, settings, reminderSettings, state]);
 
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }
@@ -1004,6 +1202,54 @@ function uniqueNotionTargets(targets: NotionSyncTarget[]) {
     seen.add(key);
     return true;
   });
+}
+
+function buildNotionQueueItemId(target: Pick<NotionSyncTarget, "entityType" | "entityId">) {
+  return `${target.entityType}:${target.entityId}`;
+}
+
+function compareNotionQueueItems(left: NotionSyncQueueItem, right: NotionSyncQueueItem) {
+  const statusRank = (item: NotionSyncQueueItem) => item.status === "failed" ? 0 : item.status === "pending" ? 1 : 2;
+  return statusRank(left) - statusRank(right) || left.updatedAt.localeCompare(right.updatedAt);
+}
+
+function mergeNotionQueueItems(current: NotionSyncQueueItem[], incoming: NotionSyncQueueItem[]) {
+  if (!incoming.length) return current;
+  const incomingById = new Map(incoming.map((item) => [item.id, item]));
+  const merged = current.map((item) => incomingById.get(item.id) || item);
+  const missing = incoming.filter((item) => !current.some((currentItem) => currentItem.id === item.id));
+  return [...merged, ...missing].sort(compareNotionQueueItems);
+}
+
+function formatNotionTargetLabel(target: NotionSyncTarget, state: LifeLogState) {
+  if (target.entityType === "person") {
+    const person = state.people.find((item) => item.id === target.entityId);
+    return `人物：${person?.name || "未命名"}`;
+  }
+  if (target.entityType === "place") {
+    const place = state.places.find((item) => item.id === target.entityId);
+    return `地点：${place ? buildPlaceDisplayName(place) : "未命名"}`;
+  }
+  if (target.entityType === "memory") {
+    const memory = state.memories.find((item) => item.id === target.entityId);
+    return `回忆：${memory?.title || memory?.date || "未命名"}`;
+  }
+  const plan = state.anniversaryPlans.find((item) => item.id === target.entityId);
+  return `安排：${plan?.title || plan?.anniversaryTitle || "未命名"}`;
+}
+
+function upsertById<T extends { id: string }>(items: T[], next: T) {
+  return items.some((item) => item.id === next.id)
+    ? items.map((item) => (item.id === next.id ? next : item))
+    : [...items, next];
+}
+
+function canAutoSyncNotionTarget(settings: NotionSettings, entityType: NotionSyncTarget["entityType"]) {
+  if (!settings.enabled || !settings.token.trim()) return false;
+  if (entityType === "person") return Boolean(settings.peopleDatabaseId);
+  if (entityType === "place") return Boolean(settings.placesDatabaseId);
+  if (entityType === "memory") return Boolean(settings.memoriesDatabaseId);
+  return Boolean(settings.plansDatabaseId);
 }
 
 function buildNotionSyncHistoryEntry({

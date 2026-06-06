@@ -8,6 +8,7 @@ import type {
   NotionPageMapping,
   NotionSettings,
   NotionSyncHistoryEntry,
+  NotionSyncQueueItem,
   Person,
   Photo,
   Place,
@@ -36,6 +37,7 @@ class LifeLogDatabase extends Dexie {
   notionSettings!: Table<{ key: string; value: NotionSettings }, string>;
   notionPageMappings!: Table<NotionPageMapping, string>;
   notionSyncHistory!: Table<NotionSyncHistoryEntry, string>;
+  notionSyncQueue!: Table<NotionSyncQueueItem, string>;
 
   constructor() {
     super("LifeLogDatabase");
@@ -161,6 +163,20 @@ class LifeLogDatabase extends Dexie {
       notionPageMappings: "id, entityType, entityId, [entityType+entityId]",
       notionSyncHistory: "id, finishedAt, trigger, status"
     });
+    this.version(13).stores({
+      people: "id, name, birthday, relationship, favorite",
+      places: "id, name, country, province, city, mall, area, category, favorite",
+      memories: "id, date, placeId, *placeIds, *personIds",
+      anniversaryPlans: "id, personId, targetDate, status, occurrenceYear",
+      placeMergeHistory: "id, happenedAt",
+      appSettings: "key",
+      photos: "id, memoryId, uploadedAt, order",
+      reminderSettings: "key",
+      notionSettings: "key",
+      notionPageMappings: "id, entityType, entityId, [entityType+entityId]",
+      notionSyncHistory: "id, finishedAt, trigger, status",
+      notionSyncQueue: "id, entityType, entityId, status, updatedAt"
+    });
   }
 }
 
@@ -255,6 +271,23 @@ export async function saveNotionSyncHistoryEntry(entry: NotionSyncHistoryEntry, 
       await db.notionSyncHistory.bulkDelete(staleEntries.map((item) => item.id));
     }
   });
+}
+
+export async function loadNotionSyncQueue(): Promise<NotionSyncQueueItem[]> {
+  await initializeDatabase();
+  return db.notionSyncQueue.orderBy("updatedAt").toArray();
+}
+
+export async function saveNotionSyncQueueItems(items: NotionSyncQueueItem[]) {
+  if (!items.length) return;
+  await initializeDatabase();
+  await db.notionSyncQueue.bulkPut(items);
+}
+
+export async function deleteNotionSyncQueueItems(ids: string[]) {
+  if (!ids.length) return;
+  await initializeDatabase();
+  await db.notionSyncQueue.bulkDelete(ids);
 }
 
 export async function savePersonRecord(person: Person) {

@@ -39,6 +39,9 @@ const {
   buildPersonProperties,
   syncLifeLogToNotion
 } = loadTs("src/utils/notionSync.ts");
+const {
+  getNotionRecordSyncMeta
+} = loadTs("src/utils/notionStatus.ts");
 
 const state = {
   people: [{
@@ -211,6 +214,43 @@ async function run() {
   });
   assert(targeted.total === 1 && targeted.byType.person.total === 1, "targeted sync total", JSON.stringify(targeted));
   assert(targeted.byType.place.total === 0 && targeted.byType.memory.total === 0, "targeted sync excludes other types", JSON.stringify(targeted.byType));
+
+  const lightweightFetcher = buildFetcher();
+  const lightweight = await syncLifeLogToNotion({
+    state,
+    settings: { ...settings, workspaceName: "Cached Space", workspaceBotName: "Cached Bot" },
+    mappings: [],
+    options: { targets: [{ entityType: "person", entityId: "p1" }], connectionMode: "targeted" },
+    fetcher: lightweightFetcher
+  });
+  assert(lightweight.synced === 1 && lightweight.failed === 0, "targeted lightweight sync", JSON.stringify(lightweight));
+  assert(!lightweightFetcher.calls.some((call) => call.url.endsWith("/users/me")), "targeted skips user probe", JSON.stringify(lightweightFetcher.calls));
+  assert(lightweight.workspaceName === "Cached Space", "targeted keeps cached workspace", JSON.stringify(lightweight));
+
+  const syncedMeta = getNotionRecordSyncMeta({
+    enabled: true,
+    entityType: "person",
+    entityId: "p1",
+    mappings: [{ ...first.mappings[0], lastError: "" }],
+    queue: []
+  });
+  assert(syncedMeta.status === "synced", "sync status mapped", JSON.stringify(syncedMeta));
+  const queuedMeta = getNotionRecordSyncMeta({
+    enabled: true,
+    entityType: "person",
+    entityId: "p1",
+    mappings: [{ ...first.mappings[0], lastError: "" }],
+    queue: [{ id: "person:p1", entityType: "person", entityId: "p1", targetLabel: "人物：测试人物", status: "pending", attempts: 0, queuedAt: "2026-06-01T00:00:00.000Z", updatedAt: "2026-06-01T00:00:00.000Z" }]
+  });
+  assert(queuedMeta.status === "pending", "sync status queue priority", JSON.stringify(queuedMeta));
+  const failedMeta = getNotionRecordSyncMeta({
+    enabled: true,
+    entityType: "person",
+    entityId: "p1",
+    mappings: [{ ...first.mappings[0], lastError: "" }],
+    queue: [{ id: "person:p1", entityType: "person", entityId: "p1", targetLabel: "人物：测试人物", status: "failed", attempts: 1, queuedAt: "2026-06-01T00:00:00.000Z", updatedAt: "2026-06-01T00:01:00.000Z", lastError: "blocked" }]
+  });
+  assert(failedMeta.status === "failed" && failedMeta.lastError === "blocked", "sync status failed priority", JSON.stringify(failedMeta));
 
   const itemFailure = await syncLifeLogToNotion({
     state,

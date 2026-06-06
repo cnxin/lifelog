@@ -42,6 +42,7 @@ export interface NotionSyncTarget {
 
 export interface NotionSyncOptions {
   targets?: NotionSyncTarget[];
+  connectionMode?: "full" | "targeted";
 }
 
 interface NotionSyncTypeSummaryBase {
@@ -92,24 +93,31 @@ export async function syncLifeLogToNotion({
     };
   }
 
-  const connection = await testNotionConnection(settings, fetcher);
-  if (!connection.ok) {
-    return {
-      ...empty,
-      failed: 1,
-      workspaceName: connection.workspaceName,
-      workspaceBotName: connection.workspaceBotName,
-      messages: [connection.message],
-      diagnostic: connection.diagnostic
-    };
+  const shouldRunFullConnectionCheck = options?.connectionMode !== "targeted";
+  let workspaceName = settings.workspaceName;
+  let workspaceBotName = settings.workspaceBotName;
+  if (shouldRunFullConnectionCheck) {
+    const connection = await testNotionConnection(settings, fetcher);
+    if (!connection.ok) {
+      return {
+        ...empty,
+        failed: 1,
+        workspaceName: connection.workspaceName,
+        workspaceBotName: connection.workspaceBotName,
+        messages: [connection.message],
+        diagnostic: connection.diagnostic
+      };
+    }
+    workspaceName = connection.workspaceName;
+    workspaceBotName = connection.workspaceBotName;
   }
 
   const items = filterSyncItems(buildSyncItems(state, settings), options?.targets);
   const nextSummary: NotionSyncSummary = {
     ...empty,
     total: items.length,
-    workspaceName: connection.workspaceName,
-    workspaceBotName: connection.workspaceBotName,
+    workspaceName,
+    workspaceBotName,
     messages: []
   };
 

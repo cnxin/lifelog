@@ -54,6 +54,46 @@ export interface NotionAutoCreateResult {
   diagnostic?: NotionRequestDiagnostic;
 }
 
+export type NotionDatabaseSchemaIssueKind = "missing" | "conflict";
+
+export interface NotionDatabaseSchemaIssue {
+  kind: NotionDatabaseSchemaIssueKind;
+  propertyName: string;
+  expectedType: string;
+  actualType?: string;
+}
+
+export interface NotionDatabaseSchemaCheck {
+  key: NotionDatabaseProbe["key"];
+  label: string;
+  databaseId: string;
+  configured: boolean;
+  ok: boolean;
+  repairable: boolean;
+  title?: string;
+  message: string;
+  missing: NotionDatabaseSchemaIssue[];
+  conflicts: NotionDatabaseSchemaIssue[];
+  errorKind?: NotionConnectionErrorKind;
+  diagnostic?: NotionRequestDiagnostic;
+}
+
+export interface NotionSchemaCheckResult {
+  ok: boolean;
+  repairable: boolean;
+  message: string;
+  databases: NotionDatabaseSchemaCheck[];
+  diagnostic?: NotionRequestDiagnostic;
+}
+
+export interface NotionSchemaRepairResult {
+  ok: boolean;
+  repaired: number;
+  message: string;
+  databases: NotionDatabaseSchemaCheck[];
+  diagnostic?: NotionRequestDiagnostic;
+}
+
 export interface NotionRequestDiagnostic {
   at: string;
   platform: string;
@@ -387,6 +427,140 @@ export async function createLifeLogNotionDatabases(
   };
 }
 
+export async function checkLifeLogNotionDatabaseSchemas(
+  settings: NotionSettings,
+  fetcher: NotionFetch = notionFetch
+): Promise<NotionSchemaCheckResult> {
+  const token = settings.token.trim();
+  if (!token) {
+    return {
+      ok: false,
+      repairable: false,
+      message: "请先填写 Notion Token。",
+      databases: []
+    };
+  }
+
+  const databases: NotionDatabaseSchemaCheck[] = [];
+  for (const definition of buildLifeLogDatabaseDefinitions()) {
+    const databaseId = normalizeNotionId(String(settings[definition.settingKey] || ""));
+    if (!databaseId) {
+      databases.push({
+        key: definition.key,
+        label: definition.label,
+        databaseId: "",
+        configured: false,
+        ok: false,
+        repairable: false,
+        message: "未配置数据库 ID。",
+        missing: [],
+        conflicts: []
+      });
+      continue;
+    }
+
+    const result = await probeNotionDataTarget(settings, databaseId, fetcher);
+    if (!result.ok) {
+      databases.push({
+        key: definition.key,
+        label: definition.label,
+        databaseId,
+        configured: true,
+        ok: false,
+        repairable: false,
+        message: result.message,
+        missing: [],
+        conflicts: [],
+        errorKind: result.errorKind,
+        diagnostic: result.diagnostic
+      });
+      continue;
+    }
+
+    databases.push(buildSchemaCheckFromDatabase(definition, databaseId, result.data));
+  }
+
+  const failed = databases.filter((item) => !item.ok);
+  const repairable = databases.some((item) => item.repairable);
+  return {
+    ok: failed.length === 0,
+    repairable,
+    message: buildSchemaCheckMessage(databases),
+    databases,
+    diagnostic: failed.find((item) => item.diagnostic)?.diagnostic
+  };
+}
+
+export async function repairLifeLogNotionDatabaseSchemas(
+  settings: NotionSettings,
+  fetcher: NotionFetch = notionFetch
+): Promise<NotionSchemaRepairResult> {
+  const before = await checkLifeLogNotionDatabaseSchemas(settings, fetcher);
+  if (!before.databases.length) {
+    return {
+      ok: false,
+      repaired: 0,
+      message: before.message,
+      databases: before.databases,
+      diagnostic: before.diagnostic
+    };
+  }
+
+  let repaired = 0;
+  let diagnostic = before.diagnostic;
+  const definitions = buildLifeLogDatabaseDefinitions();
+
+  for (const database of before.databases) {
+    if (!database.repairable || !database.missing.length) continue;
+    const definition = definitions.find((item) => item.key === database.key);
+    if (!definition) continue;
+
+    const properties = Object.fromEntries(
+      database.missing
+        .map((issue) => [issue.propertyName, definition.properties[issue.propertyName]])
+        .filter(([, schema]) => Boolean(schema))
+    );
+    if (!Object.keys(properties).length) continue;
+
+    const response = await notionRequest(
+      settings,
+      `/databases/${encodeURIComponent(database.databaseId)}`,
+      {
+        method: "PATCH",
+        json: { properties }
+      },
+      fetcher
+    );
+
+    if (!response.ok) {
+      diagnostic = response.diagnostic || diagnostic;
+      return {
+        ok: false,
+        repaired,
+        message: `${database.label}字段补齐失败：${response.message}`,
+        databases: before.databases,
+        diagnostic
+      };
+    }
+    repaired += database.missing.length;
+  }
+
+  const after = await checkLifeLogNotionDatabaseSchemas(settings, fetcher);
+  return {
+    ok: after.ok,
+    repaired,
+    message: repaired
+      ? after.ok
+        ? `已补齐 ${repaired} 个字段，数据库结构正常。`
+        : `已补齐 ${repaired} 个字段，仍有项目需要处理。`
+      : before.repairable
+        ? "没有可自动补齐的字段。"
+        : before.message,
+    databases: after.databases,
+    diagnostic: after.diagnostic || diagnostic
+  };
+}
+
 export function getConnectionErrorMessage(status: number, body: unknown): {
   errorKind: NotionConnectionErrorKind;
   message: string;
@@ -626,6 +800,85 @@ function buildLifeLogDatabaseDefinitions(): Array<{
       }
     }
   ];
+}
+
+function buildSchemaCheckFromDatabase(
+  definition: ReturnType<typeof buildLifeLogDatabaseDefinitions>[number],
+  databaseId: string,
+  data: unknown
+): NotionDatabaseSchemaCheck {
+  const properties = getDatabaseProperties(data);
+  const missing: NotionDatabaseSchemaIssue[] = [];
+  const conflicts: NotionDatabaseSchemaIssue[] = [];
+
+  Object.entries(definition.properties).forEach(([propertyName, schema]) => {
+    const expectedType = getSchemaPropertyType(schema);
+    const actualType = getExistingPropertyType(properties[propertyName]);
+    if (!expectedType) return;
+    if (!actualType) {
+      missing.push({
+        kind: "missing",
+        propertyName,
+        expectedType
+      });
+      return;
+    }
+    if (actualType !== expectedType) {
+      conflicts.push({
+        kind: "conflict",
+        propertyName,
+        expectedType,
+        actualType
+      });
+    }
+  });
+
+  const ok = missing.length === 0 && conflicts.length === 0;
+  return {
+    key: definition.key,
+    label: definition.label,
+    databaseId,
+    configured: true,
+    ok,
+    repairable: missing.length > 0,
+    title: getDataContainerTitle(data),
+    message: ok
+      ? "字段完整。"
+      : conflicts.length
+        ? `缺少 ${missing.length} 个字段，${conflicts.length} 个字段类型不一致。`
+        : `缺少 ${missing.length} 个字段，可一键补齐。`,
+    missing,
+    conflicts
+  };
+}
+
+function getDatabaseProperties(data: unknown): Record<string, unknown> {
+  if (!isRecord(data) || !isRecord(data.properties)) return {};
+  return data.properties;
+}
+
+function getSchemaPropertyType(schema: unknown) {
+  if (!isRecord(schema)) return "";
+  return Object.keys(schema)[0] || "";
+}
+
+function getExistingPropertyType(property: unknown) {
+  if (!isRecord(property)) return "";
+  return String(property.type || "");
+}
+
+function buildSchemaCheckMessage(databases: NotionDatabaseSchemaCheck[]) {
+  if (!databases.length) return "请先填写 Notion Token。";
+  const unconfigured = databases.filter((item) => !item.configured).length;
+  const unreadable = databases.filter((item) => item.configured && item.errorKind).length;
+  const missing = databases.reduce((sum, item) => sum + item.missing.length, 0);
+  const conflicts = databases.reduce((sum, item) => sum + item.conflicts.length, 0);
+
+  if (!unconfigured && !unreadable && !missing && !conflicts) return "4 个 Notion 数据库字段结构正常。";
+  if (conflicts) return `发现 ${conflicts} 个字段类型冲突，需要在 Notion 手动处理或重新建库。`;
+  if (missing) return `发现 ${missing} 个缺失字段，可以一键补齐。`;
+  if (unreadable) return `${unreadable} 个数据库不可读取，请先检查权限。`;
+  return `${unconfigured} 个数据库尚未配置。`;
 }
 
 function titleSchema() {

@@ -6,6 +6,7 @@ import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
+import NotionSyncBadge from "../../components/NotionSyncBadge";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
@@ -18,6 +19,7 @@ import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
+import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { buildMallVisitStats, buildPlaceVisitStats, type MallVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import {
   buildMallKey,
@@ -49,6 +51,9 @@ interface PlaceBatchDraft {
 export default function Places() {
   const {
     state,
+    notionSettings,
+    notionPageMappings,
+    notionSyncQueue,
     deleteEntry,
     getDeleteSnapshot,
     restoreDeletedEntry,
@@ -807,6 +812,16 @@ export default function Places() {
                   <div className="place-name">
                     <span>{buildPlaceDisplayName(place)}</span>
                     <span className="place-title-actions">
+                      <NotionSyncBadge
+                        compact
+                        meta={getNotionRecordSyncMeta({
+                          enabled: Boolean(notionSettings.enabled && notionSettings.placesDatabaseId),
+                          entityType: "place",
+                          entityId: place.id,
+                          mappings: notionPageMappings,
+                          queue: notionSyncQueue
+                        })}
+                      />
                       <button
                         type="button"
                         className={`favorite-toggle ${place.favorite ? "active" : ""}`}

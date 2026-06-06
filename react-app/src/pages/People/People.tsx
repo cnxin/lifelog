@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import NotionSyncBadge from "../../components/NotionSyncBadge";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import SearchBar from "../../components/SearchBar";
@@ -14,6 +15,7 @@ import { usePersistentState } from "../../hooks/usePersistentState";
 import type { Person } from "../../types";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel } from "../../utils/date";
 import { buildRelationshipHealth, type RelationshipHealth } from "../../utils/relationshipHealth";
+import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { initials } from "../../utils/text";
 
 type PeopleSortMode = "smart" | "recent" | "name";
@@ -23,7 +25,7 @@ interface PeopleFilterState {
 }
 
 export default function People() {
-  const { state, deleteEntry, getDeleteSnapshot, restoreDeletedEntry, togglePersonFavorite, updatePersonProfile } = useLifeLog();
+  const { state, notionSettings, notionPageMappings, notionSyncQueue, deleteEntry, getDeleteSnapshot, restoreDeletedEntry, togglePersonFavorite, updatePersonProfile } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
@@ -168,6 +170,16 @@ export default function People() {
                       {person.name}
                       {person.nickname ? ` · ${person.nickname}` : ""}
                     </span>
+                    <NotionSyncBadge
+                      compact
+                      meta={getNotionRecordSyncMeta({
+                        enabled: Boolean(notionSettings.enabled && notionSettings.peopleDatabaseId),
+                        entityType: "person",
+                        entityId: person.id,
+                        mappings: notionPageMappings,
+                        queue: notionSyncQueue
+                      })}
+                    />
                     <button
                       type="button"
                       className={`favorite-toggle ${person.favorite ? "active" : ""}`}

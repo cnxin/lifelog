@@ -202,6 +202,7 @@ export const defaultNotionSettings: NotionSettings = {
 export type NotionEntityType = "person" | "place" | "memory" | "anniversaryPlan";
 export type NotionSyncTrigger = "manual" | "single" | "retry";
 export type NotionSyncHistoryStatus = "success" | "partial" | "failed";
+export type NotionSyncQueueStatus = "pending" | "syncing" | "failed";
 
 export interface NotionSyncTypeStats {
   total: number;
@@ -220,6 +221,19 @@ export interface NotionPageMapping {
   dataSourceId: string;
   lastSyncedAt?: string;
   lastSyncHash?: string;
+  lastError?: string;
+}
+
+export interface NotionSyncQueueItem {
+  id: string;
+  entityType: NotionEntityType;
+  entityId: ID;
+  targetLabel: string;
+  status: NotionSyncQueueStatus;
+  attempts: number;
+  queuedAt: string;
+  updatedAt: string;
+  lastAttemptAt?: string;
   lastError?: string;
 }
 
