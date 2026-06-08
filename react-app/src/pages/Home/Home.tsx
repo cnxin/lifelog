@@ -29,7 +29,7 @@ export default function Home() {
       ...item,
       planStatus: buildUpcomingPlanStatus(state.anniversaryPlans, item)
     }));
-  const upcoming = upcomingWithPlanStatus.slice(0, 4);
+  const upcoming = upcomingWithPlanStatus.slice(0, 3);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
   const featuredPlaces = useMemo(
@@ -154,7 +154,7 @@ export default function Home() {
         <div className="home-hero-copy">
           <span>{todayLabel()}</span>
           <h1>今天的 LifeLog</h1>
-          <p>快速回看最近的人、地点和回忆，从一件小事开始继续记录。</p>
+          <p>先记一件小事，需要时再补人物、地点和照片。</p>
         </div>
         <GlassCard className="insight-card home-overview-card">
           <div className="metric">
@@ -201,7 +201,7 @@ export default function Home() {
           <div className="daily-focus-shortcuts">
             <button type="button" onClick={() => openQuickMemory()}>
               <PenLine />
-              记回忆
+              写一句
             </button>
             <button type="button" onClick={() => setEntrySheetType("person")}>
               <Heart />
@@ -213,7 +213,7 @@ export default function Home() {
             </button>
             <button type="button" onClick={() => navigate("/calendar")}>
               <Gift />
-              看日历
+              日历
             </button>
           </div>
         </GlassCard>

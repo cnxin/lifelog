@@ -9,6 +9,7 @@ interface PersonPickerProps {
   name?: string;
   onCreate?: (name: string) => Promise<string>;
   includeEmptyMarker?: boolean;
+  recommendedIds?: string[];
 }
 
 export default function PersonPicker({
@@ -18,7 +19,8 @@ export default function PersonPicker({
   onChange,
   name = "personIds",
   onCreate,
-  includeEmptyMarker = false
+  includeEmptyMarker = false,
+  recommendedIds = []
 }: PersonPickerProps) {
   const isControlled = value !== undefined;
   const [internalSelected, setInternalSelected] = useState<string[]>(() =>
@@ -44,6 +46,13 @@ export default function PersonPicker({
       .map((item) => item.person)
       .slice(0, 12);
   }, [people, selected, query]);
+  const recommendedPeople = useMemo(
+    () => recommendedIds
+      .map((id) => people.find((person) => person.id === id))
+      .filter((person): person is typeof people[number] => Boolean(person && !selected.includes(person.id)))
+      .slice(0, 6),
+    [people, recommendedIds, selected]
+  );
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -122,6 +131,19 @@ export default function PersonPicker({
               aria-label="搜索人物"
             />
           </div>
+
+          {!query.trim() && recommendedPeople.length > 0 && (
+            <div className="picker-recommendations">
+              <span>常用推荐</span>
+              <div className="picker-recommendation-row">
+                {recommendedPeople.map((person) => (
+                  <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
+                    {person.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isOpen && filtered.length > 0 && (
             <ul className="person-picker-results" role="listbox">

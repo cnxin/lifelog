@@ -3008,6 +3008,39 @@
   background: color-mix(in srgb, var(--danger) 6%, var(--card-solid));
 }
 
+.notion-sync-result-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.notion-sync-result-head div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.notion-sync-result-head strong,
+.notion-sync-result-head span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.notion-sync-result-head strong {
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.notion-sync-result-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .notion-sync-result-metrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -3032,12 +3065,64 @@
   line-height: 1;
 }
 
+.notion-sync-result-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rotate-open {
+  transform: rotate(180deg);
+}
+
 .notion-sync-result ul {
   margin: 0;
   padding-left: 17px;
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.notion-sync-failed-list {
+  display: grid;
+  gap: 7px;
+  border-radius: 12px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.notion-sync-failed-list > strong {
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.notion-sync-failed-item {
+  display: grid;
+  gap: 2px;
+  border-top: 1px solid color-mix(in srgb, var(--danger) 10%, transparent);
+  padding-top: 7px;
+}
+
+.notion-sync-failed-item span,
+.notion-sync-failed-item small,
+.notion-sync-failed-list em {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.notion-sync-failed-item span {
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.notion-sync-failed-item small,
+.notion-sync-failed-list em {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-style: normal;
 }
 
 .notion-history-panel {
@@ -3434,7 +3519,7 @@
 
 .backup-reminder-card {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
   padding: 14px;
   background:
@@ -3447,6 +3532,13 @@
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--danger) 8%, transparent), transparent 60%),
     var(--card-bg);
+}
+
+.backup-reminder-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
 }
 
 .backup-reminder-head {
@@ -3462,6 +3554,19 @@
 
 .backup-reminder-card.warning .backup-reminder-head > svg {
   color: var(--danger);
+}
+
+.backup-reminder-action {
+  min-height: 34px;
+  border: 0;
+  color: #fff;
+  background: var(--primary);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.backup-reminder-action:disabled {
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 .backup-reminder-head strong,
@@ -3486,6 +3591,63 @@
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.backup-reminder-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.backup-reminder-stats span {
+  min-width: 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 2px;
+  padding: 9px 8px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  font-size: 11px;
+  text-align: center;
+}
+
+.backup-reminder-stats strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.backup-reminder-location {
+  border-radius: 14px;
+  display: grid;
+  gap: 3px;
+  padding: 10px 11px;
+  background: color-mix(in srgb, var(--card-bg) 72%, var(--primary) 8%);
+}
+
+.backup-reminder-location span,
+.backup-reminder-location small,
+.backup-reminder-location strong {
+  display: block;
+  min-width: 0;
+}
+
+.backup-reminder-location span {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.backup-reminder-location strong {
+  color: var(--text-main);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.backup-reminder-location small {
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .data-action-grid {
@@ -3595,6 +3757,66 @@
   font-size: 11px;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.backup-import-preview-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  padding: 13px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 7%, transparent), transparent 58%),
+    var(--card-bg);
+}
+
+.backup-import-preview-card.backup {
+  border-color: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.backup-import-preview-head,
+.backup-import-preview-grid {
+  display: grid;
+  gap: 7px;
+}
+
+.backup-import-preview-head span,
+.backup-import-preview-card small {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.backup-import-preview-head strong {
+  color: var(--text-main);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.backup-import-preview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.backup-import-preview-grid span {
+  border-radius: 12px;
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.backup-import-preview-grid strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.backup-import-preview-card p {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .backup-import-recovery {
@@ -4137,6 +4359,43 @@
   font-weight: 600;
 }
 
+.settings-fold-head {
+  width: 100%;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.settings-fold-head span {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-fold-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.settings-fold-head small {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.settings-fold-head svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  color: var(--text-sub);
+}
+
 .settings-control-demo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4336,8 +4595,21 @@
   .update-check-actions,
   .update-source-diagnostics span,
   .feedback-actions,
+  .backup-reminder-main,
   .backup-health-grid,
   .reminder-center-item {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-reminder-action {
+    width: 100%;
+  }
+
+  .backup-reminder-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .backup-import-preview-grid {
     grid-template-columns: 1fr;
   }
 
@@ -5011,6 +5283,18 @@
     var(--card-bg);
 }
 
+.quick-context-card.compact {
+  gap: 8px;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.quick-assist-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: -4px;
+}
+
 .quick-scene-strip {
   display: flex;
   gap: 8px;
@@ -5102,6 +5386,23 @@
   font: inherit;
   font-size: 14px;
   font-weight: 700;
+}
+
+.quick-detail-toggle.subtle {
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 13px;
+  padding: 0 11px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--soft-purple) 54%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quick-detail-toggle.subtle svg {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
 }
 
 .quick-detail-toggle svg {

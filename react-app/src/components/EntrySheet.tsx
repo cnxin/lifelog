@@ -433,7 +433,7 @@ function buildSaveToast({
       tone: "success" as const,
       actions: [
         { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) },
-        { label: "补照片", onClick: () => navigate(`/memories/${savedMemoryId}?edit=photos`) }
+        { label: "补细节", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
       ]
     };
   }

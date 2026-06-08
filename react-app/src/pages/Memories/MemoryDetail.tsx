@@ -53,7 +53,8 @@ export default function MemoryDetail() {
 
   useEffect(() => {
     if (!memory) return;
-    if (searchParams.get("edit") === "photos") {
+    const editTarget = searchParams.get("edit");
+    if (editTarget === "photos" || editTarget === "details") {
       setEditing(true);
       setSearchParams({}, { replace: true });
       return;

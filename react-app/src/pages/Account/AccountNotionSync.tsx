@@ -105,6 +105,7 @@ export default function AccountNotionSync() {
   const [lastResult, setLastResult] = useState<NotionConnectionResult | null>(null);
   const [lastCreate, setLastCreate] = useState<NotionAutoCreateResult | null>(null);
   const [lastSync, setLastSync] = useState<NotionSyncSummary | null>(null);
+  const [showLastSyncDetails, setShowLastSyncDetails] = useState(false);
   const [schemaCheck, setSchemaCheck] = useState<NotionSchemaCheckResult | null>(null);
   const [lastDiagnostic, setLastDiagnostic] = useState<NotionRequestDiagnostic | null>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
@@ -268,6 +269,7 @@ export default function AccountNotionSync() {
       });
       const result = await syncNotionAll(nextSettings);
       setLastSync(result);
+      setShowLastSyncDetails(Boolean(result.failed));
       setLastDiagnostic(result.diagnostic || null);
       notify({
         message: result.failed
@@ -335,6 +337,7 @@ export default function AccountNotionSync() {
         settingsOverride: draft
       });
       setLastSync(result);
+      setShowLastSyncDetails(Boolean(result.failed));
       setLastDiagnostic(result.diagnostic || null);
       notify({
         message: result.failed
@@ -354,6 +357,7 @@ export default function AccountNotionSync() {
     try {
       const result = await retryFailedNotionItems(entry.failedItems, draft);
       setLastSync(result);
+      setShowLastSyncDetails(Boolean(result.failed));
       setLastDiagnostic(result.diagnostic || null);
       notify({
         message: result.failed
@@ -377,6 +381,7 @@ export default function AccountNotionSync() {
         return;
       }
       setLastSync(result);
+      setShowLastSyncDetails(Boolean(result.failed));
       setLastDiagnostic(result.diagnostic || null);
       notify({
         message: result.failed
@@ -774,6 +779,18 @@ export default function AccountNotionSync() {
 
               {lastSync && (
                 <div className={`notion-sync-result ${lastSync.failed ? "failed" : "ok"}`}>
+                  <div className="notion-sync-result-head">
+                    <div>
+                      <strong>{formatLastSyncTitle(lastSync)}</strong>
+                      <span>{formatLastSyncSubtitle(lastSync)}</span>
+                    </div>
+                    {lastSync.failedItems.length ? (
+                      <button className="notion-button notion-button-ghost compact" type="button" onClick={() => void handleRetryFailed(buildRetryEntryFromSummary(lastSync))} disabled={isSyncing || !draft.token.trim()}>
+                        <RefreshCw className={isSyncing ? "spinning" : ""} />
+                        重试失败项
+                      </button>
+                    ) : null}
+                  </div>
                   <div className="notion-sync-result-metrics">
                     <span>
                       <strong>{lastSync.synced}</strong>
@@ -796,19 +813,42 @@ export default function AccountNotionSync() {
                       失败
                     </span>
                   </div>
-                  <ul>
-                    {lastSync.messages.slice(0, 4).map((message) => (
-                      <li key={message}>{message}</li>
-                    ))}
-                  </ul>
-                  <div className="notion-sync-type-grid">
-                    {syncPreview.map((item) => (
-                      <div className="notion-sync-type-item" key={item.entityType}>
-                        <span>{item.label}</span>
-                        <strong>{formatSyncTypeSummary(lastSync.byType[item.entityType])}</strong>
-                      </div>
-                    ))}
+                  <div className="notion-sync-result-toolbar">
+                    <button className="notion-button notion-button-ghost compact" type="button" onClick={() => setShowLastSyncDetails((open) => !open)}>
+                      <ChevronDown className={showLastSyncDetails ? "rotate-open" : ""} />
+                      {showLastSyncDetails ? "收起明细" : lastSync.failedItems.length ? "查看失败原因" : "查看同步明细"}
+                    </button>
                   </div>
+                  {showLastSyncDetails && (
+                    <>
+                      <div className="notion-sync-type-grid">
+                        {syncPreview.map((item) => (
+                          <div className="notion-sync-type-item" key={item.entityType}>
+                            <span>{item.label}</span>
+                            <strong>{formatSyncTypeSummary(lastSync.byType[item.entityType])}</strong>
+                          </div>
+                        ))}
+                      </div>
+                      {lastSync.failedItems.length ? (
+                        <div className="notion-sync-failed-list">
+                          <strong>需要处理的失败项</strong>
+                          {lastSync.failedItems.slice(0, 5).map((item) => (
+                            <div className="notion-sync-failed-item" key={item.id}>
+                              <span>{item.label}</span>
+                              <small>{formatFailedItemHint(item.message)}</small>
+                            </div>
+                          ))}
+                          {lastSync.failedItems.length > 5 ? <em>还有 {lastSync.failedItems.length - 5} 条失败项，可点击重试失败项后继续查看队列。</em> : null}
+                        </div>
+                      ) : (
+                        <ul>
+                          {lastSync.messages.slice(0, 3).map((message) => (
+                            <li key={message}>{message}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </>
@@ -1376,6 +1416,51 @@ function formatSyncTypeSummary(summary: NotionSyncTypeSummary | undefined) {
   if (!summary || !summary.total) return "无同步内容";
   if (summary.failed) return `成功 ${summary.synced}，失败 ${summary.failed}`;
   return `新增 ${summary.created}，更新 ${summary.updated}，跳过 ${summary.skipped}`;
+}
+
+function formatFailedItemHint(message: string) {
+  if (/Failed to fetch|NetworkError|CORS/i.test(message)) return `${message}。建议在 Android 真机或代理环境下重试。`;
+  if (/401|unauthorized|token/i.test(message)) return `${message}。请检查 Token 是否完整、是否已保存最新配置。`;
+  if (/403|permission|share/i.test(message)) return `${message}。请确认父页面和数据库已分享给 Integration。`;
+  if (/404|not found|database/i.test(message)) return `${message}。请检查数据库 ID，或重新自动创建数据库。`;
+  return message;
+}
+
+function formatLastSyncTitle(summary: NotionSyncSummary) {
+  if (!summary.total && summary.failed) return "同步未开始";
+  if (summary.failed) return `同步完成，${summary.failed} 条失败`;
+  if (!summary.synced && summary.skipped) return "已是最新";
+  return "同步成功";
+}
+
+function formatLastSyncSubtitle(summary: NotionSyncSummary) {
+  return [
+    summary.created ? `新增 ${summary.created}` : "",
+    summary.updated ? `更新 ${summary.updated}` : "",
+    summary.skipped ? `跳过 ${summary.skipped}` : "",
+    summary.failed ? `失败 ${summary.failed}` : ""
+  ].filter(Boolean).join(" · ") || "没有需要同步的内容";
+}
+
+function buildRetryEntryFromSummary(summary: NotionSyncSummary): NotionSyncHistoryEntry {
+  const now = new Date().toISOString();
+  return {
+    id: `last-sync-${now}`,
+    startedAt: now,
+    finishedAt: now,
+    trigger: "retry",
+    status: summary.failed ? "partial" : "success",
+    targetLabel: "重试失败项",
+    total: summary.total,
+    synced: summary.synced,
+    created: summary.created,
+    updated: summary.updated,
+    skipped: summary.skipped,
+    failed: summary.failed,
+    byType: summary.byType,
+    messages: summary.messages,
+    failedItems: summary.failedItems
+  };
 }
 
 function formatHistoryTitle(entry: NotionSyncHistoryEntry) {

@@ -78,6 +78,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
   const [isMerging, setIsMerging] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
+  const [showDefaultAdvanced, setShowDefaultAdvanced] = useState(false);
   const [dismissedReminderIds, setDismissedReminderIds] = useState<string[]>(() => loadDismissedReminderIds());
   const [openPicker, setOpenPicker] = useState<"relationship" | "mood" | null>(null);
   const [pickerAnchor, setPickerAnchor] = useState({ top: 0, right: 0 });
@@ -406,7 +407,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
                     </button>
                     <button className="mini-action" type="button" onClick={() => void updatePlanStatus(item.plan, "done")}>
                       <Check size={13} />
-                      完成
+                      完成并记录
                     </button>
                     <button className="mini-action" type="button" onClick={() => void updatePlanStatus(item.plan, "skipped")}>
                       <X size={13} />
@@ -533,31 +534,36 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
             </div>
           </GlassCard>
           <GlassCard className="settings-control-demo">
-            <div className="settings-control-demo-header">
-              <strong>控件样式 Demo</strong>
-              <span>确认后可批量替换原始控件</span>
-            </div>
-            <div className="settings-control-demo-grid">
-              <label className="settings-control-field">
-                <span>日期</span>
-                <DateInput label="Demo 日期" defaultValue="2026-05-08" />
-              </label>
-              <label className="settings-control-field">
-                <span>时间</span>
-                <TimePicker label="Demo 时间" value="09:00" onChange={() => undefined} />
-              </label>
-              <label className="settings-control-field">
-                <span>数字</span>
-                <NumberStepper min={1} max={30} defaultValue={7} label="Demo 数字" />
-              </label>
-              <div className="settings-control-field inline">
-                <span>开关</span>
-                <label className="reminder-toggle">
-                  <input type="checkbox" defaultChecked />
-                  <span className="toggle-slider"></span>
+            <button className="settings-fold-head" type="button" onClick={() => setShowDefaultAdvanced((open) => !open)} aria-expanded={showDefaultAdvanced}>
+              <span>
+                <strong>高级显示预览</strong>
+                <small>日期、时间、数字和开关控件样式</small>
+              </span>
+              <ChevronDown className={showDefaultAdvanced ? "rotate-open" : ""} />
+            </button>
+            {showDefaultAdvanced && (
+              <div className="settings-control-demo-grid">
+                <label className="settings-control-field">
+                  <span>日期</span>
+                  <DateInput label="Demo 日期" defaultValue="2026-05-08" />
                 </label>
+                <label className="settings-control-field">
+                  <span>时间</span>
+                  <TimePicker label="Demo 时间" value="09:00" onChange={() => undefined} />
+                </label>
+                <label className="settings-control-field">
+                  <span>数字</span>
+                  <NumberStepper min={1} max={30} defaultValue={7} label="Demo 数字" />
+                </label>
+                <div className="settings-control-field inline">
+                  <span>开关</span>
+                  <label className="reminder-toggle">
+                    <input type="checkbox" defaultChecked />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
           </GlassCard>
         </div>
         <p className="form-hint settings-section-hint">新建人物、地点和回忆时会使用这些默认值，修改后自动保存。</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { MemoryEvent, Photo } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -113,7 +113,7 @@ export function MemoryFields({
   onCreatePerson?: (name: string) => Promise<string>;
   onCreatePlace?: (name: string) => Promise<string>;
 }) {
-  const { settings } = useLifeLog();
+  const { settings, state } = useLifeLog();
   const draftPersonIds = getDraftValues(draftValues, "personIds").filter(Boolean);
   const draftPlaceIds = getDraftMemoryPlaceIds(draftValues);
   const selectedPersonIds = hasDraftField(draftValues, "personIds")
@@ -140,6 +140,7 @@ export function MemoryFields({
   const [quickDetailsContent, setQuickDetailsContent] = useState(getDraftValue(draftValues, "content"));
   const [quickTags, setQuickTags] = useState(getDraftValue(draftValues, "tags"));
   const [activeSceneId, setActiveSceneId] = useState("");
+  const [assistOpen, setAssistOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(() => hasRestoredQuickDetails(draftValues));
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => selectedPersonIds);
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
@@ -164,6 +165,8 @@ export function MemoryFields({
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
   const quickTemplateGroups = buildQuickMemoryTemplateGroups(previewPeople, previewPlace);
   const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlaces);
+  const recommendedPersonIds = useMemo(() => getRecentRecommendedIds(state.memories, "person", selectedPersonIds), [selectedPersonIds, state.memories]);
+  const recommendedPlaceIds = useMemo(() => getRecentRecommendedIds(state.memories, "place", selectedPlaceIds), [selectedPlaceIds, state.memories]);
   const previewTitle =
     deriveMemorySummary(
       {
@@ -186,63 +189,7 @@ export function MemoryFields({
       <>
         <div className="quick-record-intro">
           <strong>先留下这一刻</strong>
-          <span>{hasQuickContext ? "已经带上相关人物或地点，可以直接保存；想换一种说法也可以点下面的模板。" : "不知道怎么分类也没关系，先写一句发生了什么。"}</span>
-        </div>
-        {quickTemplateGroups.length > 0 && (
-          <div className="quick-context-card">
-            {hasQuickContext && (
-              <>
-                <span className="quick-context-eyebrow">已自动关联</span>
-                <div className="quick-context-list">
-                  {previewPeople.map((name) => (
-                    <span className="quick-context-token" key={`person-${name}`}>
-                      人物 · {name}
-                    </span>
-                  ))}
-                  {previewPlace && (
-                    <span className="quick-context-token">
-                      地点 · {previewPlace}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
-            {quickTemplateGroups.map((group) => (
-              <div className="quick-template-group" key={group.title}>
-                <span className="quick-context-eyebrow">{group.title}</span>
-                <div className="quick-template-grid">
-                  {group.templates.map((template) => (
-                    <button
-                      type="button"
-                      className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
-                      key={template}
-                      onClick={() => setQuickContent(template)}
-                    >
-                      {template}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="quick-scene-strip" aria-label="快速记录场景">
-          {QUICK_SCENE_PRESETS.map((scene) => (
-            <button
-              type="button"
-              className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
-              key={scene.id}
-              onClick={() => {
-                setActiveSceneId(scene.id);
-                setQuickContent(scene.title);
-                setMood(scene.mood);
-                setQuickTags(scene.tags);
-                setQuickDetailsContent((current) => current.trim() ? current : scene.content);
-              }}
-            >
-              {scene.label}
-            </button>
-          ))}
+          <span>{hasQuickContext ? "已经带上相关人物或地点，写一句就能保存。" : "不知道怎么分类也没关系，先写一句发生了什么。"}</span>
         </div>
         <label>
           这件事
@@ -254,6 +201,70 @@ export function MemoryFields({
             placeholder="例如：和小林在湖边散步，聊到下次去看展"
           />
         </label>
+        <button className="quick-detail-toggle subtle" type="button" onClick={() => setAssistOpen((open) => !open)}>
+          {assistOpen ? "收起提示" : "不会写时点这里"}
+          {assistOpen ? <ChevronUp /> : <ChevronDown />}
+        </button>
+        {assistOpen && (
+          <div className="quick-assist-panel">
+            {quickTemplateGroups.length > 0 && (
+              <div className="quick-context-card compact">
+                {hasQuickContext && (
+                  <>
+                    <span className="quick-context-eyebrow">已自动关联</span>
+                    <div className="quick-context-list">
+                      {previewPeople.map((name) => (
+                        <span className="quick-context-token" key={`person-${name}`}>
+                          人物 · {name}
+                        </span>
+                      ))}
+                      {previewPlace && (
+                        <span className="quick-context-token">
+                          地点 · {previewPlace}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+                {quickTemplateGroups.map((group) => (
+                  <div className="quick-template-group" key={group.title}>
+                    <span className="quick-context-eyebrow">{group.title}</span>
+                    <div className="quick-template-grid">
+                      {group.templates.map((template) => (
+                        <button
+                          type="button"
+                          className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
+                          key={template}
+                          onClick={() => setQuickContent(template)}
+                        >
+                          {template}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="quick-scene-strip" aria-label="快速记录场景">
+              {QUICK_SCENE_PRESETS.map((scene) => (
+                <button
+                  type="button"
+                  className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
+                  key={scene.id}
+                  onClick={() => {
+                    setActiveSceneId(scene.id);
+                    setQuickContent(scene.title);
+                    setMood(scene.mood);
+                    setQuickTags(scene.tags);
+                    setQuickDetailsContent((current) => current.trim() ? current : scene.content);
+                  }}
+                >
+                  {scene.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <label className="inline-field">
           <span className="inline-field-label">发生日期</span>
           <DateInput name="date" label="发生日期" value={quickDate} onChange={setQuickDate} required />
@@ -280,7 +291,7 @@ export function MemoryFields({
           </div>
         </label>
         <button className="quick-detail-toggle" type="button" onClick={() => setDetailsOpen((open) => !open)}>
-          {detailsOpen ? "先收起来" : "想多记一点"}
+          {detailsOpen ? "先收起来" : "补人物 / 地点 / 照片"}
           {detailsOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
         {detailsOpen && (
@@ -294,6 +305,7 @@ export function MemoryFields({
                   onChange={setQuickPersonIds}
                   onCreate={onCreatePerson}
                   includeEmptyMarker
+                  recommendedIds={recommendedPersonIds}
                 />
               </div>
               <div>
@@ -304,6 +316,7 @@ export function MemoryFields({
                   onChange={setQuickPlaceIds}
                   onCreate={onCreatePlace}
                   includeEmptyMarker
+                  recommendedIds={recommendedPlaceIds}
                 />
                 <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
               </div>
@@ -424,7 +437,7 @@ export function MemoryFields({
       </label>
       <div>
         <span className="field-title">关联人物</span>
-        <PersonPicker people={people} defaultSelected={selectedPersonIds} onCreate={onCreatePerson} includeEmptyMarker />
+        <PersonPicker people={people} defaultSelected={selectedPersonIds} onCreate={onCreatePerson} includeEmptyMarker recommendedIds={recommendedPersonIds} />
       </div>
       <div>
         <span className="field-title">关联地点</span>
@@ -434,6 +447,7 @@ export function MemoryFields({
           onChange={setFullPlaceIds}
           onCreate={onCreatePlace}
           includeEmptyMarker
+          recommendedIds={recommendedPlaceIds}
         />
         <input type="hidden" name="placeId" value={fullPlaceIds[0] || ""} />
         <p className="form-hint memory-place-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
@@ -548,6 +562,26 @@ function hasRestoredQuickDetails(draftValues?: DraftFieldMap) {
     getDraftMemoryPlaceIds(draftValues).length > 0 ||
     Boolean(content && content !== title)
   );
+}
+
+function getRecentRecommendedIds(memories: MemoryEvent[], kind: "person" | "place", selectedIds: string[] = []) {
+  const selected = new Set(selectedIds.filter(Boolean));
+  const score = new Map<string, number>();
+  memories
+    .slice()
+    .sort((left, right) => right.date.localeCompare(left.date))
+    .slice(0, 50)
+    .forEach((memory, index) => {
+      const ids = kind === "person" ? memory.personIds || [] : getInitialPlaceIds(memory, undefined, []);
+      ids.forEach((id) => {
+        if (!id || selected.has(id)) return;
+        score.set(id, (score.get(id) || 0) + Math.max(1, 50 - index));
+      });
+    });
+  return Array.from(score.entries())
+    .sort((left, right) => right[1] - left[1])
+    .map(([id]) => id)
+    .slice(0, 6);
 }
 
 function appendTemplate(current: string, template: string) {

@@ -17,6 +17,7 @@ interface PlacePickerProps {
   name?: string;
   onCreate?: (name: string) => Promise<string>;
   includeEmptyMarker?: boolean;
+  recommendedIds?: string[];
 }
 
 export default function PlacePicker({
@@ -26,7 +27,8 @@ export default function PlacePicker({
   onChange,
   name = "placeIds",
   onCreate,
-  includeEmptyMarker = false
+  includeEmptyMarker = false,
+  recommendedIds = []
 }: PlacePickerProps) {
   const isControlled = value !== undefined;
   const [internalSelected, setInternalSelected] = useState<string[]>(() =>
@@ -52,6 +54,13 @@ export default function PlacePicker({
       .map((item) => item.place)
       .slice(0, 12);
   }, [places, selected, query]);
+  const recommendedPlaces = useMemo(
+    () => recommendedIds
+      .map((id) => places.find((place) => place.id === id))
+      .filter((place): place is typeof places[number] => Boolean(place && !selected.includes(place.id)))
+      .slice(0, 6),
+    [places, recommendedIds, selected]
+  );
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -131,6 +140,19 @@ export default function PlacePicker({
               aria-label="搜索地点"
             />
           </div>
+
+          {!query.trim() && recommendedPlaces.length > 0 && (
+            <div className="picker-recommendations">
+              <span>常用推荐</span>
+              <div className="picker-recommendation-row">
+                {recommendedPlaces.map((place) => (
+                  <button type="button" key={place.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>
+                    {formatPlaceOptionTitle(place)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isOpen && filtered.length > 0 && (
             <ul className="person-picker-results" role="listbox">

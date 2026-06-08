@@ -6,7 +6,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { buildBackupHealthDetailGroups, buildBackupHealthReport, buildBackupImportPreview } from "../../utils/backupHealth";
-import { saveReadableFile } from "../../utils/backupExport";
+import { saveReadableFile, type BackupExportTarget } from "../../utils/backupExport";
 import { buildShareImportPreview, isLifeLogSharePayload, normalizeLifeLogSharePayload } from "../../utils/lifelogShare";
 import { isRecord } from "../../utils/lifelogHelpers";
 import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableExport";
@@ -21,14 +21,26 @@ export default function AccountDataManagement() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [lastExport, setLastExport] = useState<Awaited<ReturnType<typeof exportData>> | null>(null);
+  const [lastExport, setLastExport] = useState<BackupExportMeta | null>(null);
+  const [lastBackupMeta, setLastBackupMeta] = useState<BackupExportMeta | null>(() => loadLastFullBackupMeta());
+  const [lastImportPreview, setLastImportPreview] = useState<ImportPreviewCard | null>(null);
   const [importRecovery, setImportRecovery] = useState<ImportRecoveryState | null>(null);
   const [shareHistory, setShareHistory] = useState<ShareHistoryEntry[]>(() => loadShareHistory());
   const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
   const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
   const [lastFullBackupAt, setLastFullBackupAt] = useState(() => localStorage.getItem("lifelog:last-full-backup-at") || "");
-  const backupReminder = useMemo(() => getBackupReminder(lastFullBackupAt), [lastFullBackupAt]);
+  const backupReminder = useMemo(() => getBackupReminder(lastBackupMeta?.exportedAt || lastFullBackupAt), [lastBackupMeta?.exportedAt, lastFullBackupAt]);
+  const latestExportResult = lastExport || lastBackupMeta;
+  const backupSnapshotStats = useMemo(
+    () => [
+      { label: "人物", value: state.people.length },
+      { label: "地点", value: state.places.length },
+      { label: "回忆", value: state.memories.length },
+      { label: "照片", value: healthReport.photoRefs }
+    ],
+    [healthReport.photoRefs, state.memories.length, state.people.length, state.places.length]
+  );
 
   const dataSummary = useMemo(
     () => [
@@ -72,6 +84,13 @@ export default function AccountDataManagement() {
         preview.missingPhotoRefs ? `${preview.missingPhotoRefs} 个照片引用缺少文件` : "",
         preview.ignoredPhotos ? `${preview.ignoredPhotos} 张照片会被忽略` : ""
       ].filter(Boolean).join("；");
+      const effect = [
+        `覆盖为人物 ${preview.people}`,
+        `地点 ${preview.places}`,
+        `回忆 ${preview.memories}`,
+        `安排 ${preview.anniversaryPlans}`,
+        `照片 ${preview.photos}`
+      ].join(" · ");
       recoveryPreview = {
         summary: countPreview,
         backupTime: preview.exportedAt ? formatBackupDate(preview.exportedAt) : "",
@@ -80,6 +99,16 @@ export default function AccountDataManagement() {
         issues: preview.issues.slice(0, 4),
         photoNotes: photoPreview ? [photoPreview] : ["照片检查未发现明显关联问题。"]
       };
+      setLastImportPreview({
+        kind: "backup",
+        title: file.name,
+        modeLabel: "完整备份 · 覆盖恢复",
+        effect,
+        summary: countPreview,
+        warning: "导入后会覆盖当前本地资料、照片、设置和提醒。",
+        exportedAt: preview.exportedAt,
+        issueCount: preview.issueCount
+      });
       previewMessage = [
         `将导入：${countPreview}。`,
         preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
@@ -158,6 +187,16 @@ export default function AccountDataManagement() {
         preview.skippedMemories ? `跳过重复回忆 ${preview.skippedMemories}` : "",
         preview.willCreate.photos ? `新增照片 ${preview.willCreate.photos}` : ""
       ].filter(Boolean).join(" · ") || "没有新内容需要添加";
+      setLastImportPreview({
+        kind: "share",
+        title: preview.title,
+        modeLabel: "分享导入 · 只添加内容",
+        effect,
+        summary: incoming,
+        warning: "分享包只会添加或复用资料，不会覆盖当前本地数据。",
+        exportedAt: preview.exportedAt,
+        issueCount: 0
+      });
       previewMessage = [
         `分享包：${preview.title}`,
         `内容：${incoming}。`,
@@ -273,9 +312,17 @@ export default function AccountDataManagement() {
   async function handleExport() {
     try {
       const result = await exportData();
-      setLastExport(result);
       const nextBackupAt = new Date().toISOString();
+      const nextMeta = buildBackupExportMeta(result, nextBackupAt, {
+        people: state.people.length,
+        places: state.places.length,
+        memories: state.memories.length,
+        photoRefs: healthReport.photoRefs
+      });
+      setLastExport(nextMeta);
+      setLastBackupMeta(nextMeta);
       localStorage.setItem("lifelog:last-full-backup-at", nextBackupAt);
+      saveLastFullBackupMeta(nextMeta);
       setLastFullBackupAt(nextBackupAt);
       notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
     } catch (error) {
@@ -294,7 +341,7 @@ export default function AccountDataManagement() {
       const result = format === "markdown"
         ? await saveReadableFile(`lifelog-readable-${date}.md`, buildReadableMarkdown(state), "text/markdown;charset=utf-8")
         : await saveReadableFile(`lifelog-readable-${date}.html`, buildReadableHtml(state), "text/html;charset=utf-8");
-      setLastExport(result);
+      setLastExport(buildBackupExportMeta(result, new Date().toISOString()));
       notify({ message: `可读导出已生成：${result.fileName}`, tone: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "请稍后重试";
@@ -384,14 +431,35 @@ export default function AccountDataManagement() {
           <p>数据保存在当前设备的 IndexedDB 中。完整备份会包含资料、照片、设置和提醒；导入和重置会覆盖当前本地数据。</p>
         </GlassCard>
         <GlassCard className={`backup-reminder-card ${backupReminder.state}`}>
-          <div className="backup-reminder-head">
-            <ShieldCheck />
-            <div>
-              <strong>{backupReminder.title}</strong>
-              <span>{backupReminder.subtitle}</span>
+          <div className="backup-reminder-main">
+            <div className="backup-reminder-head">
+              <ShieldCheck />
+              <div>
+                <strong>{backupReminder.title}</strong>
+                <span>{backupReminder.subtitle}</span>
+              </div>
             </div>
+            <button className="mini-action backup-reminder-action" type="button" onClick={() => void handleExport()} disabled={!hasUserData}>
+              <Download size={14} />
+              立即备份
+            </button>
           </div>
           <p>{backupReminder.detail}</p>
+          <div className="backup-reminder-stats">
+            {backupSnapshotStats.map((item) => (
+              <span key={item.label}>
+                <strong>{item.value}</strong>
+                {item.label}
+              </span>
+            ))}
+          </div>
+          {lastBackupMeta && (
+            <div className="backup-reminder-location">
+              <span>上次文件</span>
+              <strong>{lastBackupMeta.fileName}</strong>
+              <small>{lastBackupMeta.locationLabel}</small>
+            </div>
+          )}
         </GlassCard>
         <GlassCard className={`backup-health-card ${healthReport.status}`}>
           <div className="backup-health-head">
@@ -549,12 +617,36 @@ export default function AccountDataManagement() {
             </div>
           </button>
         </div>
-        {lastExport && (
+        {lastImportPreview && (
+          <GlassCard className={`backup-import-preview-card ${lastImportPreview.kind}`}>
+            <div className="backup-import-preview-head">
+              <span>{lastImportPreview.modeLabel}</span>
+              <strong>{lastImportPreview.title}</strong>
+            </div>
+            <div className="backup-import-preview-grid">
+              <span>
+                <strong>内容</strong>
+                {lastImportPreview.summary}
+              </span>
+              <span>
+                <strong>导入后</strong>
+                {lastImportPreview.effect}
+              </span>
+            </div>
+            <p>{lastImportPreview.warning}</p>
+            <small>
+              {lastImportPreview.exportedAt ? `来源时间：${formatBackupDate(lastImportPreview.exportedAt)}` : "来源时间：未记录"}
+              {lastImportPreview.issueCount ? ` · 预检问题 ${lastImportPreview.issueCount} 个` : ""}
+            </small>
+          </GlassCard>
+        )}
+        {latestExportResult && (
           <GlassCard className="backup-export-result">
-            <strong>{lastExport.fileName}</strong>
-            <span>{lastExport.locationLabel}</span>
-            <p>{lastExport.locationDetail}</p>
-            {lastExport.path && <code>{lastExport.path}</code>}
+            <strong>{latestExportResult.fileName}</strong>
+            <span>{latestExportResult.locationLabel}</span>
+            <p>{latestExportResult.locationDetail}</p>
+            {latestExportResult.exportedAt && <p>导出时间：{formatBackupDate(latestExportResult.exportedAt)}</p>}
+            {latestExportResult.path && <code>{latestExportResult.path}</code>}
           </GlassCard>
         )}
         {importRecovery && (
@@ -672,6 +764,69 @@ interface ImportRecoveryState {
     photoNotes: string[];
   };
   suggestions: string[];
+}
+
+interface BackupExportMeta extends BackupExportTarget {
+  exportedAt: string;
+  counts?: {
+    people: number;
+    places: number;
+    memories: number;
+    photoRefs: number;
+  };
+}
+
+interface ImportPreviewCard {
+  kind: "backup" | "share";
+  title: string;
+  modeLabel: string;
+  effect: string;
+  summary: string;
+  warning: string;
+  exportedAt: string;
+  issueCount: number;
+}
+
+const LAST_FULL_BACKUP_META_KEY = "lifelog:last-full-backup-meta";
+
+function buildBackupExportMeta(
+  result: BackupExportTarget,
+  exportedAt: string,
+  counts?: NonNullable<BackupExportMeta["counts"]>
+): BackupExportMeta {
+  return {
+    ...result,
+    exportedAt,
+    counts
+  };
+}
+
+function loadLastFullBackupMeta(): BackupExportMeta | null {
+  try {
+    const raw = localStorage.getItem(LAST_FULL_BACKUP_META_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isBackupExportMeta(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveLastFullBackupMeta(meta: BackupExportMeta) {
+  try {
+    localStorage.setItem(LAST_FULL_BACKUP_META_KEY, JSON.stringify(meta));
+  } catch {
+    // The timestamp is stored separately; losing detail metadata should not block export.
+  }
+}
+
+function isBackupExportMeta(value: unknown): value is BackupExportMeta {
+  if (!isRecord(value)) return false;
+  return typeof value.fileName === "string"
+    && typeof value.locationLabel === "string"
+    && typeof value.locationDetail === "string"
+    && typeof value.exportedAt === "string";
 }
 
 function buildImportRecoverySuggestions(message: string, preview?: ImportRecoveryState["preview"]) {
