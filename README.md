@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.107`
+当前版本：`0.1.0-test.108`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.107
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.107/lifelog-v0.1.0-test.107.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.107.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.108
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.108/lifelog-v0.1.0-test.108.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.108.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.107.apk`
-- 大小：`3727734` bytes
-- SHA256：`49dc60d2a5645d9d06821a018bffcef71c350ae3d69c6783479d6610bfedc815`
+- 文件名：`lifelog-v0.1.0-test.108.apk`
+- 大小：`3729222` bytes
+- SHA256：`5d3e74a3daa86d7d38bd99610172907b0ab5d4541e91a36245989e75644dbc03`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -104,13 +104,14 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 
 ### Notion 联动
 
-- 设置页的“实验”入口新增 Notion 同步试验功能，可保存 Internal Integration Token 和父页面 ID，并通过 5 步向导完成连接。
+- 设置页的“实验”入口新增 Notion 同步试验功能，可保存 Internal Integration Token 和父页面 ID，并通过折叠式连接配置完成连接。
+- Notion 同步页拆分为连接配置、数据同步、自动同步队列、同步历史和高级配置，连接完成后可按需展开对应工具区。
 - 支持在父页面下自动创建人物、地点、回忆、纪念日安排数据库，并把数据库 ID 自动写回设置。
 - 支持测试连接和数据库字段体检，分别提示 Token 无效、权限不足、数据库不存在、网络失败、字段缺失和字段类型冲突。
 - 缺少 LifeLog 需要的中文字段时可一键补齐；字段类型冲突会提示在 Notion 手动处理或重新建库。
 - 保存人物、地点、回忆和纪念日安排后会进入自动同步队列，连续编辑会去重合并，失败项可在队列中重试。
 - 人物、地点和回忆列表会显示 Notion 同步状态徽标，区分未同步、待同步、同步中、同步失败和已同步。
-- 支持手动同步全部，把 LifeLog 本地数据单向写入 Notion。
+- 支持在数据同步工具区手动同步全部，也可按人物、地点、回忆和安排单独同步，把 LifeLog 本地数据单向写入 Notion。
 - 同步会保存本地页面映射，重复同步不会重复创建；Notion 页面被删除后会自动重新创建。
 - 当前不上传图片，只同步照片数量；人物、地点关系先以文本字段写入。
 - Notion 同步属于未来云端高级能力方向，本地人物、地点、回忆、提醒、备份和分享功能继续免费。
@@ -120,10 +121,10 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 1. 在 Notion 创建 Internal Integration，复制 Secret。
 2. 在 Notion 新建一个空页面，例如 `LifeLog`。
 3. 打开该页面右上角 Share / Invite，把页面分享给刚创建的 Integration。
-4. 复制该页面链接，在 LifeLog 的 设置 -> 实验 -> Notion 同步 中填写 Token 和父页面链接 / ID。
-5. 点“自动创建”，LifeLog 会创建 4 个数据库并自动保存 ID。
-6. 点“测试连接”，通过后再点“同步全部”。
-7. 页面顶部主按钮会根据当前状态自动提示下一步。
+4. 复制该页面链接，在 LifeLog 的 设置 -> 实验 -> Notion 同步 中展开“连接配置”。
+5. 按 4 个步骤依次填写 Token、填写父页面、自动创建数据库、测试连接。
+6. 连接通过后展开“数据同步”，可同步全部或只同步某一类数据。
+7. 自动同步队列、同步历史和高级配置默认折叠，需要排查或手动维护时再展开。
 
 ### 设置与关于
 
@@ -298,12 +299,12 @@ App 内更新读取根目录 `update-manifest.json`。当前字段：
 
 ## 当前版本更新
 
-`0.1.0-test.107` 主要变化：
+`0.1.0-test.108` 主要变化：
 
-- Notion 同步新增数据库字段体检，可检查 LifeLog 需要的中文字段是否完整，缺失字段支持一键补齐。
-- 保存人物、地点、回忆和纪念日安排后会进入自动同步队列，连续编辑会去重合并，避免频繁并发请求 Notion。
-- 设置页新增自动同步队列，可查看待同步、同步中和失败项，并支持立即同步或单条重试。
-- 人物、地点和回忆列表新增 Notion 同步状态徽标，可直接看到未同步、待同步、同步中、同步失败和已同步状态。
+- Notion 同步页改为连接配置、数据同步、自动同步队列、同步历史和高级配置五个折叠区，减少首屏信息量。
+- 连接配置改成 4 步就地展开，Token、父页面、自动建库和测试连接都在对应步骤内完成，不再跳到页面下方。
+- 引导完成后不再显示同步作为第 5 步，手动同步统一放到数据同步工具区，避免和连接流程混在一起。
+- 同步预览和数据库字段体检布局进一步压缩，修复窄屏下按钮重叠、内容裁切和卡片留白过多的问题。
 
 完整历史见 [CHANGELOG.md](./CHANGELOG.md)。
 

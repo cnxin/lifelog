@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.108",
+    date: "2026-06-08",
+    title: "Notion 同步页流程收敛",
+    highlights: [
+      "Notion 同步页改为连接配置、数据同步、自动同步队列、同步历史和高级配置五个折叠区，减少首屏信息量。",
+      "连接配置改成 4 步就地展开，Token、父页面、自动建库和测试连接都在对应步骤内完成，不再跳到页面下方。",
+      "引导完成后不再显示同步作为第 5 步，手动同步统一放到数据同步工具区，避免和连接流程混在一起。",
+      "同步预览和数据库字段体检布局进一步压缩，修复窄屏下按钮重叠、内容裁切和卡片留白过多的问题。"
+    ]
+  },
+  {
     version: "0.1.0-test.107",
     date: "2026-06-06",
     title: "Notion 字段体检和自动同步队列",
