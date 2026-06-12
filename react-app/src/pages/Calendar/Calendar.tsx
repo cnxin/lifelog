@@ -60,7 +60,8 @@ export default function Calendar() {
     selectedLunar,
     selectedRelative
   });
-  const firstMemoryItem = selectedItems.find((item) => item.type === "memory");
+  const actionCopy = getCalendarActionCopy(selectedRelative.tone);
+  const firstEntryItem = selectedItems.find((item) => item.type === "memory" || item.type === "plan");
   const firstAnniversaryItem = selectedItems.find((item) => item.type === "person");
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function Calendar() {
   return (
     <>
       <PageSegmentNav
-        ariaLabel="回忆视图"
+        ariaLabel="记录视图"
         items={[
           { to: "/memories", label: "时间线", icon: <Heart />, end: true },
           { to: "/calendar", label: "日历", icon: <CalendarDays /> }
@@ -178,10 +179,14 @@ export default function Calendar() {
             </div>
             <button type="button" onClick={() => setAddingMemory(true)}>
               <PenLine />
-              补记
+              {actionCopy.shortLabel}
             </button>
           </div>
           <div className="calendar-day-metrics">
+            <span>
+              <strong>{selectedOverview.planCount}</strong>
+              计划
+            </span>
             <span>
               <strong>{selectedOverview.memoryCount}</strong>
               回忆
@@ -213,12 +218,12 @@ export default function Calendar() {
           <div className="calendar-day-actions">
             <button type="button" className="primary" onClick={() => setAddingMemory(true)}>
               <PenLine />
-              补记这一天
+              {actionCopy.primaryLabel}
             </button>
-            {firstMemoryItem && (
-              <button type="button" onClick={() => navigate(firstMemoryItem.target)}>
+            {firstEntryItem && (
+              <button type="button" onClick={() => navigate(firstEntryItem.target)}>
                 <Heart />
-                打开回忆
+                {firstEntryItem.type === "plan" ? "打开计划" : "打开回忆"}
               </button>
             )}
             {firstAnniversaryItem && (
@@ -239,13 +244,16 @@ export default function Calendar() {
               <span className={`calendar-relative-pill ${selectedRelative.tone}`}>{selectedItems.length} 条</span>
             </div>
             <button className="see-all" onClick={() => setAddingMemory(true)}>
-              补记
+              {actionCopy.shortLabel}
             </button>
           </div>
           <div className="list">
             {selectedItems.map((item) => (
               <button className="calendar-item glass-card" key={item.id} onClick={() => navigate(item.target)}>
-                <strong>{item.title}</strong>
+                <div className="calendar-item-head">
+                  <strong>{item.title}</strong>
+                  <span className={`calendar-item-type ${item.type}`}>{getCalendarItemTypeLabel(item.type)}</span>
+                </div>
                 {item.subtitleLines ? (
                   <div className="calendar-item-meta">
                     {item.subtitleLines.map((line) => (
@@ -279,6 +287,7 @@ export default function Calendar() {
 }
 
 interface SelectedDateOverview {
+  planCount: number;
   memoryCount: number;
   anniversaryCount: number;
   personNames: string[];
@@ -308,6 +317,7 @@ function buildSelectedDateOverview({
 }): SelectedDateOverview {
   const dayMemories = memories.filter((memory) => memory.date === selectedDate);
   const memoryCount = selectedItems.filter((item) => item.type === "memory").length;
+  const planCount = selectedItems.filter((item) => item.type === "plan").length;
   const anniversaryCount = selectedItems.filter((item) => item.type === "person").length;
   const personNames = uniqueLabels(dayMemories.flatMap((memory) => memory.personIds || []).map(getPersonName), "未关联人物");
   const placeNames = uniqueLabels(dayMemories.flatMap(getMemoryPlaceIds).map(getPlaceName), "未关联地点");
@@ -319,46 +329,23 @@ function buildSelectedDateOverview({
     ? `${selectedLunar.ganZhiZodiacText} · ${selectedLunar.weekText} ${selectedLunar.weekOfYearText} · ${selectedLunar.lunarText}`
     : "农历转换不可用";
 
-  if (memoryCount && anniversaryCount) {
+  if (planCount || memoryCount || anniversaryCount) {
+    const context = buildSelectedDateContext(personNames, placeNames);
     return {
+      planCount,
       memoryCount,
       anniversaryCount,
       personNames,
       placeNames,
       chips,
       dateLine,
-      title: "这一天有回忆，也有重要日子",
-      desc: buildSelectedDateContext(personNames, placeNames) || "可以打开当天内容，也可以继续补一条细节。"
-    };
-  }
-
-  if (memoryCount) {
-    return {
-      memoryCount,
-      anniversaryCount,
-      personNames,
-      placeNames,
-      chips,
-      dateLine,
-      title: `${memoryCount} 条回忆在这一天`,
-      desc: buildSelectedDateContext(personNames, placeNames) || "可以打开回忆查看细节，或继续补记当时发生的事。"
-    };
-  }
-
-  if (anniversaryCount) {
-    return {
-      memoryCount,
-      anniversaryCount,
-      personNames,
-      placeNames,
-      chips,
-      dateLine,
-      title: `${anniversaryCount} 个重要日子在这一天`,
-      desc: "可以查看人物详情里的纪念日和安排，也可以补记当天发生的事。"
+      title: buildSelectedDateTitle(planCount, memoryCount, anniversaryCount),
+      desc: context || buildSelectedDateDesc(planCount, memoryCount, anniversaryCount, selectedRelative.tone)
     };
   }
 
   return {
+    planCount,
     memoryCount,
     anniversaryCount,
     personNames,
@@ -367,6 +354,57 @@ function buildSelectedDateOverview({
     dateLine,
     title: selectedRelative.tone === "future" ? "这一天还没有安排" : "这一天还没有记录",
     desc: selectedRelative.emptyHint
+  };
+}
+
+function buildSelectedDateTitle(planCount: number, memoryCount: number, anniversaryCount: number) {
+  const parts = [
+    planCount ? `${planCount} 个计划` : "",
+    memoryCount ? `${memoryCount} 条回忆` : "",
+    anniversaryCount ? `${anniversaryCount} 个日子` : ""
+  ].filter(Boolean);
+  return `${parts.join("、")}在这一天`;
+}
+
+function buildSelectedDateDesc(
+  planCount: number,
+  memoryCount: number,
+  anniversaryCount: number,
+  tone: ReturnType<typeof getRelativeDateInfo>["tone"]
+) {
+  if (planCount && tone === "future") return "可以打开计划查看准备事项，之后再补充当天实际发生的回忆。";
+  if (planCount) return "可以打开安排补充实际发生的事，或继续补记当天细节。";
+  if (memoryCount) return tone === "future"
+    ? "可以提前记录这一天的安排，之后再补充实际发生的事。"
+    : "可以打开回忆查看细节，或继续补记当时发生的事。";
+  if (anniversaryCount) return tone === "future"
+    ? "可以查看人物详情里的纪念日和安排，也可以提前记录这一天的计划。"
+    : "可以查看人物详情里的纪念日和安排，也可以补记当天发生的事。";
+  return "";
+}
+
+function getCalendarItemTypeLabel(type: CalendarItem["type"]) {
+  if (type === "plan") return "计划";
+  if (type === "memory") return "回忆";
+  return "日子";
+}
+
+function getCalendarActionCopy(tone: ReturnType<typeof getRelativeDateInfo>["tone"]) {
+  if (tone === "future") {
+    return {
+      shortLabel: "安排",
+      primaryLabel: "安排这一天"
+    };
+  }
+  if (tone === "today") {
+    return {
+      shortLabel: "记录",
+      primaryLabel: "记录今天"
+    };
+  }
+  return {
+    shortLabel: "补记",
+    primaryLabel: "补记这一天"
   };
 }
 
@@ -399,7 +437,7 @@ function getRelativeDateInfo(dateKey: string, todayKey: string) {
   if (delta > 0) {
     return {
       label: `${delta} 天后`,
-      emptyHint: `距离今天 ${delta} 天后，可以提前安排或补记。`,
+      emptyHint: `距离今天 ${delta} 天后，可以先记下计划或想做的事。`,
       tone: "future"
     };
   }

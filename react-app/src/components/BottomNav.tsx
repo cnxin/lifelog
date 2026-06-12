@@ -4,7 +4,7 @@ import { NavLink, useLocation } from "react-router-dom";
 const navItems = [
   { to: "/", label: "首页", icon: Home, match: (pathname: string) => pathname === "/" },
   { to: "/people", label: "档案", icon: Archive, match: (pathname: string) => pathname.startsWith("/people") || pathname.startsWith("/places") },
-  { to: "/memories", label: "回忆", icon: Heart, match: (pathname: string) => pathname.startsWith("/memories") || pathname.startsWith("/calendar") }
+  { to: "/memories", label: "记录", icon: Heart, match: (pathname: string) => pathname.startsWith("/memories") || pathname.startsWith("/calendar") }
 ];
 
 export default function BottomNav() {

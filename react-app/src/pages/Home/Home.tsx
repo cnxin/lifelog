@@ -9,7 +9,7 @@ import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
-import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, isMemoryPlan } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
@@ -31,7 +31,8 @@ export default function Home() {
     }));
   const upcoming = upcomingWithPlanStatus.slice(0, 3);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
-  const recent = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
+  const recentEntries = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
   const featuredPlaces = useMemo(
     () =>
       state.places
@@ -40,8 +41,8 @@ export default function Home() {
         .slice(0, 3),
     [getPersonName, state.memories, state.places]
   );
-  const monthlyMemoryCount = countMemoriesInCurrentMonth(state.memories);
-  const onThisDayMemories = buildOnThisDayMemories(state.memories, getPersonName, getPlaceName).slice(0, 3);
+  const monthlyMemoryCount = countMemoriesInCurrentMonth(actualMemories);
+  const onThisDayMemories = buildOnThisDayMemories(actualMemories, getPersonName, getPlaceName).slice(0, 3);
 
   useEffect(() => {
     saveQuickInboxDraft(inboxText);
@@ -166,7 +167,7 @@ export default function Home() {
             <span>地点</span>
           </div>
           <div className="metric">
-            <strong>{state.memories.length}</strong>
+            <strong>{actualMemories.length}</strong>
             <span>回忆</span>
           </div>
           <div className="metric metric-wide">
@@ -419,15 +420,15 @@ export default function Home() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <Clock /> 最近回忆
+            <Clock /> 最近记录
           </h2>
           <button className="see-all" onClick={() => navigate("/memories")}>
             全部
           </button>
         </div>
-        {recent.length > 0 ? (
+        {recentEntries.length > 0 ? (
           <div className="list">
-            {recent.map((memory) => {
+            {recentEntries.map((memory) => {
               const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
               return (
                 <MemoryCard
@@ -442,7 +443,7 @@ export default function Home() {
           </div>
         ) : (
           <GlassCard className="home-empty-card">
-            <strong>还没有记录回忆</strong>
+            <strong>还没有记录</strong>
             <span>从今天发生的一件小事开始，建立你的第一条 LifeLog。</span>
             <div className="home-empty-actions">
               <button
@@ -450,7 +451,7 @@ export default function Home() {
                   openQuickMemory();
                 }}
               >
-                记录一条回忆
+                记录一条
               </button>
               <button onClick={() => setEntrySheetType("place")}>添加地点</button>
             </div>
@@ -601,8 +602,9 @@ function buildRecordSuggestions({
   const suggestions: RecordSuggestion[] = [];
   const todayActionIdSet = new Set(todayActionIds);
   const todayKey = toDateKey(new Date());
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const memoryIds = new Set(state.memories.map((memory) => memory.id));
-  const todayMemoryCount = state.memories.filter((memory) => memory.date === todayKey).length;
+  const todayMemoryCount = actualMemories.filter((memory) => memory.date === todayKey).length;
 
   const completedPlan = state.anniversaryPlans
     .filter((plan) =>
@@ -662,7 +664,7 @@ function buildRecordSuggestions({
     });
   }
 
-  const personPrompt = findRecordSuggestionPerson(state.people, state.memories, todayActionIdSet);
+  const personPrompt = findRecordSuggestionPerson(state.people, actualMemories, todayActionIdSet);
   if (personPrompt) {
     suggestions.push({
       id: `person-memory-${personPrompt.personId}`,
@@ -675,7 +677,7 @@ function buildRecordSuggestions({
     });
   }
 
-  const placePrompt = findRecordSuggestionPlace(state.places, state.memories);
+  const placePrompt = findRecordSuggestionPlace(state.places, actualMemories);
   if (placePrompt) {
     suggestions.push({
       id: `place-memory-${placePrompt.id}`,
@@ -780,6 +782,7 @@ function buildTodayActions({
   actionPrefs: TodayActionPrefs;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const todayPlanAction = findTodayAnniversaryPlanAction(state.anniversaryPlans, state.people);
   if (todayPlanAction) {
     actions.push({
@@ -819,7 +822,7 @@ function buildTodayActions({
     });
   });
 
-  const personToContact = findPersonToContact(state.people, state.memories);
+  const personToContact = findPersonToContact(state.people, actualMemories);
   if (personToContact) {
     actions.push({
       id: `contact-${personToContact.personId}`,
@@ -833,7 +836,7 @@ function buildTodayActions({
     });
   }
 
-  const todayMemory = findOnThisDayMemory(state.memories);
+  const todayMemory = findOnThisDayMemory(actualMemories);
   if (todayMemory) {
     const ctx = buildMemoryDisplayContext(todayMemory, getPersonName, getPlaceName);
     actions.push({

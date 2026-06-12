@@ -2,21 +2,21 @@
 
 LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、回忆和日历把日常经历串起来。它优先服务个人长期记录：记录和谁一起、去了哪里、发生了什么、未来有什么纪念日或安排需要处理。
 
-当前版本：`0.1.0-test.109`
+当前版本：`0.1.0-test.110`
 
 ## 下载与安装
 
 ### Android APK
 
-- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.109
-- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.109/lifelog-v0.1.0-test.109.apk
-- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.109.apk
+- GitHub Release：https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.110
+- APK 下载：https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.110/lifelog-v0.1.0-test.110.apk
+- Gitee 国内镜像：https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.110.apk
 
 APK 校验信息：
 
-- 文件名：`lifelog-v0.1.0-test.109.apk`
-- 大小：`3731798` bytes
-- SHA256：`10ffb1c019137205bf361fb04c4a8f14406873b2176715d3eb2d5165eb191acd`
+- 文件名：`lifelog-v0.1.0-test.110.apk`
+- 大小：`3735262` bytes
+- SHA256：`40e66bb26aab282bc505d1cbd13c61940d902b74bc675f19544e08878e6de413`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 
@@ -61,21 +61,23 @@ App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 Git
 - 支持重复地点检测、合并预览、一键合并、撤销合并。
 - 支持批量管理地点，修改前预览，可批量补充分类、商场、区域和标签，并支持撤销。
 
-### 回忆
+### 记录
 
-- 支持快速记录和完整表单记录。
+- 记录分为已发生的回忆和未来的计划，未来日期快捷记录会先保存为计划。
+- 支持快速记录和完整表单记录，快速记录会根据日期显示“记录今天 / 补记 / 安排”。
 - 快速记录支持常用场景模板，也会根据当前人物 / 地点给出上下文标题模板。
 - 可关联多个人物和多个地点，支持心情、日期、内容、标签和照片。
-- 可从人物、地点、日历上下文中快速创建回忆，自动带入当前人物、地点或日期。
-- 回忆详情支持查看关联人物、关联地点、照片、标签和相关回忆；照片较多时会先展示前 9 张，可再展开全部。
-- 支持本地分享单条回忆，可选择隐藏或公开内容、关联人物、关联地点和照片。
+- 可从人物、地点、日历上下文中快速创建记录，自动带入当前人物、地点或日期。
+- 到期或已过期的计划详情提供“补成回忆”入口，保存后转为真实回忆，不生成重复记录。
+- 记录详情支持查看关联人物、关联地点、照片、标签和相关记录；照片较多时会先展示前 9 张，可再展开全部。
+- 支持本地分享单条记录，可选择隐藏或公开内容、关联人物、关联地点和照片。
 
 ### 日历与提醒
 
-- 日历聚合生日、纪念日和回忆。
+- 日历聚合生日、纪念日、回忆和未来计划。
 - 支持农历、节日、节气和周年显示。
 - 支持纪念日天数节点展示和提醒，例如“满 100 天”“第 365 天”。
-- 提醒支持生日、纪念日、联系提醒和回忆提醒。
+- 提醒支持生日、纪念日、联系提醒和回忆提醒，未来计划不会计入真实到访和共同回忆统计。
 - 提醒中心可查看未来 30 天事项，支持查看、忽略、完成和跳过。
 - Android 端集成本地通知权限检查、提醒权限检查和测试通知。
 

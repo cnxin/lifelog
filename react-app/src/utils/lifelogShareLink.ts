@@ -205,7 +205,7 @@ function buildQrMiniPayload(payload: LifeLogSharePayload): LifeLogQrMiniPayload 
   return {
     v: 1,
     k: "m",
-    t: cleanQrText(memory?.title || payload.title || "回忆分享", 48),
+    t: cleanQrText(memory?.title || payload.title || "记录分享", 48),
     d: normalizeQrDate(memory?.date || ""),
     o: cleanQrText(memory?.mood || "", 12),
     g: Array.isArray(memory?.tags) ? memory.tags.map((tag) => cleanQrText(tag, 12)).filter(Boolean).slice(0, 6) : [],
@@ -251,7 +251,7 @@ function inflateQrMiniPayload(value: unknown): LifeLogSharePayload {
     .filter((place): place is LifeLogSharePayload["data"]["places"][number] => Boolean(place));
   const memory = {
     id: "qrm1",
-    title: value.t || "分享的回忆",
+    title: value.t || "分享的记录",
     date: normalizeQrDate(value.d || ""),
     personIds: people.map((person) => person.id),
     placeId: places[0]?.id || "",

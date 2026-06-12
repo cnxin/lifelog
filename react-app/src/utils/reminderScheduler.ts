@@ -329,6 +329,7 @@ function generateContactReminders(
 
   for (const person of people) {
     const lastMemory = memories
+      .filter((memory) => memory.kind !== "plan")
       .filter((memory) => (memory.personIds || []).includes(person.id))
       .sort((a, b) => b.date.localeCompare(a.date))[0];
 
@@ -364,6 +365,7 @@ function generateMemoryReminders(memories: MemoryEvent[], settings: ReminderSett
   const day = today.getDate();
 
   const lastYearMemories = memories.filter((memory) => {
+    if (memory.kind === "plan") return false;
     const memoryDate = new Date(`${memory.date}T00:00:00`);
     return (
       memoryDate.getMonth() + 1 === month &&

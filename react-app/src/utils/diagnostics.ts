@@ -1,6 +1,7 @@
 import { APP_VERSION } from "../constants/version";
 import type { LifeLogState } from "../types";
 import type { BackupHealthReport } from "./backupHealth";
+import { isMemoryPlan } from "./memoryDisplay";
 
 export interface DiagnosticsPayload {
   appVersion: string;
@@ -13,6 +14,7 @@ export interface DiagnosticsPayload {
     people: number;
     places: number;
     memories: number;
+    memoryPlans: number;
     photoRefs: number;
   };
   backupHealth: {
@@ -33,7 +35,8 @@ export function buildDiagnosticsPayload(state: LifeLogState, healthReport: Backu
     counts: {
       people: state.people.length,
       places: state.places.length,
-      memories: state.memories.length,
+      memories: state.memories.filter((memory) => !isMemoryPlan(memory)).length,
+      memoryPlans: state.memories.filter(isMemoryPlan).length,
       photoRefs: state.memories.reduce((total, memory) => total + (memory.photos || []).length, 0)
     },
     backupHealth: {
@@ -59,6 +62,7 @@ export function formatDiagnosticsText(payload: DiagnosticsPayload) {
     `- 人物：${payload.counts.people}`,
     `- 地点：${payload.counts.places}`,
     `- 回忆：${payload.counts.memories}`,
+    `- 计划：${payload.counts.memoryPlans}`,
     `- 照片引用：${payload.counts.photoRefs}`,
     "",
     "备份健康：",

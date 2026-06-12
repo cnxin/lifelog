@@ -85,8 +85,11 @@ export interface Photo {
   order: number;
 }
 
+export type MemoryEventKind = "memory" | "plan";
+
 export interface MemoryEvent {
   id: ID;
+  kind?: MemoryEventKind;
   title: string;
   date: string;
   personIds: ID[];

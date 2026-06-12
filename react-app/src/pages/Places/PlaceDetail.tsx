@@ -12,6 +12,7 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { openExternalUrl, openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
+import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { hasMemoryPlace } from "../../utils/memoryPlaces";
 import { normalizePlacePlatformLinks } from "../../utils/placeLinks";
 import { buildPlaceVisitStats } from "../../utils/placeVisitStats";
@@ -41,9 +42,11 @@ export default function PlaceDetail() {
     );
   }
 
-  const relatedMemories = state.memories
+  const relatedEntries = state.memories
     .filter((memory) => hasMemoryPlace(memory, place.id))
     .sort((a, b) => b.date.localeCompare(a.date));
+  const relatedMemories = relatedEntries.filter((memory) => !isMemoryPlan(memory));
+  const relatedPlans = relatedEntries.filter(isMemoryPlan);
 
   const relatedPeople = Array.from(
     new Set(relatedMemories.flatMap((memory) => memory.personIds || []).filter(Boolean))
@@ -53,7 +56,7 @@ export default function PlaceDetail() {
     getPersonName
   );
   const visitStats = buildPlaceVisitStats(place.id, state.memories, getPersonName);
-  const groupedMemories = groupMemoriesByMonth(relatedMemories);
+  const groupedMemories = groupMemoriesByMonth(relatedEntries);
   const latestMemory = relatedMemories[0];
   const photos = (place.photos || []).slice(0, 3);
   const platformLinks = normalizePlacePlatformLinks(place.platformLinks);
@@ -156,13 +159,19 @@ export default function PlaceDetail() {
           <div className="summary-grid">
             <div className="summary-metric">
               <strong>{relatedMemories.length}</strong>
-              <span>相关回忆</span>
+              <span>到访回忆</span>
             </div>
             <div className="summary-metric">
               <strong>{latestMemory ? formatMonthDay(latestMemory.date) : "暂无"}</strong>
               <span>最近一次</span>
             </div>
           </div>
+          {relatedPlans.length > 0 && (
+            <div className="summary-line">
+              <strong>计划</strong>
+              <span>{relatedPlans.length} 条待发生记录</span>
+            </div>
+          )}
           <div className="summary-line">
             <strong>类型</strong>
             <span>{place.category || "未设置"}</span>
@@ -331,13 +340,13 @@ export default function PlaceDetail() {
       </section>
 
       <MemoryTimelineSection
-        title="地点时间线"
+        title="地点记录"
         groupedMemories={groupedMemories}
         getPersonName={getPersonName}
         getPlaceName={getPlaceName}
         onAddMemory={() => setAddingMemory(true)}
-        emptyTitle="还没有在这里发生的回忆"
-        emptyDesc="记录一次到访，让这个地点变得更有故事。"
+        emptyTitle="还没有在这里发生的记录"
+        emptyDesc="记录一次到访或计划，让这个地点变得更有故事。"
         emptyAction="记录在这里发生的事"
         renderMeta={(memory, ctx, showContentLine) => (
           <p className="memory-desc">

@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import type { MemoryEvent, Photo } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { inferQuickMemory } from "../../utils/memoryInference";
-import { deriveMemorySummary } from "../../utils/memoryDisplay";
+import { deriveMemorySummary, isMemoryPlan } from "../../utils/memoryDisplay";
 import { buildDefaultQuickMemoryTitle, buildMemoryContentTemplates, buildQuickMemoryTemplateGroups } from "../../utils/quickMemoryContext";
 import DateInput from "../DateInput";
 import PersonPicker from "../PersonPicker";
@@ -90,6 +90,7 @@ export function MemoryFields({
   initialPlaceId,
   initialPlaceIds = [],
   initialDate,
+  memoryKindOverride,
   mode,
   photos,
   onPhotosChange,
@@ -105,6 +106,7 @@ export function MemoryFields({
   initialPlaceId?: string;
   initialPlaceIds?: string[];
   initialDate?: string;
+  memoryKindOverride?: MemoryEvent["kind"];
   mode: "quick" | "full";
   photos: Photo[];
   onPhotosChange: (photos: Photo[]) => void;
@@ -146,6 +148,8 @@ export function MemoryFields({
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [fullPlaceIds, setFullPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [mood, setMood] = useState<string>(getDraftValue(draftValues, "mood", memory ? memory.mood : settings.defaultMood));
+  const quickTone = getQuickDateTone(quickDate, todayValue);
+  const quickCopy = getQuickMemoryCopy(quickTone);
   const quickInferenceContent = detailsOpen ? quickDetailsContent : quickContent;
   const quickPreview = inferQuickMemory({
     rawTitle: quickContent,
@@ -188,17 +192,17 @@ export function MemoryFields({
     return (
       <>
         <div className="quick-record-intro">
-          <strong>先留下这一刻</strong>
-          <span>{hasQuickContext ? "已经带上相关人物或地点，写一句就能保存。" : "不知道怎么分类也没关系，先写一句发生了什么。"}</span>
+          <strong>{quickCopy.title}</strong>
+          <span>{hasQuickContext ? quickCopy.contextHint : quickCopy.emptyHint}</span>
         </div>
         <label>
-          这件事
+          {quickCopy.titleLabel}
           <input
             name="title"
             value={quickContent}
             onChange={(event) => setQuickContent(event.target.value)}
             autoFocus
-            placeholder="例如：和小林在湖边散步，聊到下次去看展"
+            placeholder={quickCopy.titlePlaceholder}
           />
         </label>
         <button className="quick-detail-toggle subtle" type="button" onClick={() => setAssistOpen((open) => !open)}>
@@ -266,16 +270,16 @@ export function MemoryFields({
           </div>
         )}
         <label className="inline-field">
-          <span className="inline-field-label">发生日期</span>
-          <DateInput name="date" label="发生日期" value={quickDate} onChange={setQuickDate} required />
+          <span className="inline-field-label">{quickCopy.dateLabel}</span>
+          <DateInput name="date" label={quickCopy.dateLabel} value={quickDate} onChange={setQuickDate} required />
         </label>
         <label>
-          当时感觉
+          {quickCopy.moodLabel}
           <input
             name="mood"
             value={mood}
             onChange={(event) => setMood(event.target.value)}
-            placeholder="开心、平静、感动，或自己写一个词"
+            placeholder={quickCopy.moodPlaceholder}
           />
           <div className="mood-presets">
             {MOOD_PRESETS.map((preset) => (
@@ -291,7 +295,7 @@ export function MemoryFields({
           </div>
         </label>
         <button className="quick-detail-toggle" type="button" onClick={() => setDetailsOpen((open) => !open)}>
-          {detailsOpen ? "先收起来" : "补人物 / 地点 / 照片"}
+          {detailsOpen ? "先收起来" : quickCopy.detailToggle}
           {detailsOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
         {detailsOpen && (
@@ -341,7 +345,7 @@ export function MemoryFields({
                 name="content"
                 value={quickDetailsContent}
                 onChange={(event) => setQuickDetailsContent(event.target.value)}
-                placeholder="可以写发生了什么、当时的感觉、下次想怎么做。"
+                placeholder={quickCopy.contentPlaceholder}
               />
             </label>
             <div>
@@ -366,9 +370,9 @@ export function MemoryFields({
           </div>
         )}
         <div className="memory-preview" aria-live="polite">
-          <span className="memory-preview-eyebrow">会这样留下来</span>
+          <span className="memory-preview-eyebrow">{quickCopy.previewEyebrow}</span>
           <div className="memory-preview-row">
-            <strong>这件事</strong>
+            <strong>{quickCopy.previewTitleLabel}</strong>
             <span>{quickContent.trim() || previewTitle}</span>
           </div>
           <div className="memory-preview-row">
@@ -390,7 +394,8 @@ export function MemoryFields({
         {!detailsOpen && quickPlaceIds.map((placeId) => <input key={placeId} type="hidden" name="placeIds" value={placeId} />)}
         {!detailsOpen && <input type="hidden" name="tags" value={quickTags} />}
         <input type="hidden" name="memoryMode" value="quick" />
-        <p className="form-hint">人物、地点和照片都可以先不管，之后想起来再补也可以。</p>
+        <input type="hidden" name="memoryKind" value={quickTone === "future" ? "plan" : "memory"} />
+        <p className="form-hint">{quickCopy.footerHint}</p>
       </>
     );
   }
@@ -409,7 +414,7 @@ export function MemoryFields({
         <span className="inline-field-label">日期</span>
         <DateInput
           name="date"
-          label="回忆日期"
+          label="记录日期"
           defaultValue={getDraftValue(draftValues, "date", memory?.date || initialDate || todayValue)}
           required
         />
@@ -503,6 +508,7 @@ export function MemoryFields({
           placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
         />
       </label>
+      <input type="hidden" name="memoryKind" value={memoryKindOverride || (memory?.kind === "plan" ? "plan" : "memory")} />
     </>
   );
 }
@@ -514,6 +520,77 @@ function formatPreviewDate(date: string) {
     month: "long",
     day: "numeric"
   });
+}
+
+function getQuickDateTone(dateKey: string, todayKey: string): "past" | "today" | "future" {
+  const delta = diffDateKeys(dateKey, todayKey);
+  if (delta > 0) return "future";
+  if (delta === 0) return "today";
+  return "past";
+}
+
+function getQuickMemoryCopy(tone: "past" | "today" | "future") {
+  if (tone === "future") {
+    return {
+      title: "先安排这一天",
+      contextHint: "已经带上相关人物或地点，先写一句计划，之后可以再补实际发生的事。",
+      emptyHint: "未来的日子更适合先写计划、约定或想做的事。",
+      titleLabel: "计划内容",
+      titlePlaceholder: "例如：周六和小林去看展，顺路试试那家甜品店",
+      dateLabel: "计划日期",
+      moodLabel: "期待程度",
+      moodPlaceholder: "期待、重要、待确认，或自己写一个词",
+      detailToggle: "补人物 / 地点 / 准备事项",
+      contentPlaceholder: "可以写计划做什么、需要准备什么、到时想注意什么。",
+      previewEyebrow: "会这样安排",
+      previewTitleLabel: "计划",
+      footerHint: "未来计划会先作为这一天的记录保存，到了当天或之后可以再补照片和实际回忆。"
+    };
+  }
+
+  if (tone === "today") {
+    return {
+      title: "记录今天这一刻",
+      contextHint: "已经带上相关人物或地点，写一句就能保存。",
+      emptyHint: "不知道怎么分类也没关系，先写一句今天发生了什么。",
+      titleLabel: "这件事",
+      titlePlaceholder: "例如：和小林在湖边散步，聊到下次去看展",
+      dateLabel: "发生日期",
+      moodLabel: "当时感觉",
+      moodPlaceholder: "开心、平静、感动，或自己写一个词",
+      detailToggle: "补人物 / 地点 / 照片",
+      contentPlaceholder: "可以写发生了什么、当时的感觉、下次想怎么做。",
+      previewEyebrow: "会这样留下来",
+      previewTitleLabel: "这件事",
+      footerHint: "人物、地点和照片都可以先不管，之后想起来再补也可以。"
+    };
+  }
+
+  return {
+    title: "补上那一天",
+    contextHint: "已经带上相关人物或地点，补一句当时发生的事就能保存。",
+    emptyHint: "过去的日子可以先补一句，之后再慢慢补细节。",
+    titleLabel: "当时的事",
+    titlePlaceholder: "例如：那天和小林在湖边散步，聊到下次去看展",
+    dateLabel: "发生日期",
+    moodLabel: "当时感觉",
+    moodPlaceholder: "开心、平静、感动，或自己写一个词",
+    detailToggle: "补人物 / 地点 / 照片",
+    contentPlaceholder: "可以写当时发生了什么、有什么感觉、现在想补充什么。",
+    previewEyebrow: "会这样补记",
+    previewTitleLabel: "当时的事",
+    footerHint: "补记可以先保存关键一句，照片、人物和地点之后再补。"
+  };
+}
+
+function diffDateKeys(targetDateKey: string, baseDateKey: string) {
+  return Math.round((dateKeyToUtcTime(targetDateKey) - dateKeyToUtcTime(baseDateKey)) / 86400000);
+}
+
+function dateKeyToUtcTime(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return 0;
+  return Date.UTC(year, month - 1, day);
 }
 
 function resolvePersonNames(personIds: string[] = [], people: Array<{ id: string; name: string }>) {
@@ -569,6 +646,7 @@ function getRecentRecommendedIds(memories: MemoryEvent[], kind: "person" | "plac
   const score = new Map<string, number>();
   memories
     .slice()
+    .filter((memory) => !isMemoryPlan(memory))
     .sort((left, right) => right.date.localeCompare(left.date))
     .slice(0, 50)
     .forEach((memory, index) => {

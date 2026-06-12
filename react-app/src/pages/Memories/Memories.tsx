@@ -13,7 +13,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import type { MemoryEvent } from "../../types";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
@@ -28,15 +28,16 @@ export default function Memories() {
   const importedMemoryIdSet = useMemo(() => new Set(importedMemoryIds), [importedMemoryIds]);
   const [filters, setFilters] = usePersistentState<MemoryFilterState>(
     "lifelog:filters:memories",
-    { query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" },
+    { query: "", typeFilter: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" },
     isMemoryFilterState
   );
   const query = filters.query;
+  const typeFilter = filters.typeFilter || "";
   const personFilter = filters.personFilter;
   const placeFilter = filters.placeFilter;
   const moodFilter = filters.moodFilter;
   const tagFilter = filters.tagFilter;
-  const activeAdvancedFilterCount = [personFilter, placeFilter, moodFilter, tagFilter].filter(Boolean).length;
+  const activeAdvancedFilterCount = [typeFilter, personFilter, placeFilter, moodFilter, tagFilter].filter(Boolean).length;
   const hasAdvancedFilters = activeAdvancedFilterCount > 0;
   const [filtersOpen, setFiltersOpen] = useState(hasAdvancedFilters);
   const [editingId, setEditingId] = useState<string | undefined>();
@@ -46,6 +47,7 @@ export default function Memories() {
   const hasActiveFilters = Boolean(query.trim() || hasAdvancedFilters);
   const activeFilterLabels = buildActiveFilterLabels({
     query: query.trim(),
+    type: typeFilter,
     person: personFilter ? getPersonName(personFilter) : "",
     place: placeFilter ? getPlaceName(placeFilter) : "",
     mood: moodFilter,
@@ -65,27 +67,30 @@ export default function Memories() {
           getMemoryDisplayTitle(memory, ctx),
           memory.content,
           memory.mood,
+          getMemoryKindLabel(memory),
           ctx.personNames.join(","),
           ctx.placeName,
           (memory.tags || []).join(",")
         ].join(" ").toLowerCase();
 
         if (normalizedQuery && !content.includes(normalizedQuery)) return false;
+        if (typeFilter === "plan" && !isMemoryPlan(memory)) return false;
+        if (typeFilter === "memory" && isMemoryPlan(memory)) return false;
         if (personFilter && !(memory.personIds || []).includes(personFilter)) return false;
         if (placeFilter && !getMemoryPlaceIds(memory).includes(placeFilter)) return false;
         if (moodFilter && memory.mood !== moodFilter) return false;
         if (tagFilter && !(memory.tags || []).includes(tagFilter)) return false;
         return true;
       });
-  }, [getPersonName, getPlaceName, importedMemoryIdSet, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter]);
+  }, [getPersonName, getPlaceName, importedMemoryIdSet, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter, typeFilter]);
   const groupedMemories = useMemo(() => groupMemoriesByMonth(memories), [memories]);
   const yearAnchors = useMemo(() => buildYearAnchors(groupedMemories), [groupedMemories]);
   const yearMapItems = useMemo(() => buildYearMapItems(groupedMemories), [groupedMemories]);
 
   async function handleDelete(id: string) {
     const accepted = await confirm({
-      title: "删除回忆",
-      message: "确认删除这条回忆？",
+      title: "删除记录",
+      message: "确认删除这条记录？",
       confirmText: "删除"
     });
     if (!accepted) return;
@@ -93,14 +98,14 @@ export default function Memories() {
     await deleteEntry("memory", id);
     if (snapshot) {
       notify({
-        message: "回忆已删除",
+        message: "记录已删除",
         tone: "info",
         actions: [
           {
             label: "撤销",
             onClick: async () => {
               await restoreDeletedEntry(snapshot);
-              notify({ message: "回忆已恢复", tone: "success" });
+              notify({ message: "记录已恢复", tone: "success" });
             }
           }
         ]
@@ -109,7 +114,7 @@ export default function Memories() {
   }
 
   function clearFilters() {
-    setFilters({ query: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" });
+    setFilters({ query: "", typeFilter: "", personFilter: "", placeFilter: "", moodFilter: "", tagFilter: "" });
     setFiltersOpen(false);
   }
 
@@ -126,7 +131,7 @@ export default function Memories() {
   return (
     <>
       <PageSegmentNav
-        ariaLabel="回忆视图"
+        ariaLabel="记录视图"
         items={[
           { to: "/memories", label: "时间线", icon: <Heart />, end: true },
           { to: "/calendar", label: "日历", icon: <CalendarDays /> }
@@ -137,8 +142,8 @@ export default function Memories() {
         <section className="section imported-focus-section">
           <GlassCard className="imported-focus-card">
             <div>
-              <strong>刚导入的回忆</strong>
-              <span>已临时筛出 {memories.length} 条刚添加的回忆，便于检查内容。</span>
+              <strong>刚导入的记录</strong>
+              <span>已临时筛出 {memories.length} 条刚添加的记录，便于检查内容。</span>
             </div>
             <button className="mini-action" type="button" onClick={clearImportedView}>
               查看全部
@@ -150,7 +155,7 @@ export default function Memories() {
         <div className="list-filter-toolbar">
           <div className="list-filter-summary">
             <span>
-              显示 {memories.length} / {state.memories.length} 条回忆
+              显示 {memories.length} / {state.memories.length} 条记录
             </span>
           </div>
           <div className="list-filter-actions">
@@ -179,6 +184,17 @@ export default function Memories() {
         )}
         {filtersOpen && (
           <div className="advanced-filter-panel memory-filter-grid">
+            <SelectPicker
+              label="筛选类型"
+              value={typeFilter}
+              onChange={(typeFilter) => updateFilters({ typeFilter })}
+              placeholder="全部记录"
+              options={[
+                { value: "", label: "全部记录" },
+                { value: "memory", label: "只看回忆" },
+                { value: "plan", label: "只看计划" }
+              ]}
+            />
             <SelectPicker
               label="筛选人物"
               value={personFilter}
@@ -212,7 +228,7 @@ export default function Memories() {
       </section>
       <section className="section">
         {yearMapItems.length > 0 && (
-          <div className="memory-time-map" aria-label="回忆时间地图">
+          <div className="memory-time-map" aria-label="记录时间地图">
             <div className="memory-time-map-head">
               <strong>时间地图</strong>
               <span>{yearMapItems.length} 个年份 · {memories.length} 条</span>
@@ -223,7 +239,7 @@ export default function Memories() {
                   href={`#memory-year-${item.year}`}
                   key={item.year}
                   style={{ "--density": item.density } as CSSProperties}
-                  title={`${item.year} · ${item.count} 条回忆`}
+                  title={`${item.year} · ${item.count} 条记录`}
                 >
                   <span />
                   <em>{item.year}</em>
@@ -269,14 +285,14 @@ export default function Memories() {
           {!memories.length &&
             (state.memories.length === 0 ? (
               <GlassCard className="empty empty-cta">
-                <p>还没有回忆记录</p>
+                <p>还没有记录</p>
                 <button className="primary-btn" onClick={() => setCreatingNew(true)}>
-                  <Plus size={16} /> 记录第一条回忆
+                  <Plus size={16} /> 记录第一条
                 </button>
               </GlassCard>
             ) : (
               <GlassCard className="empty empty-cta">
-                <p>没有找到匹配的回忆</p>
+                <p>没有找到匹配记录</p>
                 <button className="primary-btn" onClick={clearFilters}>
                   <RotateCcw size={16} /> 清除筛选
                 </button>
@@ -292,6 +308,7 @@ export default function Memories() {
 
 interface MemoryFilterState {
   query: string;
+  typeFilter: string;
   personFilter: string;
   placeFilter: string;
   moodFilter: string;
@@ -303,6 +320,7 @@ function isMemoryFilterState(value: unknown): value is MemoryFilterState {
   const candidate = value as Partial<MemoryFilterState>;
   return (
     typeof candidate.query === "string" &&
+    (candidate.typeFilter === undefined || typeof candidate.typeFilter === "string") &&
     typeof candidate.personFilter === "string" &&
     typeof candidate.placeFilter === "string" &&
     typeof candidate.moodFilter === "string" &&
@@ -341,6 +359,7 @@ function isFirstYearGroup(groups: Array<{ month: string; memories: MemoryEvent[]
 
 function buildActiveFilterLabels(filters: {
   query: string;
+  type: string;
   person: string;
   place: string;
   mood: string;
@@ -348,6 +367,7 @@ function buildActiveFilterLabels(filters: {
 }) {
   return [
     filters.query ? `搜索：${filters.query}` : "",
+    filters.type ? `类型：${filters.type === "plan" ? "计划" : "回忆"}` : "",
     filters.person ? `人物：${filters.person}` : "",
     filters.place ? `地点：${filters.place}` : "",
     filters.mood ? `心情：${filters.mood}` : "",

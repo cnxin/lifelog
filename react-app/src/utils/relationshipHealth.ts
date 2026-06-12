@@ -13,6 +13,7 @@ export interface RelationshipHealth {
 
 export function buildRelationshipHealth(personId: string, memories: MemoryEvent[]): RelationshipHealth {
   const relatedMemories = memories
+    .filter((memory) => memory.kind !== "plan")
     .filter((memory) => (memory.personIds || []).includes(personId))
     .sort((a, b) => b.date.localeCompare(a.date));
   const latest = relatedMemories[0];

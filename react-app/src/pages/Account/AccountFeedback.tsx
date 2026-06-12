@@ -38,13 +38,13 @@ export default function AccountFeedback() {
           <ClipboardList />
           <div>
             <strong>反馈时附带诊断信息</strong>
-            <span>只包含版本、设备、数据数量和备份健康状态，不会导出具体人物、地点或回忆正文。</span>
+            <span>只包含版本、设备、数据数量和备份健康状态，不会导出具体人物、地点或记录正文。</span>
           </div>
         </div>
         <div className="feedback-diagnostics-preview">
           <span>版本和数据概况</span>
           <strong>
-            {state.people.length} 人物 · {state.places.length} 地点 · {state.memories.length} 回忆
+            {state.people.length} 人物 · {state.places.length} 地点 · {healthReport.memories} 回忆 · {healthReport.memoryPlans} 计划
           </strong>
           <small>
             备份健康：{healthReport.status === "ok" ? "正常" : `${healthReport.issueCount} 个问题`}

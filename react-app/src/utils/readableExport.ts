@@ -1,5 +1,5 @@
 import type { LifeLogState } from "../types";
-import { buildMemoryDisplayContext } from "./memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryKindLabel, isMemoryPlan } from "./memoryDisplay";
 import { buildPlaceDisplayName } from "./placeMeta";
 
 export function buildReadableMarkdown(state: LifeLogState) {
@@ -8,6 +8,8 @@ export function buildReadableMarkdown(state: LifeLogState) {
     const place = state.places.find((item) => item.id === id);
     return place ? buildPlaceDisplayName(place) : "未关联地点";
   };
+  const memoryCount = state.memories.filter((memory) => !isMemoryPlan(memory)).length;
+  const planCount = state.memories.filter(isMemoryPlan).length;
   const lines = [
     "# LifeLog 可读导出",
     "",
@@ -15,7 +17,8 @@ export function buildReadableMarkdown(state: LifeLogState) {
     "",
     `- 人物：${state.people.length}`,
     `- 地点：${state.places.length}`,
-    `- 回忆：${state.memories.length}`,
+    `- 回忆：${memoryCount}`,
+    `- 计划：${planCount}`,
     "",
     "## 人物",
     "",
@@ -41,14 +44,14 @@ export function buildReadableMarkdown(state: LifeLogState) {
       place.tags.length ? `- 标签：${place.tags.join("、")}` : "",
       ""
     ]),
-    "## 回忆",
+    "## 记录",
     "",
     ...[...state.memories]
       .sort((left, right) => right.date.localeCompare(left.date))
       .flatMap((memory) => {
         const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
         return [
-          `### ${memory.date} · ${memory.title || "未命名回忆"}`,
+          `### ${memory.date} · ${getMemoryKindLabel(memory)} · ${memory.title || "未命名记录"}`,
           "",
           ctx.personNames.length ? `- 人物：${ctx.personNames.join("、")}` : "",
           ctx.placeNames.length ? `- 地点：${ctx.placeNames.join("、")}` : "",

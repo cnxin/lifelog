@@ -12,6 +12,7 @@ import type {
   PreferenceGroup
 } from "../types";
 import { getMemoryPlaceIds } from "./memoryPlaces";
+import { getMemoryKindLabel } from "./memoryDisplay";
 import { normalizeNotionId } from "./notionIds";
 import { buildPlaceDisplayName } from "./placeMeta";
 import { notionRequest, testNotionConnection, type NotionFetch, type NotionRequestDiagnostic } from "./notionClient";
@@ -273,8 +274,9 @@ export function buildMemoryProperties(memory: MemoryEvent, state: LifeLogState):
     .filter((place): place is Place => Boolean(place))
     .map(buildPlaceDisplayName);
   return cleanPropertiesWithAliases({
-    标题: [titleProperty(memory.title || "未命名回忆"), "Name"],
+    标题: [titleProperty(memory.title || `未命名${getMemoryKindLabel(memory)}`), "Name"],
     "LifeLog ID": richTextProperty(memory.id),
+    类型: [selectProperty(memory.kind === "plan" ? "计划" : "回忆"), "Type"],
     日期: [dateProperty(memory.date), "Date"],
     心情: [selectProperty(memory.mood), "Mood"],
     内容: [richTextProperty(memory.content), "Content"],

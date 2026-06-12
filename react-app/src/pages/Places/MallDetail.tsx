@@ -16,7 +16,7 @@ import {
   isSameMall,
   parseMallKey,
 } from "../../utils/placeMeta";
-import { buildMemoryDisplayContext } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
 import { buildMallVisitStats, buildPlaceVisitStats } from "../../utils/placeVisitStats";
@@ -42,6 +42,12 @@ export default function MallDetail() {
   const mallRecord = places.find((place) => isMallRecord(place));
   const storePlaces = places.filter((place) => !isMallRecord(place));
   const categories = Array.from(new Set(places.filter((p) => !isMallRecord(p)).map((place) => place.category)));
+  const relatedEntries = state.memories
+    .filter((memory) =>
+      getMemoryPlaceIds(memory).some((placeId) => places.some((place) => place.id === placeId)),
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const relatedPlans = relatedEntries.filter(isMemoryPlan);
   const mallVisitStats = buildMallVisitStats(storePlaces.map((place) => place.id), state.memories, getPersonName);
   const storeVisitStats = new Map(
     storePlaces.map((place) => [place.id, buildPlaceVisitStats(place.id, state.memories, getPersonName)])
@@ -158,6 +164,12 @@ export default function MallDetail() {
             <strong>最近到访</strong>
             <span>{mallVisitStats.latestDate ? mallVisitStats.latestLabel : "还没有到访记录"}</span>
           </div>
+          {relatedPlans.length > 0 && (
+            <div className="summary-line">
+              <strong>计划</strong>
+              <span>{relatedPlans.length} 条待发生记录</span>
+            </div>
+          )}
           <div className="summary-line">
             <strong>常关联人物</strong>
             <span>{mallVisitStats.topPeople.length ? mallVisitStats.topPeople.map((item) => item.label).join("、") : "还没有关联人物"}</span>
@@ -205,15 +217,11 @@ export default function MallDetail() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <MapPin /> 关联回忆
+            <MapPin /> 相关记录
           </h2>
         </div>
         <div className="list">
-            {state.memories
-              .filter((memory) =>
-                getMemoryPlaceIds(memory).some((placeId) => places.some((place) => place.id === placeId)),
-              )
-            .sort((a, b) => b.date.localeCompare(a.date))
+          {relatedEntries
             .slice(0, 8)
             .map((memory) => {
               const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);

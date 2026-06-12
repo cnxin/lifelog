@@ -66,6 +66,7 @@ interface NotionSyncPreviewItem {
   label: string;
   databaseLabel: string;
   total: number;
+  detail?: string;
   mapped: number;
   pending: number;
   databaseId: string;
@@ -75,7 +76,7 @@ interface NotionSyncPreviewItem {
 const databaseFields: Array<{ key: DatabaseField; label: string; placeholder: string }> = [
   { key: "peopleDatabaseId", label: "人物数据库", placeholder: "People database ID" },
   { key: "placesDatabaseId", label: "地点数据库", placeholder: "Places database ID" },
-  { key: "memoriesDatabaseId", label: "回忆数据库", placeholder: "Memories database ID" },
+  { key: "memoriesDatabaseId", label: "记录数据库", placeholder: "Records database ID" },
   { key: "plansDatabaseId", label: "安排数据库", placeholder: "Plans database ID" }
 ];
 
@@ -619,7 +620,7 @@ export default function AccountNotionSync() {
                               <div className="notion-auto-create-card">
                                 <div>
                                   <strong>自动准备 Notion 数据库</strong>
-                                  <span>在父页面下创建中文字段的人物、地点、回忆和纪念日安排数据库，并自动保存 ID。</span>
+                                  <span>在父页面下创建中文字段的人物、地点、记录和纪念日安排数据库，并自动保存 ID。</span>
                                   <small>当前已配置 {countConfiguredDatabases(draft)}/4 个数据库。</small>
                                 </div>
                                 <button className="notion-button notion-button-primary compact" type="button" onClick={() => void handleCreateDatabases()} disabled={isCreating || !draft.token.trim() || !draft.parentPageId.trim()}>
@@ -1124,7 +1125,7 @@ function buildNotionSetupState({
         ? `4 个数据库已配置。`
         : databaseCount
           ? `已配置 ${databaseCount}/4 个数据库，建议继续自动补齐。`
-          : "LifeLog 会在父页面下创建人物、地点、回忆和纪念日安排数据库。",
+          : "LifeLog 会在父页面下创建人物、地点、记录和纪念日安排数据库。",
       state: hasAllDatabases ? "done" : createFailed ? "failed" : currentStep === "database" ? "current" : "waiting"
     },
     {
@@ -1272,7 +1273,7 @@ function buildNotionPreflight({
       label: "数据库",
       value: `${databaseCount}/4`,
       detail: databaseCount === databaseFields.length
-        ? "人物、地点、回忆和安排数据库都已配置。"
+        ? "人物、地点、记录和安排数据库都已配置。"
         : databaseCount
           ? "已部分配置，建议点击自动创建补齐。"
           : "可由 LifeLog 自动创建中文字段数据库。",
@@ -1330,6 +1331,7 @@ function buildNotionSyncPreview({
     databaseLabel: string;
     databaseId: string;
     total: number;
+    detail?: string;
   }> = [
     {
       entityType: "person",
@@ -1347,10 +1349,11 @@ function buildNotionSyncPreview({
     },
     {
       entityType: "memory",
-      label: "回忆",
-      databaseLabel: "回忆数据库",
+      label: "记录",
+      databaseLabel: "记录数据库",
       databaseId: normalizeNotionId(settings.memoriesDatabaseId),
-      total: state.memories.length
+      total: state.memories.length,
+      detail: formatRecordSyncDetail(state.memories)
     },
     {
       entityType: "anniversaryPlan",
@@ -1393,10 +1396,18 @@ function formatSyncPreviewSummary(items: NotionSyncPreviewItem[]) {
 
 function formatSyncPreviewDetail(item: NotionSyncPreviewItem) {
   if (!item.databaseId) return `${item.databaseLabel} 未配置，暂不会同步。`;
+  const suffix = item.detail ? `（${item.detail}）` : "";
   if (!item.total) return "本地暂无内容，配置已就绪。";
-  if (!item.mapped) return `${item.total} 条会首次写入 Notion。`;
-  if (!item.pending) return `${item.mapped} 条已有同步记录，本次会检查更新。`;
-  return `${item.mapped} 条已有同步记录，${item.pending} 条可能首次写入。`;
+  if (!item.mapped) return `${item.total} 条会首次写入 Notion${suffix}。`;
+  if (!item.pending) return `${item.mapped} 条已有同步记录，本次会检查更新${suffix}。`;
+  return `${item.mapped} 条已有同步记录，${item.pending} 条可能首次写入${suffix}。`;
+}
+
+function formatRecordSyncDetail(memories: LifeLogState["memories"]) {
+  const plans = memories.filter((memory) => memory.kind === "plan").length;
+  const actual = memories.length - plans;
+  if (!memories.length) return "";
+  return `${actual} 条回忆，${plans} 条计划`;
 }
 
 function buildTargetsForPreviewItem(item: NotionSyncPreviewItem, state: LifeLogState): NotionSyncTarget[] {

@@ -523,7 +523,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         ...state,
         memories: upsertById(state.memories, memory)
       };
-      syncSavedNotionTarget({ entityType: "memory", entityId: memory.id }, nextState, `保存回忆：${memory.title || "未命名"}`);
+      syncSavedNotionTarget({ entityType: "memory", entityId: memory.id }, nextState, `保存记录：${memory.title || "未命名"}`);
 
       return memory.id;
     }
@@ -1050,7 +1050,7 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
     async function buildMemoryShare(memoryId: string, options: MemoryShareOptions): Promise<LifeLogSharePayload> {
       const memory = state.memories.find((item) => item.id === memoryId);
-      if (!memory) throw new Error("没有找到要分享的回忆。");
+      if (!memory) throw new Error("没有找到要分享的记录。");
       const photos = options.includePhotos ? await loadMemoryPhotos(memory.id, memory.photos || []) : [];
       return buildMemorySharePayload({
         state,

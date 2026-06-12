@@ -623,6 +623,7 @@ export function normalizeState(input: Partial<LifeLogState>): LifeLogState {
   })) as Place[];
   const memories = (input.memories || seedData.memories).map((memory) => ({
     ...memory,
+    kind: memory.kind === "plan" ? "plan" : "memory",
     personIds: Array.isArray(memory.personIds) ? memory.personIds.filter(Boolean).map(String) : [],
     placeId: typeof memory.placeId === "string" ? memory.placeId : "",
     placeIds: getMemoryPlaceIds(memory as MemoryEvent),

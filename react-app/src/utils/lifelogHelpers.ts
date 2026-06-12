@@ -164,6 +164,7 @@ export function buildMemoryFromFormData({
     .filter(Boolean);
   const selectedPlaceId = String(formData.get("placeId") || selectedPlaceIds[0] || "");
   const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
+  const memoryKind = String(formData.get("memoryKind") || existing?.kind || "memory") === "plan" ? "plan" : "memory";
   const quickInference = inferQuickMemory({
     rawTitle,
     content,
@@ -189,6 +190,7 @@ export function buildMemoryFromFormData({
 
   return {
     id: memoryId,
+    kind: memoryKind,
     title: buildMemoryTitle(rawTitle, content),
     date: memoryMode === "quick" && !existing ? quickInference.date : inputDate,
     personIds: matchedPersonIds,

@@ -6,6 +6,14 @@ const SUMMARY_MAX = 24;
 const UNLINKED_PERSON_LABEL = "未关联人物";
 const UNLINKED_PLACE_LABEL = "未关联地点";
 
+export function isMemoryPlan(memory: Pick<MemoryEvent, "kind">): boolean {
+  return memory.kind === "plan";
+}
+
+export function getMemoryKindLabel(memory: Pick<MemoryEvent, "kind">): string {
+  return isMemoryPlan(memory) ? "计划" : "回忆";
+}
+
 export function getMemoryDisplayTitle(memory: MemoryEvent, ctx: MemoryDisplayContext): string {
   const manual = memory.title?.trim();
   if (manual && manual !== "新的回忆") return manual;
@@ -21,9 +29,9 @@ export function deriveMemorySummary(memory: MemoryEvent, ctx: MemoryDisplayConte
   if (firstPerson && sentence) return `${firstPerson} · ${sentence}`;
   if (place && sentence) return `${place} · ${sentence}`;
   if (sentence) return sentence;
-  if (firstPerson) return `关于${firstPerson}的回忆`;
+  if (firstPerson) return isMemoryPlan(memory) ? `和${firstPerson}的计划` : `关于${firstPerson}的回忆`;
   if (place) return `在${place}`;
-  return "未命名回忆";
+  return isMemoryPlan(memory) ? "未命名计划" : "未命名回忆";
 }
 
 export function firstSentence(content: string): string {

@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.109",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.109",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.109/lifelog-v0.1.0-test.109.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.109.apk",
-    "apkName":  "lifelog-v0.1.0-test.109.apk",
-    "apkSize":  3731798,
-    "apkSha256":  "10ffb1c019137205bf361fb04c4a8f14406873b2176715d3eb2d5165eb191acd",
-    "publishedAt":  "2026-06-08T15:11:53Z",
-    "body":  "- 数据管理页新增完整备份状态、上次备份文件和导入预检卡，区分覆盖恢复和分享导入，降低误操作风险。\n- Notion 同步结果默认压缩为关键数字，失败原因和分类型明细改为按需展开，并补充常见网络、权限和数据库错误提示。\n- 快速记录回忆进一步简化为先写一句，模板提示默认收起，人物和地点选择器新增常用推荐，减少搜索输入。\n- 提醒中心的纪念日安排完成动作改为完成并记录，设置页低频控件预览折叠，减少普通用户首屏信息量。"
+    "version":  "0.1.0-test.110",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.110",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.110/lifelog-v0.1.0-test.110.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.110.apk",
+    "apkName":  "lifelog-v0.1.0-test.110.apk",
+    "apkSize":  3735262,
+    "apkSha256":  "40e66bb26aab282bc505d1cbd13c61940d902b74bc675f19544e08878e6de413",
+    "publishedAt":  "2026-06-12T02:54:43Z",
+    "body":  "- 记录体系区分已发生回忆和未来计划，未来日期快捷记录会保存为计划，今天和过去日期保存为回忆。\n- 底部导航、记录页、搜索、分享、备份和 Notion 文案统一为“记录”，条目级继续显示“回忆 / 计划”标签。\n- 首页、人物、地点、商场、日历、数据体检和提醒统计排除未来计划，避免计划被误算成真实到访或共同回忆。\n- 日历未来日期操作改为“安排这一天”，当天和过去日期分别显示“记录今天 / 补记这一天”。\n- 到期或已过期的计划详情新增“补成回忆”入口，保存后可把计划转成真实回忆，不生成重复记录。"
 }

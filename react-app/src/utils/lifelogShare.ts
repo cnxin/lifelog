@@ -1,6 +1,7 @@
 import type { LifeLogState, MemoryEvent, Person, Photo, Place } from "../types";
 import { isRecord, uid } from "./lifelogHelpers";
 import { serializeBackupPhoto, type BackupPhotoRecord } from "./lifelogBackup";
+import { getMemoryKindLabel } from "./memoryDisplay";
 import { getMemoryPlaceIds } from "./memoryPlaces";
 
 export type LifeLogShareType = "memory" | "places";
@@ -114,7 +115,7 @@ export async function buildMemorySharePayload({
   appVersion: string;
 }): Promise<LifeLogSharePayload> {
   const memory = state.memories.find((item) => item.id === memoryId);
-  if (!memory) throw new Error("没有找到要分享的回忆。");
+  if (!memory) throw new Error("没有找到要分享的记录。");
 
   const people = buildSharedPeople(memory.personIds || [], state.people, options.peopleMode);
   const places = buildSharedMemoryPlaces(getMemoryPlaceIds(memory), state.places, options.placeMode);
@@ -124,7 +125,7 @@ export async function buildMemorySharePayload({
 
   return buildPayload({
     shareType: "memory",
-    title: sharedMemory.title || "回忆分享",
+    title: sharedMemory.title || `${getMemoryKindLabel(sharedMemory)}分享`,
     appVersion,
     options: { memory: options },
     data: {
@@ -480,7 +481,8 @@ function normalizeSharedMemory(value: unknown) {
   if (!id) return null;
   return {
     id,
-    title: String(value.title || "分享的回忆"),
+    kind: value.kind === "plan" ? "plan" : "memory",
+    title: String(value.title || "分享的记录"),
     date: normalizeDate(String(value.date || "")),
     personIds: Array.isArray(value.personIds) ? value.personIds.map(String).filter(Boolean) : [],
     placeId: String(value.placeId || ""),
@@ -661,7 +663,7 @@ function buildPlacePreviewLabel(place: Place) {
 }
 
 function buildMemoryPreviewLabel(memory: MemoryEvent) {
-  return [memory.title || "分享的回忆", normalizeDate(memory.date)].filter(Boolean).join(" · ");
+  return [memory.title || `分享的${getMemoryKindLabel(memory)}`, normalizeDate(memory.date)].filter(Boolean).join(" · ");
 }
 
 function limitPreviewItems(items: string[], limit = 5) {

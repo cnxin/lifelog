@@ -22,7 +22,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "下午好", subtitle: "从今天的一件小事开始" },
   "/people": { title: "人物", subtitle: "记住重要的人和相处细节" },
   "/places": { title: "地点", subtitle: "收藏想再去的地方" },
-  "/memories": { title: "回忆", subtitle: "回看那些值得留下的瞬间" },
+  "/memories": { title: "记录", subtitle: "回看回忆，也提前安排想做的事" },
   "/calendar": { title: "日历", subtitle: "重要日子和想提前准备的事" },
   "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
   "/account": { title: "设置", subtitle: "账号、应用、数据和关于" }
@@ -33,7 +33,7 @@ function getPageMeta(pathname: string) {
   if (pathname.startsWith("/people/")) return { title: "人物详情", subtitle: "和 TA 有关的细节都在这里" };
   if (pathname.startsWith("/places/malls/")) return { title: "商场详情", subtitle: "这里去过的店和发生过的事" };
   if (pathname.startsWith("/places/")) return { title: "地点详情", subtitle: "适合谁、发生过什么、下次还想不想去" };
-  if (pathname.startsWith("/memories/")) return { title: "回忆详情", subtitle: "这一次经历的完整记录" };
+  if (pathname.startsWith("/memories/")) return { title: "记录详情", subtitle: "这一次经历或计划的完整记录" };
   return pageMeta["/"];
 }
 
@@ -384,10 +384,11 @@ function buildFloatingActions({
 
   if (pathname.startsWith("/calendar")) {
     const selectedDate = new URLSearchParams(window.location.search).get("date") || new Date().toISOString().slice(0, 10);
+    const actionCopy = getCalendarFabActionCopy(selectedDate);
     return [
       {
         id: "memory-for-date",
-        label: "补记这一天",
+        label: actionCopy.label,
         desc: selectedDate,
         icon: <CalendarPlus />,
         primary: true,
@@ -441,6 +442,24 @@ function quickMemoryAction(onClick: () => void, primary = false): FloatingAction
     primary,
     onClick
   };
+}
+
+function getCalendarFabActionCopy(dateKey: string) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const delta = diffDateKeys(dateKey, todayKey);
+  if (delta > 0) return { label: "安排这一天" };
+  if (delta === 0) return { label: "记录今天" };
+  return { label: "补记这一天" };
+}
+
+function diffDateKeys(targetDateKey: string, baseDateKey: string) {
+  return Math.round((dateKeyToUtcTime(targetDateKey) - dateKeyToUtcTime(baseDateKey)) / 86400000);
+}
+
+function dateKeyToUtcTime(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return 0;
+  return Date.UTC(year, month - 1, day);
 }
 
 function placeShareAction(onClick: () => void): FloatingAction {

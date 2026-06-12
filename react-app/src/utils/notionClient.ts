@@ -706,7 +706,7 @@ function getConfiguredDatabases(settings: NotionSettings): NotionDatabaseTarget[
   const targets: NotionDatabaseTarget[] = [
     { key: "people", label: "人物", databaseId: settings.peopleDatabaseId },
     { key: "places", label: "地点", databaseId: settings.placesDatabaseId },
-    { key: "memories", label: "回忆", databaseId: settings.memoriesDatabaseId },
+    { key: "memories", label: "记录", databaseId: settings.memoriesDatabaseId },
     { key: "plans", label: "纪念日安排", databaseId: settings.plansDatabaseId }
   ];
 
@@ -763,8 +763,8 @@ function buildLifeLogDatabaseDefinitions(): Array<{
     },
     {
       key: "memories",
-      label: "回忆",
-      title: "LifeLog 回忆",
+      label: "记录",
+      title: "LifeLog 记录",
       settingKey: "memoriesDatabaseId",
       properties: {
         标题: titleSchema(),

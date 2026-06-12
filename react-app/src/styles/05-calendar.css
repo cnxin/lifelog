@@ -254,7 +254,7 @@
 
 .calendar-day-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -378,6 +378,45 @@
     transform 0.16s ease,
     background-color 0.16s ease,
     box-shadow 0.16s ease;
+}
+
+.calendar-item-head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calendar-item-head strong {
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.calendar-item-type {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px !important;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.calendar-item-type.plan {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.calendar-item-type.memory {
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 12%, transparent);
+}
+
+.calendar-item-type.person {
+  color: color-mix(in srgb, var(--text-sub) 88%, var(--text-main));
+  background: rgba(99, 110, 114, 0.1);
 }
 
 .calendar-item span {

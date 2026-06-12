@@ -36,19 +36,21 @@ export default function AccountDataManagement() {
     () => [
       { label: "人物", value: state.people.length },
       { label: "地点", value: state.places.length },
-      { label: "回忆", value: state.memories.length },
+      { label: "回忆", value: healthReport.memories },
+      { label: "计划", value: healthReport.memoryPlans },
       { label: "照片", value: healthReport.photoRefs }
     ],
-    [healthReport.photoRefs, state.memories.length, state.people.length, state.places.length]
+    [healthReport.memories, healthReport.memoryPlans, healthReport.photoRefs, state.people.length, state.places.length]
   );
 
   const dataSummary = useMemo(
     () => [
       `${state.people.length} 个人物`,
       `${state.places.length} 个地点`,
-      `${state.memories.length} 条回忆`
+      `${healthReport.memories} 条回忆`,
+      `${healthReport.memoryPlans} 条计划`
     ].join(" · "),
-    [state.memories.length, state.people.length, state.places.length]
+    [healthReport.memories, healthReport.memoryPlans, state.people.length, state.places.length]
   );
   const hasUserData = state.people.length > 0 || state.places.length > 0 || state.memories.length > 0;
 
@@ -75,12 +77,13 @@ export default function AccountDataManagement() {
         `人物 ${preview.people}${formatDelta(preview.peopleDelta)}`,
         `地点 ${preview.places}${formatDelta(preview.placesDelta)}`,
         `回忆 ${preview.memories}${formatDelta(preview.memoriesDelta)}`,
+        `计划 ${preview.memoryPlans}${formatDelta(preview.memoryPlansDelta)}`,
         `安排 ${preview.anniversaryPlans}${formatDelta(preview.anniversaryPlansDelta)}`,
         `照片 ${preview.photos}${formatDelta(preview.photosDelta)}`
       ].join(" · ");
       const photoPreview = [
         preview.repairedPhotos ? `${preview.repairedPhotos} 张照片将自动修复归属` : "",
-        preview.extraPhotoRefs ? `${preview.extraPhotoRefs} 张照片将补回回忆引用` : "",
+        preview.extraPhotoRefs ? `${preview.extraPhotoRefs} 张照片将补回记录引用` : "",
         preview.missingPhotoRefs ? `${preview.missingPhotoRefs} 个照片引用缺少文件` : "",
         preview.ignoredPhotos ? `${preview.ignoredPhotos} 张照片会被忽略` : ""
       ].filter(Boolean).join("；");
@@ -88,6 +91,7 @@ export default function AccountDataManagement() {
         `覆盖为人物 ${preview.people}`,
         `地点 ${preview.places}`,
         `回忆 ${preview.memories}`,
+        `计划 ${preview.memoryPlans}`,
         `安排 ${preview.anniversaryPlans}`,
         `照片 ${preview.photos}`
       ].join(" · ");
@@ -176,15 +180,15 @@ export default function AccountDataManagement() {
       const incoming = [
         preview.incoming.people ? `${preview.incoming.people} 个人物` : "",
         preview.incoming.places ? `${preview.incoming.places} 个地点` : "",
-        preview.incoming.memories ? `${preview.incoming.memories} 条回忆` : "",
+        preview.incoming.memories ? `${preview.incoming.memories} 条记录` : "",
         preview.incoming.photos ? `${preview.incoming.photos} 张照片` : ""
       ].filter(Boolean).join(" · ") || "没有可导入内容";
       const effect = [
         preview.willCreate.people ? `新增人物 ${preview.willCreate.people}` : "",
         preview.willCreate.places ? `新增地点 ${preview.willCreate.places}` : "",
         preview.willReuse.places ? `复用已有地点 ${preview.willReuse.places}` : "",
-        preview.willCreate.memories ? `新增回忆 ${preview.willCreate.memories}` : "",
-        preview.skippedMemories ? `跳过重复回忆 ${preview.skippedMemories}` : "",
+        preview.willCreate.memories ? `新增记录 ${preview.willCreate.memories}` : "",
+        preview.skippedMemories ? `跳过重复记录 ${preview.skippedMemories}` : "",
         preview.willCreate.photos ? `新增照片 ${preview.willCreate.photos}` : ""
       ].filter(Boolean).join(" · ") || "没有新内容需要添加";
       setLastImportPreview({
@@ -239,7 +243,7 @@ export default function AccountDataManagement() {
           result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
           result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
           result.placesReused ? `复用地点 ${result.placesReused}` : "",
-          result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
+          result.memoriesCreated ? `新增记录 ${result.memoriesCreated}` : "",
           result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : "",
           result.photosCreated ? `新增照片 ${result.photosCreated}` : ""
         ].filter(Boolean).join(" · ") || "分享包已处理",
@@ -257,7 +261,7 @@ export default function AccountDataManagement() {
           result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
           result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
           result.placesReused ? `复用地点 ${result.placesReused}` : "",
-          result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
+          result.memoriesCreated ? `新增记录 ${result.memoriesCreated}` : "",
           result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : "",
           result.photosCreated ? `新增照片 ${result.photosCreated}` : ""
         ].filter(Boolean).join(" · ") || "分享包已处理",
@@ -467,7 +471,7 @@ export default function AccountDataManagement() {
             <div>
               <strong>{healthReport.status === "ok" ? "备份健康：可备份" : "备份健康：需检查"}</strong>
               <span>
-                {healthReport.people} 人物 · {healthReport.places} 地点 · {healthReport.memories} 回忆 · {healthReport.photoRefs} 照片引用
+                {healthReport.people} 人物 · {healthReport.places} 地点 · {healthReport.memories} 回忆 · {healthReport.memoryPlans} 计划 · {healthReport.photoRefs} 照片引用
               </span>
             </div>
           </div>

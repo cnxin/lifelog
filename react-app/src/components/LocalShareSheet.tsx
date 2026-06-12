@@ -246,7 +246,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               <Share2 size={18} />
             </span>
             <div>
-              <strong>{target.type === "memory" ? "导出 1 条回忆" : `导出 ${target.count} 个地点`}</strong>
+              <strong>{target.type === "memory" ? "导出 1 条记录" : `导出 ${target.count} 个地点`}</strong>
               <span>生成 `.lifelog-share.json`，接收方可在 LifeLog 中预览后添加。</span>
             </div>
           </div>

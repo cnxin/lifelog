@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -15,8 +15,9 @@ import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } 
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
-import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
+import { toCalendarDateKey } from "../../utils/calendarItems";
 import type { AnniversaryPlan, MemoryEvent, Photo } from "../../types";
 
 export default function MemoryDetail() {
@@ -32,6 +33,7 @@ export default function MemoryDetail() {
   const [shareOpen, setShareOpen] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [addingRelatedMemory, setAddingRelatedMemory] = useState(false);
+  const [completingPlan, setCompletingPlan] = useState(false);
   const memory = state.memories.find((item) => item.id === memoryId);
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
@@ -64,31 +66,34 @@ export default function MemoryDetail() {
   if (!memory) {
     return (
       <section className="section">
-        <GlassCard className="empty">没有找到这条回忆</GlassCard>
+        <GlassCard className="empty">没有找到这条记录</GlassCard>
       </section>
     );
   }
 
+  const memoryCtx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+  const memoryTitle = getMemoryDisplayTitle(memory, memoryCtx);
+  const copy = buildMemoryDetailCopy(memory);
   const completionTips = [
     {
       id: "content",
       icon: <Heart />,
-      title: "补充内容",
-      desc: "写下发生了什么、下次要注意什么。",
+      title: copy.contentTipTitle,
+      desc: copy.contentTipDesc,
       visible: !memory.content.trim()
     },
     {
       id: "people",
       icon: <Users />,
       title: "关联人物",
-      desc: "关联后人物详情会自动出现这条回忆。",
+      desc: copy.personTipDesc,
       visible: !personIds.length
     },
     {
       id: "place",
       icon: <MapPin />,
       title: "关联地点",
-      desc: "关联后地点详情会自动串起去过的人和回忆。",
+      desc: copy.placeTipDesc,
       visible: !placeIds.length
     },
     {
@@ -102,11 +107,10 @@ export default function MemoryDetail() {
   const relatedMemoryMatches = buildRelatedMemoryMatches(memory, state.memories);
   const relatedReasonById = new Map(relatedMemoryMatches.map((item) => [item.memory.id, item.reason]));
   const groupedRelatedMemories = groupMemoriesByMonth(relatedMemoryMatches.map((item) => item.memory));
-  const memoryCtx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-  const memoryTitle = getMemoryDisplayTitle(memory, memoryCtx);
   const storyFacts = buildMemoryStoryFacts(memory, memoryCtx, photoIds.length, linkedPlans.length);
   const firstPersonId = personIds[0];
   const firstPlaceId = placeIds[0];
+  const planDueState = getPlanDueState(memory);
 
   return (
     <>
@@ -114,7 +118,7 @@ export default function MemoryDetail() {
         <GlassCard className="profile-card detail-profile-card memory-detail-profile-card">
           <div className="detail-profile-nav">
             <button className="back-button" type="button" onClick={() => navigate("/memories")}>
-              <ArrowLeft /> 返回回忆
+              <ArrowLeft /> 返回记录
             </button>
             <strong className="detail-compact-title">
               {memoryTitle}
@@ -129,10 +133,10 @@ export default function MemoryDetail() {
                 <h2>{memoryTitle}</h2>
               </div>
               <p>
-                {formatMonthDay(memory.date)} · {memory.mood}
+                {getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood}
               </p>
               <button className="category-pill active" onClick={() => setEditing(true)}>
-                编辑回忆
+                {copy.editLabel}
               </button>
             </div>
           </div>
@@ -143,7 +147,7 @@ export default function MemoryDetail() {
         <GlassCard className="memory-reader-card">
           <div className="memory-reader-head">
             <div>
-              <span>{formatMonthDay(memory.date)} · {memory.mood || "日常"}</span>
+              <span>{getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood || "日常"}</span>
               <h2>{memoryTitle}</h2>
             </div>
             <button className="memory-reader-share" type="button" onClick={() => setShareOpen(true)}>
@@ -151,7 +155,7 @@ export default function MemoryDetail() {
             </button>
           </div>
           <div className={`memory-reader-body ${memory.content.trim() ? "" : "empty"}`}>
-            {memory.content.trim() || "还没有记录内容，可以补充发生了什么、当时的感受，或者下次要注意的事。"}
+            {memory.content.trim() || copy.emptyBody}
           </div>
           <MemoryTags mood={memory.mood} tags={tags} />
           <div className="memory-reader-facts">
@@ -161,7 +165,7 @@ export default function MemoryDetail() {
           </div>
           <div className="memory-reader-actions">
             <button type="button" onClick={() => setEditing(true)}>
-              <PenLine /> {memory.content.trim() ? "补充细节" : "写下发生了什么"}
+              <PenLine /> {memory.content.trim() ? copy.detailAction : copy.emptyAction}
             </button>
             {firstPersonId ? (
               <button type="button" onClick={() => navigate(`/people/${firstPersonId}`)}>
@@ -179,6 +183,23 @@ export default function MemoryDetail() {
           </div>
         </GlassCard>
       </section>
+
+      {planDueState && (
+        <section className="section">
+          <GlassCard className="plan-completion-card">
+            <div className="plan-completion-icon">
+              <CheckCircle2 />
+            </div>
+            <div>
+              <strong>{planDueState.title}</strong>
+              <span>{planDueState.desc}</span>
+            </div>
+            <button type="button" onClick={() => setCompletingPlan(true)}>
+              补成回忆
+            </button>
+          </GlassCard>
+        </section>
+      )}
 
       {photos.length > 0 && (
         <section className="section" id="memory-photos">
@@ -256,7 +277,7 @@ export default function MemoryDetail() {
                 ))}
               </div>
             ) : (
-              <span className="memory-related-empty">未关联地点，点击“编辑回忆”可以补充。</span>
+              <span className="memory-related-empty">未关联地点，点击“{copy.editLabel}”可以补充。</span>
             )}
           </div>
         </GlassCard>
@@ -287,14 +308,14 @@ export default function MemoryDetail() {
       )}
 
       <MemoryTimelineSection
-        title="相关回忆"
+        title={isMemoryPlan(memory) ? "相关记录" : "相关回忆"}
         groupedMemories={groupedRelatedMemories}
         getPersonName={getPersonName}
         getPlaceName={getPlaceName}
         onAddMemory={() => setAddingRelatedMemory(true)}
-        emptyTitle="还没有找到相关回忆"
+        emptyTitle={isMemoryPlan(memory) ? "还没有找到相关记录" : "还没有找到相关回忆"}
         emptyDesc="同人物、同地点或同标签的记录会自动出现在这里。"
-        emptyAction="记录相关回忆"
+        emptyAction={isMemoryPlan(memory) ? "记录相关计划" : "记录相关回忆"}
         renderMeta={(relatedMemory, ctx, showContentLine) => (
           <>
             <p className="memory-desc memory-meta-line">
@@ -314,6 +335,13 @@ export default function MemoryDetail() {
       )}
 
       <EntrySheet type={editing ? "memory" : null} itemId={memory.id} onClose={() => setEditing(false)} />
+      <EntrySheet
+        type={completingPlan ? "memory" : null}
+        itemId={memory.id}
+        memoryKindOverride="memory"
+        onSaved={() => setCompletingPlan(false)}
+        onClose={() => setCompletingPlan(false)}
+      />
       <EntrySheet
         type={addingRelatedMemory ? "memory" : null}
         memoryMode="quick"
@@ -353,8 +381,52 @@ function formatLinkedPlanStatus(status: AnniversaryPlan["status"]) {
   return "未开始";
 }
 
+function getPlanDueState(memory: MemoryEvent) {
+  if (!isMemoryPlan(memory)) return null;
+  const todayKey = toCalendarDateKey(new Date());
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(memory.date) || memory.date > todayKey) return null;
+  const days = Math.abs(diffDateKeys(memory.date, todayKey));
+  if (days === 0) {
+    return {
+      title: "这条计划今天到了",
+      desc: "完成后可以补上实际发生的事、照片和心情，保存后会变成回忆。"
+    };
+  }
+  return {
+    title: `这条计划已过去 ${days} 天`,
+    desc: "可以把准备事项补成实际回忆，之后统计和常去地点会按真实到访计算。"
+  };
+}
+
+function buildMemoryDetailCopy(memory: MemoryEvent) {
+  if (isMemoryPlan(memory)) {
+    return {
+      editLabel: "编辑计划",
+      contentTipTitle: "补充安排",
+      contentTipDesc: "写下准备事项、时间地点和需要注意什么。",
+      personTipDesc: "关联后人物详情会自动出现这条计划。",
+      placeTipDesc: "关联后地点详情会自动串起想去哪里和后续回忆。",
+      emptyBody: "还没有写具体安排，可以补充准备事项、想去哪里、和谁一起，或者到时需要注意什么。",
+      detailAction: "补充安排",
+      emptyAction: "写下计划"
+    };
+  }
+
+  return {
+    editLabel: "编辑回忆",
+    contentTipTitle: "补充内容",
+    contentTipDesc: "写下发生了什么、下次要注意什么。",
+    personTipDesc: "关联后人物详情会自动出现这条回忆。",
+    placeTipDesc: "关联后地点详情会自动串起去过的人和回忆。",
+    emptyBody: "还没有记录内容，可以补充发生了什么、当时的感受，或者下次要注意的事。",
+    detailAction: "补充细节",
+    emptyAction: "写下发生了什么"
+  };
+}
+
 function buildMemoryStoryFacts(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>, photoCount: number, planCount: number) {
   return [
+    getMemoryKindLabel(memory),
     ctx.personNames.length ? `${ctx.personNames.length} 位人物` : "未关联人物",
     ctx.placeNames.length ? `${ctx.placeNames.length} 个地点` : "未关联地点",
     photoCount ? `${photoCount} 张照片` : "暂无照片",
@@ -458,4 +530,14 @@ function getDateDistance(left: string, right: string) {
 
 function isSameMonth(left: string, right: string) {
   return /^\d{4}-\d{2}/.test(left) && left.slice(0, 7) === right.slice(0, 7);
+}
+
+function diffDateKeys(targetDateKey: string, baseDateKey: string) {
+  return Math.round((dateKeyToUtcTime(targetDateKey) - dateKeyToUtcTime(baseDateKey)) / 86400000);
+}
+
+function dateKeyToUtcTime(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  if (!year || !month || !day) return 0;
+  return Date.UTC(year, month - 1, day);
 }

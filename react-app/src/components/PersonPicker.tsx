@@ -110,7 +110,7 @@ export default function PersonPicker({
       )}
 
       {people.length === 0 ? (
-        <p className="form-hint">还没有人物，可以先保存回忆，后续再关联。</p>
+        <p className="form-hint">还没有人物，可以先保存记录，后续再关联。</p>
       ) : (
         <>
           <div className="person-picker-search">

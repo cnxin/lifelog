@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLifeLog } from "../context/LifeLogContext";
 import { formatMonthDay } from "../utils/date";
-import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle } from "../utils/memoryDisplay";
+import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { buildPlaceContextLine, buildPlaceDisplayName } from "../utils/placeMeta";
 
@@ -18,6 +18,7 @@ interface SearchKeyword {
 interface SearchResult {
   id: string;
   kind: SearchKind;
+  kindLabel?: string;
   title: string;
   subtitle: string;
   meta: string;
@@ -108,12 +109,14 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
     const memoryResults = state.memories.map<SearchResult>((memory) => {
       const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
       const title = getMemoryDisplayTitle(memory, ctx);
+      const memoryKindLabel = getMemoryKindLabel(memory);
       const people = (memory.personIds || []).map((id) => personById.get(id)).filter(Boolean);
       const places = getMemoryPlaceIds(memory).map((id) => placeById.get(id)).filter(Boolean);
       const keywords = [
         keyword("标题", title),
         keyword("标题", memory.title),
         keyword("正文", memory.content),
+        keyword("分类", memoryKindLabel),
         keyword("分类", memory.mood),
         keyword("分类", memory.date),
         ...ctx.personNames.map((name) => keyword("人物", name)).filter(isSearchKeyword),
@@ -132,8 +135,9 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
       return {
         id: memory.id,
         kind: "memory",
+        kindLabel: memoryKindLabel,
         title,
-        subtitle: buildMemoryMetaLine(ctx) || firstLine(memory.content) || "回忆记录",
+        subtitle: buildMemoryMetaLine(ctx) || firstLine(memory.content) || (isMemoryPlan(memory) ? "计划记录" : "回忆记录"),
         meta: [formatMonthDay(memory.date), memory.mood, safeArray(memory.photos).length ? `${safeArray(memory.photos).length} 张照片` : ""].filter(Boolean).join(" · "),
         path: `/memories/${memory.id}`,
         searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
@@ -208,7 +212,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
             <input
               ref={inputRef}
               value={query}
-              placeholder="搜索回忆、人物、地点、标签"
+              placeholder="搜索回忆、计划、人物、地点、标签"
               onChange={(event) => setQuery(event.target.value)}
             />
             {query && (
@@ -225,7 +229,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         {!queryTokens.length ? (
           <div className="global-search-empty">
             <strong>输入关键词开始搜索</strong>
-            <span>可以搜索回忆标题、正文、人物、地点、标签、地址、喜好或平台链接。</span>
+            <span>可以搜索回忆、计划、人物、地点、标签、地址、喜好或平台链接。</span>
           </div>
         ) : results.length ? (
           <div className="global-search-results">
@@ -249,7 +253,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
                   <small className="global-search-match">{buildMatchHint(result, queryTokens)}</small>
                 </span>
                 <span className="global-search-result-meta">
-                  <em>{kindLabel(result.kind)}</em>
+                  <em>{result.kindLabel || kindLabel(result.kind)}</em>
                   <small>{result.meta}</small>
                 </span>
               </button>
@@ -258,7 +262,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         ) : (
           <div className="global-search-no-result glass-card">
             <strong>没有匹配结果</strong>
-            <span>换个关键词试试，例如姓名、地点、标签或回忆里的关键词。</span>
+            <span>换个关键词试试，例如姓名、地点、标签或记录里的关键词。</span>
           </div>
         )}
       </section>
@@ -331,7 +335,7 @@ function firstLine(value: string) {
 function kindLabel(kind: SearchKind) {
   if (kind === "person") return "人物";
   if (kind === "place") return "地点";
-  return "回忆";
+  return "记录";
 }
 
 function keyword(field: SearchField, value?: string | null): SearchKeyword | null {

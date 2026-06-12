@@ -4,6 +4,7 @@ import { buildPlanAnniversaryPath } from "./anniversaryLinks";
 import { findPlaceDuplicateGroups } from "./placeDedup";
 import { buildPlaceDisplayName } from "./placeMeta";
 import { isRecord } from "./lifelogHelpers";
+import { isMemoryPlan } from "./memoryDisplay";
 import { getMemoryPlaceIds } from "./memoryPlaces";
 
 export interface BackupHealthGroup {
@@ -19,6 +20,7 @@ export interface BackupHealthReport {
   people: number;
   places: number;
   memories: number;
+  memoryPlans: number;
   anniversaryPlans: number;
   photoRefs: number;
   attentionCount: number;
@@ -51,11 +53,13 @@ export interface BackupImportPreview {
   people: number;
   places: number;
   memories: number;
+  memoryPlans: number;
   anniversaryPlans: number;
   photos: number;
   peopleDelta: number | null;
   placesDelta: number | null;
   memoriesDelta: number | null;
+  memoryPlansDelta: number | null;
   anniversaryPlansDelta: number | null;
   photosDelta: number | null;
   repairedPhotos: number;
@@ -83,7 +87,8 @@ export function buildBackupHealthReport(state: LifeLogState): BackupHealthReport
     status: issues.length ? "warning" : "ok",
     people: state.people.length,
     places: state.places.length,
-    memories: state.memories.length,
+    memories: state.memories.filter((memory) => !isMemoryPlan(memory)).length,
+    memoryPlans: state.memories.filter(isMemoryPlan).length,
     anniversaryPlans: state.anniversaryPlans.length,
     photoRefs: countMemoryPhotoRefs(state),
     attentionCount: attentions.length,
@@ -99,14 +104,15 @@ export function buildBackupHealthReport(state: LifeLogState): BackupHealthReport
 export function buildBackupHealthDetailGroups(state: LifeLogState): BackupHealthDetailGroup[] {
   const integrityIssues = collectStateIssues(state);
   const duplicateGroups = findPlaceDuplicateGroups(state.places);
-  const placeIdsInMemories = new Set(state.memories.flatMap(getMemoryPlaceIds));
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
+  const placeIdsInMemories = new Set(actualMemories.flatMap(getMemoryPlaceIds));
 
   return [
     {
       id: "integrity",
       title: "关联完整性",
       status: integrityIssues.length ? "warning" : "ok",
-      emptyText: "人物、地点、回忆和安排的关键关联正常。",
+      emptyText: "人物、地点、记录和安排的关键关联正常。",
       items: integrityIssues.map((issue, index) => ({
         id: `integrity-${index}`,
         title: issue,
@@ -130,9 +136,9 @@ export function buildBackupHealthDetailGroups(state: LifeLogState): BackupHealth
     },
     {
       id: "records",
-      title: "回忆与安排",
+      title: "记录与安排",
       status: buildRecordHealthDetailItems(state).length ? "info" : "ok",
-      emptyText: "回忆上下文和纪念日安排状态正常。",
+      emptyText: "回忆、计划和纪念日安排状态正常。",
       items: buildRecordHealthDetailItems(state)
     }
   ];
@@ -143,6 +149,8 @@ export function buildBackupImportPreview(input: Record<string, unknown>, current
   const people = Array.isArray(sourceState.people) ? sourceState.people : [];
   const places = Array.isArray(sourceState.places) ? sourceState.places : [];
   const memories = Array.isArray(sourceState.memories) ? sourceState.memories : [];
+  const memoryPlans = memories.filter((item) => isRecord(item) && item.kind === "plan").length;
+  const currentMemoryPlans = currentState?.memories.filter(isMemoryPlan).length || 0;
   const anniversaryPlans = Array.isArray(sourceState.anniversaryPlans) ? sourceState.anniversaryPlans : [];
   const photos = Array.isArray(input.photos) ? input.photos : [];
   const photoReport = inspectBackupPhotoLinks(
@@ -162,12 +170,14 @@ export function buildBackupImportPreview(input: Record<string, unknown>, current
     schemaVersion: String(input.schemaVersion || input.version || ""),
     people: people.length,
     places: places.length,
-    memories: memories.length,
+    memories: memories.length - memoryPlans,
+    memoryPlans,
     anniversaryPlans: anniversaryPlans.length,
     photos: photos.length,
     peopleDelta: currentState ? people.length - currentState.people.length : null,
     placesDelta: currentState ? places.length - currentState.places.length : null,
-    memoriesDelta: currentState ? memories.length - currentState.memories.length : null,
+    memoriesDelta: currentState ? memories.length - memoryPlans - (currentState.memories.length - currentMemoryPlans) : null,
+    memoryPlansDelta: currentState ? memoryPlans - currentMemoryPlans : null,
     anniversaryPlansDelta: currentState ? anniversaryPlans.length - currentState.anniversaryPlans.length : null,
     photosDelta: currentState ? photos.length - countMemoryPhotoRefs(currentState) : null,
     repairedPhotos: photoReport.repairedPhotos,
@@ -199,7 +209,7 @@ function collectRawStateIssues(state: {
   const issues: string[] = [];
   const personIds = collectIds(state.people, "人物", issues);
   const placeIds = collectIds(state.places, "地点", issues);
-  const memoryIds = collectIds(state.memories, "回忆", issues);
+  const memoryIds = collectIds(state.memories, "记录", issues);
   if (state.anniversaryPlans) collectIds(state.anniversaryPlans, "纪念日安排", issues);
 
   let missingPeopleRefs = 0;
@@ -215,8 +225,8 @@ function collectRawStateIssues(state: {
     missingPlaceRefs += memoryPlaceIds.filter((placeId) => !placeIds.has(placeId)).length;
   }
 
-  if (missingPeopleRefs) issues.push(`${missingPeopleRefs} 处回忆关联了不存在的人物`);
-  if (missingPlaceRefs) issues.push(`${missingPlaceRefs} 处回忆关联了不存在的地点`);
+  if (missingPeopleRefs) issues.push(`${missingPeopleRefs} 处记录关联了不存在的人物`);
+  if (missingPlaceRefs) issues.push(`${missingPlaceRefs} 处记录关联了不存在的地点`);
 
   if (state.anniversaryPlans) {
     let missingPlanPeopleRefs = 0;
@@ -245,6 +255,7 @@ function buildHealthGroups(
   integrityIssues: string[],
   duplicateStats: { duplicatePlaceGroups: number; strongDuplicatePlaceGroups: number }
 ): BackupHealthGroup[] {
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const peopleItems = [
     state.people.filter((person) => !person.birthday).length ? `${state.people.filter((person) => !person.birthday).length} 个人物缺少生日` : "",
     state.people.filter((person) => !person.preferences.length && !person.dislikes.length).length
@@ -253,7 +264,7 @@ function buildHealthGroups(
     countDuplicatePersonNames(state.people) ? `${countDuplicatePersonNames(state.people)} 组人物姓名可能重复` : ""
   ].filter(Boolean);
 
-  const placeIdsInMemories = new Set(state.memories.flatMap(getMemoryPlaceIds));
+  const placeIdsInMemories = new Set(actualMemories.flatMap(getMemoryPlaceIds));
   const placesWithoutVisit = state.places.filter((place) => !placeIdsInMemories.has(place.id)).length;
   const placesWithoutMap = state.places.filter((place) => !hasPlaceNavigation(place)).length;
   const placeItems = [
@@ -265,8 +276,8 @@ function buildHealthGroups(
     placesWithoutVisit ? `${placesWithoutVisit} 个地点还没有到访记录` : ""
   ].filter(Boolean);
 
-  const contextlessMemories = state.memories.filter((memory) => !memory.personIds.length && !getMemoryPlaceIds(memory).length).length;
-  const emptyMemories = state.memories.filter((memory) => !memory.title.trim() && !memory.content.trim() && !memory.photos.length).length;
+  const contextlessMemories = actualMemories.filter((memory) => !memory.personIds.length && !getMemoryPlaceIds(memory).length).length;
+  const emptyMemories = actualMemories.filter((memory) => !memory.title.trim() && !memory.content.trim() && !memory.photos.length).length;
   const plansWithoutChecklist = state.anniversaryPlans.filter((plan) => !plan.checklist.length && !plan.notes && !plan.budget && !plan.placeIds.length).length;
   const donePlansWithoutMemory = state.anniversaryPlans.filter((plan) => plan.status === "done" && !plan.memoryId).length;
   const memoryItems = [
@@ -282,7 +293,7 @@ function buildHealthGroups(
       title: "关联完整性",
       status: integrityIssues.length ? "warning" : "ok",
       count: integrityIssues.length,
-      items: integrityIssues.length ? integrityIssues : ["人物、地点、回忆和安排的关键关联正常"]
+      items: integrityIssues.length ? integrityIssues : ["人物、地点、记录和安排的关键关联正常"]
     },
     {
       id: "people",
@@ -300,10 +311,10 @@ function buildHealthGroups(
     },
     {
       id: "records",
-      title: "回忆与安排",
+      title: "记录与安排",
       status: memoryItems.length ? "info" : "ok",
       count: memoryItems.length,
-      items: memoryItems.length ? memoryItems : ["回忆上下文和纪念日安排状态正常"]
+      items: memoryItems.length ? memoryItems : ["回忆、计划和纪念日安排状态正常"]
     }
   ];
 }
@@ -390,8 +401,9 @@ function buildPlaceHealthDetailItems(
 function buildRecordHealthDetailItems(state: LifeLogState): BackupHealthDetailItem[] {
   const items: BackupHealthDetailItem[] = [];
   const peopleById = new Map(state.people.map((person) => [person.id, person.name]));
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
 
-  state.memories
+  actualMemories
     .filter((memory) => !memory.personIds.length && !getMemoryPlaceIds(memory).length)
     .forEach((memory) => {
       items.push({
@@ -402,7 +414,7 @@ function buildRecordHealthDetailItems(state: LifeLogState): BackupHealthDetailIt
       });
     });
 
-  state.memories
+  actualMemories
     .filter((memory) => !memory.title.trim() && !memory.content.trim() && !memory.photos.length)
     .forEach((memory) => {
       items.push({
@@ -548,11 +560,11 @@ function inspectBackupPhotoLinks(memories: Array<Record<string, unknown>>, photo
   const missingPhotoRefs = Array.from(photoIdsInMemories).filter((photoId) => !photoRecordIds.has(photoId)).length;
   const extraPhotoRefs = Array.from(importablePhotoRecordIds).filter((photoId) => !photoIdsInMemories.has(photoId)).length;
   const issues: string[] = [];
-  if (repairedPhotos) issues.push(`${repairedPhotos} 张照片的回忆归属将自动修复`);
-  if (ignoredPhotos) issues.push(`${ignoredPhotos} 张照片没有可用回忆，将在导入时忽略`);
-  if (missingPhotoRefs) issues.push(`${missingPhotoRefs} 个回忆照片引用缺少照片文件`);
-  if (extraPhotoRefs) issues.push(`${extraPhotoRefs} 张照片未出现在回忆引用中，将自动补回关联`);
-  if (duplicatePhotoRefs) issues.push(`${duplicatePhotoRefs} 个照片引用重复出现在多条回忆中`);
+  if (repairedPhotos) issues.push(`${repairedPhotos} 张照片的记录归属将自动修复`);
+  if (ignoredPhotos) issues.push(`${ignoredPhotos} 张照片没有可用记录，将在导入时忽略`);
+  if (missingPhotoRefs) issues.push(`${missingPhotoRefs} 个记录照片引用缺少照片文件`);
+  if (extraPhotoRefs) issues.push(`${extraPhotoRefs} 张照片未出现在记录引用中，将自动补回关联`);
+  if (duplicatePhotoRefs) issues.push(`${duplicatePhotoRefs} 个照片引用重复出现在多条记录中`);
 
   return {
     repairedPhotos,

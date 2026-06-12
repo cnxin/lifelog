@@ -7,7 +7,9 @@ import type { MemoryDisplayContext, MemoryEvent } from "../types";
 import { formatMonthDay } from "../utils/date";
 import {
   buildMemoryMetaLine,
+  getMemoryKindLabel,
   getMemoryDisplayTitle,
+  isMemoryPlan,
   isManualTitle
 } from "../utils/memoryDisplay";
 import type { NotionRecordSyncMeta } from "../utils/notionStatus";
@@ -37,9 +39,10 @@ export default function MemoryCard({
   const showContentLine = isManualTitle(memory) && Boolean(memory.content.trim());
   const meta = buildMemoryMetaLine(ctx);
   const photoCount = (memory.photos || []).length;
+  const kindLabel = getMemoryKindLabel(memory);
 
   return (
-    <GlassCard className="memory-card">
+    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""}`}>
       <button className="place-tap" onClick={onOpen} type="button">
         <div className="memory-badge">{icon || <Heart />}</div>
       </button>
@@ -48,6 +51,7 @@ export default function MemoryCard({
           <span>{displayTitle}</span>
           <span className="place-title-actions">
             {syncMeta ? <NotionSyncBadge compact meta={syncMeta} /> : null}
+            <span className={`memory-kind-pill ${isMemoryPlan(memory) ? "plan" : "memory"}`}>{kindLabel}</span>
             <span className="place-rating">{formatMonthDay(memory.date)}</span>
           </span>
         </div>

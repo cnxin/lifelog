@@ -14,6 +14,7 @@ import { getAnniversaryKey } from "../../utils/anniversaryLinks";
 import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind, type AnniversaryPlanTarget } from "../../utils/anniversaryPlans";
 import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
+import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildRelationshipHealth } from "../../utils/relationshipHealth";
 import { initials } from "../../utils/text";
@@ -89,9 +90,11 @@ export default function PersonDetail() {
     );
   }
 
-  const relatedMemories = state.memories
+  const relatedEntries = state.memories
     .filter((memory) => (memory.personIds || []).includes(person.id))
     .sort((a, b) => b.date.localeCompare(a.date));
+  const relatedMemories = relatedEntries.filter((memory) => !isMemoryPlan(memory));
+  const relatedPlans = relatedEntries.filter(isMemoryPlan);
 
   const relatedPlaces = Array.from(
     new Set(relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean))
@@ -101,7 +104,7 @@ export default function PersonDetail() {
     relatedMemories.flatMap(getMemoryPlaceIds).filter(Boolean),
     getPlaceName
   );
-  const groupedMemories = groupMemoriesByMonth(relatedMemories);
+  const groupedMemories = groupMemoriesByMonth(relatedEntries);
   const latestMemory = relatedMemories[0];
   const actionCenter = buildPersonActionCenter({
     person,
@@ -234,6 +237,12 @@ export default function PersonDetail() {
                 <span>最近一次</span>
               </div>
             </div>
+            {relatedPlans.length > 0 && (
+              <div className="summary-line">
+                <strong>计划</strong>
+                <span>{relatedPlans.length} 条待发生记录</span>
+              </div>
+            )}
             <div className="summary-line">
               <strong>关系</strong>
               <span>{person.relationship || "未设置"}</span>
@@ -402,14 +411,14 @@ export default function PersonDetail() {
       </section>
 
       <MemoryTimelineSection
-        title="回忆时间线"
+        title="相关记录"
         groupedMemories={groupedMemories}
         getPersonName={getPersonName}
         getPlaceName={getPlaceName}
         onAddMemory={() => setAddingMemory(true)}
-        emptyTitle="还没有和 TA 相关的回忆"
+        emptyTitle="还没有和 TA 相关的记录"
         emptyDesc="记录一次相处，让这个人物变得更完整。"
-        emptyAction="记录和 TA 的回忆"
+        emptyAction="记录和 TA 的事"
       />
 
       <EntrySheet type={editing ? "person" : null} itemId={person.id} onClose={() => setEditing(false)} />

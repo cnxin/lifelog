@@ -11,6 +11,7 @@ import { useToast } from "../../context/ToastContext";
 import type { AnniversaryPlan, LifeLogState, MemoryEvent, Person, Place, ThemeStyle } from "../../types";
 import { buildPlanAnniversaryPath, buildPlanRecordAnniversaryPath } from "../../utils/anniversaryLinks";
 import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
+import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
@@ -103,6 +104,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
     [duplicatePlaceGroups]
   );
   const healthReport = useMemo(() => buildDataHealthReport(state), [state]);
+  const memoryStats = useMemo(() => buildRecordStats(state.memories), [state.memories]);
   const reminderCenterItems = useMemo(() => {
     const dismissed = new Set(dismissedReminderIds);
     return previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 30, limit: 12 })
@@ -256,8 +258,12 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
             <span>地点</span>
           </div>
           <div className="metric">
-            <strong>{state.memories.length}</strong>
+            <strong>{memoryStats.memories}</strong>
             <span>回忆</span>
+          </div>
+          <div className="metric">
+            <strong>{memoryStats.plans}</strong>
+            <span>计划</span>
           </div>
         </GlassCard>
         <GlassCard className="insight-card">
@@ -309,7 +315,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
             ))}
           </div>
         ) : (
-          <GlassCard className="empty">人物、地点和回忆的核心字段都已经比较完整。</GlassCard>
+          <GlassCard className="empty">人物、地点、回忆和计划的核心字段都已经比较完整。</GlassCard>
         )}
       </section>}
 
@@ -615,22 +621,23 @@ interface HealthItem {
 }
 
 function buildDataHealthReport(state: LifeLogState) {
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const items: HealthItem[] = [
     buildPeopleBirthdayHealth(state.people),
     buildPeoplePreferenceHealth(state.people),
     buildPlaceMapHealth(state.places),
     buildPlaceAddressHealth(state.places),
     buildPlacePhotoHealth(state.places),
-    buildMemoryContentHealth(state.memories),
-    buildMemoryPeopleHealth(state.memories),
-    buildMemoryPlaceHealth(state.memories),
-    buildMemoryTagHealth(state.memories)
+    buildMemoryContentHealth(actualMemories),
+    buildMemoryPeopleHealth(actualMemories),
+    buildMemoryPlaceHealth(actualMemories),
+    buildMemoryTagHealth(actualMemories)
   ].filter((item): item is HealthItem => Boolean(item && item.count > 0));
 
   const totalChecks =
     state.people.length * 2 +
     state.places.length * 3 +
-    state.memories.length * 4;
+    actualMemories.length * 4;
   const missingChecks = items.reduce((sum, item) => sum + item.count, 0);
   const score = totalChecks ? Math.max(0, Math.round(((totalChecks - missingChecks) / totalChecks) * 100)) : 100;
   const sortedItems = items.sort((left, right) => right.severity - left.severity || right.count - left.count);
@@ -639,9 +646,17 @@ function buildDataHealthReport(state: LifeLogState) {
   return {
     score,
     title: nextItem ? `还有 ${missingChecks} 项资料可补全` : "资料状态良好",
-    desc: nextItem ? `优先处理：${nextItem.title}` : "继续记录新的回忆即可。",
+    desc: nextItem ? `优先处理：${nextItem.title}` : "继续记录新的回忆或计划即可。",
     nextPath: nextItem?.path || "",
     items: sortedItems
+  };
+}
+
+function buildRecordStats(memories: MemoryEvent[]) {
+  const plans = memories.filter(isMemoryPlan).length;
+  return {
+    memories: memories.length - plans,
+    plans
   };
 }
 

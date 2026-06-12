@@ -61,7 +61,7 @@ export function formatShareHistoryCounts(counts: ShareHistoryCounts | undefined)
   return [
     counts.people ? `${counts.people} 个人物` : "",
     counts.places ? `${counts.places} 个地点` : "",
-    counts.memories ? `${counts.memories} 条回忆` : "",
+    counts.memories ? `${counts.memories} 条记录` : "",
     counts.photos ? `${counts.photos} 张照片` : ""
   ].filter(Boolean).join(" · ");
 }

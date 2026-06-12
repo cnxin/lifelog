@@ -30,6 +30,7 @@ interface EntrySheetProps {
   initialPlaceDraft?: Partial<Place>;
   initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
+  memoryKindOverride?: MemoryEvent["kind"];
   initialDate?: string;
   onSaved?: (result: { type: EntryType; id: string }) => void | Promise<void>;
   onClose: () => void;
@@ -38,7 +39,7 @@ interface EntrySheetProps {
 const meta: Record<EntryType, { addTitle: string; editTitle: string; kicker: string; redirect: string }> = {
   person: { addTitle: "记一个人", editTitle: "编辑人物", kicker: "先留下名字，细节以后慢慢补", redirect: "/people" },
   place: { addTitle: "记一个地方", editTitle: "编辑地点", kicker: "想再去、想推荐、想避雷都可以", redirect: "/places" },
-  memory: { addTitle: "记一件事", editTitle: "编辑回忆", kicker: "先写一句，之后再整理", redirect: "/memories" }
+  memory: { addTitle: "记一件事", editTitle: "编辑记录", kicker: "先写一句，之后再整理", redirect: "/memories" }
 };
 
 export default function EntrySheet({
@@ -51,6 +52,7 @@ export default function EntrySheet({
   initialPlaceDraft,
   initialPlaceShareReview,
   memoryMode = "full",
+  memoryKindOverride,
   initialDate,
   onSaved,
   onClose
@@ -80,6 +82,7 @@ export default function EntrySheet({
         type,
         itemId: itemId || "",
         memoryMode,
+        memoryKindOverride: memoryKindOverride || "",
         initialDate: initialDate || "",
         initialPersonId: initialPersonId || "",
         initialPersonIds: (initialPersonIds || []).join("|"),
@@ -324,6 +327,7 @@ export default function EntrySheet({
               initialPlaceId={initialPlaceId}
               initialPlaceIds={initialPlaceIds}
               initialDate={initialDate}
+              memoryKindOverride={memoryKindOverride}
               mode={memoryMode}
               photos={photos}
               onPhotosChange={setPhotos}
@@ -446,7 +450,7 @@ function buildSaveToast({
 function getSaveFeedback(type: EntryType, isEditing: boolean) {
   if (type === "person") return isEditing ? "人物资料已更新" : "人物已保存";
   if (type === "place") return isEditing ? "地点资料已更新" : "地点已保存";
-  return isEditing ? "回忆已更新" : "回忆已保存";
+  return isEditing ? "记录已更新" : "记录已保存";
 }
 
 function getSubmitText(type: EntryType, isEditing: boolean) {
@@ -473,8 +477,8 @@ function validateForm(type: EntryType, formData: FormData) {
       if (!title && !content) return "请先写下今天发生了什么。";
       return "";
     }
-    if (!String(formData.get("date") || "").trim()) return "请选择回忆日期。";
-    if (!String(formData.get("content") || "").trim()) return "请填写回忆内容。";
+    if (!String(formData.get("date") || "").trim()) return "请选择记录日期。";
+    if (!String(formData.get("content") || "").trim()) return "请填写记录内容。";
   }
 
   return "";

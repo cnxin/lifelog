@@ -27,6 +27,7 @@ export function buildPlaceGroupVisitStats(
 ): PlaceVisitStats {
   const placeIdSet = new Set(placeIds.filter(Boolean));
   const relatedMemories = memories
+    .filter((memory) => memory.kind !== "plan")
     .filter((memory) => getMemoryPlaceIds(memory).some((placeId) => placeIdSet.has(placeId)))
     .sort((a, b) => b.date.localeCompare(a.date));
   const latestDate = relatedMemories[0]?.date || "";
@@ -47,7 +48,7 @@ export function buildMallVisitStats(
   const uniqueStoreIds = Array.from(new Set(storePlaceIds.filter(Boolean)));
   const storeIdSet = new Set(uniqueStoreIds);
   const groupStats = buildPlaceGroupVisitStats(uniqueStoreIds, memories, getPersonName);
-  const storeVisitCount = memories.reduce((sum, memory) => {
+  const storeVisitCount = memories.filter((memory) => memory.kind !== "plan").reduce((sum, memory) => {
     return sum + getMemoryPlaceIds(memory).filter((placeId) => storeIdSet.has(placeId)).length;
   }, 0);
 

@@ -68,7 +68,7 @@ export default function ShareImport() {
         result.peopleCreated ? `新增人物 ${result.peopleCreated}` : "",
         result.placesCreated ? `新增地点 ${result.placesCreated}` : "",
         result.placesReused ? `复用地点 ${result.placesReused}` : "",
-        result.memoriesCreated ? `新增回忆 ${result.memoriesCreated}` : "",
+        result.memoriesCreated ? `新增记录 ${result.memoriesCreated}` : "",
         result.memoriesSkipped ? `跳过重复 ${result.memoriesSkipped}` : ""
       ].filter(Boolean).join(" · ") || "分享内容已处理";
       const viewTarget = getShareImportViewTarget(result);
@@ -270,7 +270,7 @@ export default function ShareImport() {
             </span>
             <div>
               <strong>{preview.title}</strong>
-              <small>{preview.shareType === "memory" ? "回忆分享" : "地点分享"} · {formatShareDate(preview.exportedAt)}</small>
+              <small>{preview.shareType === "memory" ? "记录分享" : "地点分享"} · {formatShareDate(preview.exportedAt)}</small>
             </div>
           </div>
           {isQrMiniShare && (
@@ -282,7 +282,7 @@ export default function ShareImport() {
           <div className="share-import-metrics">
             <Metric label="人物" value={preview.incoming.people} />
             <Metric label="地点" value={preview.incoming.places} />
-            <Metric label="回忆" value={preview.incoming.memories} />
+            <Metric label="记录" value={preview.incoming.memories} />
             <Metric label="照片" value={preview.incoming.photos} />
           </div>
           <div className="share-import-effect">
@@ -290,8 +290,8 @@ export default function ShareImport() {
               preview.willCreate.people ? `新增人物 ${preview.willCreate.people}` : "",
               preview.willCreate.places ? `新增地点 ${preview.willCreate.places}` : "",
               preview.willReuse.places ? `复用已有地点 ${preview.willReuse.places}` : "",
-              preview.willCreate.memories ? `新增回忆 ${preview.willCreate.memories}` : "",
-              preview.skippedMemories ? `跳过重复回忆 ${preview.skippedMemories}` : ""
+              preview.willCreate.memories ? `新增记录 ${preview.willCreate.memories}` : "",
+              preview.skippedMemories ? `跳过重复记录 ${preview.skippedMemories}` : ""
             ].filter(Boolean).map((item) => (
               <span key={item}>{item}</span>
             ))}

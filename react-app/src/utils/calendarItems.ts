@@ -18,7 +18,7 @@ export type CalendarItem = {
   content?: string;
   mood?: string;
   tagItems?: string[];
-  type: "person" | "memory";
+  type: "person" | "memory" | "plan";
   target: string;
 };
 
@@ -100,6 +100,7 @@ export function buildCalendarItemsForDateRange(
     .map((memory) => {
       const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
       const content = isManualTitle(memory) ? memory.content.trim() : "";
+      const type: CalendarItem["type"] = memory.kind === "plan" ? "plan" : "memory";
       return {
         id: `memory-${memory.id}`,
         dateKey: memory.date,
@@ -108,7 +109,7 @@ export function buildCalendarItemsForDateRange(
         content,
         mood: memory.mood,
         tagItems: (memory.tags || []).filter(Boolean),
-        type: "memory" as const,
+        type,
         target: `/memories/${memory.id}`
       };
     });

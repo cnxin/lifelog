@@ -10,8 +10,8 @@ export function getShareImportViewTarget(result: LifeLogShareImportResult): Shar
   const placeIds = result.createdPlaceIds || [];
   const personIds = result.createdPersonIds || [];
 
-  if (memoryIds.length === 1) return { label: "查看回忆", path: `/memories/${memoryIds[0]}` };
-  if (memoryIds.length > 1) return { label: "查看回忆", path: `/memories?imported=${encodeURIComponent(memoryIds.join(","))}` };
+  if (memoryIds.length === 1) return { label: "查看记录", path: `/memories/${memoryIds[0]}` };
+  if (memoryIds.length > 1) return { label: "查看记录", path: `/memories?imported=${encodeURIComponent(memoryIds.join(","))}` };
   if (placeIds.length === 1) return { label: "查看地点", path: `/places/${placeIds[0]}` };
   if (placeIds.length > 1) return { label: "查看地点", path: `/places?imported=${encodeURIComponent(placeIds.join(","))}` };
   if (personIds.length === 1) return { label: "查看人物", path: `/people/${personIds[0]}` };

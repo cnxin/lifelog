@@ -98,6 +98,10 @@
   background: linear-gradient(135deg, var(--primary), var(--secondary));
 }
 
+.memory-card-plan .memory-badge {
+  background: linear-gradient(135deg, #22a06b, var(--primary));
+}
+
 .place-info,
 .person-info,
 .memory-info {
@@ -134,6 +138,23 @@
   color: #fdcb6e;
   font-size: 13px;
   white-space: nowrap;
+}
+
+.memory-kind-pill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 3px 7px;
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 12%, transparent);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.memory-kind-pill.plan {
+  color: var(--primary);
+  background: var(--soft-purple);
 }
 
 .place-desc,
@@ -302,6 +323,60 @@
   flex: 0 0 auto;
   width: 15px;
   height: 15px;
+}
+
+.plan-completion-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.plan-completion-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 12%, transparent);
+}
+
+.plan-completion-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.plan-completion-card > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.plan-completion-card strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.plan-completion-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.plan-completion-card button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 12px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .truncate-text {
