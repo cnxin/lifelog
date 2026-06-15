@@ -201,6 +201,15 @@ export default function MemoryDetail() {
         </section>
       )}
 
+      {!isMemoryPlan(memory) && memory.plannedContent?.trim() && (
+        <section className="section">
+          <GlassCard className="memory-plan-original-card">
+            <span>原计划</span>
+            <p>{memory.plannedContent.trim()}</p>
+          </GlassCard>
+        </section>
+      )}
+
       {photos.length > 0 && (
         <section className="section" id="memory-photos">
           <div className="section-header">
@@ -339,6 +348,8 @@ export default function MemoryDetail() {
         type={completingPlan ? "memory" : null}
         itemId={memory.id}
         memoryKindOverride="memory"
+        memoryTitleOverride="补成回忆"
+        memoryKickerOverride="保留原计划，补上实际发生的事"
         onSaved={() => setCompletingPlan(false)}
         onClose={() => setCompletingPlan(false)}
       />

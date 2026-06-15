@@ -1,4 +1,4 @@
-import { CalendarDays, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, CheckCircle2, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -17,6 +17,7 @@ import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, i
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
+import { toCalendarDateKey } from "../../utils/calendarItems";
 
 export default function Memories() {
   const { state, notionSettings, notionPageMappings, notionSyncQueue, getPersonName, getPlaceName, deleteEntry, getDeleteSnapshot, restoreDeletedEntry } = useLifeLog();
@@ -37,12 +38,14 @@ export default function Memories() {
   const placeFilter = filters.placeFilter;
   const moodFilter = filters.moodFilter;
   const tagFilter = filters.tagFilter;
+  const todayKey = toCalendarDateKey(new Date());
   const activeAdvancedFilterCount = [typeFilter, personFilter, placeFilter, moodFilter, tagFilter].filter(Boolean).length;
   const hasAdvancedFilters = activeAdvancedFilterCount > 0;
   const [filtersOpen, setFiltersOpen] = useState(hasAdvancedFilters);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
 
+  const duePlanCount = useMemo(() => state.memories.filter((memory) => isDuePlan(memory, todayKey)).length, [state.memories, todayKey]);
   const filterOptions = useMemo(() => buildFilterOptions(state.memories, getPersonName, getPlaceName), [state.memories, getPersonName, getPlaceName]);
   const hasActiveFilters = Boolean(query.trim() || hasAdvancedFilters);
   const activeFilterLabels = buildActiveFilterLabels({
@@ -75,6 +78,7 @@ export default function Memories() {
 
         if (normalizedQuery && !content.includes(normalizedQuery)) return false;
         if (typeFilter === "plan" && !isMemoryPlan(memory)) return false;
+        if (typeFilter === "due-plan" && !isDuePlan(memory, todayKey)) return false;
         if (typeFilter === "memory" && isMemoryPlan(memory)) return false;
         if (personFilter && !(memory.personIds || []).includes(personFilter)) return false;
         if (placeFilter && !getMemoryPlaceIds(memory).includes(placeFilter)) return false;
@@ -82,7 +86,7 @@ export default function Memories() {
         if (tagFilter && !(memory.tags || []).includes(tagFilter)) return false;
         return true;
       });
-  }, [getPersonName, getPlaceName, importedMemoryIdSet, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter, typeFilter]);
+  }, [getPersonName, getPlaceName, importedMemoryIdSet, moodFilter, personFilter, placeFilter, query, state.memories, tagFilter, todayKey, typeFilter]);
   const groupedMemories = useMemo(() => groupMemoriesByMonth(memories), [memories]);
   const yearAnchors = useMemo(() => buildYearAnchors(groupedMemories), [groupedMemories]);
   const yearMapItems = useMemo(() => buildYearMapItems(groupedMemories), [groupedMemories]);
@@ -151,6 +155,22 @@ export default function Memories() {
           </GlassCard>
         </section>
       )}
+      {duePlanCount > 0 && typeFilter !== "due-plan" && !importedMemoryIds.length && (
+        <section className="section due-plan-focus-section">
+          <GlassCard className="due-plan-focus-card">
+            <div className="due-plan-focus-icon">
+              <CheckCircle2 />
+            </div>
+            <div>
+              <strong>{duePlanCount} 条计划可以补成回忆</strong>
+              <span>集中处理今天到期和已过期的计划。</span>
+            </div>
+            <button type="button" onClick={() => updateFilters({ typeFilter: "due-plan" })}>
+              去处理
+            </button>
+          </GlassCard>
+        </section>
+      )}
       <section className="section memory-filter-section compact-filter-section">
         <div className="list-filter-toolbar">
           <div className="list-filter-summary">
@@ -192,7 +212,8 @@ export default function Memories() {
               options={[
                 { value: "", label: "全部记录" },
                 { value: "memory", label: "只看回忆" },
-                { value: "plan", label: "只看计划" }
+                { value: "plan", label: "只看计划" },
+                { value: "due-plan", label: "待补成回忆" }
               ]}
             />
             <SelectPicker
@@ -367,12 +388,22 @@ function buildActiveFilterLabels(filters: {
 }) {
   return [
     filters.query ? `搜索：${filters.query}` : "",
-    filters.type ? `类型：${filters.type === "plan" ? "计划" : "回忆"}` : "",
+    filters.type ? `类型：${formatTypeFilterLabel(filters.type)}` : "",
     filters.person ? `人物：${filters.person}` : "",
     filters.place ? `地点：${filters.place}` : "",
     filters.mood ? `心情：${filters.mood}` : "",
     filters.tag ? `标签：${filters.tag}` : ""
   ].filter(Boolean);
+}
+
+function formatTypeFilterLabel(value: string) {
+  if (value === "plan") return "计划";
+  if (value === "due-plan") return "待补成回忆";
+  return "回忆";
+}
+
+function isDuePlan(memory: MemoryEvent, todayKey: string) {
+  return isMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= todayKey;
 }
 
 function parseImportedIds(value: string | null) {

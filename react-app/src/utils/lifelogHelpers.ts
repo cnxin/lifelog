@@ -165,6 +165,7 @@ export function buildMemoryFromFormData({
   const selectedPlaceId = String(formData.get("placeId") || selectedPlaceIds[0] || "");
   const inputDate = String(formData.get("date") || (existing ? existing.date : new Date().toISOString().slice(0, 10)));
   const memoryKind = String(formData.get("memoryKind") || existing?.kind || "memory") === "plan" ? "plan" : "memory";
+  const plannedContent = buildPlannedContent(existing, memoryKind);
   const quickInference = inferQuickMemory({
     rawTitle,
     content,
@@ -198,9 +199,19 @@ export function buildMemoryFromFormData({
     placeIds: matchedPlaceIds,
     mood: String(formData.get("mood") || (existing ? "" : settings.defaultMood)),
     content,
+    plannedContent,
     tags: splitList(formData.get("tags")),
     photos: photoIds !== undefined ? photoIds : existing?.photos || []
   };
+}
+
+function buildPlannedContent(existing: MemoryEvent | undefined, nextKind: MemoryEvent["kind"]) {
+  if (!existing) return undefined;
+  if (existing.plannedContent?.trim()) return existing.plannedContent;
+  if (existing.kind === "plan" && nextKind === "memory" && existing.content.trim()) {
+    return existing.content;
+  }
+  return undefined;
 }
 
 function parseRating(value: string) {

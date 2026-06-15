@@ -16,6 +16,18 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.111",
+    date: "2026-06-15",
+    title: "Notion 正文同步和计划转回忆",
+    highlights: [
+      "Notion 记录同步新增页面正文写入，会在 Notion 页面内生成正文、原计划和关联信息。",
+      "Notion 重新同步会替换 LifeLog 同步区，并保留同步区外手动写入的 Notion 内容。",
+      "Notion 同步支持清空字段、分页读取旧同步区和分批写入页面块，长内容同步更稳定。",
+      "数据同步区新增同步方式提示，高级配置可关闭记录页面正文同步，仅保留数据库属性。",
+      "计划补成回忆会保留原计划内容，记录页新增待补成回忆筛选，方便把到期计划补记为真实回忆。"
+    ]
+  },
+  {
     version: "0.1.0-test.110",
     date: "2026-06-12",
     title: "记录和计划体验收口",

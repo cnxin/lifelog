@@ -489,6 +489,7 @@ function normalizeSharedMemory(value: unknown) {
     placeIds: Array.isArray(value.placeIds) ? value.placeIds.map(String).filter(Boolean) : [],
     mood: String(value.mood || "日常"),
     content: String(value.content || ""),
+    plannedContent: String(value.plannedContent || "") || undefined,
     tags: Array.isArray(value.tags) ? value.tags.map(String).filter(Boolean) : [],
     photos: Array.isArray(value.photos) ? value.photos.map(String).filter(Boolean) : []
   } satisfies MemoryEvent;

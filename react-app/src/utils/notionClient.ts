@@ -772,6 +772,7 @@ function buildLifeLogDatabaseDefinitions(): Array<{
         日期: dateSchema(),
         心情: selectSchema(),
         内容: richTextSchema(),
+        原计划: richTextSchema(),
         关联人物: richTextSchema(),
         关联地点: richTextSchema(),
         标签: multiSelectSchema(),

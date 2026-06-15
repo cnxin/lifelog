@@ -563,6 +563,7 @@ function normalizeNotionSettings(value: Partial<NotionSettings> | undefined): No
     placesDatabaseId: normalizeNotionId(next.placesDatabaseId),
     memoriesDatabaseId: normalizeNotionId(next.memoriesDatabaseId),
     plansDatabaseId: normalizeNotionId(next.plansDatabaseId),
+    syncPageContent: next.syncPageContent !== false,
     apiVersion: String(next.apiVersion || defaultNotionSettings.apiVersion).trim(),
     lastConnectionTestAt: next.lastConnectionTestAt,
     lastConnectionStatus: ["idle", "connected", "failed"].includes(String(next.lastConnectionStatus))

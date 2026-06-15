@@ -97,6 +97,7 @@ export interface MemoryEvent {
   placeIds: ID[];
   mood: string;
   content: string;
+  plannedContent?: string;
   tags: string[];
   photos: string[];
 }
@@ -179,6 +180,7 @@ export interface NotionSettings {
   placesDatabaseId: string;
   memoriesDatabaseId: string;
   plansDatabaseId: string;
+  syncPageContent: boolean;
   apiVersion: string;
   lastConnectionTestAt?: string;
   lastConnectionStatus?: NotionConnectionStatus;
@@ -197,6 +199,7 @@ export const defaultNotionSettings: NotionSettings = {
   placesDatabaseId: "",
   memoriesDatabaseId: "",
   plansDatabaseId: "",
+  syncPageContent: true,
   apiVersion: "2022-06-28",
   lastConnectionStatus: "idle",
   lastConnectionMessage: ""

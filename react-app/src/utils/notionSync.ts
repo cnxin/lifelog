@@ -57,6 +57,9 @@ interface NotionSyncTypeSummaryBase {
 
 type NotionPropertyValue = Record<string, unknown>;
 type NotionProperties = Record<string, NotionPropertyValue>;
+type NotionBlock = Record<string, unknown>;
+const NOTION_BLOCK_PAGE_SIZE = 100;
+const NOTION_BLOCK_WRITE_BATCH_SIZE = 90;
 
 interface NotionSyncItem {
   entityType: NotionEntityType;
@@ -64,12 +67,19 @@ interface NotionSyncItem {
   label: string;
   databaseId: string;
   properties: NotionProperties;
+  blocks?: NotionBlock[];
 }
 
 interface NotionDatabaseSchema {
   id: string;
   title: string;
   properties: Record<string, { type?: string }>;
+}
+
+interface NotionBlockChildrenResponse {
+  results?: unknown[];
+  has_more?: boolean;
+  next_cursor?: string | null;
 }
 
 export async function syncLifeLogToNotion({
@@ -135,7 +145,7 @@ export async function syncLifeLogToNotion({
   for (const item of items) {
     const mappingId = buildNotionMappingId(item.entityType, item.entityId);
     const previousMapping = mappingById.get(mappingId);
-    const hash = buildSyncHash(item.properties);
+    const hash = buildSyncHash({ properties: item.properties, blocks: item.blocks || [] });
     const typeSummary = nextSummary.byType[item.entityType];
     typeSummary.total += 1;
 
@@ -169,6 +179,7 @@ export async function syncLifeLogToNotion({
       databaseId: item.databaseId,
       pageId: previousMapping?.notionPageId,
       properties,
+      blocks: item.blocks,
       fetcher
     });
 
@@ -224,7 +235,7 @@ export function buildSyncItems(state: LifeLogState, settings: NotionSettings): N
   return [
     ...(settings.peopleDatabaseId ? state.people.map((person) => buildPersonItem(person, settings.peopleDatabaseId)) : []),
     ...(settings.placesDatabaseId ? state.places.map((place) => buildPlaceItem(place, settings.placesDatabaseId)) : []),
-    ...(settings.memoriesDatabaseId ? state.memories.map((memory) => buildMemoryItem(memory, state, settings.memoriesDatabaseId)) : []),
+    ...(settings.memoriesDatabaseId ? state.memories.map((memory) => buildMemoryItem(memory, state, settings.memoriesDatabaseId, settings)) : []),
     ...(settings.plansDatabaseId ? state.anniversaryPlans.map((plan) => buildPlanItem(plan, state, settings.plansDatabaseId)) : [])
   ];
 }
@@ -280,12 +291,91 @@ export function buildMemoryProperties(memory: MemoryEvent, state: LifeLogState):
     日期: [dateProperty(memory.date), "Date"],
     心情: [selectProperty(memory.mood), "Mood"],
     内容: [richTextProperty(memory.content), "Content"],
+    原计划: [richTextProperty(memory.plannedContent || ""), "Planned Content"],
     关联人物: [richTextProperty(people.join("、")), "People"],
     关联地点: [richTextProperty(places.join("、")), "Places"],
     标签: [multiSelectProperty(memory.tags), "Tags"],
     照片数量: [numberProperty(memory.photos.length), "Photo Count"],
     更新时间: [dateProperty(new Date().toISOString()), "Updated At"]
   });
+}
+
+function buildMemoryPageBlocks(memory: MemoryEvent, state: LifeLogState): NotionBlock[] {
+  const people = memory.personIds.map((id) => state.people.find((person) => person.id === id)?.name).filter(Boolean);
+  const places = getMemoryPlaceIds(memory)
+    .map((id) => state.places.find((place) => place.id === id))
+    .filter((place): place is Place => Boolean(place))
+    .map(buildPlaceDisplayName);
+  const content = memory.content.trim();
+  const plannedContent = memory.plannedContent?.trim() || "";
+  const metaLines = [
+    `类型：${getMemoryKindLabel(memory)}`,
+    `日期：${memory.date || "未设置"}`,
+    memory.mood ? `心情：${memory.mood}` : "",
+    people.length ? `人物：${people.join("、")}` : "",
+    places.length ? `地点：${places.join("、")}` : "",
+    memory.tags.length ? `标签：${memory.tags.join("、")}` : "",
+    memory.photos.length ? `照片数量：${memory.photos.length}` : ""
+  ].filter(Boolean);
+
+  return [
+    calloutBlock("LifeLog 同步内容开始。重新同步时会替换这一段，下面手动新增的内容不会被覆盖。"),
+    headingBlock("正文"),
+    ...textBlocks(content || "还没有记录正文。"),
+    ...(plannedContent ? [headingBlock("原计划"), ...textBlocks(plannedContent)] : []),
+    headingBlock("关联信息"),
+    ...textBlocks(metaLines.join("\n")),
+    paragraphBlock("LifeLog 同步内容结束")
+  ];
+}
+
+function calloutBlock(text: string): NotionBlock {
+  return {
+    object: "block",
+    type: "callout",
+    callout: {
+      rich_text: richText(text),
+      icon: { type: "emoji", emoji: "📝" }
+    }
+  };
+}
+
+function headingBlock(text: string): NotionBlock {
+  return {
+    object: "block",
+    type: "heading_2",
+    heading_2: {
+      rich_text: richText(text)
+    }
+  };
+}
+
+function paragraphBlock(text: string): NotionBlock {
+  return {
+    object: "block",
+    type: "paragraph",
+    paragraph: {
+      rich_text: richText(text)
+    }
+  };
+}
+
+function textBlocks(value: string): NotionBlock[] {
+  const normalized = value.trim();
+  if (!normalized) return [];
+  return splitNotionText(normalized).map(paragraphBlock);
+}
+
+function splitNotionText(value: string) {
+  const chunks: string[] = [];
+  let rest = value;
+  const max = 1800;
+  while (rest.length > max) {
+    chunks.push(rest.slice(0, max));
+    rest = rest.slice(max);
+  }
+  if (rest) chunks.push(rest);
+  return chunks;
 }
 
 export function buildPlanProperties(plan: AnniversaryPlan, state: LifeLogState): NotionProperties {
@@ -347,12 +437,14 @@ async function upsertNotionPage({
   databaseId,
   pageId,
   properties,
+  blocks,
   fetcher
 }: {
   settings: NotionSettings;
   databaseId: string;
   pageId?: string;
   properties: NotionProperties;
+  blocks?: NotionBlock[];
   fetcher?: NotionFetch;
 }): Promise<{ ok: true; pageId: string; created: boolean } | { ok: false; message: string; diagnostic?: NotionRequestDiagnostic }> {
   if (pageId) {
@@ -362,7 +454,14 @@ async function upsertNotionPage({
       { method: "PATCH", json: { properties } },
       fetcher
     );
-    if (update.ok) return { ok: true, pageId: String(update.data.id || pageId), created: false };
+    if (update.ok) {
+      const nextPageId = String(update.data.id || pageId);
+      if (blocks?.length) {
+        const blockResult = await replaceLifeLogPageBlocks(settings, nextPageId, blocks, fetcher);
+        if (!blockResult.ok) return blockResult;
+      }
+      return { ok: true, pageId: nextPageId, created: false };
+    }
     if (update.status !== 404) return { ok: false, message: update.message, diagnostic: update.diagnostic };
   }
 
@@ -373,13 +472,118 @@ async function upsertNotionPage({
       method: "POST",
       json: {
         parent: { database_id: normalizeNotionId(databaseId) },
-        properties
+        properties,
+        ...(blocks?.length ? { children: blocks.slice(0, NOTION_BLOCK_WRITE_BATCH_SIZE) } : {})
       }
     },
     fetcher
   );
   if (!create.ok) return { ok: false, message: create.message, diagnostic: create.diagnostic };
-  return { ok: true, pageId: String(create.data.id || ""), created: true };
+  const createdPageId = String(create.data.id || "");
+  if (!createdPageId) return { ok: false, message: "Notion 创建页面后未返回页面 ID。" };
+  if (blocks && blocks.length > NOTION_BLOCK_WRITE_BATCH_SIZE) {
+    const append = await appendNotionPageBlocks(settings, createdPageId, blocks.slice(NOTION_BLOCK_WRITE_BATCH_SIZE), fetcher);
+    if (!append.ok) return append;
+  }
+  return { ok: true, pageId: createdPageId, created: true };
+}
+
+async function replaceLifeLogPageBlocks(
+  settings: NotionSettings,
+  pageId: string,
+  blocks: NotionBlock[],
+  fetcher?: NotionFetch
+): Promise<{ ok: true } | { ok: false; message: string; diagnostic?: NotionRequestDiagnostic }> {
+  const existing = await listTopLevelBlockChildren(settings, pageId, fetcher);
+  if (!existing.ok) return existing;
+
+  const blocksToArchive = getLifeLogManagedBlockIds(existing.results);
+
+  for (const blockId of blocksToArchive) {
+    const archived = await notionRequest(
+      settings,
+      `/blocks/${encodeURIComponent(blockId)}`,
+      { method: "PATCH", json: { archived: true } },
+      fetcher
+    );
+    if (!archived.ok) return { ok: false, message: archived.message, diagnostic: archived.diagnostic };
+  }
+
+  return appendNotionPageBlocks(settings, pageId, blocks, fetcher);
+}
+
+async function listTopLevelBlockChildren(
+  settings: NotionSettings,
+  pageId: string,
+  fetcher?: NotionFetch
+): Promise<{ ok: true; results: unknown[] } | { ok: false; message: string; diagnostic?: NotionRequestDiagnostic }> {
+  const results: unknown[] = [];
+  let cursor = "";
+  let pageCount = 0;
+
+  do {
+    const query = cursor
+      ? `?page_size=${NOTION_BLOCK_PAGE_SIZE}&start_cursor=${encodeURIComponent(cursor)}`
+      : `?page_size=${NOTION_BLOCK_PAGE_SIZE}`;
+    const response = await notionRequest<NotionBlockChildrenResponse>(
+      settings,
+      `/blocks/${encodeURIComponent(pageId)}/children${query}`,
+      { method: "GET" },
+      fetcher
+    );
+    if (!response.ok) return { ok: false, message: response.message, diagnostic: response.diagnostic };
+
+    if (Array.isArray(response.data.results)) results.push(...response.data.results);
+    cursor = typeof response.data.next_cursor === "string" ? response.data.next_cursor : "";
+    pageCount += 1;
+    if (pageCount > 50) {
+      return { ok: false, message: "Notion 页面块数量过多，暂时无法安全替换同步内容。" };
+    }
+    if (!response.data.has_more) break;
+  } while (cursor);
+
+  return { ok: true, results };
+}
+
+async function appendNotionPageBlocks(
+  settings: NotionSettings,
+  pageId: string,
+  blocks: NotionBlock[],
+  fetcher?: NotionFetch
+): Promise<{ ok: true } | { ok: false; message: string; diagnostic?: NotionRequestDiagnostic }> {
+  for (let index = 0; index < blocks.length; index += NOTION_BLOCK_WRITE_BATCH_SIZE) {
+    const append = await notionRequest(
+      settings,
+      `/blocks/${encodeURIComponent(pageId)}/children`,
+      { method: "PATCH", json: { children: blocks.slice(index, index + NOTION_BLOCK_WRITE_BATCH_SIZE) } },
+      fetcher
+    );
+    if (!append.ok) return { ok: false, message: append.message, diagnostic: append.diagnostic };
+  }
+  return { ok: true };
+}
+
+function getLifeLogManagedBlockIds(blocks: unknown[]) {
+  const ids: string[] = [];
+  let insideManagedRange = false;
+  for (const block of blocks) {
+    if (!isRecord(block)) continue;
+    const text = getBlockPlainText(block);
+    const id = String(block.id || "");
+    if (text.includes("LifeLog 同步内容开始")) insideManagedRange = true;
+    if (insideManagedRange && id) ids.push(id);
+    if (insideManagedRange && text.includes("LifeLog 同步内容结束")) break;
+  }
+  return ids;
+}
+
+function getBlockPlainText(block: Record<string, unknown>) {
+  const type = String(block.type || "");
+  const body = isRecord(block[type]) ? block[type] : {};
+  const richText = Array.isArray(body.rich_text) ? body.rich_text : [];
+  return richText
+    .map((item) => isRecord(item) ? String(item.plain_text || "") : "")
+    .join("");
 }
 
 function buildPersonItem(person: Person, databaseId: string): NotionSyncItem {
@@ -402,13 +606,14 @@ function buildPlaceItem(place: Place, databaseId: string): NotionSyncItem {
   };
 }
 
-function buildMemoryItem(memory: MemoryEvent, state: LifeLogState, databaseId: string): NotionSyncItem {
+function buildMemoryItem(memory: MemoryEvent, state: LifeLogState, databaseId: string, settings: NotionSettings): NotionSyncItem {
   return {
     entityType: "memory",
     entityId: memory.id,
     label: `回忆 ${memory.title || memory.id}`,
     databaseId: normalizeNotionId(databaseId),
-    properties: buildMemoryProperties(memory, state)
+    properties: buildMemoryProperties(memory, state),
+    blocks: settings.syncPageContent === false ? undefined : buildMemoryPageBlocks(memory, state)
   };
 }
 
@@ -477,17 +682,17 @@ function titleProperty(value: string): NotionPropertyValue {
 
 function richTextProperty(value: string | undefined): NotionPropertyValue {
   const text = truncateRichText(String(value || ""));
-  return text ? { rich_text: richText(text) } : {};
+  return { rich_text: text ? richText(text) : [] };
 }
 
 function selectProperty(value: string | undefined): NotionPropertyValue {
   const name = truncateSelectName(String(value || "").trim());
-  return name ? { select: { name } } : {};
+  return { select: name ? { name } : null };
 }
 
 function multiSelectProperty(values: string[] | undefined): NotionPropertyValue {
   const options = Array.from(new Set((values || []).map((value) => truncateSelectName(value)).filter(Boolean))).slice(0, 100);
-  return options.length ? { multi_select: options.map((name) => ({ name })) } : {};
+  return { multi_select: options.map((name) => ({ name })) };
 }
 
 function checkboxProperty(value: boolean): NotionPropertyValue {
@@ -495,17 +700,17 @@ function checkboxProperty(value: boolean): NotionPropertyValue {
 }
 
 function numberProperty(value: number | undefined): NotionPropertyValue {
-  return Number.isFinite(Number(value)) ? { number: Number(value) } : {};
+  return { number: Number.isFinite(Number(value)) ? Number(value) : null };
 }
 
 function dateProperty(value: string | undefined): NotionPropertyValue {
   const normalized = String(value || "").trim();
-  return normalized ? { date: { start: normalized } } : {};
+  return { date: normalized ? { start: normalized } : null };
 }
 
 function urlProperty(value: string | undefined): NotionPropertyValue {
   const normalized = String(value || "").trim();
-  return normalized ? { url: normalized } : {};
+  return { url: normalized || null };
 }
 
 function richText(value: string) {
@@ -542,11 +747,14 @@ function stableStringify(value: unknown) {
   return JSON.stringify(sortValue(value));
 }
 
-function buildSyncHash(properties: NotionProperties) {
-  const stableProperties = { ...properties };
+function buildSyncHash(payload: { properties: NotionProperties; blocks?: NotionBlock[] }) {
+  const stableProperties = { ...payload.properties };
   delete stableProperties["更新时间"];
   delete stableProperties["Updated At"];
-  return stableStringify(stableProperties);
+  return stableStringify({
+    properties: stableProperties,
+    blocks: payload.blocks || []
+  });
 }
 
 function sortValue(value: unknown): unknown {

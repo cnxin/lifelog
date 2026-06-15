@@ -57,6 +57,7 @@ export function buildReadableMarkdown(state: LifeLogState) {
           ctx.placeNames.length ? `- 地点：${ctx.placeNames.join("、")}` : "",
           memory.mood ? `- 心情：${memory.mood}` : "",
           memory.tags.length ? `- 标签：${memory.tags.join("、")}` : "",
+          !isMemoryPlan(memory) && memory.plannedContent?.trim() ? `- 原计划：${memory.plannedContent.trim()}` : "",
           "",
           memory.content || "",
           ""

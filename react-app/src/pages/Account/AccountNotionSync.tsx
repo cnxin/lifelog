@@ -67,6 +67,7 @@ interface NotionSyncPreviewItem {
   databaseLabel: string;
   total: number;
   detail?: string;
+  modeDetail?: string;
   mapped: number;
   pending: number;
   databaseId: string;
@@ -754,6 +755,10 @@ export default function AccountNotionSync() {
                   </div>
                   {notionSettings.lastFullSyncAt ? <em>上次同步 {formatTestTime(notionSettings.lastFullSyncAt)}</em> : null}
                 </div>
+                <div className="notion-sync-mode-note">
+                  <Cloud />
+                  <span>{formatSyncModeSummary(draft)}</span>
+                </div>
                 <div className="notion-sync-preview-grid">
                   {syncPreview.map((item) => (
                     <div className={`notion-sync-preview-item ${item.tone}`} key={item.entityType}>
@@ -942,6 +947,19 @@ export default function AccountNotionSync() {
           icon: <Database />,
           children: (
             <>
+              <label className={`notion-option-switch ${draft.syncPageContent !== false ? "active" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={draft.syncPageContent !== false}
+                  onChange={(event) => patchDraft({ syncPageContent: event.target.checked })}
+                />
+                <span>
+                  <strong>同步记录正文到页面内容</strong>
+                  <small>开启后，记录会在 Notion 页面内生成正文、原计划和关联信息；重新同步只替换 LifeLog 同步区。</small>
+                </span>
+                <i aria-hidden="true" />
+              </label>
+
               <div className="notion-database-grid">
                 {databaseFields.map((field) => (
                   <label className="notion-field" key={field.key}>
@@ -1332,6 +1350,7 @@ function buildNotionSyncPreview({
     databaseId: string;
     total: number;
     detail?: string;
+    modeDetail?: string;
   }> = [
     {
       entityType: "person",
@@ -1353,7 +1372,8 @@ function buildNotionSyncPreview({
       databaseLabel: "记录数据库",
       databaseId: normalizeNotionId(settings.memoriesDatabaseId),
       total: state.memories.length,
-      detail: formatRecordSyncDetail(state.memories)
+      detail: formatRecordSyncDetail(state.memories),
+      modeDetail: settings.syncPageContent === false ? "仅同步数据库属性" : "同步数据库属性和页面正文"
     },
     {
       entityType: "anniversaryPlan",
@@ -1394,9 +1414,16 @@ function formatSyncPreviewSummary(items: NotionSyncPreviewItem[]) {
   return `4 个数据库已配置，预计同步 ${total} 条`;
 }
 
+function formatSyncModeSummary(settings: NotionSettings) {
+  return settings.syncPageContent === false
+    ? "记录目前只写入 Notion 数据库属性；可在高级配置开启页面正文同步。"
+    : "记录会同步到 Notion 数据库属性，并在页面内写入正文、原计划和关联信息。";
+}
+
 function formatSyncPreviewDetail(item: NotionSyncPreviewItem) {
   if (!item.databaseId) return `${item.databaseLabel} 未配置，暂不会同步。`;
-  const suffix = item.detail ? `（${item.detail}）` : "";
+  const detail = [item.detail, item.modeDetail].filter(Boolean).join("，");
+  const suffix = detail ? `（${detail}）` : "";
   if (!item.total) return "本地暂无内容，配置已就绪。";
   if (!item.mapped) return `${item.total} 条会首次写入 Notion${suffix}。`;
   if (!item.pending) return `${item.mapped} 条已有同步记录，本次会检查更新${suffix}。`;

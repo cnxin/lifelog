@@ -379,6 +379,85 @@
   white-space: nowrap;
 }
 
+.memory-plan-original-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.memory-plan-original-card span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.memory-plan-original-card p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.due-plan-focus-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.due-plan-focus-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 12%, transparent);
+}
+
+.due-plan-focus-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.due-plan-focus-card > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.due-plan-focus-card strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.due-plan-focus-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.due-plan-focus-card button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 13px;
+  padding: 0 11px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .truncate-text {
   overflow: hidden;
   text-overflow: ellipsis;

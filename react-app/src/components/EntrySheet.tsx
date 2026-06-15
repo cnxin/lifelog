@@ -31,6 +31,8 @@ interface EntrySheetProps {
   initialPlaceShareReview?: PlaceDraft;
   memoryMode?: "quick" | "full";
   memoryKindOverride?: MemoryEvent["kind"];
+  memoryTitleOverride?: string;
+  memoryKickerOverride?: string;
   initialDate?: string;
   onSaved?: (result: { type: EntryType; id: string }) => void | Promise<void>;
   onClose: () => void;
@@ -53,6 +55,8 @@ export default function EntrySheet({
   initialPlaceShareReview,
   memoryMode = "full",
   memoryKindOverride,
+  memoryTitleOverride,
+  memoryKickerOverride,
   initialDate,
   onSaved,
   onClose
@@ -83,6 +87,8 @@ export default function EntrySheet({
         itemId: itemId || "",
         memoryMode,
         memoryKindOverride: memoryKindOverride || "",
+        memoryTitleOverride: memoryTitleOverride || "",
+        memoryKickerOverride: memoryKickerOverride || "",
         initialDate: initialDate || "",
         initialPersonId: initialPersonId || "",
         initialPersonIds: (initialPersonIds || []).join("|"),
@@ -264,8 +270,8 @@ export default function EntrySheet({
         <div className="sheet-handle" />
         <div className="sheet-header">
           <div>
-            <p className="date-label">{current.kicker}</p>
-            <h2>{itemId ? current.editTitle : current.addTitle}</h2>
+            <p className="date-label">{memoryKickerOverride || current.kicker}</p>
+            <h2>{memoryTitleOverride || (itemId ? current.editTitle : current.addTitle)}</h2>
           </div>
           <button className="sheet-close" aria-label="关闭" onClick={() => void requestClose()}>
             ×
