@@ -294,7 +294,7 @@
 
 .memory-reader-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
 
 .memory-reader-actions button {
@@ -922,6 +922,53 @@ button.person-pref-line {
 
 .memory-detail-profile-card .profile-main>p {
   margin: 0;
+}
+
+.detail-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.detail-notion-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.detail-notion-pill svg {
+  width: 14px;
+  height: 14px;
+}
+
+.detail-notion-pill:disabled {
+  opacity: 0.72;
+  box-shadow: none;
+}
+
+.detail-notion-pill.synced {
+  color: #0ca678;
+  background: color-mix(in srgb, #12b886 11%, transparent);
+}
+
+.detail-notion-pill.pending,
+.detail-notion-pill.unsynced {
+  color: #d97706;
+  background: color-mix(in srgb, #f59f00 12%, transparent);
+}
+
+.detail-notion-pill.syncing {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.detail-notion-pill.failed {
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 .person-birthday-summary {

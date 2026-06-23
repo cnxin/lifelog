@@ -45,7 +45,12 @@ export default function Memories() {
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
 
-  const duePlanCount = useMemo(() => state.memories.filter((memory) => isDuePlan(memory, todayKey)).length, [state.memories, todayKey]);
+  const duePlans = useMemo(
+    () => state.memories.filter((memory) => isDuePlan(memory, todayKey)).sort((a, b) => b.date.localeCompare(a.date)),
+    [state.memories, todayKey]
+  );
+  const duePlanCount = duePlans.length;
+  const primaryDuePlan = duePlans[0];
   const filterOptions = useMemo(() => buildFilterOptions(state.memories, getPersonName, getPlaceName), [state.memories, getPersonName, getPlaceName]);
   const hasActiveFilters = Boolean(query.trim() || hasAdvancedFilters);
   const activeFilterLabels = buildActiveFilterLabels({
@@ -162,11 +167,17 @@ export default function Memories() {
               <CheckCircle2 />
             </div>
             <div>
-              <strong>{duePlanCount} 条计划可以补成回忆</strong>
-              <span>集中处理今天到期和已过期的计划。</span>
+              <strong>{formatDuePlanFocusTitle(duePlanCount)}</strong>
+              <span>{primaryDuePlan ? buildDuePlanFocusDesc(primaryDuePlan, getPersonName, getPlaceName) : "集中处理今天到期和已过期的计划。"}</span>
             </div>
-            <button type="button" onClick={() => updateFilters({ typeFilter: "due-plan" })}>
-              去处理
+            <button type="button" onClick={() => {
+              if (duePlanCount === 1 && primaryDuePlan) {
+                navigate(`/memories/${primaryDuePlan.id}`);
+                return;
+              }
+              updateFilters({ typeFilter: "due-plan" });
+            }}>
+              {duePlanCount === 1 ? "去补成回忆" : "集中处理"}
             </button>
           </GlassCard>
         </section>
@@ -400,6 +411,21 @@ function formatTypeFilterLabel(value: string) {
   if (value === "plan") return "计划";
   if (value === "due-plan") return "待补成回忆";
   return "回忆";
+}
+
+function formatDuePlanFocusTitle(count: number) {
+  return count === 1 ? "有一条计划可以补成回忆" : `${count} 条计划可以补成回忆`;
+}
+
+function buildDuePlanFocusDesc(
+  memory: MemoryEvent,
+  getPersonName: (id: string) => string,
+  getPlaceName: (id: string) => string
+) {
+  const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+  const title = getMemoryDisplayTitle(memory, ctx);
+  const relation = [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ");
+  return [title, relation].filter(Boolean).join(" · ") || "打开后可以补上实际发生的事。";
 }
 
 function isDuePlan(memory: MemoryEvent, todayKey: string) {

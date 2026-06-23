@@ -16,6 +16,18 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.112",
+    date: "2026-06-23",
+    title: "Notion 单条同步和记录闭环",
+    highlights: [
+      "人物、地点和记录详情新增条目级 Notion 操作，可直接打开已同步页面，也可对单条内容立即同步或重试。",
+      "Notion 按钮会区分待同步、同步中、同步失败和已同步状态，编辑后不会误打开旧 Notion 页面。",
+      "手动同步成功后会清理对应自动同步队列，避免设置页和详情页残留待同步或失败状态。",
+      "保存人物、地点和记录后的提示更明确，并在已配置 Notion 时提示已加入同步队列。",
+      "地点重复合并流程增加提交中状态和统一保存反馈，避免重复点击和突然跳页。"
+    ]
+  },
+  {
     version: "0.1.0-test.111",
     date: "2026-06-15",
     title: "Notion 正文同步和计划转回忆",

@@ -6,6 +6,7 @@ import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTags from "../../components/MemoryTags";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
+import NotionRecordAction from "../../components/NotionRecordAction";
 import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -180,6 +181,7 @@ export default function MemoryDetail() {
                 <Sparkles /> 补关联
               </button>
             )}
+            <NotionRecordAction entityType="memory" entityId={memory.id} label="打开 Notion" className="" />
           </div>
         </GlassCard>
       </section>
@@ -249,7 +251,7 @@ export default function MemoryDetail() {
                   <strong>{getPersonName(plan.personId)} · {formatAnniversaryPlanTargetTitle(plan)}</strong>
                   <span>{formatLinkedPlanMeta(plan)}</span>
                 </div>
-                <small>{formatLinkedPlanStatus(plan.status)}</small>
+                <small>{formatLinkedPlanStatus(plan)}</small>
               </button>
             ))}
           </div>
@@ -385,10 +387,11 @@ function formatLinkedPlanMeta(plan: Pick<AnniversaryPlan, "targetKind" | "target
   return [`${plan.occurrenceYear} 年`, plan.targetDate].join(" · ");
 }
 
-function formatLinkedPlanStatus(status: AnniversaryPlan["status"]) {
-  if (status === "doing") return "准备中";
-  if (status === "done") return "已完成";
-  if (status === "skipped") return "已跳过";
+function formatLinkedPlanStatus(plan: Pick<AnniversaryPlan, "status" | "memoryId">) {
+  if (plan.memoryId) return "已生成回忆";
+  if (plan.status === "doing") return "准备中";
+  if (plan.status === "done") return "已完成";
+  if (plan.status === "skipped") return "已跳过";
   return "未开始";
 }
 

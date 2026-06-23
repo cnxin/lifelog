@@ -1,4 +1,4 @@
-import type { NotionEntityType, NotionPageMapping, NotionSyncQueueItem } from "../types";
+import type { NotionEntityType, NotionPageMapping, NotionSettings, NotionSyncQueueItem } from "../types";
 
 export type NotionRecordSyncStatus = "off" | "pending" | "syncing" | "failed" | "synced" | "unsynced";
 
@@ -7,6 +7,37 @@ export interface NotionRecordSyncMeta {
   label: string;
   detail: string;
   lastError?: string;
+}
+
+export function buildNotionPageUrl(pageId: string) {
+  const normalized = pageId.trim().replace(/-/g, "");
+  return normalized ? `https://www.notion.so/${normalized}` : "";
+}
+
+export function findNotionPageUrl({
+  entityType,
+  entityId,
+  mappings
+}: {
+  entityType: NotionEntityType;
+  entityId: string;
+  mappings: NotionPageMapping[];
+}) {
+  const mapping = mappings.find((item) =>
+    item.entityType === entityType &&
+    item.entityId === entityId &&
+    item.notionPageId &&
+    !item.lastError
+  );
+  return buildNotionPageUrl(mapping?.notionPageId || "");
+}
+
+export function canSyncNotionRecord(settings: NotionSettings, entityType: NotionEntityType) {
+  if (!settings.enabled || !settings.token.trim()) return false;
+  if (entityType === "person") return Boolean(settings.peopleDatabaseId);
+  if (entityType === "place") return Boolean(settings.placesDatabaseId);
+  if (entityType === "memory") return Boolean(settings.memoriesDatabaseId);
+  return Boolean(settings.plansDatabaseId);
 }
 
 export function getNotionRecordSyncMeta({

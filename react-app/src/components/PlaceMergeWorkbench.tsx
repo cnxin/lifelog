@@ -11,8 +11,8 @@ interface PlaceMergeWorkbenchProps {
   keepBothLabel?: string;
   allowKeepBoth?: boolean;
   onCancel: () => void;
-  onConfirm: (preview: PlaceMergePreview) => void;
-  onKeepBoth?: () => void;
+  onConfirm: (preview: PlaceMergePreview) => void | Promise<void>;
+  onKeepBoth?: () => void | Promise<void>;
 }
 
 export default function PlaceMergeWorkbench({
@@ -28,6 +28,7 @@ export default function PlaceMergeWorkbench({
 }: PlaceMergeWorkbenchProps) {
   const incoming = preview.sources[0];
   const [mergedDraft, setMergedDraft] = useState(preview.merged);
+  const [pendingAction, setPendingAction] = useState<"keep" | "confirm" | null>(null);
 
   const nextPreview = useMemo(
     () => ({
@@ -39,6 +40,26 @@ export default function PlaceMergeWorkbench({
 
   function updateMerged<K extends keyof Place>(key: K, value: Place[K]) {
     setMergedDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  async function runKeepBoth() {
+    if (!onKeepBoth || pendingAction) return;
+    setPendingAction("keep");
+    try {
+      await onKeepBoth();
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function runConfirm() {
+    if (pendingAction) return;
+    setPendingAction("confirm");
+    try {
+      await onConfirm(nextPreview);
+    } finally {
+      setPendingAction(null);
+    }
   }
 
   return (
@@ -68,16 +89,16 @@ export default function PlaceMergeWorkbench({
       </div>
 
       <div className="submit-row merge-preview-actions">
-        <button type="button" className="ghost-btn" onClick={onCancel}>
+        <button type="button" className="ghost-btn" onClick={onCancel} disabled={Boolean(pendingAction)}>
           {cancelLabel}
         </button>
         {allowKeepBoth && onKeepBoth && (
-          <button type="button" className="ghost-btn" onClick={onKeepBoth}>
-            {keepBothLabel}
+          <button type="button" className="ghost-btn" onClick={() => void runKeepBoth()} disabled={Boolean(pendingAction)}>
+            {pendingAction === "keep" ? "保存中..." : keepBothLabel}
           </button>
         )}
-        <button type="button" className="primary-btn" onClick={() => onConfirm(nextPreview)}>
-          {confirmLabel}
+        <button type="button" className="primary-btn" onClick={() => void runConfirm()} disabled={Boolean(pendingAction)}>
+          {pendingAction === "confirm" ? "合并中..." : confirmLabel}
         </button>
       </div>
     </div>

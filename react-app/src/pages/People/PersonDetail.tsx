@@ -5,6 +5,7 @@ import CompletionTipsSection, { type CompletionTip } from "../../components/Comp
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
+import NotionRecordAction from "../../components/NotionRecordAction";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
@@ -202,9 +203,12 @@ export default function PersonDetail() {
               </div>
               <p>{person.relationship}</p>
               {person.birthday && <BirthdaySummary date={person.birthday} />}
-              <button className="category-pill active person-profile-edit" onClick={() => setEditing(true)}>
-                编辑资料
-              </button>
+              <div className="detail-profile-actions">
+                <button className="category-pill active person-profile-edit" onClick={() => setEditing(true)}>
+                  编辑资料
+                </button>
+                <NotionRecordAction entityType="person" entityId={person.id} />
+              </div>
             </div>
           </div>
         </GlassCard>

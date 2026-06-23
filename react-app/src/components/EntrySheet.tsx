@@ -19,6 +19,7 @@ import { PersonFields } from "./EntrySheet/PersonFields";
 import { PlaceFields } from "./EntrySheet/PlaceFields";
 import { MemoryFields } from "./EntrySheet/MemoryFields";
 import { buildDraftFieldMap, type DraftFieldMap } from "./EntrySheet/draftValues";
+import { canSyncNotionRecord } from "../utils/notionStatus";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -64,7 +65,7 @@ export default function EntrySheet({
   const navigate = useNavigate();
   const confirm = useConfirm();
   const notify = useToast();
-  const { state, inspectPlaceSave, savePerson, savePlace, saveMemory, loadMemoryPhotos, settings } = useLifeLog();
+  const { state, inspectPlaceSave, savePerson, savePlace, saveMemory, loadMemoryPhotos, settings, notionSettings } = useLifeLog();
   const [error, setError] = useState("");
   const [mergePreview, setMergePreview] = useState<PlaceMergePreview | null>(null);
   const [pendingPlaceFormData, setPendingPlaceFormData] = useState<FormData | null>(null);
@@ -192,6 +193,7 @@ export default function EntrySheet({
         savedPersonId,
         savedPlaceId,
         savedMemoryId,
+        notionQueued: canSyncNotionRecord(notionSettings, entryType),
         navigate
       }));
     } finally {
@@ -384,8 +386,15 @@ export default function EntrySheet({
               setMergePreview(null);
               setPendingPlaceFormData(null);
               forceClose();
-              notify({ message: getSaveFeedback("place", Boolean(itemId)), tone: "success" });
-              if (!itemId) navigate(`/places/${savedId}`);
+              notify(buildSaveToast({
+                type: "place",
+                isEditing: Boolean(itemId),
+                savedPersonId: "",
+                savedPlaceId: savedId,
+                savedMemoryId: "",
+                notionQueued: canSyncNotionRecord(notionSettings, "place"),
+                navigate
+              }));
             }}
             onConfirm={async (nextPreview) => {
               const savedId = await savePlace(pendingPlaceFormData, itemId, {
@@ -395,8 +404,20 @@ export default function EntrySheet({
               setMergePreview(null);
               setPendingPlaceFormData(null);
               forceClose();
-              notify({ message: "地点已合并并保存", tone: "success" });
-              if (!itemId) navigate(`/places/${savedId}`);
+              notify({
+                ...buildSaveToast({
+                  type: "place",
+                  isEditing: Boolean(itemId),
+                  savedPersonId: "",
+                  savedPlaceId: savedId,
+                  savedMemoryId: "",
+                  notionQueued: canSyncNotionRecord(notionSettings, "place"),
+                  navigate
+                }),
+                message: canSyncNotionRecord(notionSettings, "place")
+                  ? "地点已合并并保存，已加入 Notion 同步"
+                  : "地点已合并并保存"
+              });
             }}
           />
         )}
@@ -411,6 +432,7 @@ function buildSaveToast({
   savedPersonId,
   savedPlaceId,
   savedMemoryId,
+  notionQueued,
   navigate
 }: {
   type: EntryType;
@@ -418,23 +440,26 @@ function buildSaveToast({
   savedPersonId: string;
   savedPlaceId: string;
   savedMemoryId: string;
+  notionQueued: boolean;
   navigate: ReturnType<typeof useNavigate>;
 }) {
-  const message = getSaveFeedback(type, isEditing);
+  const message = buildSaveFeedback(type, isEditing, notionQueued);
   if (type === "person" && savedPersonId) {
     return {
       message,
       tone: "success" as const,
-      actionLabel: "查看",
-      onAction: () => navigate(`/people/${savedPersonId}`)
+      actionLabel: "看资料",
+      onAction: () => navigate(`/people/${savedPersonId}`),
+      durationMs: 5200
     };
   }
   if (type === "place" && savedPlaceId) {
     return {
       message,
       tone: "success" as const,
-      actionLabel: "查看",
-      onAction: () => navigate(`/places/${savedPlaceId}`)
+      actionLabel: "看地点",
+      onAction: () => navigate(`/places/${savedPlaceId}`),
+      durationMs: 5200
     };
   }
   if (type === "memory" && savedMemoryId) {
@@ -442,9 +467,10 @@ function buildSaveToast({
       message,
       tone: "success" as const,
       actions: [
-        { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) },
-        { label: "补细节", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
-      ]
+        { label: "看回忆", onClick: () => navigate(`/memories/${savedMemoryId}`) },
+        { label: "补照片/地点", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
+      ],
+      durationMs: 6800
     };
   }
   return {
@@ -457,6 +483,11 @@ function getSaveFeedback(type: EntryType, isEditing: boolean) {
   if (type === "person") return isEditing ? "人物资料已更新" : "人物已保存";
   if (type === "place") return isEditing ? "地点资料已更新" : "地点已保存";
   return isEditing ? "记录已更新" : "记录已保存";
+}
+
+function buildSaveFeedback(type: EntryType, isEditing: boolean, notionQueued: boolean) {
+  const base = getSaveFeedback(type, isEditing);
+  return notionQueued ? `${base}，已加入 Notion 同步` : base;
 }
 
 function getSubmitText(type: EntryType, isEditing: boolean) {

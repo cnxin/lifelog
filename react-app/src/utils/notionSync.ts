@@ -149,7 +149,7 @@ export async function syncLifeLogToNotion({
     const typeSummary = nextSummary.byType[item.entityType];
     typeSummary.total += 1;
 
-    if (previousMapping?.notionPageId && previousMapping.lastSyncHash === hash && previousMapping.dataSourceId === item.databaseId) {
+    if (previousMapping?.notionPageId && !previousMapping.lastError && previousMapping.lastSyncHash === hash && previousMapping.dataSourceId === item.databaseId) {
       nextSummary.skipped += 1;
       typeSummary.skipped += 1;
       continue;

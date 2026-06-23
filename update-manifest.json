@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.111",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.111",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.111/lifelog-v0.1.0-test.111.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.111.apk",
-    "apkName":  "lifelog-v0.1.0-test.111.apk",
-    "apkSize":  3737934,
-    "apkSha256":  "224431357c46b65e83fa561678289d18c4031a8d9b97788caa366ea8da4c5d44",
-    "publishedAt":  "2026-06-15T07:32:52Z",
-    "body":  "- Notion 记录同步新增页面正文写入，会在 Notion 页面内生成正文、原计划和关联信息。\n- Notion 重新同步会替换 LifeLog 同步区，并保留同步区外手动写入的 Notion 内容。\n- Notion 同步支持清空字段、分页读取旧同步区和分批写入页面块，长内容同步更稳定。\n- 数据同步区新增同步方式提示，高级配置可关闭记录页面正文同步，仅保留数据库属性。\n- 计划补成回忆会保留原计划内容，记录页新增待补成回忆筛选，方便把到期计划补记为真实回忆。"
+    "version":  "0.1.0-test.112",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.112",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.112/lifelog-v0.1.0-test.112.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.112.apk",
+    "apkName":  "lifelog-v0.1.0-test.112.apk",
+    "apkSize":  3740249,
+    "apkSha256":  "5b49d3c562e006ac1a45c13108fd1bc05526a22b2f9faff80afdcb530158a33a",
+    "publishedAt":  "2026-06-23T16:19:33Z",
+    "body":  "- 人物、地点和记录详情新增条目级 Notion 操作，可直接打开已同步页面，也可对单条内容立即同步或重试。\n- Notion 按钮会区分待同步、同步中、同步失败和已同步状态，编辑后不会误打开旧 Notion 页面。\n- 手动同步成功后会清理对应自动同步队列，避免设置页和详情页残留待同步或失败状态。\n- 保存人物、地点和记录后的提示更明确，并在已配置 Notion 时提示已加入同步队列。\n- 地点重复合并流程增加提交中状态和统一保存反馈，避免重复点击和突然跳页。"
 }

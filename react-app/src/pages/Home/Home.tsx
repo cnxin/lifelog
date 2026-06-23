@@ -1,4 +1,4 @@
-import { Calendar, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -9,7 +9,7 @@ import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
-import { buildMemoryDisplayContext, isMemoryPlan } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isMemoryPlan } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
@@ -17,10 +17,12 @@ import { initials } from "../../utils/text";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { state, reminderSettings, getPersonName, getPlaceName } = useLifeLog();
+  const { state, reminderSettings, getPersonName, getPlaceName, saveAnniversaryPlan } = useLifeLog();
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
+  const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
+  const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
   const [inboxText, setInboxText] = useState(() => loadQuickInboxDraft());
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
@@ -48,18 +50,34 @@ export default function Home() {
     saveQuickInboxDraft(inboxText);
   }, [inboxText]);
 
-  function openQuickMemory(personIds: string[] = [], placeIds: string[] = []) {
+  function openQuickMemory(options: OpenMemoryOptions | string[] = {}, legacyPlaceIds: string[] = [], legacyPlanId: string | null = null) {
+    const nextOptions = Array.isArray(options)
+      ? { personIds: options, placeIds: legacyPlaceIds, pendingPlanId: legacyPlanId }
+      : options;
+    const {
+      personIds = [],
+      placeIds = [],
+      initialDate,
+      pendingPlanId = null
+    } = nextOptions;
     setInitialMemoryPersonIds(personIds);
     setInitialMemoryPlaceIds(placeIds);
+    setInitialMemoryDate(initialDate);
+    setPendingMemoryPlanId(pendingPlanId || null);
     setEntrySheetType("memory");
   }
 
-  function openSuggestedMemory(text: string, personIds: string[] = [], placeIds: string[] = []) {
+  function openSuggestedMemory(text: string, personIds: string[] = [], placeIds: string[] = [], options: OpenSuggestedMemoryOptions = {}) {
     const normalized = text.trim();
     if (normalized) {
       window.localStorage.setItem("lifelog:quick-inbox-prefill", normalized);
     }
-    openQuickMemory(personIds, placeIds);
+    openQuickMemory({
+      personIds,
+      placeIds,
+      initialDate: options.initialDate,
+      pendingPlanId: options.pendingPlanId
+    });
   }
 
   function openInboxMemory() {
@@ -71,6 +89,8 @@ export default function Home() {
 
     setInitialMemoryPersonIds([]);
     setInitialMemoryPlaceIds([]);
+    setInitialMemoryDate(undefined);
+    setPendingMemoryPlanId(null);
     setInboxText("");
     setEntrySheetType("memory");
     window.localStorage.setItem("lifelog:quick-inbox-prefill", text);
@@ -464,10 +484,24 @@ export default function Home() {
         memoryMode={entrySheetType === "memory" ? "quick" : "full"}
         initialPersonIds={entrySheetType === "memory" ? initialMemoryPersonIds : []}
         initialPlaceIds={entrySheetType === "memory" ? initialMemoryPlaceIds : []}
+        initialDate={entrySheetType === "memory" ? initialMemoryDate : undefined}
         onClose={() => {
           setEntrySheetType(null);
           setInitialMemoryPersonIds([]);
           setInitialMemoryPlaceIds([]);
+          setInitialMemoryDate(undefined);
+          setPendingMemoryPlanId(null);
+        }}
+        onSaved={async (result) => {
+          if (result.type !== "memory" || !pendingMemoryPlanId) return;
+          const plan = state.anniversaryPlans.find((item) => item.id === pendingMemoryPlanId);
+          if (!plan) return;
+          await saveAnniversaryPlan({
+            ...plan,
+            status: "done",
+            memoryId: result.id,
+            updatedAt: new Date().toISOString()
+          });
         }}
       />
     </>
@@ -531,6 +565,18 @@ type TodayActionPrefs = Record<string, number | "dismissed">;
 type DailyFocusItem = Pick<TodayAction, "id" | "icon" | "title" | "desc" | "tone" | "onClick"> & {
   actionLabel: string;
 };
+
+interface OpenMemoryOptions {
+  personIds?: string[];
+  placeIds?: string[];
+  initialDate?: string;
+  pendingPlanId?: string | null;
+}
+
+interface OpenSuggestedMemoryOptions {
+  initialDate?: string;
+  pendingPlanId?: string | null;
+}
 
 interface RecordSuggestion {
   id: string;
@@ -596,7 +642,7 @@ function buildRecordSuggestions({
   getPlaceName: (id: string) => string;
   onOpenPerson: (personId: string, hash?: string) => void;
   onOpenCalendar: () => void;
-  onOpenMemory: (text: string, personIds?: string[], placeIds?: string[]) => void;
+  onOpenMemory: (text: string, personIds?: string[], placeIds?: string[], options?: OpenSuggestedMemoryOptions) => void;
   todayActionIds: string[];
 }): RecordSuggestion[] {
   const suggestions: RecordSuggestion[] = [];
@@ -627,7 +673,11 @@ function buildRecordSuggestions({
       onClick: () => onOpenMemory(
         `${personName} 的${formatAnniversaryPlanTargetTitle(completedPlan)}：${completedPlan.title}`,
         [completedPlan.personId],
-        completedPlan.placeIds || []
+        completedPlan.placeIds || [],
+        {
+          initialDate: completedPlan.targetDate,
+          pendingPlanId: completedPlan.id
+        }
       )
     });
     if (placeNames.length) {
@@ -783,6 +833,22 @@ function buildTodayActions({
 }): TodayAction[] {
   const actions: TodayAction[] = [];
   const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
+  const dueMemoryPlan = findDueMemoryPlan(state.memories);
+  if (dueMemoryPlan) {
+    const ctx = buildMemoryDisplayContext(dueMemoryPlan, getPersonName, getPlaceName);
+    const days = daysBetweenToday(dueMemoryPlan.date);
+    actions.push({
+      id: `due-memory-plan-${dueMemoryPlan.id}`,
+      icon: <CheckCircle2 />,
+      title: days === 0 ? "这条计划今天到了" : `有一条计划已过期 ${days} 天`,
+      desc: buildDueMemoryPlanDesc(dueMemoryPlan, ctx),
+      meta: "补回忆",
+      tone: "warm",
+      canDismiss: true,
+      onClick: () => onOpenMemory(dueMemoryPlan.id)
+    });
+  }
+
   const todayPlanAction = findTodayAnniversaryPlanAction(state.anniversaryPlans, state.people);
   if (todayPlanAction) {
     actions.push({
@@ -923,6 +989,20 @@ function clearQuickInboxDraft() {
   } catch {
     // 忽略本地草稿清理失败。
   }
+}
+
+function findDueMemoryPlan(memories: MemoryEvent[]) {
+  const today = toDateKey(new Date());
+  return memories
+    .filter((memory) => isMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= today)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+function buildDueMemoryPlanDesc(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>) {
+  const title = getMemoryDisplayTitle(memory, ctx);
+  const relation = [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ");
+  if (relation) return `${title} · ${relation}`;
+  return title || "打开后可以补成实际发生的回忆。";
 }
 
 function findTodayAnniversaryPlanAction(anniversaryPlans: AnniversaryPlan[], people: ReturnType<typeof useLifeLog>["state"]["people"]) {

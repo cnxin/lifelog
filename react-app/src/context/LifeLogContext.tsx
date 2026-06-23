@@ -875,6 +875,18 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         await saveNotionPageMappings(result.mappings);
         setNotionPageMappings((current) => mergeById(current, result.mappings));
       }
+      const shouldClearSuccessfulTargets = targets.length > 0 && !result.failed && result.total === targets.length;
+      const successfulTargetIds = shouldClearSuccessfulTargets
+        ? targets
+            .map(buildNotionQueueItemId)
+            .filter((id) => !result.failedItems.some((item) => buildNotionQueueItemId(item) === id))
+        : [];
+      if (successfulTargetIds.length) {
+        await deleteNotionSyncQueueItems(successfulTargetIds);
+        const nextQueue = notionSyncQueueRef.current.filter((item) => !successfulTargetIds.includes(item.id));
+        notionSyncQueueRef.current = nextQueue;
+        setNotionSyncQueue(nextQueue);
+      }
       const syncedAt = new Date().toISOString();
       const historyEntry = buildNotionSyncHistoryEntry({
         result,

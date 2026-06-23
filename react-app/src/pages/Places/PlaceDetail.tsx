@@ -6,6 +6,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
+import NotionRecordAction from "../../components/NotionRecordAction";
 import Tags from "../../components/Tags";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
@@ -121,9 +122,12 @@ export default function PlaceDetail() {
               </div>
               <p>{buildPlaceGeoLine(place)}</p>
               <p>{buildPlaceContextLine(place)}</p>
-              <button className="category-pill active" onClick={() => setEditing(true)}>
-                编辑地点
-              </button>
+              <div className="detail-profile-actions">
+                <button className="category-pill active" onClick={() => setEditing(true)}>
+                  编辑地点
+                </button>
+                <NotionRecordAction entityType="place" entityId={place.id} />
+              </div>
             </div>
           </div>
         </GlassCard>
