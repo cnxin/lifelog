@@ -144,10 +144,17 @@ export function MemoryFields({
   const [activeSceneId, setActiveSceneId] = useState("");
   const [assistOpen, setAssistOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(() => hasRestoredQuickDetails(draftValues));
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => selectedPersonIds);
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [fullPlaceIds, setFullPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [mood, setMood] = useState<string>(getDraftValue(draftValues, "mood", memory ? memory.mood : settings.defaultMood));
+  const [fullTitle, setFullTitle] = useState(() =>
+    getDraftValue(draftValues, "title", memory?.title === "新的回忆" ? "" : memory?.title || "")
+  );
+  const [fullContent, setFullContent] = useState(() => getDraftValue(draftValues, "content", memory?.content || ""));
+  const [fullTags, setFullTags] = useState(() => getDraftValue(draftValues, "tags", memory?.tags.join("，") || ""));
+  const [fullAdvancedOpen, setFullAdvancedOpen] = useState(() => hasRestoredFullAdvanced(draftValues));
   const quickTone = getQuickDateTone(quickDate, todayValue);
   const quickCopy = getQuickMemoryCopy(quickTone);
   const quickInferenceContent = detailsOpen ? quickDetailsContent : quickContent;
@@ -205,126 +212,135 @@ export function MemoryFields({
             placeholder={quickCopy.titlePlaceholder}
           />
         </label>
-        <button className="quick-detail-toggle subtle" type="button" onClick={() => setAssistOpen((open) => !open)}>
-          {assistOpen ? "收起提示" : "不会写时点这里"}
-          {assistOpen ? <ChevronUp /> : <ChevronDown />}
-        </button>
-        {assistOpen && (
-          <div className="quick-assist-panel">
-            {quickTemplateGroups.length > 0 && (
-              <div className="quick-context-card compact">
-                {hasQuickContext && (
-                  <>
-                    <span className="quick-context-eyebrow">已自动关联</span>
-                    <div className="quick-context-list">
-                      {previewPeople.map((name) => (
-                        <span className="quick-context-token" key={`person-${name}`}>
-                          人物 · {name}
-                        </span>
-                      ))}
-                      {previewPlace && (
-                        <span className="quick-context-token">
-                          地点 · {previewPlace}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-                {quickTemplateGroups.map((group) => (
-                  <div className="quick-template-group" key={group.title}>
-                    <span className="quick-context-eyebrow">{group.title}</span>
-                    <div className="quick-template-grid">
-                      {group.templates.map((template) => (
-                        <button
-                          type="button"
-                          className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
-                          key={template}
-                          onClick={() => setQuickContent(template)}
-                        >
-                          {template}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="quick-scene-strip" aria-label="快速记录场景">
-              {QUICK_SCENE_PRESETS.map((scene) => (
-                <button
-                  type="button"
-                  className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
-                  key={scene.id}
-                  onClick={() => {
-                    setActiveSceneId(scene.id);
-                    setQuickContent(scene.title);
-                    setMood(scene.mood);
-                    setQuickTags(scene.tags);
-                    setQuickDetailsContent((current) => current.trim() ? current : scene.content);
-                  }}
-                >
-                  {scene.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         <label className="inline-field">
           <span className="inline-field-label">{quickCopy.dateLabel}</span>
           <DateInput name="date" label={quickCopy.dateLabel} value={quickDate} onChange={setQuickDate} required />
         </label>
-        <label>
-          {quickCopy.moodLabel}
-          <input
-            name="mood"
-            value={mood}
-            onChange={(event) => setMood(event.target.value)}
-            placeholder={quickCopy.moodPlaceholder}
-          />
-          <div className="mood-presets">
-            {MOOD_PRESETS.map((preset) => (
-              <button
-                type="button"
-                key={preset}
-                className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
-                onClick={() => setMood(preset)}
-              >
-                {preset}
-              </button>
-            ))}
+        <div className="memory-core-pickers">
+          <div>
+            <span className="field-title">人物</span>
+            <PersonPicker
+              people={people}
+              value={quickPersonIds}
+              onChange={setQuickPersonIds}
+              onCreate={onCreatePerson}
+              includeEmptyMarker
+              recommendedIds={recommendedPersonIds}
+            />
           </div>
-        </label>
-        <button className="quick-detail-toggle" type="button" onClick={() => setDetailsOpen((open) => !open)}>
-          {detailsOpen ? "先收起来" : quickCopy.detailToggle}
+          <div>
+            <span className="field-title">地点</span>
+            <PlacePicker
+              places={places}
+              value={quickPlaceIds}
+              onChange={setQuickPlaceIds}
+              onCreate={onCreatePlace}
+              includeEmptyMarker
+              recommendedIds={recommendedPlaceIds}
+            />
+            <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
+          </div>
+        </div>
+        <button
+          className="quick-detail-toggle"
+          type="button"
+          onClick={() => {
+            setDetailsOpen((open) => {
+              if (!open && !quickDetailsContent.trim()) setQuickDetailsContent(quickContent);
+              return !open;
+            });
+          }}
+        >
+          {detailsOpen ? "收起更多" : "更多设置"}
           {detailsOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
         {detailsOpen && (
-          <div className="quick-detail-panel">
-            <div className="form-row">
-              <div>
-                <span className="field-title">人物</span>
-                <PersonPicker
-                  people={people}
-                  value={quickPersonIds}
-                  onChange={setQuickPersonIds}
-                  onCreate={onCreatePerson}
-                  includeEmptyMarker
-                  recommendedIds={recommendedPersonIds}
-                />
+          <div className="quick-detail-panel memory-advanced-panel">
+            <label>
+              {quickCopy.moodLabel}
+              <input
+                name="mood"
+                value={mood}
+                onChange={(event) => setMood(event.target.value)}
+                placeholder={quickCopy.moodPlaceholder}
+              />
+              <div className="mood-presets">
+                {MOOD_PRESETS.map((preset) => (
+                  <button
+                    type="button"
+                    key={preset}
+                    className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
+                    onClick={() => setMood(preset)}
+                  >
+                    {preset}
+                  </button>
+                ))}
               </div>
-              <div>
-                <span className="field-title">地点</span>
-                <PlacePicker
-                  places={places}
-                  value={quickPlaceIds}
-                  onChange={setQuickPlaceIds}
-                  onCreate={onCreatePlace}
-                  includeEmptyMarker
-                  recommendedIds={recommendedPlaceIds}
-                />
-                <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
+            </label>
+            <button className="quick-detail-toggle subtle" type="button" onClick={() => setAssistOpen((open) => !open)}>
+              {assistOpen ? "收起提示" : "不会写时点这里"}
+              {assistOpen ? <ChevronUp /> : <ChevronDown />}
+            </button>
+            {assistOpen && (
+              <div className="quick-assist-panel">
+                {quickTemplateGroups.length > 0 && (
+                  <div className="quick-context-card compact">
+                    {hasQuickContext && (
+                      <>
+                        <span className="quick-context-eyebrow">已自动关联</span>
+                        <div className="quick-context-list">
+                          {previewPeople.map((name) => (
+                            <span className="quick-context-token" key={`person-${name}`}>
+                              人物 · {name}
+                            </span>
+                          ))}
+                          {previewPlace && (
+                            <span className="quick-context-token">
+                              地点 · {previewPlace}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    {quickTemplateGroups.map((group) => (
+                      <div className="quick-template-group" key={group.title}>
+                        <span className="quick-context-eyebrow">{group.title}</span>
+                        <div className="quick-template-grid">
+                          {group.templates.map((template) => (
+                            <button
+                              type="button"
+                              className={`quick-template-chip ${quickContent === template ? "active" : ""}`}
+                              key={template}
+                              onClick={() => setQuickContent(template)}
+                            >
+                              {template}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="quick-scene-strip" aria-label="快速记录场景">
+                  {QUICK_SCENE_PRESETS.map((scene) => (
+                    <button
+                      type="button"
+                      className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
+                      key={scene.id}
+                      onClick={() => {
+                        setActiveSceneId(scene.id);
+                        setQuickContent(scene.title);
+                        setMood(scene.mood);
+                        setQuickTags(scene.tags);
+                        setQuickDetailsContent((current) => current.trim() ? current : scene.content);
+                      }}
+                    >
+                      {scene.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <label>
               多写一点
               {quickContentTemplates.length > 0 && (
@@ -369,30 +385,43 @@ export function MemoryFields({
             </label>
           </div>
         )}
-        <div className="memory-preview" aria-live="polite">
-          <span className="memory-preview-eyebrow">{quickCopy.previewEyebrow}</span>
-          <div className="memory-preview-row">
-            <strong>{quickCopy.previewTitleLabel}</strong>
-            <span>{quickContent.trim() || previewTitle}</span>
-          </div>
-          <div className="memory-preview-row">
-            <strong>日期</strong>
-            <span>{formatPreviewDate(quickPreview.date)}</span>
-          </div>
-          <div className="memory-preview-row">
-            <strong>人物</strong>
-            <span>{previewPeople.length ? previewPeople.join("、") : "暂不关联"}</span>
-          </div>
-          <div className="memory-preview-row">
-            <strong>地点</strong>
-            <span>{previewPlace || "暂不关联"}</span>
-          </div>
+        {!detailsOpen && (
+          <>
+            <input type="hidden" name="mood" value={mood} />
+            <input type="hidden" name="content" value={quickContent} />
+            <input type="hidden" name="tags" value={quickTags} />
+          </>
+        )}
+        <div className={`memory-preview compact ${previewOpen ? "open" : ""}`} aria-live="polite">
+          <button className="memory-preview-summary" type="button" onClick={() => setPreviewOpen((open) => !open)}>
+            <span>
+              <strong>{quickCopy.previewEyebrow}</strong>
+              <small>{formatPreviewDate(quickPreview.date)} · {previewPeople.length ? previewPeople.join("、") : "暂不关联人物"} · {previewPlace || "暂不关联地点"}</small>
+            </span>
+            <em>{previewOpen ? "收起" : "查看"}</em>
+            <ChevronDown />
+          </button>
+          {previewOpen && (
+            <div className="memory-preview-detail">
+              <div className="memory-preview-row">
+                <strong>{quickCopy.previewTitleLabel}</strong>
+                <span>{quickContent.trim() || previewTitle}</span>
+              </div>
+              <div className="memory-preview-row">
+                <strong>日期</strong>
+                <span>{formatPreviewDate(quickPreview.date)}</span>
+              </div>
+              <div className="memory-preview-row">
+                <strong>人物</strong>
+                <span>{previewPeople.length ? previewPeople.join("、") : "暂不关联"}</span>
+              </div>
+              <div className="memory-preview-row">
+                <strong>地点</strong>
+                <span>{previewPlace || "暂不关联"}</span>
+              </div>
+            </div>
+          )}
         </div>
-        {!detailsOpen && <input type="hidden" name="content" value={quickContent} />}
-        {!detailsOpen && quickPersonIds.map((personId) => <input key={personId} type="hidden" name="personIds" value={personId} />)}
-        {!detailsOpen && <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />}
-        {!detailsOpen && quickPlaceIds.map((placeId) => <input key={placeId} type="hidden" name="placeIds" value={placeId} />)}
-        {!detailsOpen && <input type="hidden" name="tags" value={quickTags} />}
         <input type="hidden" name="memoryMode" value="quick" />
         <input type="hidden" name="memoryKind" value={quickTone === "future" ? "plan" : "memory"} />
         <p className="form-hint">{quickCopy.footerHint}</p>
@@ -402,14 +431,6 @@ export function MemoryFields({
 
   return (
     <>
-      <label>
-        标题
-        <input
-          name="title"
-          defaultValue={getDraftValue(draftValues, "title", memory?.title === "新的回忆" ? "" : memory?.title || "")}
-          placeholder="留空将自动按人物 / 地点生成摘要"
-        />
-      </label>
       <label className="inline-field">
         <span className="inline-field-label">日期</span>
         <DateInput
@@ -420,25 +441,13 @@ export function MemoryFields({
         />
       </label>
       <label>
-        心情
-        <input
-          name="mood"
-          value={mood}
-          onChange={(event) => setMood(event.target.value)}
-          placeholder="一个词描述今天的心情"
+        内容
+        <textarea
+          name="content"
+          value={fullContent}
+          onChange={(event) => setFullContent(event.target.value)}
+          placeholder="写下发生了什么、当时感受，或之后想补充的细节。"
         />
-        <div className="mood-presets">
-          {MOOD_PRESETS.map((preset) => (
-            <button
-              type="button"
-              key={preset}
-              className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
-              onClick={() => setMood(preset)}
-            >
-              {preset}
-            </button>
-          ))}
-        </div>
       </label>
       <div>
         <span className="field-title">关联人物</span>
@@ -455,59 +464,100 @@ export function MemoryFields({
           recommendedIds={recommendedPlaceIds}
         />
         <input type="hidden" name="placeId" value={fullPlaceIds[0] || ""} />
-        <p className="form-hint memory-place-hint">可关联多个地点，例如一次商场行程里去过的几家店。</p>
       </div>
-      <label>
-        内容
-        <div className="content-template-grid">
-          {STRUCTURED_MEMORY_TEMPLATES.map((template) => (
-            <button
-              type="button"
-              className="content-template-chip strong"
-              key={template.label}
-              onClick={(event) => insertTemplateIntoSiblingTextarea(event.currentTarget, template.content)}
-            >
-              {template.label}
-            </button>
-          ))}
-          {buildMemoryContentTemplates(
-            resolvePersonNames(selectedPersonIds, people),
-            resolvePlaceNames(fullPlaceIds, places)
-          ).map((template) => (
-            <button
-              type="button"
-              className="content-template-chip"
-              key={template}
-              onClick={(event) => insertTemplateIntoSiblingTextarea(event.currentTarget, template)}
-            >
-              {template.split("\n")[0]}
-            </button>
-          ))}
+      <button className="quick-detail-toggle" type="button" onClick={() => setFullAdvancedOpen((open) => !open)}>
+        {fullAdvancedOpen ? "收起更多" : "更多设置"}
+        {fullAdvancedOpen ? <ChevronUp /> : <ChevronDown />}
+      </button>
+      {fullAdvancedOpen && (
+        <div className="quick-detail-panel memory-advanced-panel">
+          <label>
+            标题
+            <input
+              name="title"
+              value={fullTitle}
+              onChange={(event) => setFullTitle(event.target.value)}
+              placeholder="留空将自动按人物 / 地点生成摘要"
+            />
+          </label>
+          <label>
+            心情
+            <input
+              name="mood"
+              value={mood}
+              onChange={(event) => setMood(event.target.value)}
+              placeholder="一个词描述今天的心情"
+            />
+            <div className="mood-presets">
+              {MOOD_PRESETS.map((preset) => (
+                <button
+                  type="button"
+                  key={preset}
+                  className={`mood-preset-pill ${mood === preset ? "active" : ""}`}
+                  onClick={() => setMood(preset)}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+          </label>
+          <div>
+            <span className="field-title">写作模板</span>
+            <div className="content-template-grid">
+              {STRUCTURED_MEMORY_TEMPLATES.map((template) => (
+                <button
+                  type="button"
+                  className="content-template-chip strong"
+                  key={template.label}
+                  onClick={() => setFullContent((current) => appendTemplate(current, template.content))}
+                >
+                  {template.label}
+                </button>
+              ))}
+              {buildMemoryContentTemplates(
+                resolvePersonNames(selectedPersonIds, people),
+                resolvePlaceNames(fullPlaceIds, places)
+              ).map((template) => (
+                <button
+                  type="button"
+                  className="content-template-chip"
+                  key={template}
+                  onClick={() => setFullContent((current) => appendTemplate(current, template))}
+                >
+                  {template.split("\n")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="field-title">照片</span>
+            <PhotoUploader
+              photos={photos}
+              memoryId={memory?.id || "temp"}
+              maxPhotos={9}
+              onPhotosChange={onPhotosChange}
+              disabled={isSubmitting}
+            />
+          </div>
+          <label>
+            标签
+            <input
+              name="tags"
+              value={fullTags}
+              onChange={(event) => setFullTags(event.target.value)}
+              placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
+            />
+          </label>
+          <p className="form-hint memory-place-hint">一次行程可以关联多个地点，例如商场里去过的几家店。</p>
         </div>
-        <textarea
-          name="content"
-          defaultValue={getDraftValue(draftValues, "content", memory?.content || "")}
-          placeholder="可按“发生了什么 / 当时感受 / 下次注意”三段记录。"
-        />
-      </label>
-      <div>
-        <span className="field-title">照片</span>
-        <PhotoUploader
-          photos={photos}
-          memoryId={memory?.id || "temp"}
-          maxPhotos={9}
-          onPhotosChange={onPhotosChange}
-          disabled={isSubmitting}
-        />
-      </div>
-      <label>
-        标签
-        <input
-          name="tags"
-          defaultValue={getDraftValue(draftValues, "tags", memory?.tags.join("，") || "")}
-          placeholder="日常、值得记住；可用顿号、逗号或分号分隔"
-        />
-      </label>
+      )}
+      {!fullAdvancedOpen && (
+        <>
+          <input type="hidden" name="title" value={fullTitle} />
+          <input type="hidden" name="mood" value={mood} />
+          <input type="hidden" name="tags" value={fullTags} />
+        </>
+      )}
       <input type="hidden" name="memoryKind" value={memoryKindOverride || (memory?.kind === "plan" ? "plan" : "memory")} />
     </>
   );
@@ -641,6 +691,15 @@ function hasRestoredQuickDetails(draftValues?: DraftFieldMap) {
   );
 }
 
+function hasRestoredFullAdvanced(draftValues?: DraftFieldMap) {
+  if (!draftValues) return false;
+  return (
+    hasDraftField(draftValues, "title") && Boolean(getDraftValue(draftValues, "title").trim()) ||
+    hasDraftField(draftValues, "mood") && Boolean(getDraftValue(draftValues, "mood").trim()) ||
+    hasDraftField(draftValues, "tags") && Boolean(getDraftValue(draftValues, "tags").trim())
+  );
+}
+
 function getRecentRecommendedIds(memories: MemoryEvent[], kind: "person" | "place", selectedIds: string[] = []) {
   const selected = new Set(selectedIds.filter(Boolean));
   const score = new Map<string, number>();
@@ -666,15 +725,6 @@ function appendTemplate(current: string, template: string) {
   const trimmed = current.trim();
   if (!trimmed) return template;
   return `${current.replace(/\s*$/, "")}\n${template}`;
-}
-
-function insertTemplateIntoSiblingTextarea(button: HTMLButtonElement, template: string) {
-  const label = button.closest("label");
-  const textarea = label?.querySelector("textarea");
-  if (!textarea) return;
-  textarea.value = appendTemplate(textarea.value, template);
-  textarea.dispatchEvent(new Event("input", { bubbles: true }));
-  textarea.focus();
 }
 
 function consumeQuickInboxPrefill() {

@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.113",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.113",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.113/lifelog-v0.1.0-test.113.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.113.apk",
-    "apkName":  "lifelog-v0.1.0-test.113.apk",
-    "apkSize":  3741969,
-    "apkSha256":  "7f34e18a4ce9a7152742bf510978b0ae5a715ca0b326f7a043f8e91b902b7cf1",
-    "publishedAt":  "2026-06-25T05:54:15Z",
-    "body":  "- 分享面板改为一键分享优先，默认只显示立即分享和二维码，隐私、图片和分享包等高级设置按需展开。\n- 立即分享会优先调用系统分享面板，Web 环境自动回退为复制链接，减少分享前的配置步骤。\n- 人物和地点选择器改为推荐标签加添加按钮，搜索框不再常驻，新增回忆时关联人物和地点更轻量。\n- 搜不到人物或地点时仍可直接新增并关联，保留原有快速补充能力。\n- 首页待处理和资料补全入口改为折叠队列，默认聚焦今天最需要处理的一件事。"
+    "version":  "0.1.0-test.114",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.114",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.114/lifelog-v0.1.0-test.114.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.114.apk",
+    "apkName":  "lifelog-v0.1.0-test.114.apk",
+    "apkSize":  3743589,
+    "apkSha256":  "34cbf7a432ef608302ca403dd3f3d310a96a80689d8cc3702bd41693d235bac5",
+    "publishedAt":  "2026-06-25T11:42:16Z",
+    "body":  "- 人物、地点和记录详情的建议补充、相处灵感和下次怎么用默认收起，需要时再展开，减少详情页干扰。\n- 快速记录表单默认只保留日期、内容、人物和地点，标题、心情、模板、照片和标签统一放入更多设置。\n- 首页其他快捷入口、资料补全、最近看看等辅助内容改为折叠入口，默认聚焦今天最需要记录或处理的一件事。\n- 回忆页时间地图默认折叠，并且只有跨多个年份时才显示，避免时间线顶部被工具面板占用。\n- 地点页疑似重复地点改为轻量处理入口，重复合并工作台只在点击处理后展开。"
 }

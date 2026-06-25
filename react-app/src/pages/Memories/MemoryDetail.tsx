@@ -1,6 +1,7 @@
 import { ArrowLeft, Calendar, CheckCircle2, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
@@ -75,7 +76,7 @@ export default function MemoryDetail() {
   const memoryCtx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
   const memoryTitle = getMemoryDisplayTitle(memory, memoryCtx);
   const copy = buildMemoryDetailCopy(memory);
-  const completionTips = [
+  const completionTips: CompletionTip[] = [
     {
       id: "content",
       icon: <Heart />,
@@ -148,8 +149,8 @@ export default function MemoryDetail() {
         <GlassCard className="memory-reader-card">
           <div className="memory-reader-head">
             <div>
-              <span>{getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood || "日常"}</span>
-              <h2>{memoryTitle}</h2>
+              <span>正文</span>
+              <small>{getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood || "日常"}</small>
             </div>
             <button className="memory-reader-share" type="button" onClick={() => setShareOpen(true)}>
               <QrCode /> 分享
@@ -294,29 +295,11 @@ export default function MemoryDetail() {
         </GlassCard>
       </section>
 
-      {completionTips.length > 0 && (
-        <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 建议补充
-            </h2>
-            <button className="see-all" onClick={() => setEditing(true)}>
-              去编辑
-            </button>
-          </div>
-          <div className="completion-list">
-            {completionTips.map((tip) => (
-              <button className="completion-card" key={tip.id} onClick={() => setEditing(true)}>
-                <div className="task-icon">{tip.icon}</div>
-                <div>
-                  <strong>{tip.title}</strong>
-                  <span>{tip.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      <CompletionTipsSection
+        tips={completionTips}
+        onAction={() => setEditing(true)}
+        collapsedLabel="正文、人物、地点或标签可逐步补齐"
+      />
 
       <MemoryTimelineSection
         title={isMemoryPlan(memory) ? "相关记录" : "相关回忆"}

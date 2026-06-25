@@ -411,6 +411,76 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.inspiration-prompt-card {
+  width: 100%;
+  min-height: 66px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  padding: 12px 13px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.inspiration-prompt-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.inspiration-prompt-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.inspiration-prompt-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.inspiration-prompt-copy strong {
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.inspiration-prompt-copy small {
+  overflow: hidden;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspiration-prompt-action {
+  min-width: 42px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.inspiration-prompt-card.open .inspiration-prompt-action {
+  color: var(--text-sub);
+  background: var(--bg-soft);
+}
+
+.inspiration-grid {
+  margin-top: 10px;
+}
+
 .person-action-card,
 .place-use-card {
   min-height: 116px;
@@ -6914,28 +6984,71 @@
   top: 0;
   z-index: 20;
   display: grid;
-  gap: 8px;
-  margin: -6px 0 14px;
-  padding: 10px 0;
+  gap: 6px;
+  margin: -6px 0 10px;
+  padding: 8px 0;
   background: linear-gradient(180deg, var(--bg-color) 0%, color-mix(in srgb, var(--bg-color) 82%, transparent) 100%);
 }
 
-.memory-time-map-head {
-  display: flex;
+.memory-time-map-summary {
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--line));
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  color: var(--text-sub);
+  padding: 0 12px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
 }
 
-.memory-time-map-head strong {
+.memory-time-map-summary > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.memory-time-map-summary strong,
+.memory-time-map-summary small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memory-time-map-summary strong {
   color: var(--text-main);
   font-size: 13px;
 }
 
-.memory-time-map-head span {
+.memory-time-map-summary small {
+  color: var(--text-sub);
   font-size: 12px;
+}
+
+.memory-time-map-summary em {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 12px;
+  font-style: normal;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.memory-time-map-summary svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.16s ease;
+}
+
+.memory-time-map.open .memory-time-map-summary svg {
+  transform: rotate(180deg);
 }
 
 .memory-time-map-track {

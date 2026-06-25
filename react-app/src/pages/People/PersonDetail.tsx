@@ -52,6 +52,7 @@ export default function PersonDetail() {
   const [planListTarget, setPlanListTarget] = useState<PlanListTarget | null>(null);
   const [memoryPlanId, setMemoryPlanId] = useState<string | undefined>();
   const [editingPreferenceMode, setEditingPreferenceMode] = useState<PersonPreferenceMode | null>(null);
+  const [personInspirationOpen, setPersonInspirationOpen] = useState(false);
   const anniversariesRef = useRef<HTMLElement>(null);
   const anniversaryCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const selectedAnniversaryKey = searchParams.get("anniversary") || "";
@@ -266,26 +267,39 @@ export default function PersonDetail() {
         </GlassCard>
       </section>
 
-      <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
+      <CompletionTipsSection
+        tips={completionTips}
+        onAction={() => setEditing(true)}
+        collapsedLabel="生日、喜好、禁忌或纪念日可逐步补齐"
+      />
 
       <section className="section person-detail-section">
-        <div className="section-header">
-          <h2>
-            <MessageCircle /> 相处小抄
-          </h2>
-          <button className="see-all" onClick={() => setAddingMemory(true)}>
-            记一件事
-          </button>
-        </div>
-        <div className="person-action-grid">
-          {actionCenter.map((action) => (
-            <button className={`person-action-card glass-card ${action.tone}`} type="button" key={action.id} onClick={action.onClick}>
-              <span>{action.icon}</span>
-              <strong>{action.title}</strong>
-              <small>{action.desc}</small>
-            </button>
-          ))}
-        </div>
+        <button
+          className={`inspiration-prompt-card glass-card ${personInspirationOpen ? "open" : ""}`}
+          type="button"
+          aria-expanded={personInspirationOpen}
+          onClick={() => setPersonInspirationOpen((value) => !value)}
+        >
+          <span className="inspiration-prompt-icon">
+            <MessageCircle />
+          </span>
+          <span className="inspiration-prompt-copy">
+            <strong>相处灵感</strong>
+            <small>想送礼、补记录或找共同地点时再打开。</small>
+          </span>
+          <span className="inspiration-prompt-action">{personInspirationOpen ? "收起" : "看看"}</span>
+        </button>
+        {personInspirationOpen && (
+          <div className="person-action-grid inspiration-grid">
+            {actionCenter.map((action) => (
+              <button className={`person-action-card glass-card ${action.tone}`} type="button" key={action.id} onClick={action.onClick}>
+                <span>{action.icon}</span>
+                <strong>{action.title}</strong>
+                <small>{action.desc}</small>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="section">

@@ -1,4 +1,4 @@
-import { Building2, CheckSquare, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Users, X } from "lucide-react";
+import { Building2, CheckSquare, ChevronDown, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -116,6 +116,7 @@ export default function Places() {
   const [batchDraft, setBatchDraft] = useState<PlaceBatchDraft>({ category: "", mall: "", area: "", tags: "" });
   const [batchPreviewOpen, setBatchPreviewOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [duplicateToolsOpen, setDuplicateToolsOpen] = useState(false);
   const strongDuplicateGroups = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong"),
     [duplicatePlaceGroups],
@@ -534,67 +535,84 @@ export default function Places() {
       </section>
       {duplicatePlaceGroups.length > 0 && (
         <section className="section">
-          <div className="section-header">
-            <h2>
-              <GitMerge /> 疑似重复地点
-            </h2>
-            {strongDuplicateGroups.length > 0 && (
-              <button className="see-all" onClick={() => void handleMergeAll()}>
-                一键合并
-              </button>
-            )}
-          </div>
-          <div className="duplicate-summary-grid">
-            <GlassCard className="duplicate-summary-card strong">
-              <strong>{strongDuplicateGroups.length}</strong>
-              <span>强重复，可批量合并</span>
-            </GlassCard>
-            <GlassCard className="duplicate-summary-card weak">
-              <strong>{weakDuplicateGroups.length}</strong>
-              <span>疑似重复，建议人工确认</span>
-            </GlassCard>
-          </div>
-          {placeMergeHistory.length > 0 && (
-            <div className="list">
-              {placeMergeHistory.map((entry, index) => (
-                <GlassCard className="detail-row" key={entry.id}>
-                  <div className="merge-info">
-                    <strong>{index === 0 ? "最近一次合并" : `更早一次合并 ${index}`}</strong>
-                    <span>
-                      {new Date(entry.happenedAt).toLocaleString("zh-CN")} · {entry.reason} ·{" "}
-                      {entry.placeIds.length} 条记录
-                    </span>
+          <GlassCard className={`duplicate-tools-card ${duplicateToolsOpen ? "open" : ""}`}>
+            <button className="duplicate-tools-summary" type="button" aria-expanded={duplicateToolsOpen} onClick={() => setDuplicateToolsOpen((open) => !open)}>
+              <span className="duplicate-tools-icon">
+                <GitMerge />
+              </span>
+              <span className="duplicate-tools-copy">
+                <strong>发现 {duplicatePlaceGroups.length} 组疑似重复地点</strong>
+                <small>
+                  {strongDuplicateGroups.length ? `${strongDuplicateGroups.length} 组可一键合并` : "没有强重复"} ·{" "}
+                  {weakDuplicateGroups.length ? `${weakDuplicateGroups.length} 组待确认` : "无需人工确认"}
+                </small>
+              </span>
+              <span className="duplicate-tools-action">
+                {duplicateToolsOpen ? "收起" : "处理"}
+                <ChevronDown />
+              </span>
+            </button>
+            {duplicateToolsOpen && (
+              <div className="duplicate-tools-panel">
+                <div className="duplicate-summary-grid">
+                  <GlassCard className="duplicate-summary-card strong">
+                    <strong>{strongDuplicateGroups.length}</strong>
+                    <span>强重复，可批量合并</span>
+                  </GlassCard>
+                  <GlassCard className="duplicate-summary-card weak">
+                    <strong>{weakDuplicateGroups.length}</strong>
+                    <span>疑似重复，建议人工确认</span>
+                  </GlassCard>
+                </div>
+                {strongDuplicateGroups.length > 0 && (
+                  <button className="duplicate-merge-all mini-action add" type="button" onClick={() => void handleMergeAll()}>
+                    一键合并强重复
+                  </button>
+                )}
+                {placeMergeHistory.length > 0 && (
+                  <div className="list">
+                    {placeMergeHistory.map((entry, index) => (
+                      <GlassCard className="detail-row" key={entry.id}>
+                        <div className="merge-info">
+                          <strong>{index === 0 ? "最近一次合并" : `更早一次合并 ${index}`}</strong>
+                          <span>
+                            {new Date(entry.happenedAt).toLocaleString("zh-CN")} · {entry.reason} ·{" "}
+                            {entry.placeIds.length} 条记录
+                          </span>
+                        </div>
+                        {index === 0 ? (
+                          <button className="mini-action add" onClick={() => void handleUndoLatestMerge()}>
+                            撤销
+                          </button>
+                        ) : (
+                          <span className="merge-history-badge">已归档</span>
+                        )}
+                      </GlassCard>
+                    ))}
                   </div>
-                  {index === 0 ? (
-                    <button className="mini-action add" onClick={() => void handleUndoLatestMerge()}>
-                      撤销
-                    </button>
-                  ) : (
-                    <span className="merge-history-badge">已归档</span>
-                  )}
-                </GlassCard>
-              ))}
-            </div>
-          )}
-          <DuplicateGroupList
-            groups={strongDuplicateGroups}
-            title="强重复"
-            emptyText="暂无强重复地点"
-            onPreview={handleMergeGroup}
-          />
-          <DuplicateGroupList
-            groups={weakDuplicateGroups}
-            title="待确认"
-            emptyText="暂无待确认重复地点"
-            action={
-              weakDuplicateGroups.length > 0 ? (
-                <button className="mini-action add" onClick={openWeakQueue} type="button">
-                  逐条处理
-                </button>
-              ) : null
-            }
-            onPreview={handleMergeGroup}
-          />
+                )}
+                <DuplicateGroupList
+                  groups={strongDuplicateGroups}
+                  title="强重复"
+                  emptyText="暂无强重复地点"
+                  onPreview={handleMergeGroup}
+                />
+                <DuplicateGroupList
+                  groups={weakDuplicateGroups}
+                  title="待确认"
+                  emptyText="暂无待确认重复地点"
+                  action={
+                    weakDuplicateGroups.length > 0 ? (
+                      <button className="mini-action add" onClick={openWeakQueue} type="button">
+                        逐条处理
+                      </button>
+                    ) : null
+                  }
+                  onPreview={handleMergeGroup}
+                />
+              </div>
+            )}
+          </GlassCard>
         </section>
       )}
       {mallGroups.length > 0 && (

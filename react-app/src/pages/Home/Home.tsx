@@ -27,6 +27,8 @@ export default function Home() {
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const [todayQueueOpen, setTodayQueueOpen] = useState(false);
   const [taskQueueOpen, setTaskQueueOpen] = useState(false);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [homeLibraryOpen, setHomeLibraryOpen] = useState(false);
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .map((item) => ({
@@ -47,6 +49,10 @@ export default function Home() {
   );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(actualMemories);
   const onThisDayMemories = buildOnThisDayMemories(actualMemories, getPersonName, getPlaceName).slice(0, 3);
+  const homeLibrarySummary =
+    favorites.length || featuredPlaces.length || recentEntries.length
+      ? `收藏 ${favorites.length} 人 · 常去 ${featuredPlaces.length} 处 · 最近 ${recentEntries.length} 条`
+      : "人物、地点、记录会在这里汇总";
 
   useEffect(() => {
     saveQuickInboxDraft(inboxText);
@@ -221,24 +227,31 @@ export default function Home() {
               {inboxText.trim() ? "保存" : "写一句"}
             </button>
           </div>
-          <div className="daily-focus-shortcuts">
-            <button type="button" onClick={() => openQuickMemory()}>
-              <PenLine />
-              写一句
-            </button>
-            <button type="button" onClick={() => setEntrySheetType("person")}>
-              <Heart />
-              记人物
-            </button>
-            <button type="button" onClick={() => setEntrySheetType("place")}>
-              <MapPin />
-              记地点
-            </button>
-            <button type="button" onClick={() => navigate("/calendar")}>
-              <Gift />
-              日历
-            </button>
-          </div>
+          <button className="daily-focus-more" type="button" onClick={() => setQuickActionsOpen((open) => !open)}>
+            <span>其他快捷入口</span>
+            <em>{quickActionsOpen ? "收起" : "展开"}</em>
+            <ChevronDown />
+          </button>
+          {quickActionsOpen && (
+            <div className="daily-focus-shortcuts">
+              <button type="button" onClick={() => openQuickMemory()}>
+                <PenLine />
+                写一句
+              </button>
+              <button type="button" onClick={() => setEntrySheetType("person")}>
+                <Heart />
+                记人物
+              </button>
+              <button type="button" onClick={() => setEntrySheetType("place")}>
+                <MapPin />
+                记地点
+              </button>
+              <button type="button" onClick={() => navigate("/calendar")}>
+                <Gift />
+                日历
+              </button>
+            </div>
+          )}
         </GlassCard>
       </section>
 
@@ -391,114 +404,149 @@ export default function Home() {
         </section>
       )}
 
-      <section className="section">
+      <section className="section home-library-section">
         <div className="section-header">
           <h2>
-            <Users /> 收藏的人
+            <Clock /> 最近看看
           </h2>
-          <button className="see-all" onClick={() => navigate("/people")}>
-            全部
+          <button className="see-all home-library-toggle" type="button" onClick={() => setHomeLibraryOpen((open) => !open)}>
+            {homeLibraryOpen ? "收起" : "展开"}
+            <ChevronDown />
           </button>
         </div>
-        {favorites.length > 0 ? (
-          <div className="favorites-grid">
-            {favorites.map((person) => (
-              <button className="favorite-item favorite-button" key={person.id} onClick={() => navigate(`/people/${person.id}`)}>
-                <div className="fav-avatar">{initials(person.name)}</div>
-                <div className="fav-name">{person.name}</div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <GlassCard className="home-empty-card compact">
-            <strong>还没有收藏人物</strong>
-            <span>把重要的人设为收藏后，首页会优先显示 TA。</span>
-            <button onClick={() => navigate("/people")}>去看看人物</button>
-          </GlassCard>
-        )}
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <MapPin /> 常去地点
-          </h2>
-          <button className="see-all" onClick={() => navigate("/places")}>
-            全部
-          </button>
-        </div>
-        {featuredPlaces.length > 0 ? (
-          <div className="home-place-list">
-            {featuredPlaces.map(({ place, visitStats }) => (
-              <GlassCard className="home-place-card" key={place.id}>
-                <button className="home-place-main" type="button" onClick={() => navigate(`/places/${place.id}`)}>
-                  <span className="home-place-icon">
-                    <MapPin />
-                  </span>
-                  <span className="home-place-copy">
-                    <strong>{buildPlaceDisplayName(place)}</strong>
-                    <small>{buildHomePlaceSubtitle(place)}</small>
-                  </span>
-                  {place.favorite && <Star className="home-place-favorite" />}
+        <button className="home-library-strip glass-card" type="button" onClick={() => setHomeLibraryOpen((open) => !open)}>
+          <span className="home-library-copy">
+            <strong>{homeLibrarySummary}</strong>
+            <small>需要回看时再展开，不占用今天的主流程</small>
+          </span>
+          <span className="home-library-metrics">
+            <span>
+              <Users />
+              {favorites.length}
+            </span>
+            <span>
+              <MapPin />
+              {featuredPlaces.length}
+            </span>
+            <span>
+              <Clock />
+              {recentEntries.length}
+            </span>
+          </span>
+        </button>
+        {homeLibraryOpen && (
+          <div className="home-library-content">
+            <div className="home-library-group">
+              <div className="home-library-group-header">
+                <h3>
+                  <Users /> 收藏的人
+                </h3>
+                <button type="button" onClick={() => navigate("/people")}>
+                  全部
                 </button>
-                <div className="home-place-meta">
-                  <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
-                  <span>{visitStats.latestLabel}</span>
+              </div>
+              {favorites.length > 0 ? (
+                <div className="favorites-grid">
+                  {favorites.map((person) => (
+                    <button className="favorite-item favorite-button" key={person.id} onClick={() => navigate(`/people/${person.id}`)}>
+                      <div className="fav-avatar">{initials(person.name)}</div>
+                      <div className="fav-name">{person.name}</div>
+                    </button>
+                  ))}
                 </div>
-                <button className="home-place-action" type="button" onClick={() => openQuickMemory([], [place.id])}>
-                  再记一次
-                </button>
-              </GlassCard>
-            ))}
-          </div>
-        ) : (
-          <GlassCard className="home-empty-card compact">
-            <strong>还没有地点</strong>
-            <span>添加餐厅、景点或常去的地方后，首页会显示最近到访。</span>
-            <button onClick={() => setEntrySheetType("place")}>添加地点</button>
-          </GlassCard>
-        )}
-      </section>
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Clock /> 最近记录
-          </h2>
-          <button className="see-all" onClick={() => navigate("/memories")}>
-            全部
-          </button>
-        </div>
-        {recentEntries.length > 0 ? (
-          <div className="list">
-            {recentEntries.map((memory) => {
-              const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
-              return (
-                <MemoryCard
-                  key={memory.id}
-                  memory={memory}
-                  ctx={ctx}
-                  icon="♡"
-                  onOpen={() => navigate(`/memories/${memory.id}`)}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <GlassCard className="home-empty-card">
-            <strong>还没有记录</strong>
-            <span>从今天发生的一件小事开始，建立你的第一条 LifeLog。</span>
-            <div className="home-empty-actions">
-              <button
-                onClick={() => {
-                  openQuickMemory();
-                }}
-              >
-                记录一条
-              </button>
-              <button onClick={() => setEntrySheetType("place")}>添加地点</button>
+              ) : (
+                <GlassCard className="home-empty-card compact">
+                  <strong>还没有收藏人物</strong>
+                  <span>把重要的人设为收藏后，这里会优先显示 TA。</span>
+                  <button onClick={() => navigate("/people")}>去看看人物</button>
+                </GlassCard>
+              )}
             </div>
-          </GlassCard>
+
+            <div className="home-library-group">
+              <div className="home-library-group-header">
+                <h3>
+                  <MapPin /> 常去地点
+                </h3>
+                <button type="button" onClick={() => navigate("/places")}>
+                  全部
+                </button>
+              </div>
+              {featuredPlaces.length > 0 ? (
+                <div className="home-place-list">
+                  {featuredPlaces.map(({ place, visitStats }) => (
+                    <GlassCard className="home-place-card" key={place.id}>
+                      <button className="home-place-main" type="button" onClick={() => navigate(`/places/${place.id}`)}>
+                        <span className="home-place-icon">
+                          <MapPin />
+                        </span>
+                        <span className="home-place-copy">
+                          <strong>{buildPlaceDisplayName(place)}</strong>
+                          <small>{buildHomePlaceSubtitle(place)}</small>
+                        </span>
+                        {place.favorite && <Star className="home-place-favorite" />}
+                      </button>
+                      <div className="home-place-meta">
+                        <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
+                        <span>{visitStats.latestLabel}</span>
+                      </div>
+                      <button className="home-place-action" type="button" onClick={() => openQuickMemory([], [place.id])}>
+                        再记一次
+                      </button>
+                    </GlassCard>
+                  ))}
+                </div>
+              ) : (
+                <GlassCard className="home-empty-card compact">
+                  <strong>还没有地点</strong>
+                  <span>添加餐厅、景点或常去的地方后，这里会显示最近到访。</span>
+                  <button onClick={() => setEntrySheetType("place")}>添加地点</button>
+                </GlassCard>
+              )}
+            </div>
+
+            <div className="home-library-group">
+              <div className="home-library-group-header">
+                <h3>
+                  <Clock /> 最近记录
+                </h3>
+                <button type="button" onClick={() => navigate("/memories")}>
+                  全部
+                </button>
+              </div>
+              {recentEntries.length > 0 ? (
+                <div className="list">
+                  {recentEntries.map((memory) => {
+                    const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+                    return (
+                      <MemoryCard
+                        key={memory.id}
+                        memory={memory}
+                        ctx={ctx}
+                        icon="♡"
+                        onOpen={() => navigate(`/memories/${memory.id}`)}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <GlassCard className="home-empty-card compact">
+                  <strong>还没有记录</strong>
+                  <span>从今天发生的一件小事开始，建立你的第一条 LifeLog。</span>
+                  <div className="home-empty-actions">
+                    <button
+                      onClick={() => {
+                        openQuickMemory();
+                      }}
+                    >
+                      记录一条
+                    </button>
+                    <button onClick={() => setEntrySheetType("place")}>添加地点</button>
+                  </div>
+                </GlassCard>
+              )}
+            </div>
+          </div>
         )}
       </section>
 

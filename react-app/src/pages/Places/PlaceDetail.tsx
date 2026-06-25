@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, ExternalLink, Heart, MapPin, Navigation, PenLine, QrCode, Share2, Sparkles, Star, Store, Users } from "lucide-react";
+import { ArrowLeft, Camera, ExternalLink, Heart, MapPin, Navigation, PenLine, Share2, Sparkles, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
@@ -33,6 +33,7 @@ export default function PlaceDetail() {
   const [editing, setEditing] = useState(false);
   const [addingMemory, setAddingMemory] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [placeInspirationOpen, setPlaceInspirationOpen] = useState(false);
   const place = state.places.find((item) => item.id === placeId);
 
   if (!place) {
@@ -126,27 +127,13 @@ export default function PlaceDetail() {
                 <button className="category-pill active" onClick={() => setEditing(true)}>
                   编辑地点
                 </button>
+                <button className="category-pill detail-share-pill" type="button" onClick={() => setShareOpen(true)}>
+                  <Share2 /> 分享
+                </button>
                 <NotionRecordAction entityType="place" entityId={place.id} />
               </div>
             </div>
           </div>
-        </GlassCard>
-      </section>
-
-      <section className="section">
-        <GlassCard className="detail-share-card">
-          <div className="detail-share-copy">
-            <span className="detail-share-icon">
-              <Share2 />
-            </span>
-            <div>
-              <strong>分享这个地点</strong>
-              <span>可选择地址、定位、外部链接和图片是否公开，支持链接、二维码或分享包。</span>
-            </div>
-          </div>
-          <button className="detail-share-button" type="button" onClick={() => setShareOpen(true)}>
-            <QrCode /> 打开分享
-          </button>
         </GlassCard>
       </section>
 
@@ -193,26 +180,39 @@ export default function PlaceDetail() {
         </GlassCard>
       </section>
 
-      <CompletionTipsSection tips={completionTips} onAction={() => setEditing(true)} />
+      <CompletionTipsSection
+        tips={completionTips}
+        onAction={() => setEditing(true)}
+        collapsedLabel="缺少地图、照片或地址时再补充"
+      />
 
       <section className="section">
-        <div className="section-header">
-          <h2>
-            <Sparkles /> 下次怎么用
-          </h2>
-          <button className="see-all" type="button" onClick={() => setAddingMemory(true)}>
-            记到访
-          </button>
-        </div>
-        <div className="place-use-grid">
-          {nextUseCards.map((card) => (
-            <button className={`place-use-card glass-card ${card.tone}`} type="button" key={card.id} onClick={card.onClick}>
-              <span>{card.icon}</span>
-              <strong>{card.title}</strong>
-              <small>{card.desc}</small>
-            </button>
-          ))}
-        </div>
+        <button
+          className={`inspiration-prompt-card glass-card ${placeInspirationOpen ? "open" : ""}`}
+          type="button"
+          aria-expanded={placeInspirationOpen}
+          onClick={() => setPlaceInspirationOpen((value) => !value)}
+        >
+          <span className="inspiration-prompt-icon">
+            <Sparkles />
+          </span>
+          <span className="inspiration-prompt-copy">
+            <strong>下次怎么用</strong>
+            <small>需要灵感时再展开，不打扰日常查看。</small>
+          </span>
+          <span className="inspiration-prompt-action">{placeInspirationOpen ? "收起" : "看看"}</span>
+        </button>
+        {placeInspirationOpen && (
+          <div className="place-use-grid inspiration-grid">
+            {nextUseCards.map((card) => (
+              <button className={`place-use-card glass-card ${card.tone}`} type="button" key={card.id} onClick={card.onClick}>
+                <span>{card.icon}</span>
+                <strong>{card.title}</strong>
+                <small>{card.desc}</small>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="section">

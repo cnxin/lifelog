@@ -798,6 +798,15 @@
   display: grid;
 }
 
+.memory-core-pickers {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-advanced-panel {
+  background: color-mix(in srgb, var(--card-solid, #fff) 82%, var(--surface-soft) 18%);
+}
+
 .memory-preview {
   display: grid;
   gap: 8px;
@@ -809,10 +818,76 @@
   border: 1px solid var(--soft-purple);
 }
 
+.memory-preview.compact {
+  padding: 8px 10px;
+}
+
 .memory-preview-eyebrow {
   color: var(--primary);
   font-size: 11px;
   font-weight: 800;
+}
+
+.memory-preview-summary {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.memory-preview-summary span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.memory-preview-summary strong,
+.memory-preview-summary small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memory-preview-summary strong {
+  color: var(--primary);
+  font-size: 12px;
+}
+
+.memory-preview-summary small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.memory-preview-summary em {
+  color: var(--primary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.memory-preview-summary svg {
+  width: 14px;
+  height: 14px;
+  color: var(--primary);
+  transition: transform 0.16s ease;
+}
+
+.memory-preview.open .memory-preview-summary svg {
+  transform: rotate(180deg);
+}
+
+.memory-preview-detail {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
 }
 
 .memory-preview-row {

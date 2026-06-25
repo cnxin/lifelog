@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -44,6 +44,7 @@ export default function Memories() {
   const [filtersOpen, setFiltersOpen] = useState(hasAdvancedFilters);
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
+  const [timeMapOpen, setTimeMapOpen] = useState(false);
 
   const duePlans = useMemo(
     () => state.memories.filter((memory) => isDuePlan(memory, todayKey)).sort((a, b) => b.date.localeCompare(a.date)),
@@ -259,25 +260,33 @@ export default function Memories() {
         )}
       </section>
       <section className="section">
-        {yearMapItems.length > 0 && (
-          <div className="memory-time-map" aria-label="记录时间地图">
-            <div className="memory-time-map-head">
-              <strong>时间地图</strong>
-              <span>{yearMapItems.length} 个年份 · {memories.length} 条</span>
-            </div>
-            <div className="memory-time-map-track">
-              {yearMapItems.map((item) => (
-                <a
-                  href={`#memory-year-${item.year}`}
-                  key={item.year}
-                  style={{ "--density": item.density } as CSSProperties}
-                  title={`${item.year} · ${item.count} 条记录`}
-                >
-                  <span />
-                  <em>{item.year}</em>
-                </a>
-              ))}
-            </div>
+        {yearMapItems.length > 1 && (
+          <div className={`memory-time-map ${timeMapOpen ? "open" : ""}`} aria-label="记录时间地图">
+            <button className="memory-time-map-summary" type="button" aria-expanded={timeMapOpen} onClick={() => setTimeMapOpen((open) => !open)}>
+              <span>
+                <strong>时间地图</strong>
+                <small>{yearMapItems.length} 个年份 · {memories.length} 条记录</small>
+              </span>
+              <em>
+                {timeMapOpen ? "收起" : "按年份跳转"}
+                <ChevronDown />
+              </em>
+            </button>
+            {timeMapOpen && (
+              <div className="memory-time-map-track">
+                {yearMapItems.map((item) => (
+                  <a
+                    href={`#memory-year-${item.year}`}
+                    key={item.year}
+                    style={{ "--density": item.density } as CSSProperties}
+                    title={`${item.year} · ${item.count} 条记录`}
+                  >
+                    <span />
+                    <em>{item.year}</em>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div className="memory-timeline-list">
