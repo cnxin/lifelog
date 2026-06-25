@@ -102,6 +102,21 @@
   background: linear-gradient(135deg, #22a06b, var(--primary));
 }
 
+.compact-memory-card {
+  align-items: flex-start;
+}
+
+.compact-memory-card .memory-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+}
+
+.compact-memory-card .memory-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
 .place-info,
 .person-info,
 .memory-info {
@@ -184,10 +199,99 @@
   font-weight: 700;
 }
 
+.compact-place-card {
+  align-items: flex-start;
+}
+
+.compact-place-card .place-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+}
+
+.compact-place-card .place-img svg {
+  width: 25px;
+  height: 25px;
+}
+
+.compact-place-card .place-name {
+  margin-bottom: 2px;
+}
+
+.compact-place-card .place-visit-line {
+  margin: 5px 0 0;
+}
+
+.place-card-detail-toggle {
+  width: fit-content;
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  margin-top: 7px;
+  padding: 0 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.place-card-extra {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.place-card-extra .place-visit-line,
+.place-card-extra .tags {
+  margin-top: 0;
+}
+
 .memory-meta-line {
   color: color-mix(in srgb, var(--text-sub) 86%, var(--text-main));
   font-size: 12px;
   font-weight: 700;
+}
+
+.memory-card-extra-toggle {
+  width: fit-content;
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  padding: 0 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.memory-card-extra-toggle svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 0.16s ease;
+}
+
+.compact-memory-card.extras-open .memory-card-extra-toggle svg {
+  transform: rotate(180deg);
+}
+
+.memory-card-extra {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.memory-card-extra .memory-tags-line {
+  margin-top: 0;
 }
 
 .calendar-memory-content {
@@ -650,16 +754,17 @@
 }
 
 .person-pref-lines {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 6px;
 }
 
 .person-pref-edit-area {
-  width: 100%;
+  width: fit-content;
   border: 0;
-  border-radius: 14px;
-  padding: 6px 8px;
+  border-radius: 999px;
+  padding: 5px 8px 5px 5px;
   color: inherit;
   background: color-mix(in srgb, var(--primary) 4%, transparent);
   text-align: left;
@@ -722,9 +827,9 @@
 }
 
 .person-pref-line {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   line-height: 1.4;
 }
@@ -736,7 +841,7 @@ button.person-pref-line {
 .person-pref-label {
   flex-shrink: 0;
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 2px 7px;
   font-weight: 700;
   font-size: 11px;
 }
@@ -757,6 +862,8 @@ button.person-pref-line {
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .category-row {
@@ -1178,6 +1285,56 @@ button.person-pref-line {
   padding: 14px;
   color: var(--text-main);
   text-align: left;
+}
+
+.mall-section-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.mall-section-summary {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 0;
+  color: var(--text-main);
+  background: transparent;
+  text-align: left;
+}
+
+.mall-section-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mall-section-action svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.16s ease;
+}
+
+.mall-section-card.open .mall-section-action svg {
+  transform: rotate(180deg);
+}
+
+.mall-section-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.mall-create-button {
+  width: fit-content;
 }
 
 .mall-list-main {

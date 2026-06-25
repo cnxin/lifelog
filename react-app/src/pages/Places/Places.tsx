@@ -25,7 +25,6 @@ import {
   buildMallKey,
   buildPlaceContextLine,
   buildPlaceDisplayName,
-  buildPlaceGeoLine,
   getPlaceMallName,
   isMallRecord,
 } from "../../utils/placeMeta";
@@ -117,6 +116,8 @@ export default function Places() {
   const [batchPreviewOpen, setBatchPreviewOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [duplicateToolsOpen, setDuplicateToolsOpen] = useState(false);
+  const [expandedPlaceId, setExpandedPlaceId] = useState<string | null>(null);
+  const [mallSectionOpen, setMallSectionOpen] = useState(false);
   const strongDuplicateGroups = useMemo(
     () => duplicatePlaceGroups.filter((group) => group.strength === "strong"),
     [duplicatePlaceGroups],
@@ -386,6 +387,7 @@ export default function Places() {
     [batchDraft, selectedSharePlaceIds, storePlaceRows]
   );
   const currentSortLabel = placeSortOptions.find((option) => option.value === sortMode)?.label || "";
+  const mallSummary = buildMallSummary(mallGroups);
   const activeFilterLabels = [
     ...buildActiveFilterLabels({
       query: query.trim(),
@@ -617,41 +619,55 @@ export default function Places() {
       )}
       {mallGroups.length > 0 && (
         <section className="section">
-          <div className="section-header">
-            <h2>
-              <Building2 /> 商场 / 园区
-            </h2>
-            <button className="see-all" onClick={() => setCreatingNew(true)}>
-              新建
+          <GlassCard className={`mall-section-card ${mallSectionOpen ? "open" : ""}`}>
+            <button className="mall-section-summary" type="button" aria-expanded={mallSectionOpen} onClick={() => setMallSectionOpen((open) => !open)}>
+              <span className="mall-list-icon">
+                <Building2 size={18} />
+              </span>
+              <span className="mall-list-copy">
+                <strong>商场 / 园区</strong>
+                <small>{mallSummary}</small>
+              </span>
+              <span className="mall-section-action">
+                {mallSectionOpen ? "收起" : "展开"}
+                <ChevronDown />
+              </span>
             </button>
-          </div>
-          <div className="list">
-            {mallGroups.map((mall) => (
-              <button
-                className="mall-list-card detail-button glass-card"
-                key={mall.key}
-                onClick={() =>
-                  navigate(`/places/malls/${encodeURIComponent(mall.key)}`)
-                }
-              >
-                <span className="mall-list-main">
-                  <span className="mall-list-icon">
-                    <Building2 size={18} />
-                  </span>
-                  <span className="mall-list-copy">
-                    <strong>{mall.mall}</strong>
-                    <small>{[mall.province, mall.city].filter(Boolean).join(" · ") || "未设置城市"}</small>
-                  </span>
-                </span>
-                <div className="place-visit-line mall-visit-line">
-                  <span>{mall.visitStats.storeCount} 家店</span>
-                  <span>{mall.visitStats.visitCount ? `总到访 ${mall.visitStats.visitCount} 次` : "还没有到访"}</span>
-                  <span>{mall.visitStats.latestLabel}</span>
-                  {mall.visitStats.topPeople.length > 0 && <span>常一起：{mall.visitStats.topPeople.map((item) => item.label).join("、")}</span>}
+            {mallSectionOpen && (
+              <div className="mall-section-panel">
+                <button className="mini-action add mall-create-button" type="button" onClick={() => setCreatingNew(true)}>
+                  新建商场
+                </button>
+                <div className="list">
+                  {mallGroups.map((mall) => (
+                    <button
+                      className="mall-list-card detail-button glass-card"
+                      key={mall.key}
+                      onClick={() =>
+                        navigate(`/places/malls/${encodeURIComponent(mall.key)}`)
+                      }
+                    >
+                      <span className="mall-list-main">
+                        <span className="mall-list-icon">
+                          <Building2 size={18} />
+                        </span>
+                        <span className="mall-list-copy">
+                          <strong>{mall.mall}</strong>
+                          <small>{[mall.province, mall.city].filter(Boolean).join(" · ") || "未设置城市"}</small>
+                        </span>
+                      </span>
+                      <div className="place-visit-line mall-visit-line">
+                        <span>{mall.visitStats.storeCount} 家店</span>
+                        <span>{mall.visitStats.visitCount ? `总到访 ${mall.visitStats.visitCount} 次` : "还没有到访"}</span>
+                        <span>{mall.visitStats.latestLabel}</span>
+                        {mall.visitStats.topPeople.length > 0 && <span>常一起：{mall.visitStats.topPeople.map((item) => item.label).join("、")}</span>}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
+            )}
+          </GlassCard>
         </section>
       )}
       <section className="section">
@@ -790,8 +806,10 @@ export default function Places() {
         <div className="list">
           {storePlaceRows.map(({ place, visitStats }) => {
             const selected = selectedSharePlaceIds.includes(place.id);
+            const expanded = expandedPlaceId === place.id;
+            const hasExtraDetail = Boolean(place.address || place.desc || place.tags.length || visitStats.topPeople.length);
             return (
-              <GlassCard className={`place-card ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""}`} key={place.id}>
+              <GlassCard className={`place-card compact-place-card ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`} key={place.id}>
                 {batchShareMode && (
                   <button
                     className="place-share-select"
@@ -859,20 +877,40 @@ export default function Places() {
                     </span>
                   </div>
                   <p className="place-desc truncate-text">
-                    {buildPlaceGeoLine(place)}
-                  </p>
-                  <p className="place-desc truncate-text">
-                    {place.category} · {buildPlaceContextLine(place)}
+                    {buildCompactPlaceLine(place)}
                   </p>
                   <div className="place-visit-line">
                     <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
                     <span>{visitStats.latestLabel}</span>
-                    {visitStats.topPeople.length > 0 && <span>常一起：{visitStats.topPeople.map((item) => item.label).join("、")}</span>}
                   </div>
-                  <p className="place-desc truncate-lines-2">
-                    {place.address || place.desc}
-                  </p>
-                  <Tags items={place.tags} />
+                  {hasExtraDetail && (
+                    <button
+                      className="place-card-detail-toggle"
+                      type="button"
+                      aria-expanded={expanded}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setExpandedPlaceId((current) => (current === place.id ? null : place.id));
+                      }}
+                    >
+                      {expanded ? "收起详情" : "详情"}
+                    </button>
+                  )}
+                  {expanded && (
+                    <div className="place-card-extra">
+                      {visitStats.topPeople.length > 0 && (
+                        <div className="place-visit-line">
+                          <span>常一起：{visitStats.topPeople.map((item) => item.label).join("、")}</span>
+                        </div>
+                      )}
+                      {(place.address || place.desc) && (
+                        <p className="place-desc truncate-lines-2">
+                          {place.address || place.desc}
+                        </p>
+                      )}
+                      <Tags items={place.tags} />
+                    </div>
+                  )}
                 </div>
                 <div className="person-side-actions">
                   {batchShareMode ? (
@@ -1032,6 +1070,24 @@ function buildPlaceBatchPreview(places: Place[], selectedIds: string[], draft: P
     summary: changes.join(" · "),
     examples: targetPlaces.slice(0, 3).map((place) => buildPlaceDisplayName(place))
   };
+}
+
+function buildCompactPlaceLine(place: Place) {
+  return [place.category, place.city, buildPlaceContextLine(place)]
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item, index, items) => items.indexOf(item) === index)
+    .join(" · ");
+}
+
+function buildMallSummary(
+  malls: Array<{
+    visitStats: MallVisitStats;
+  }>
+) {
+  const storeCount = malls.reduce((total, mall) => total + mall.visitStats.storeCount, 0);
+  const visitCount = malls.reduce((total, mall) => total + mall.visitStats.visitCount, 0);
+  return `${malls.length} 个商场 · ${storeCount} 家店 · ${visitCount ? `总到访 ${visitCount} 次` : "还没有到访"}`;
 }
 
 function comparePlaceRows(

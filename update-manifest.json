@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.114",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.114",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.114/lifelog-v0.1.0-test.114.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.114.apk",
-    "apkName":  "lifelog-v0.1.0-test.114.apk",
-    "apkSize":  3743589,
-    "apkSha256":  "34cbf7a432ef608302ca403dd3f3d310a96a80689d8cc3702bd41693d235bac5",
-    "publishedAt":  "2026-06-25T11:42:16Z",
-    "body":  "- 人物、地点和记录详情的建议补充、相处灵感和下次怎么用默认收起，需要时再展开，减少详情页干扰。\n- 快速记录表单默认只保留日期、内容、人物和地点，标题、心情、模板、照片和标签统一放入更多设置。\n- 首页其他快捷入口、资料补全、最近看看等辅助内容改为折叠入口，默认聚焦今天最需要记录或处理的一件事。\n- 回忆页时间地图默认折叠，并且只有跨多个年份时才显示，避免时间线顶部被工具面板占用。\n- 地点页疑似重复地点改为轻量处理入口，重复合并工作台只在点击处理后展开。"
+    "version":  "0.1.0-test.115",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.115",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.115/lifelog-v0.1.0-test.115.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.115.apk",
+    "apkName":  "lifelog-v0.1.0-test.115.apk",
+    "apkSize":  3744761,
+    "apkSha256":  "9be1be17f485f5e968b0626b019896d9590f58ff059244b5df429054f32edd92",
+    "publishedAt":  "2026-06-25T13:44:13Z",
+    "body":  "- 地点列表卡片改为摘要优先，默认只显示名称、评分、分类位置和到访摘要，地址、标签和常一起的人按需展开。\n- 人物列表中的喜好档案和禁忌雷区改为计数胶囊入口，保留直接编辑能力，减少人物卡片信息堆叠。\n- 回忆时间线默认收起正文片段、心情、标签和照片数量，点开单条详情后再查看辅助信息。\n- 地点页商场 / 园区区块改为摘要入口，默认显示商场、店铺和到访统计，展开后查看商场列表。"
 }

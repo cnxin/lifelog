@@ -1,5 +1,6 @@
-import { Heart, Image as ImageIcon } from "lucide-react";
+import { ChevronDown, Heart, Image as ImageIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import GlassCard from "./GlassCard";
 import MemoryTags from "./MemoryTags";
 import NotionSyncBadge from "./NotionSyncBadge";
@@ -23,6 +24,7 @@ interface MemoryCardProps {
   showPhotoCount?: boolean;
   icon?: ReactNode;
   syncMeta?: NotionRecordSyncMeta;
+  collapseExtras?: boolean;
 }
 
 export default function MemoryCard({
@@ -33,16 +35,20 @@ export default function MemoryCard({
   renderMeta,
   showPhotoCount = false,
   icon,
-  syncMeta
+  syncMeta,
+  collapseExtras = false
 }: MemoryCardProps) {
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const displayTitle = getMemoryDisplayTitle(memory, ctx);
   const showContentLine = isManualTitle(memory) && Boolean(memory.content.trim());
   const meta = buildMemoryMetaLine(ctx);
   const photoCount = (memory.photos || []).length;
   const kindLabel = getMemoryKindLabel(memory);
+  const hasTags = Boolean(memory.mood?.trim() || (memory.tags || []).length);
+  const hasCollapsedExtras = collapseExtras && (showContentLine || hasTags || (showPhotoCount && photoCount > 0));
 
   return (
-    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""}`}>
+    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${extrasOpen ? "extras-open" : ""}`}>
       <button className="place-tap" onClick={onOpen} type="button">
         <div className="memory-badge">{icon || <Heart />}</div>
       </button>
@@ -60,18 +66,48 @@ export default function MemoryCard({
         ) : (
           <>
             {meta && <p className="memory-desc memory-meta-line">{meta}</p>}
-            {showContentLine && <p className="memory-desc">{memory.content}</p>}
+            {!collapseExtras && showContentLine && <p className="memory-desc">{memory.content}</p>}
           </>
         )}
-        <div className="memory-tags-line">
-          <MemoryTags mood={memory.mood} tags={memory.tags || []} />
-          {showPhotoCount && photoCount > 0 && (
-            <span className="memory-photo-count">
-              <ImageIcon size={12} />
-              {photoCount}
-            </span>
-          )}
-        </div>
+        {!collapseExtras && (
+          <div className="memory-tags-line">
+            <MemoryTags mood={memory.mood} tags={memory.tags || []} />
+            {showPhotoCount && photoCount > 0 && (
+              <span className="memory-photo-count">
+                <ImageIcon size={12} />
+                {photoCount}
+              </span>
+            )}
+          </div>
+        )}
+        {hasCollapsedExtras && (
+          <button
+            className="memory-card-extra-toggle"
+            type="button"
+            aria-expanded={extrasOpen}
+            onClick={(event) => {
+              event.stopPropagation();
+              setExtrasOpen((open) => !open);
+            }}
+          >
+            {extrasOpen ? "收起详情" : "详情"}
+            <ChevronDown />
+          </button>
+        )}
+        {collapseExtras && extrasOpen && (
+          <div className="memory-card-extra">
+            {showContentLine && <p className="memory-desc">{memory.content}</p>}
+            <div className="memory-tags-line">
+              <MemoryTags mood={memory.mood} tags={memory.tags || []} />
+              {showPhotoCount && photoCount > 0 && (
+                <span className="memory-photo-count">
+                  <ImageIcon size={12} />
+                  {photoCount}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       {actions && <div className="person-side-actions">{actions}</div>}
     </GlassCard>

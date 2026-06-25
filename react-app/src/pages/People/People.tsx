@@ -318,52 +318,31 @@ function PreferenceLines({
   dislikes: PreferenceGroupShape[];
   onEdit: (mode: PersonPreferenceMode) => void;
 }) {
-  const hasContent = preferences.some((g) => g.items.length) || dislikes.some((g) => g.items.length);
-  if (!hasContent) {
-    return (
-      <div className="person-pref-lines">
-        <PreferenceLineButton mode="preferences" tone="like" label="喜好档案" text="点击补充喜好" onEdit={onEdit} />
-        <PreferenceLineButton mode="dislikes" tone="dislike" label="禁忌雷区" text="点击补充雷区" onEdit={onEdit} />
-      </div>
-    );
-  }
+  const preferenceCount = countPreferenceItems(preferences);
+  const dislikeCount = countPreferenceItems(dislikes);
 
   return (
     <div className="person-pref-lines">
-      {preferences
-        .filter((g) => g.items.length)
-        .slice(0, 2)
-        .map((group) => (
-          <PreferenceLineButton
-            mode="preferences"
-            tone="like"
-            label={`喜 · ${group.category}`}
-            text={group.items.slice(0, 4).join("、")}
-            onEdit={onEdit}
-            key={`like-${group.category}`}
-          />
-        ))}
-      {dislikes
-        .filter((g) => g.items.length)
-        .slice(0, 1)
-        .map((group) => (
-          <PreferenceLineButton
-            mode="dislikes"
-            tone="dislike"
-            label={`忌 · ${group.category}`}
-            text={group.items.slice(0, 4).join("、")}
-            onEdit={onEdit}
-            key={`dis-${group.category}`}
-          />
-        ))}
-      {!preferences.some((g) => g.items.length) && (
-        <PreferenceLineButton mode="preferences" tone="like" label="喜好档案" text="点击补充喜好" onEdit={onEdit} />
-      )}
-      {!dislikes.some((g) => g.items.length) && (
-        <PreferenceLineButton mode="dislikes" tone="dislike" label="禁忌雷区" text="点击补充雷区" onEdit={onEdit} />
-      )}
+      <PreferenceLineButton
+        mode="preferences"
+        tone="like"
+        label="喜好档案"
+        text={preferenceCount ? `${preferenceCount} 项` : "未填写"}
+        onEdit={onEdit}
+      />
+      <PreferenceLineButton
+        mode="dislikes"
+        tone="dislike"
+        label="禁忌雷区"
+        text={dislikeCount ? `${dislikeCount} 项` : "未填写"}
+        onEdit={onEdit}
+      />
     </div>
   );
+}
+
+function countPreferenceItems(groups: PreferenceGroupShape[]) {
+  return groups.reduce((total, group) => total + group.items.length, 0);
 }
 
 function PreferenceLineButton({

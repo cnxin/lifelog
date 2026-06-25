@@ -308,6 +308,7 @@ export default function Memories() {
                         ctx={ctx}
                         onOpen={() => navigate(`/memories/${memory.id}`)}
                         showPhotoCount
+                        collapseExtras
                         syncMeta={getNotionRecordSyncMeta({
                           enabled: Boolean(notionSettings.enabled && notionSettings.memoriesDatabaseId),
                           entityType: "memory",
