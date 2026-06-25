@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.112",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.112",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.112/lifelog-v0.1.0-test.112.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.112.apk",
-    "apkName":  "lifelog-v0.1.0-test.112.apk",
-    "apkSize":  3740249,
-    "apkSha256":  "5b49d3c562e006ac1a45c13108fd1bc05526a22b2f9faff80afdcb530158a33a",
-    "publishedAt":  "2026-06-23T16:19:33Z",
-    "body":  "- 人物、地点和记录详情新增条目级 Notion 操作，可直接打开已同步页面，也可对单条内容立即同步或重试。\n- Notion 按钮会区分待同步、同步中、同步失败和已同步状态，编辑后不会误打开旧 Notion 页面。\n- 手动同步成功后会清理对应自动同步队列，避免设置页和详情页残留待同步或失败状态。\n- 保存人物、地点和记录后的提示更明确，并在已配置 Notion 时提示已加入同步队列。\n- 地点重复合并流程增加提交中状态和统一保存反馈，避免重复点击和突然跳页。"
+    "version":  "0.1.0-test.113",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.113",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.113/lifelog-v0.1.0-test.113.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.113.apk",
+    "apkName":  "lifelog-v0.1.0-test.113.apk",
+    "apkSize":  3741969,
+    "apkSha256":  "7f34e18a4ce9a7152742bf510978b0ae5a715ca0b326f7a043f8e91b902b7cf1",
+    "publishedAt":  "2026-06-25T05:54:15Z",
+    "body":  "- 分享面板改为一键分享优先，默认只显示立即分享和二维码，隐私、图片和分享包等高级设置按需展开。\n- 立即分享会优先调用系统分享面板，Web 环境自动回退为复制链接，减少分享前的配置步骤。\n- 人物和地点选择器改为推荐标签加添加按钮，搜索框不再常驻，新增回忆时关联人物和地点更轻量。\n- 搜不到人物或地点时仍可直接新增并关联，保留原有快速补充能力。\n- 首页待处理和资料补全入口改为折叠队列，默认聚焦今天最需要处理的一件事。"
 }

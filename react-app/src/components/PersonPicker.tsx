@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface PersonPickerProps {
@@ -73,6 +73,10 @@ export default function PersonPicker({
     window.setTimeout(() => setIsOpen(false), 120);
   }
 
+  function openSearch() {
+    setIsOpen(true);
+  }
+
   async function createAndAdd() {
     const name = query.trim();
     if (!name || !onCreate || isCreating) return;
@@ -92,28 +96,61 @@ export default function PersonPicker({
         <input key={id} type="hidden" name={name} value={id} />
       ))}
 
-      {selectedPeople.length > 0 && (
-        <div className="person-picker-selected">
-          {selectedPeople.map((person) => (
-            <button
-              type="button"
-              key={person.id}
-              className="picker-chip"
-              onClick={() => remove(person.id)}
-              aria-label={`移除 ${person.name}`}
-            >
-              <span>{person.name}</span>
-              <X size={14} />
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="picker-surface">
+        {selectedPeople.length > 0 && (
+          <div className="person-picker-selected">
+            {selectedPeople.map((person) => (
+              <button
+                type="button"
+                key={person.id}
+                className="picker-chip"
+                onClick={() => remove(person.id)}
+                aria-label={`移除 ${person.name}`}
+              >
+                <span>{person.name}</span>
+                <X size={14} />
+              </button>
+            ))}
+          </div>
+        )}
 
-      {people.length === 0 ? (
-        <p className="form-hint">还没有人物，可以先保存记录，后续再关联。</p>
-      ) : (
+        {people.length === 0 ? (
+          <div className="picker-empty-action inline">
+            <span>还没有人物</span>
+            {onCreate && (
+              <button type="button" onClick={openSearch}>
+                先写名字并关联
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            {!query.trim() && recommendedPeople.length > 0 && (
+              <div className="picker-recommendations">
+                <span>常用推荐</span>
+                <div className="picker-recommendation-row">
+                  {recommendedPeople.map((person) => (
+                    <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
+                      {person.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!isOpen && (
+              <button className="picker-add-button" type="button" onClick={openSearch}>
+                <Plus size={15} />
+                {selected.length ? "继续添加人物" : "添加人物"}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {(isOpen || query.trim()) && (
         <>
-          <div className="person-picker-search">
+          <div className="person-picker-search compact">
             <Search size={16} />
             <input
               type="text"
@@ -130,20 +167,15 @@ export default function PersonPicker({
               placeholder={selected.length ? "继续添加人物" : "搜索姓名、昵称或多个关键词"}
               aria-label="搜索人物"
             />
+            {isOpen && (
+              <button className="picker-search-close" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => {
+                setQuery("");
+                setIsOpen(false);
+              }}>
+                <X size={14} />
+              </button>
+            )}
           </div>
-
-          {!query.trim() && recommendedPeople.length > 0 && (
-            <div className="picker-recommendations">
-              <span>常用推荐</span>
-              <div className="picker-recommendation-row">
-                {recommendedPeople.map((person) => (
-                  <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
-                    {person.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {isOpen && filtered.length > 0 && (
             <ul className="person-picker-results" role="listbox">

@@ -1,4 +1,4 @@
-import { Copy, Download, QrCode, Share2, X } from "lucide-react";
+import { ChevronDown, Copy, Download, QrCode, Share2, X } from "lucide-react";
 import { useState } from "react";
 import QRCode from "qrcode";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -45,6 +45,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   const notify = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [qrImage, setQrImage] = useState("");
   const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
@@ -63,6 +65,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   });
 
   if (!target) return null;
+
+  const isBusy = isExporting || isCopyingLink || isSharing;
 
   async function handleExport() {
     if (!target) return;
@@ -109,19 +113,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
 
     setIsCopyingLink(true);
     try {
-      const payload = target.type === "memory"
-        ? await buildMemoryShare(target.memoryId, {
-            includeContent: false,
-            peopleMode: memoryOptions.peopleMode,
-            placeMode: memoryOptions.placeMode === "hidden" ? "hidden" : "name",
-            includePhotos: false
-          })
-        : await buildPlacesShare(target.placeIds, {
-            includeAddress: false,
-            includePreciseLocation: false,
-            includeLinks: false,
-            includePhotos: false
-          });
+      const payload = await buildConfiguredSharePayload();
       const link = await buildLifeLogShareLink(payload);
       const copied = await copyTextToClipboard(link);
       const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
@@ -151,22 +143,61 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
     }
   }
 
-  async function handleGenerateQr() {
+  async function handleImmediateShare() {
     if (!target) return;
-    if (target.type === "memory" && memoryOptions.includePhotos) {
+    setIsSharing(true);
+    try {
+      const { link, compacted } = await buildQuickShareLink();
+      const result = await shareTextOrCopy(target.title, buildShareMessage(target), link);
+      const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
+      addShareHistoryEntry({
+        direction: "export",
+        method: "link",
+        status: result === "failed" ? "failed" : "created",
+        title: target.title,
+        summary: result === "shared"
+          ? (formatShareHistoryCounts(counts) || "已打开系统分享")
+          : result === "copied"
+            ? "分享链接已复制"
+            : "分享链接生成失败",
+        shareLink: link,
+        counts
+      });
+      notify({
+        message: result === "shared"
+          ? (compacted ? "已打开系统分享面板，内容已自动精简" : "已打开系统分享面板")
+          : result === "copied"
+            ? (compacted ? "内容较长，已复制精简分享链接" : "分享链接已复制")
+            : "当前环境无法分享，也无法写入剪贴板",
+        tone: result === "failed" ? "info" : "success",
+        durationMs: 3600
+      });
+    } catch (error) {
+      const message = error instanceof ShareLinkTooLargeError
+        ? "内容太多，链接会过长，请展开更多设置后改用分享包。"
+        : error instanceof Error
+          ? error.message
+          : "请稍后重试";
+      notify({ message: `分享失败：${message}`, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  async function handleGenerateQr(mode: "quick" | "configured" = "configured") {
+    if (!target) return;
+    if (mode === "configured" && target.type === "memory" && memoryOptions.includePhotos) {
       notify({ message: "二维码不支持图片内容，请关闭图片后生成。", tone: "info" });
       return;
     }
-    if (target.type === "places" && placeOptions.includePhotos) {
+    if (mode === "configured" && target.type === "places" && placeOptions.includePhotos) {
       notify({ message: "二维码不支持地点图片链接，请关闭图片后生成。", tone: "info" });
       return;
     }
 
     setIsCopyingLink(true);
     try {
-      const payload = target.type === "memory"
-        ? await buildMemoryShare(target.memoryId, { ...memoryOptions, includePhotos: false })
-        : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
+      const payload = mode === "quick" ? await buildQuickSharePayload() : await buildConfiguredSharePayload();
       const qrCode = await buildLifeLogShareQrCode(payload);
       setShareLink(qrCode.link);
       setQrSaveStatus("");
@@ -191,6 +222,35 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
       notify({ message, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
     } finally {
       setIsCopyingLink(false);
+    }
+  }
+
+  async function buildConfiguredSharePayload() {
+    if (!target) throw new Error("没有可分享的内容。");
+    return target.type === "memory"
+      ? await buildMemoryShare(target.memoryId, { ...memoryOptions, includePhotos: false })
+      : await buildPlacesShare(target.placeIds, { ...placeOptions, includePhotos: false });
+  }
+
+  async function buildQuickSharePayload(compact = false) {
+    if (!target) throw new Error("没有可分享的内容。");
+    return target.type === "memory"
+      ? await buildMemoryShare(target.memoryId, compact ? getCompactMemoryShareOptions() : getQuickMemoryShareOptions())
+      : await buildPlacesShare(target.placeIds, compact ? getCompactPlaceShareOptions() : getQuickPlaceShareOptions());
+  }
+
+  async function buildQuickShareLink() {
+    try {
+      return {
+        link: await buildLifeLogShareLink(await buildQuickSharePayload(false)),
+        compacted: false
+      };
+    } catch (error) {
+      if (!(error instanceof ShareLinkTooLargeError)) throw error;
+      return {
+        link: await buildLifeLogShareLink(await buildQuickSharePayload(true)),
+        compacted: true
+      };
     }
   }
 
@@ -246,71 +306,89 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               <Share2 size={18} />
             </span>
             <div>
-              <strong>{target.type === "memory" ? "导出 1 条记录" : `导出 ${target.count} 个地点`}</strong>
-              <span>生成 `.lifelog-share.json`，接收方可在 LifeLog 中预览后添加。</span>
+              <strong>{target.type === "memory" ? "分享这条回忆" : `分享 ${target.count} 个地点`}</strong>
+              <span>{getQuickShareSummary(target)}</span>
             </div>
           </div>
-          <div className="local-share-mode-grid" aria-label="分享方式说明">
-            <ShareModeCard title="二维码" desc="当面扫码，内容最精简" />
-            <ShareModeCard title="复制链接" desc="适合聊天发送，保留基础信息" />
-            <ShareModeCard title="分享包" desc="适合完整迁移，可包含更多内容" />
+          <div className="local-share-primary-actions">
+            <button className="primary-btn" type="button" onClick={() => void handleImmediateShare()} disabled={isBusy}>
+              <Share2 size={16} />
+              {isSharing ? "准备中…" : "立即分享"}
+            </button>
+            <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr("quick")} disabled={isBusy}>
+              <QrCode size={16} />
+              二维码
+            </button>
           </div>
+          <button className={`local-share-advanced-toggle ${advancedOpen ? "open" : ""}`} type="button" onClick={() => setAdvancedOpen((open) => !open)}>
+            <span>{advancedOpen ? "收起更多设置" : "更多设置"}</span>
+            <ChevronDown size={16} />
+          </button>
 
-          {target.type === "memory" ? (
-            <>
-              <ShareSwitch
-                checked={memoryOptions.includeContent}
-                title="分享正文"
-                desc="关闭后只保留标题、日期、心情和标签。"
-                onChange={(includeContent) => setMemoryOptions((current) => ({ ...current, includeContent }))}
-              />
-              <ShareOptionGroup
-                title="关联人物"
-                options={peopleModeOptions}
-                value={memoryOptions.peopleMode}
-                onChange={(peopleMode) => setMemoryOptions((current) => ({ ...current, peopleMode }))}
-              />
-              <ShareOptionGroup
-                title="关联地点"
-                options={placeModeOptions}
-                value={memoryOptions.placeMode}
-                onChange={(placeMode) => setMemoryOptions((current) => ({ ...current, placeMode }))}
-              />
-              <ShareSwitch
-                checked={memoryOptions.includePhotos}
-                title={`分享图片${target.photoCount ? `（${target.photoCount} 张）` : ""}`}
-                desc="图片会让分享包明显变大，默认不导出。"
-                disabled={!target.photoCount}
-                onChange={(includePhotos) => setMemoryOptions((current) => ({ ...current, includePhotos }))}
-              />
-            </>
-          ) : (
-            <>
-              <ShareSwitch
-                checked={placeOptions.includeAddress}
-                title="分享地址"
-                desc="保留城市、区域、商场和详细地址。"
-                onChange={(includeAddress) => setPlaceOptions((current) => ({ ...current, includeAddress }))}
-              />
-              <ShareSwitch
-                checked={placeOptions.includePreciseLocation}
-                title="分享精准定位"
-                desc="包含经纬度和地图入口，适合可信接收方。"
-                onChange={(includePreciseLocation) => setPlaceOptions((current) => ({ ...current, includePreciseLocation }))}
-              />
-              <ShareSwitch
-                checked={placeOptions.includeLinks}
-                title="分享外部链接"
-                desc="包含美团、大众点评、小红书或参考链接。"
-                onChange={(includeLinks) => setPlaceOptions((current) => ({ ...current, includeLinks }))}
-              />
-              <ShareSwitch
-                checked={placeOptions.includePhotos}
-                title="分享地点图片链接"
-                desc="仅导出地点里的图片链接，不处理本地回忆照片。"
-                onChange={(includePhotos) => setPlaceOptions((current) => ({ ...current, includePhotos }))}
-              />
-            </>
+          {advancedOpen && (
+            <div className="local-share-advanced-panel">
+              <div className="local-share-mode-grid" aria-label="分享方式说明">
+                <ShareModeCard title="立即分享" desc="适合聊天发送，默认保护敏感信息" />
+                <ShareModeCard title="二维码" desc="当面扫码，内容最精简" />
+                <ShareModeCard title="分享包" desc="适合完整迁移，可包含更多内容" />
+              </div>
+              {target.type === "memory" ? (
+                <>
+                  <ShareSwitch
+                    checked={memoryOptions.includeContent}
+                    title="分享正文"
+                    desc="关闭后只保留标题、日期、心情和标签。"
+                    onChange={(includeContent) => setMemoryOptions((current) => ({ ...current, includeContent }))}
+                  />
+                  <ShareOptionGroup
+                    title="关联人物"
+                    options={peopleModeOptions}
+                    value={memoryOptions.peopleMode}
+                    onChange={(peopleMode) => setMemoryOptions((current) => ({ ...current, peopleMode }))}
+                  />
+                  <ShareOptionGroup
+                    title="关联地点"
+                    options={placeModeOptions}
+                    value={memoryOptions.placeMode}
+                    onChange={(placeMode) => setMemoryOptions((current) => ({ ...current, placeMode }))}
+                  />
+                  <ShareSwitch
+                    checked={memoryOptions.includePhotos}
+                    title={`分享图片${target.photoCount ? `（${target.photoCount} 张）` : ""}`}
+                    desc="图片会让分享包明显变大，默认不导出。"
+                    disabled={!target.photoCount}
+                    onChange={(includePhotos) => setMemoryOptions((current) => ({ ...current, includePhotos }))}
+                  />
+                </>
+              ) : (
+                <>
+                  <ShareSwitch
+                    checked={placeOptions.includeAddress}
+                    title="分享地址"
+                    desc="保留城市、区域、商场和详细地址。"
+                    onChange={(includeAddress) => setPlaceOptions((current) => ({ ...current, includeAddress }))}
+                  />
+                  <ShareSwitch
+                    checked={placeOptions.includePreciseLocation}
+                    title="分享精准定位"
+                    desc="包含经纬度和地图入口，适合可信接收方。"
+                    onChange={(includePreciseLocation) => setPlaceOptions((current) => ({ ...current, includePreciseLocation }))}
+                  />
+                  <ShareSwitch
+                    checked={placeOptions.includeLinks}
+                    title="分享外部链接"
+                    desc="包含美团、大众点评、小红书或参考链接。"
+                    onChange={(includeLinks) => setPlaceOptions((current) => ({ ...current, includeLinks }))}
+                  />
+                  <ShareSwitch
+                    checked={placeOptions.includePhotos}
+                    title="分享地点图片链接"
+                    desc="仅导出地点里的图片链接，不处理本地回忆照片。"
+                    onChange={(includePhotos) => setPlaceOptions((current) => ({ ...current, includePhotos }))}
+                  />
+                </>
+              )}
+            </div>
           )}
           {shareLink && (
             <div className="local-share-qr">
@@ -332,18 +410,22 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           <button className="ghost-btn" type="button" onClick={onClose}>
             取消
           </button>
-          <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
-            <Copy size={16} />
-            {isCopyingLink ? "生成中…" : "复制链接"}
-          </button>
-          <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isCopyingLink || isExporting}>
-            <Share2 size={16} />
-            二维码
-          </button>
-          <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isExporting}>
-            <Download size={16} />
-            {isExporting ? "生成中…" : "生成分享包"}
-          </button>
+          {advancedOpen && (
+            <>
+              <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isBusy}>
+                <Copy size={16} />
+                {isCopyingLink ? "生成中…" : "复制链接"}
+              </button>
+              <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isBusy}>
+                <QrCode size={16} />
+                二维码
+              </button>
+              <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isBusy}>
+                <Download size={16} />
+                {isExporting ? "生成中…" : "生成分享包"}
+              </button>
+            </>
+          )}
         </div>
       </section>
       {qrPreviewOpen && qrImage && (
@@ -390,6 +472,73 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
 function buildQrFileName(title: string) {
   const slug = title.replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 24) || "lifelog-share";
   return `lifelog-qr-${slug}.png`;
+}
+
+function getQuickShareSummary(target: ShareTarget) {
+  if (target.type === "memory") {
+    return "默认分享正文、日期、人物姓名和地点名称，不包含照片和精准定位。";
+  }
+  return "默认分享地点名称和基础地址，不包含精准定位和图片链接。";
+}
+
+function buildShareMessage(target: ShareTarget) {
+  return target.type === "memory"
+    ? `我用 LifeLog 分享了一条回忆：${target.title}`
+    : `我用 LifeLog 分享了 ${target.count} 个地点：${target.title}`;
+}
+
+function getQuickMemoryShareOptions(): MemoryShareOptions {
+  return {
+    includeContent: true,
+    peopleMode: "public",
+    placeMode: "name",
+    includePhotos: false
+  };
+}
+
+function getCompactMemoryShareOptions(): MemoryShareOptions {
+  return {
+    includeContent: false,
+    peopleMode: "public",
+    placeMode: "name",
+    includePhotos: false
+  };
+}
+
+function getQuickPlaceShareOptions(): PlaceShareOptions {
+  return {
+    includeAddress: true,
+    includePreciseLocation: false,
+    includeLinks: false,
+    includePhotos: false
+  };
+}
+
+function getCompactPlaceShareOptions(): PlaceShareOptions {
+  return {
+    includeAddress: false,
+    includePreciseLocation: false,
+    includeLinks: false,
+    includePhotos: false
+  };
+}
+
+async function shareTextOrCopy(title: string, text: string, url: string): Promise<"shared" | "copied" | "failed"> {
+  const share = navigator.share?.bind(navigator);
+  if (share) {
+    try {
+      await share({ title, text, url });
+      return "shared";
+    } catch (error) {
+      if (isAbortError(error)) return "failed";
+    }
+  }
+
+  return await copyTextToClipboard(`${text}\n${url}`) ? "copied" : "failed";
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function ShareModeCard({ title, desc }: { title: string; desc: string }) {

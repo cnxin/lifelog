@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle2, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, CheckCircle2, ChevronDown, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -25,6 +25,8 @@ export default function Home() {
   const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
   const [inboxText, setInboxText] = useState(() => loadQuickInboxDraft());
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
+  const [todayQueueOpen, setTodayQueueOpen] = useState(false);
+  const [taskQueueOpen, setTaskQueueOpen] = useState(false);
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .map((item) => ({
@@ -158,7 +160,7 @@ export default function Home() {
       onClick: inboxText.trim() ? openInboxMemory : () => openQuickMemory()
     }
   });
-  const secondaryTodayActions = todayActions.filter((action) => action.id !== dailyFocus.id).slice(0, 2);
+  const secondaryTodayActions = todayActions.filter((action) => action.id !== dailyFocus.id);
 
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
@@ -242,38 +244,47 @@ export default function Home() {
 
       {secondaryTodayActions.length > 0 && (
         <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 待处理
-            </h2>
-            <button className="see-all" onClick={() => openQuickMemory()}>
-              记录
+          <GlassCard className={`today-queue-card ${todayQueueOpen ? "open" : ""}`}>
+            <button className="today-queue-summary" type="button" onClick={() => setTodayQueueOpen((open) => !open)}>
+              <span className="today-queue-icon">
+                <Sparkles />
+              </span>
+              <span className="today-queue-copy">
+                <strong>还有 {secondaryTodayActions.length} 个待处理</strong>
+                <small>{secondaryTodayActions[0].title}</small>
+              </span>
+              <span className="today-queue-toggle">
+                {todayQueueOpen ? "收起" : "展开"}
+                <ChevronDown />
+              </span>
             </button>
-          </div>
-          <div className="today-action-list compact">
-            {secondaryTodayActions.map((action) => (
-              <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
-                <button className="today-action-main" type="button" onClick={action.onClick}>
-                  <span className="today-action-icon">{action.icon}</span>
-                  <span className="today-action-copy">
-                    <strong>{action.title}</strong>
-                    <small>{action.desc}</small>
-                  </span>
-                  {action.meta && <em>{action.meta}</em>}
-                </button>
-                {action.canDismiss && (
-                  <span className="today-action-tools">
-                    <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "snooze"))}>
-                      稍后
+            {todayQueueOpen && (
+              <div className="today-queue-list">
+                {secondaryTodayActions.map((action) => (
+                  <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
+                    <button className="today-action-main" type="button" onClick={action.onClick}>
+                      <span className="today-action-icon">{action.icon}</span>
+                      <span className="today-action-copy">
+                        <strong>{action.title}</strong>
+                        <small>{action.desc}</small>
+                      </span>
+                      {action.meta && <em>{action.meta}</em>}
                     </button>
-                    <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "dismiss"))}>
-                      今天忽略
-                    </button>
-                  </span>
-                )}
+                    {action.canDismiss && (
+                      <span className="today-action-tools">
+                        <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "snooze"))}>
+                          稍后
+                        </button>
+                        <button type="button" onClick={(event) => handleActionTool(event, () => updateActionPref(action.id, "dismiss"))}>
+                          今天忽略
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </GlassCard>
         </section>
       )}
 
@@ -347,24 +358,36 @@ export default function Home() {
 
       {tasks.length > 0 && (
         <section className="section">
-          <div className="section-header">
-            <h2>
-              <Sparkles /> 可以顺手补
-            </h2>
-          </div>
-          <div className="task-grid">
-            {tasks.slice(0, 4).map((task) => (
-              <button className="task-card" key={task.id} onClick={() => navigate(task.path)}>
-                <div className="task-icon">{task.icon}</div>
-                <div>
-                  <strong>
-                    {task.count} 项 · {task.title}
-                  </strong>
-                  <span>{task.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+          <GlassCard className={`today-queue-card profile-queue-card ${taskQueueOpen ? "open" : ""}`}>
+            <button className="today-queue-summary" type="button" onClick={() => setTaskQueueOpen((open) => !open)}>
+              <span className="today-queue-icon">
+                <Sparkles />
+              </span>
+              <span className="today-queue-copy">
+                <strong>有 {tasks.length} 类资料可以顺手补</strong>
+                <small>{tasks[0].title} · {tasks[0].count} 项</small>
+              </span>
+              <span className="today-queue-toggle">
+                {taskQueueOpen ? "收起" : "整理"}
+                <ChevronDown />
+              </span>
+            </button>
+            {taskQueueOpen && (
+              <div className="task-grid compact">
+                {tasks.slice(0, 4).map((task) => (
+                  <button className="task-card" key={task.id} onClick={() => navigate(task.path)}>
+                    <div className="task-icon">{task.icon}</div>
+                    <div>
+                      <strong>
+                        {task.count} 项 · {task.title}
+                      </strong>
+                      <span>{task.desc}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </GlassCard>
         </section>
       )}
 
