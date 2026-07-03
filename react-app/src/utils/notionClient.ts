@@ -733,6 +733,7 @@ function buildLifeLogDatabaseDefinitions(): Array<{
         "LifeLog ID": richTextSchema(),
         关系: selectSchema(),
         生日: dateSchema(),
+        星座: selectSchema(),
         重点关注: checkboxSchema(),
         喜好档案: richTextSchema(),
         禁忌雷区: richTextSchema(),

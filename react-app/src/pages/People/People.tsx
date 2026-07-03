@@ -13,7 +13,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import type { Person } from "../../types";
-import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel } from "../../utils/date";
+import { anniversaryRelativeLabel, anniversaryYearLabel, buildBirthdayInfo, getWesternZodiacSign } from "../../utils/date";
 import { buildRelationshipHealth, type RelationshipHealth } from "../../utils/relationshipHealth";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { initials } from "../../utils/text";
@@ -50,6 +50,7 @@ export default function People() {
           person.name,
           person.nickname,
           person.relationship,
+          getWesternZodiacSign(person.birthday),
           person.preferences.flatMap((group) => [group.category, ...group.items]).join(","),
           person.dislikes.flatMap((group) => [group.category, ...group.items]).join(","),
           person.notes
@@ -159,6 +160,7 @@ export default function People() {
         <div className="list">
           {peopleRows.map(({ person, health }) => {
             const anniversary = person.anniversaries[0];
+            const birthdayInfo = buildBirthdayInfo(person.birthday);
             return (
               <GlassCard className="person-card" key={person.id}>
                 <button className="person-open" onClick={() => navigate(`/people/${person.id}`)}>
@@ -196,7 +198,7 @@ export default function People() {
                   <p className="person-desc">
                     {person.relationship} ·{" "}
                     {anniversary
-                      ? `${anniversary.title}${anniversaryRelativeLabel(anniversary.date)} · ${anniversary.title === "生日" ? birthdayAgeLabel(anniversary.date) : anniversaryYearLabel(anniversary.date)}`
+                      ? `${anniversary.title === "生日" && birthdayInfo ? birthdayInfo.listText : `${anniversary.title}${anniversaryRelativeLabel(anniversary.date)} · ${anniversaryYearLabel(anniversary.date)}`}`
                       : "暂无纪念日"}
                   </p>
                   <div className="relationship-health-line">

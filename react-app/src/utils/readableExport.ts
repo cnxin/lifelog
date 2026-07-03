@@ -1,4 +1,5 @@
 import type { LifeLogState } from "../types";
+import { getWesternZodiacSign } from "./date";
 import { buildMemoryDisplayContext, getMemoryKindLabel, isMemoryPlan } from "./memoryDisplay";
 import { buildPlaceDisplayName } from "./placeMeta";
 
@@ -27,6 +28,7 @@ export function buildReadableMarkdown(state: LifeLogState) {
       "",
       `- 关系：${person.relationship || "未设置"}`,
       `- 生日：${person.birthday || "未设置"}`,
+      `- 星座：${getWesternZodiacSign(person.birthday) || "未设置"}`,
       person.preferences.length ? `- 喜好：${person.preferences.map((group) => `${group.category}：${group.items.join("、")}`).join("；")}` : "- 喜好：未设置",
       person.dislikes.length ? `- 禁忌：${person.dislikes.map((group) => `${group.category}：${group.items.join("、")}`).join("；")}` : "- 禁忌：未设置",
       person.notes ? `- 备注：${person.notes}` : "",

@@ -13,7 +13,7 @@ import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanTargetKind } from "../../types";
 import { getAnniversaryKey } from "../../utils/anniversaryLinks";
 import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind, type AnniversaryPlanTarget } from "../../utils/anniversaryPlans";
-import { anniversaryRelativeLabel, anniversaryYearLabel, birthdayAgeLabel, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay, getLunarDateInfo } from "../../utils/date";
+import { anniversaryRelativeLabel, anniversaryYearLabel, buildBirthdayInfo, buildNextAnniversaryMilestone, daysUntil, formatDaysUntilLabel, formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelpers";
 import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
@@ -364,7 +364,7 @@ export default function PersonDetail() {
                     <span className="anniversary-detail-date">{item.date}</span>
                   </div>
                   <div className="anniversary-detail-meta">
-                    {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? birthdayAgeLabel(item.date) : anniversaryYearLabel(item.date)}
+                    {anniversaryRelativeLabel(item.date)} · {item.title === "生日" ? buildBirthdayInfo(item.date)?.anniversaryMeta || "" : anniversaryYearLabel(item.date)}
                   </div>
                   {milestone && (
                     <button
@@ -984,19 +984,14 @@ function PlanHistoryGroup({
 }
 
 function BirthdaySummary({ date }: { date: string }) {
-  const lunar = getLunarDateInfo(date);
+  const info = buildBirthdayInfo(date);
+  if (!info) return null;
 
   return (
     <p className="person-birthday-summary">
-      <span>公历生日 · {date}</span>
-      {lunar ? (
-        <>
-          <span>{lunar.lunarText}</span>
-          <span>{lunar.ganZhiText}</span>
-        </>
-      ) : (
-        <span>农历信息暂不可用</span>
-      )}
+      {info.profileLines.map((line) => (
+        <span key={line}>{line}</span>
+      ))}
     </p>
   );
 }

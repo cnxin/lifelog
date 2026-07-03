@@ -32,6 +32,74 @@ export function formatMonthDay(date?: string) {
   });
 }
 
+const WESTERN_ZODIAC_SIGNS = [
+  { name: "摩羯座", start: 101 },
+  { name: "水瓶座", start: 120 },
+  { name: "双鱼座", start: 219 },
+  { name: "白羊座", start: 321 },
+  { name: "金牛座", start: 420 },
+  { name: "双子座", start: 521 },
+  { name: "巨蟹座", start: 622 },
+  { name: "狮子座", start: 723 },
+  { name: "处女座", start: 823 },
+  { name: "天秤座", start: 923 },
+  { name: "天蝎座", start: 1024 },
+  { name: "射手座", start: 1123 },
+  { name: "摩羯座", start: 1222 }
+];
+
+export function getWesternZodiacSign(date?: string) {
+  if (!date) return "";
+  const [, month, day] = date.split("-").map(Number);
+  if (!month || !day || month < 1 || month > 12 || day < 1 || day > 31) return "";
+
+  const monthDay = month * 100 + day;
+  let sign = WESTERN_ZODIAC_SIGNS[0].name;
+  for (const item of WESTERN_ZODIAC_SIGNS) {
+    if (monthDay >= item.start) sign = item.name;
+  }
+  return sign;
+}
+
+export interface BirthdayInfo {
+  date: string;
+  monthDayText: string;
+  ageLabel: string;
+  zodiac: string;
+  lunarText: string;
+  ganZhiText: string;
+  profileLines: string[];
+  listText: string;
+  anniversaryMeta: string;
+}
+
+export function buildBirthdayInfo(date?: string, occurrenceDate = new Date()): BirthdayInfo | null {
+  const normalized = String(date || "").trim();
+  if (!normalized) return null;
+
+  const lunar = getLunarDateInfo(normalized);
+  const ageLabel = birthdayAgeLabel(normalized, occurrenceDate);
+  const zodiac = getWesternZodiacSign(normalized);
+  const profileLines = [
+    `公历生日 · ${normalized}`,
+    zodiac ? `星座 · ${zodiac}` : "",
+    lunar?.lunarText || "农历信息暂不可用",
+    lunar?.ganZhiText || ""
+  ].filter(Boolean);
+
+  return {
+    date: normalized,
+    monthDayText: formatMonthDay(normalized),
+    ageLabel,
+    zodiac,
+    lunarText: lunar?.lunarText || "",
+    ganZhiText: lunar?.ganZhiText || "",
+    profileLines,
+    listText: [zodiac, `生日${anniversaryRelativeLabel(normalized)}`, ageLabel].filter(Boolean).join(" · "),
+    anniversaryMeta: [ageLabel, zodiac].filter(Boolean).join(" · ")
+  };
+}
+
 export interface LunarDateInfo {
   fullText: string;
   lunarText: string;

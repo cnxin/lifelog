@@ -104,7 +104,16 @@ export default function PlacePicker({
         <input key={id} type="hidden" name={name} value={id} />
       ))}
 
-      <div className="picker-surface place-picker-surface">
+      <div className={`picker-surface place-picker-surface ${selectedPlaces.length || recommendedPlaces.length ? "has-context" : "empty-context"}`}>
+        <div className="picker-context-head">
+          <span>{selectedPlaces.length ? `已关联 ${selectedPlaces.length} 处` : recommendedPlaces.length ? "最近用过" : "可先不关联地点"}</span>
+          {!isOpen && (
+            <button className="picker-inline-add" type="button" onClick={openSearch}>
+              <Plus size={14} />
+              {selected.length ? "继续加" : "添加"}
+            </button>
+          )}
+        </div>
         {selectedPlaces.length > 0 && (
           <div className="person-picker-selected">
             {selectedPlaces.map((place) => (
@@ -136,7 +145,6 @@ export default function PlacePicker({
           <>
             {!query.trim() && recommendedPlaces.length > 0 && (
               <div className="picker-recommendations">
-                <span>最近用过</span>
                 <div className="picker-recommendation-row">
                   {recommendedPlaces.map((place) => (
                     <button type="button" key={place.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>
@@ -147,7 +155,7 @@ export default function PlacePicker({
               </div>
             )}
 
-            {!isOpen && (
+            {!isOpen && !selectedPlaces.length && !recommendedPlaces.length && (
               <button className="picker-add-button" type="button" onClick={openSearch}>
                 <Plus size={15} />
                 {selected.length ? "继续添加地点" : "添加地点"}

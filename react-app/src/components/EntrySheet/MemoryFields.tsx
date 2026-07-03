@@ -147,6 +147,7 @@ export function MemoryFields({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [quickPersonIds, setQuickPersonIds] = useState<string[]>(() => selectedPersonIds);
   const [quickPlaceIds, setQuickPlaceIds] = useState<string[]>(() => selectedPlaceIds);
+  const [quickContextOpen, setQuickContextOpen] = useState(() => selectedPersonIds.length > 0 || selectedPlaceIds.length > 0);
   const [fullPlaceIds, setFullPlaceIds] = useState<string[]>(() => selectedPlaceIds);
   const [mood, setMood] = useState<string>(getDraftValue(draftValues, "mood", memory ? memory.mood : settings.defaultMood));
   const [fullTitle, setFullTitle] = useState(() =>
@@ -174,6 +175,7 @@ export function MemoryFields({
   const previewPlaces = resolvePlaceNames(previewPlaceIds, places);
   const previewPlace = previewPlaces.join("、");
   const hasQuickContext = previewPeople.length > 0 || Boolean(previewPlace);
+  const quickContextSummary = buildQuickContextSummary(previewPeople, previewPlaces);
   const quickTemplateGroups = buildQuickMemoryTemplateGroups(previewPeople, previewPlace);
   const quickContentTemplates = buildMemoryContentTemplates(previewPeople, previewPlaces);
   const recommendedPersonIds = useMemo(() => getRecentRecommendedIds(state.memories, "person", selectedPersonIds), [selectedPersonIds, state.memories]);
@@ -194,6 +196,7 @@ export function MemoryFields({
       },
       { personNames: previewPeople, placeName: previewPlace, placeNames: previewPlaces }
     );
+  const shouldShowQuickPreview = Boolean(quickContent.trim() || hasQuickContext || quickDate !== todayValue || detailsOpen);
 
   if (!memory && mode === "quick") {
     return (
@@ -216,30 +219,44 @@ export function MemoryFields({
           <span className="inline-field-label">{quickCopy.dateLabel}</span>
           <DateInput name="date" label={quickCopy.dateLabel} value={quickDate} onChange={setQuickDate} required />
         </label>
-        <div className="memory-core-pickers">
-          <div>
-            <span className="field-title">人物</span>
-            <PersonPicker
-              people={people}
-              value={quickPersonIds}
-              onChange={setQuickPersonIds}
-              onCreate={onCreatePerson}
-              includeEmptyMarker
-              recommendedIds={recommendedPersonIds}
-            />
-          </div>
-          <div>
-            <span className="field-title">地点</span>
-            <PlacePicker
-              places={places}
-              value={quickPlaceIds}
-              onChange={setQuickPlaceIds}
-              onCreate={onCreatePlace}
-              includeEmptyMarker
-              recommendedIds={recommendedPlaceIds}
-            />
-            <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
-          </div>
+        <div className={`quick-context-disclosure ${quickContextOpen ? "open" : ""}`}>
+          <button className="quick-context-disclosure-button" type="button" onClick={() => setQuickContextOpen((open) => !open)}>
+            <span>
+              <strong>关联人物 / 地点</strong>
+              <small>{quickContextSummary}</small>
+            </span>
+            <em>{quickContextOpen ? "收起" : hasQuickContext ? "修改" : "添加"}</em>
+            <ChevronDown />
+          </button>
+          {quickContextOpen ? (
+            <div className="memory-core-pickers">
+              <div>
+                <span className="field-title">人物</span>
+                <PersonPicker
+                  people={people}
+                  value={quickPersonIds}
+                  onChange={setQuickPersonIds}
+                  onCreate={onCreatePerson}
+                  includeEmptyMarker
+                  recommendedIds={recommendedPersonIds}
+                />
+              </div>
+              <div>
+                <span className="field-title">地点</span>
+                <PlacePicker
+                  places={places}
+                  value={quickPlaceIds}
+                  onChange={setQuickPlaceIds}
+                  onCreate={onCreatePlace}
+                  includeEmptyMarker
+                  recommendedIds={recommendedPlaceIds}
+                />
+                <input type="hidden" name="placeId" value={quickPlaceIds[0] || ""} />
+              </div>
+            </div>
+          ) : (
+            <HiddenQuickContextInputs personIds={quickPersonIds} placeIds={quickPlaceIds} />
+          )}
         </div>
         <button
           className="quick-detail-toggle"
@@ -392,36 +409,38 @@ export function MemoryFields({
             <input type="hidden" name="tags" value={quickTags} />
           </>
         )}
-        <div className={`memory-preview compact ${previewOpen ? "open" : ""}`} aria-live="polite">
-          <button className="memory-preview-summary" type="button" onClick={() => setPreviewOpen((open) => !open)}>
-            <span>
-              <strong>{quickCopy.previewEyebrow}</strong>
-              <small>{formatPreviewDate(quickPreview.date)} · {previewPeople.length ? previewPeople.join("、") : "暂不关联人物"} · {previewPlace || "暂不关联地点"}</small>
-            </span>
-            <em>{previewOpen ? "收起" : "查看"}</em>
-            <ChevronDown />
-          </button>
-          {previewOpen && (
-            <div className="memory-preview-detail">
-              <div className="memory-preview-row">
-                <strong>{quickCopy.previewTitleLabel}</strong>
-                <span>{quickContent.trim() || previewTitle}</span>
+        {shouldShowQuickPreview && (
+          <div className={`memory-preview compact ${previewOpen ? "open" : ""}`} aria-live="polite">
+            <button className="memory-preview-summary" type="button" onClick={() => setPreviewOpen((open) => !open)}>
+              <span>
+                <strong>{quickCopy.previewEyebrow}</strong>
+                <small>{formatPreviewDate(quickPreview.date)} · {quickContextSummary}</small>
+              </span>
+              <em>{previewOpen ? "收起" : "查看"}</em>
+              <ChevronDown />
+            </button>
+            {previewOpen && (
+              <div className="memory-preview-detail">
+                <div className="memory-preview-row">
+                  <strong>{quickCopy.previewTitleLabel}</strong>
+                  <span>{quickContent.trim() || previewTitle}</span>
+                </div>
+                <div className="memory-preview-row">
+                  <strong>日期</strong>
+                  <span>{formatPreviewDate(quickPreview.date)}</span>
+                </div>
+                <div className="memory-preview-row">
+                  <strong>人物</strong>
+                  <span>{previewPeople.length ? previewPeople.join("、") : "暂不关联"}</span>
+                </div>
+                <div className="memory-preview-row">
+                  <strong>地点</strong>
+                  <span>{previewPlace || "暂不关联"}</span>
+                </div>
               </div>
-              <div className="memory-preview-row">
-                <strong>日期</strong>
-                <span>{formatPreviewDate(quickPreview.date)}</span>
-              </div>
-              <div className="memory-preview-row">
-                <strong>人物</strong>
-                <span>{previewPeople.length ? previewPeople.join("、") : "暂不关联"}</span>
-              </div>
-              <div className="memory-preview-row">
-                <strong>地点</strong>
-                <span>{previewPlace || "暂不关联"}</span>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
         <input type="hidden" name="memoryMode" value="quick" />
         <input type="hidden" name="memoryKind" value={quickTone === "future" ? "plan" : "memory"} />
         <p className="form-hint">{quickCopy.footerHint}</p>
@@ -561,6 +580,30 @@ export function MemoryFields({
       <input type="hidden" name="memoryKind" value={memoryKindOverride || (memory?.kind === "plan" ? "plan" : "memory")} />
     </>
   );
+}
+
+function HiddenQuickContextInputs({ personIds, placeIds }: { personIds: string[]; placeIds: string[] }) {
+  return (
+    <>
+      {personIds.length === 0 && <input type="hidden" name="personIds" value="" />}
+      {personIds.map((personId) => (
+        <input key={`hidden-person-${personId}`} type="hidden" name="personIds" value={personId} />
+      ))}
+      {placeIds.length === 0 && <input type="hidden" name="placeIds" value="" />}
+      {placeIds.map((placeId) => (
+        <input key={`hidden-place-${placeId}`} type="hidden" name="placeIds" value={placeId} />
+      ))}
+      <input type="hidden" name="placeId" value={placeIds[0] || ""} />
+    </>
+  );
+}
+
+function buildQuickContextSummary(personNames: string[], placeNames: string[]) {
+  const parts = [
+    personNames.length ? `人物 ${personNames.slice(0, 2).join("、")}${personNames.length > 2 ? ` 等 ${personNames.length} 人` : ""}` : "",
+    placeNames.length ? `地点 ${placeNames.slice(0, 2).join("、")}${placeNames.length > 2 ? ` 等 ${placeNames.length} 处` : ""}` : ""
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "可先不填，之后再补";
 }
 
 function formatPreviewDate(date: string) {

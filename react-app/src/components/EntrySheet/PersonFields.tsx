@@ -2,7 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import type { Anniversary, AnniversaryMilestoneCounting, AnniversaryMilestoneMode, Person, PreferenceGroup } from "../../types";
 import { useLifeLog } from "../../context/LifeLogContext";
-import { ANNIVERSARY_MILESTONE_TEMPLATES, normalizeAnniversaryMilestoneDays } from "../../utils/date";
+import { ANNIVERSARY_MILESTONE_TEMPLATES, getWesternZodiacSign, normalizeAnniversaryMilestoneDays } from "../../utils/date";
 import { groupsToText, splitPreferenceItems } from "../../utils/text";
 import DateInput from "../DateInput";
 import SelectPicker from "../SelectPicker";
@@ -65,7 +65,7 @@ export function PersonFields({
         </label>
       </div>
       <BirthdayDateFields birthday={person?.birthday} draftValues={draftValues} />
-      <p className="form-hint">只记录公历生日，农历日期会自动计算并显示。</p>
+      <p className="form-hint">只记录公历生日，农历日期和星座会自动计算并显示。</p>
       <label>纪念日</label>
       <AnniversaryEditor anniversaries={customAnniversaries} draftValues={draftValues} />
       <label>
@@ -112,11 +112,15 @@ function BirthdayDateFields({ birthday, draftValues }: { birthday?: string; draf
   );
   const [birthdayValue, setBirthdayValue] = useState(draftBirthday || birthday || "");
   const [year = "", month = "", day = ""] = birthdayValue.split("-");
+  const zodiac = getWesternZodiacSign(birthdayValue);
 
   return (
     <label className="birthday-date-field">
       生日
       <DateInput label="生日" value={birthdayValue} onChange={setBirthdayValue} />
+      <span className={`birthday-zodiac-preview ${zodiac ? "" : "empty"}`}>
+        {zodiac ? `星座 · ${zodiac}` : "选择生日后自动显示星座"}
+      </span>
       <input type="hidden" name="birthdayYear" value={year} />
       <input type="hidden" name="birthdayMonth" value={month} />
       <input type="hidden" name="birthdayDay" value={day} />

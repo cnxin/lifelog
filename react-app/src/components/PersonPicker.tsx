@@ -96,7 +96,16 @@ export default function PersonPicker({
         <input key={id} type="hidden" name={name} value={id} />
       ))}
 
-      <div className="picker-surface">
+      <div className={`picker-surface ${selectedPeople.length || recommendedPeople.length ? "has-context" : "empty-context"}`}>
+        <div className="picker-context-head">
+          <span>{selectedPeople.length ? `已关联 ${selectedPeople.length} 人` : recommendedPeople.length ? "最近常用" : "可先不关联人物"}</span>
+          {!isOpen && (
+            <button className="picker-inline-add" type="button" onClick={openSearch}>
+              <Plus size={14} />
+              {selected.length ? "继续加" : "添加"}
+            </button>
+          )}
+        </div>
         {selectedPeople.length > 0 && (
           <div className="person-picker-selected">
             {selectedPeople.map((person) => (
@@ -127,7 +136,6 @@ export default function PersonPicker({
           <>
             {!query.trim() && recommendedPeople.length > 0 && (
               <div className="picker-recommendations">
-                <span>常用推荐</span>
                 <div className="picker-recommendation-row">
                   {recommendedPeople.map((person) => (
                     <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
@@ -138,8 +146,8 @@ export default function PersonPicker({
               </div>
             )}
 
-            {!isOpen && (
-              <button className="picker-add-button" type="button" onClick={openSearch}>
+            {!isOpen && !selectedPeople.length && !recommendedPeople.length && (
+              <button className="picker-add-button picker-add-button-subtle" type="button" onClick={openSearch}>
                 <Plus size={15} />
                 {selected.length ? "继续添加人物" : "添加人物"}
               </button>

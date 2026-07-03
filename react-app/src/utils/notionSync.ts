@@ -15,6 +15,7 @@ import { getMemoryPlaceIds } from "./memoryPlaces";
 import { getMemoryKindLabel } from "./memoryDisplay";
 import { normalizeNotionId } from "./notionIds";
 import { buildPlaceDisplayName } from "./placeMeta";
+import { getWesternZodiacSign } from "./date";
 import { notionRequest, testNotionConnection, type NotionFetch, type NotionRequestDiagnostic } from "./notionClient";
 
 export interface NotionSyncSummary {
@@ -252,6 +253,7 @@ export function buildPersonProperties(person: Person): NotionProperties {
     "LifeLog ID": richTextProperty(person.id),
     关系: [selectProperty(person.relationship), "Relationship"],
     生日: [dateProperty(person.birthday), "Birthday"],
+    星座: [selectProperty(getWesternZodiacSign(person.birthday)), "Zodiac"],
     重点关注: [checkboxProperty(person.favorite), "Favorite"],
     喜好档案: [richTextProperty(formatGroups(person.preferences)), "Preferences"],
     禁忌雷区: [richTextProperty(formatGroups(person.dislikes)), "Dislikes"],

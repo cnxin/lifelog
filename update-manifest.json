@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.115",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.115",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.115/lifelog-v0.1.0-test.115.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.115.apk",
-    "apkName":  "lifelog-v0.1.0-test.115.apk",
-    "apkSize":  3744761,
-    "apkSha256":  "9be1be17f485f5e968b0626b019896d9590f58ff059244b5df429054f32edd92",
-    "publishedAt":  "2026-06-25T13:44:13Z",
-    "body":  "- 地点列表卡片改为摘要优先，默认只显示名称、评分、分类位置和到访摘要，地址、标签和常一起的人按需展开。\n- 人物列表中的喜好档案和禁忌雷区改为计数胶囊入口，保留直接编辑能力，减少人物卡片信息堆叠。\n- 回忆时间线默认收起正文片段、心情、标签和照片数量，点开单条详情后再查看辅助信息。\n- 地点页商场 / 园区区块改为摘要入口，默认显示商场、店铺和到访统计，展开后查看商场列表。"
+    "version":  "0.1.0-test.116",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.116",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.116/lifelog-v0.1.0-test.116.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.116.apk",
+    "apkName":  "lifelog-v0.1.0-test.116.apk",
+    "apkSize":  3745981,
+    "apkSha256":  "a2dbbc3e23be1b64df2722993d028e2b49d17fd25f9d9558612d896262a28875",
+    "publishedAt":  "2026-07-03T07:45:29Z",
+    "body":  "- 人物生日信息统一展示公历日期、年龄、星座、农历和干支，列表、详情、编辑预览、搜索、Notion 同步和可读导出都能识别星座。\n- 快速记录的关联人物 / 地点改为折叠式上下文入口，默认可先写内容，需要时再展开关联，隐藏状态仍保留已选人物和地点。\n- 人物和地点选择器默认突出已关联、最近常用和可先不关联，减少新增回忆时的搜索框和大按钮干扰。\n- 首页今日行动只保留到期计划、今日纪念日安排和真实提醒，联系建议和历年今日回看回到记录建议 / 历年今日区块，减少重复。"
 }

@@ -139,9 +139,6 @@ export default function Home() {
     onOpenMemory: (memoryId) => navigate(`/memories/${memoryId}`),
     onOpenPerson: (personId, hash = "") => navigate(`/people/${personId}${hash}`),
     onOpenCalendar: () => navigate("/calendar"),
-    onAddMemoryForPerson: (personId) => {
-      openQuickMemory([personId]);
-    },
     actionPrefs
   });
   const recordSuggestions = buildRecordSuggestions({
@@ -152,7 +149,6 @@ export default function Home() {
     onOpenPerson: (personId, hash = "") => navigate(`/people/${personId}${hash}`),
     onOpenCalendar: () => navigate("/calendar"),
     onOpenMemory: openSuggestedMemory,
-    todayActionIds: todayActions.map((action) => action.id)
   });
   const dailyFocus = buildDailyFocus({
     todayActions,
@@ -704,8 +700,7 @@ function buildRecordSuggestions({
   getPlaceName,
   onOpenPerson,
   onOpenCalendar,
-  onOpenMemory,
-  todayActionIds
+  onOpenMemory
 }: {
   state: ReturnType<typeof useLifeLog>["state"];
   upcoming: Array<ReturnType<typeof getUpcomingAnniversaries>[number] & { planStatus: { label: string; tone: string } }>;
@@ -714,10 +709,8 @@ function buildRecordSuggestions({
   onOpenPerson: (personId: string, hash?: string) => void;
   onOpenCalendar: () => void;
   onOpenMemory: (text: string, personIds?: string[], placeIds?: string[], options?: OpenSuggestedMemoryOptions) => void;
-  todayActionIds: string[];
 }): RecordSuggestion[] {
   const suggestions: RecordSuggestion[] = [];
-  const todayActionIdSet = new Set(todayActionIds);
   const todayKey = toDateKey(new Date());
   const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const memoryIds = new Set(state.memories.map((memory) => memory.id));
@@ -785,7 +778,7 @@ function buildRecordSuggestions({
     });
   }
 
-  const personPrompt = findRecordSuggestionPerson(state.people, actualMemories, todayActionIdSet);
+  const personPrompt = findRecordSuggestionPerson(state.people, actualMemories);
   if (personPrompt) {
     suggestions.push({
       id: `person-memory-${personPrompt.personId}`,
@@ -843,11 +836,10 @@ function buildSuggestionAnniversaryTitle(item: ReturnType<typeof getUpcomingAnni
 
 function findRecordSuggestionPerson(
   people: Array<{ id: string; name: string; favorite: boolean }>,
-  memories: MemoryEvent[],
-  todayActionIdSet: Set<string>
+  memories: MemoryEvent[]
 ) {
   const candidates = people
-    .filter((person) => person.favorite && !todayActionIdSet.has(`contact-${person.id}`))
+    .filter((person) => person.favorite)
     .map((person) => {
       const latestMemory = memories
         .filter((memory) => (memory.personIds || []).includes(person.id))
@@ -889,7 +881,6 @@ function buildTodayActions({
   onOpenMemory,
   onOpenPerson,
   onOpenCalendar,
-  onAddMemoryForPerson,
   actionPrefs
 }: {
   state: ReturnType<typeof useLifeLog>["state"];
@@ -899,11 +890,9 @@ function buildTodayActions({
   onOpenMemory: (memoryId: string) => void;
   onOpenPerson: (personId: string, hash?: string) => void;
   onOpenCalendar: () => void;
-  onAddMemoryForPerson: (personId: string) => void;
   actionPrefs: TodayActionPrefs;
 }): TodayAction[] {
   const actions: TodayAction[] = [];
-  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const dueMemoryPlan = findDueMemoryPlan(state.memories);
   if (dueMemoryPlan) {
     const ctx = buildMemoryDisplayContext(dueMemoryPlan, getPersonName, getPlaceName);
@@ -958,35 +947,6 @@ function buildTodayActions({
       }
     });
   });
-
-  const personToContact = findPersonToContact(state.people, actualMemories);
-  if (personToContact) {
-    actions.push({
-      id: `contact-${personToContact.personId}`,
-      icon: <Users />,
-      title: `和 ${personToContact.name} 补一条互动`,
-      desc: personToContact.daysSinceContact === null ? "还没有共同回忆，可以从第一次互动开始。" : `距离上次记录已经 ${personToContact.daysSinceContact} 天。`,
-      meta: "联系",
-      tone: "warm",
-      canDismiss: true,
-      onClick: () => onAddMemoryForPerson(personToContact.personId)
-    });
-  }
-
-  const todayMemory = findOnThisDayMemory(actualMemories);
-  if (todayMemory) {
-    const ctx = buildMemoryDisplayContext(todayMemory, getPersonName, getPlaceName);
-    actions.push({
-      id: `on-this-day-${todayMemory.id}`,
-      icon: <History />,
-      title: `${new Date().getFullYear() - new Date(`${todayMemory.date}T00:00:00`).getFullYear()} 年前的今天`,
-      desc: ctx.personNames.length || ctx.placeNames.length ? [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ") : todayMemory.content || "有一条旧回忆可以回看。",
-      meta: formatMonthDay(todayMemory.date),
-      tone: "cool",
-      canDismiss: true,
-      onClick: () => onOpenMemory(todayMemory.id)
-    });
-  }
 
   const visibleActions = actions.filter((action) => !isActionSuppressed(action.id, actionPrefs));
 
@@ -1100,25 +1060,6 @@ function compareTodayPlans(left: AnniversaryPlan, right: AnniversaryPlan) {
   return rightScore - leftScore || right.updatedAt.localeCompare(left.updatedAt);
 }
 
-function findPersonToContact(people: Array<{ id: string; name: string; favorite: boolean }>, memories: MemoryEvent[]) {
-  const candidates = people.map((person) => {
-    const latestMemory = memories
-      .filter((memory) => (memory.personIds || []).includes(person.id))
-      .sort((a, b) => b.date.localeCompare(a.date))[0];
-    const daysSinceContact = latestMemory ? daysBetweenToday(latestMemory.date) : null;
-    return {
-      personId: person.id,
-      name: person.name,
-      score: (person.favorite ? 1000 : 0) + (daysSinceContact ?? 365),
-      daysSinceContact
-    };
-  });
-
-  return candidates
-    .filter((item) => item.daysSinceContact === null || item.daysSinceContact >= 21)
-    .sort((a, b) => b.score - a.score)[0];
-}
-
 function buildUpcomingPlanStatus(
   plans: ReturnType<typeof useLifeLog>["state"]["anniversaryPlans"],
   item: ReturnType<typeof getUpcomingAnniversaries>[number]
@@ -1187,19 +1128,6 @@ function getUpcomingAnniversaryLinkTarget(item: ReturnType<typeof getUpcomingAnn
     title: item.title,
     date: item.kind === "milestone" ? item.sourceDate : item.date
   };
-}
-
-function findOnThisDayMemory(memories: MemoryEvent[]) {
-  const today = new Date();
-  const month = today.getMonth();
-  const day = today.getDate();
-
-  return memories
-    .filter((memory) => {
-      const date = new Date(`${memory.date}T00:00:00`);
-      return date.getFullYear() < today.getFullYear() && date.getMonth() === month && date.getDate() === day;
-    })
-    .sort((a, b) => b.date.localeCompare(a.date))[0];
 }
 
 function compareHomePlaceRows(
