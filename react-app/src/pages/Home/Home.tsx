@@ -27,7 +27,12 @@ export default function Home() {
   const [todayQueueOpen, setTodayQueueOpen] = useState(false);
   const [taskQueueOpen, setTaskQueueOpen] = useState(false);
   const [homeLibraryOpen, setHomeLibraryOpen] = useState(false);
-  const monthlyPlans = buildCurrentMonthPlans(state.anniversaryPlans);
+  const monthlyScheduleItems = buildCurrentMonthScheduleItems({
+    anniversaryPlans: state.anniversaryPlans,
+    memories: state.memories,
+    getPersonName,
+    getPlaceName
+  });
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .map((item) => ({
@@ -35,7 +40,7 @@ export default function Home() {
       planStatus: buildUpcomingPlanStatus(state.anniversaryPlans, item)
     }));
   const upcoming = upcomingWithPlanStatus
-    .filter((item) => !isUpcomingCoveredByMonthlyPlan(item, monthlyPlans))
+    .filter((item) => !isUpcomingCoveredByMonthlySchedule(item, monthlyScheduleItems))
     .slice(0, 3);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
@@ -218,29 +223,29 @@ export default function Home() {
       <section className="section">
         <div className="section-header">
           <h2>
-            <Calendar /> 纪念日与安排
+            <Calendar /> 本月安排
           </h2>
           <button className="see-all" onClick={() => navigate("/calendar")}>
             查看
           </button>
         </div>
-        {monthlyPlans.length > 0 || upcoming.length > 0 ? (
+        {monthlyScheduleItems.length > 0 || upcoming.length > 0 ? (
           <div className="home-anniversary-stack">
-            {monthlyPlans.length > 0 && (
+            {monthlyScheduleItems.length > 0 && (
               <div className="monthly-plan-list">
-                {monthlyPlans.map((plan) => (
+                {monthlyScheduleItems.map((item) => (
                   <button
                     className="monthly-plan-card glass-card"
-                    key={plan.id}
+                    key={item.id}
                     type="button"
-                    onClick={() => navigate(`/people/${plan.personId}${buildPersonAnniversarySuffix({ title: plan.anniversaryTitle, date: plan.anniversaryDate })}`)}
+                    onClick={() => navigate(item.path)}
                   >
-                    <span className={`monthly-plan-status ${plan.status}`}>{formatPlanStatus(plan)}</span>
+                    <span className={`monthly-plan-status ${item.statusTone}`}>{item.statusLabel}</span>
                     <span className="monthly-plan-copy">
-                      <strong>{getPersonName(plan.personId)} · {formatAnniversaryPlanTargetTitle(plan)}</strong>
-                      <small>{plan.title}</small>
+                      <strong>{item.title}</strong>
+                      <small>{item.desc}</small>
                     </span>
-                    <em>{formatMonthDay(plan.targetDate)}</em>
+                    <em>{formatMonthDay(item.date)}</em>
                   </button>
                 ))}
               </div>
@@ -274,8 +279,8 @@ export default function Home() {
           </div>
         ) : (
           <GlassCard className="home-empty-card">
-            <strong>本月暂无纪念日安排</strong>
-            <span>有计划或近期纪念日时，这里会自动显示。</span>
+            <strong>本月暂无安排</strong>
+            <span>日历计划、纪念日安排或近期纪念日会显示在这里。</span>
           </GlassCard>
         )}
       </section>
@@ -551,6 +556,20 @@ interface OpenMemoryOptions {
   pendingPlanId?: string | null;
 }
 
+interface MonthlyScheduleItem {
+  id: string;
+  kind: "anniversary-plan" | "memory-plan";
+  title: string;
+  desc: string;
+  date: string;
+  statusLabel: string;
+  statusTone: string;
+  path: string;
+  anniversaryKey?: string;
+  sortScore: number;
+  updatedAt: string;
+}
+
 function buildTodayActions({
   state,
   reminderSettings,
@@ -781,35 +800,84 @@ function getUpcomingAnniversaryLinkTarget(item: ReturnType<typeof getUpcomingAnn
   };
 }
 
-function buildCurrentMonthPlans(plans: AnniversaryPlan[]) {
+function buildCurrentMonthScheduleItems({
+  anniversaryPlans,
+  memories,
+  getPersonName,
+  getPlaceName
+}: {
+  anniversaryPlans: AnniversaryPlan[];
+  memories: MemoryEvent[];
+  getPersonName: (id: string) => string;
+  getPlaceName: (id: string) => string;
+}): MonthlyScheduleItem[] {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
 
-  return plans
+  const anniversaryItems: MonthlyScheduleItem[] = anniversaryPlans
     .filter((plan) => {
       if (plan.status === "skipped") return false;
       const time = new Date(`${plan.targetDate}T00:00:00`).getTime();
       return time >= monthStart && time < nextMonthStart;
     })
+    .map((plan) => ({
+      id: `anniversary-plan-${plan.id}`,
+      kind: "anniversary-plan",
+      title: `${getPersonName(plan.personId)} · ${formatAnniversaryPlanTargetTitle(plan)}`,
+      desc: plan.title,
+      date: plan.targetDate,
+      statusLabel: formatPlanStatus(plan),
+      statusTone: plan.status,
+      path: `/people/${plan.personId}${buildPersonAnniversarySuffix({ title: plan.anniversaryTitle, date: plan.anniversaryDate })}`,
+      anniversaryKey: buildAnniversaryScheduleKey(plan.personId, plan.anniversaryTitle, plan.anniversaryDate, plan.targetDate),
+      sortScore: getPlanSortScore(plan),
+      updatedAt: plan.updatedAt
+    }));
+
+  const memoryPlanItems: MonthlyScheduleItem[] = memories
+    .filter((memory) => {
+      if (!isMemoryPlan(memory) || !/^\d{4}-\d{2}-\d{2}$/.test(memory.date)) return false;
+      const time = new Date(`${memory.date}T00:00:00`).getTime();
+      return time >= monthStart && time < nextMonthStart;
+    })
+    .map((memory) => {
+      const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+      const title = getMemoryDisplayTitle(memory, ctx);
+      const relation = [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ");
+      return {
+        id: `memory-plan-${memory.id}`,
+        kind: "memory-plan",
+        title,
+        desc: relation || memory.content || "日历计划",
+        date: memory.date,
+        statusLabel: memory.date < toDateKey(new Date()) ? "逾期" : memory.date === toDateKey(new Date()) ? "今日" : "计划",
+        statusTone: memory.date < toDateKey(new Date()) ? "overdue" : memory.date === toDateKey(new Date()) ? "today" : "memory",
+        path: `/memories/${memory.id}`,
+        sortScore: memory.date <= toDateKey(new Date()) ? 4 : 2,
+        updatedAt: memory.date
+      };
+    });
+
+  return [...anniversaryItems, ...memoryPlanItems]
     .sort((left, right) => {
-      const statusScore = getPlanSortScore(right) - getPlanSortScore(left);
-      return statusScore || left.targetDate.localeCompare(right.targetDate) || right.updatedAt.localeCompare(left.updatedAt);
+      const statusScore = right.sortScore - left.sortScore;
+      return statusScore || left.date.localeCompare(right.date) || right.updatedAt.localeCompare(left.updatedAt);
     })
     .slice(0, 4);
 }
 
-function isUpcomingCoveredByMonthlyPlan(
+function isUpcomingCoveredByMonthlySchedule(
   item: ReturnType<typeof getUpcomingAnniversaries>[number],
-  plans: AnniversaryPlan[]
+  items: MonthlyScheduleItem[]
 ) {
   const sourceDate = item.kind === "milestone" ? item.sourceDate : item.date;
-  return plans.some((plan) =>
-    plan.personId === item.personId &&
-    plan.anniversaryTitle === item.title &&
-    plan.anniversaryDate === sourceDate &&
-    plan.targetDate === item.date
-  );
+  const key = buildAnniversaryScheduleKey(item.personId, item.title, sourceDate, item.date);
+  return items.some((plan) => plan.anniversaryKey === key);
+}
+
+function buildAnniversaryScheduleKey(personId: string, title: string, anniversaryDate: string, targetDate: string) {
+  return [personId, title, anniversaryDate, targetDate].join("|");
 }
 
 function getPlanSortScore(plan: AnniversaryPlan) {

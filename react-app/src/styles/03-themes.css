@@ -994,6 +994,21 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   background: color-mix(in srgb, #22a06b 14%, transparent);
 }
 
+.monthly-plan-status.today {
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 14%, transparent);
+}
+
+.monthly-plan-status.overdue {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.monthly-plan-status.memory {
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+}
+
 .monthly-plan-copy {
   min-width: 0;
   display: grid;

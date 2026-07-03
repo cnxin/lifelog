@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.117",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.117",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.117/lifelog-v0.1.0-test.117.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.117.apk",
-    "apkName":  "lifelog-v0.1.0-test.117.apk",
-    "apkSize":  3744669,
-    "apkSha256":  "f7b517d73f020e8f3693b8434b80843bf6a99f46e7e9b1e942c570c8991007ef",
-    "publishedAt":  "2026-07-03T08:48:42Z",
-    "body":  "- 首页去掉标题上方重复日期，只保留“今天的 LifeLog”和核心统计，减少首屏重复信息。\n- 移除首页“今天先做这件事”主卡和快捷新增入口，新增记录继续通过底部 `+` 进入，首页不再重复承担新增入口。\n- 今日待处理改为只在确实有到期计划、今日安排或提醒时显示的折叠队列。\n- 纪念日与安排优先显示本月已有计划，并过滤已被本月计划覆盖的近期纪念日，空状态不再出现突兀的“添加人物”按钮。"
+    "version":  "0.1.0-test.118",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.118",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.118/lifelog-v0.1.0-test.118.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.118.apk",
+    "apkName":  "lifelog-v0.1.0-test.118.apk",
+    "apkSize":  3745117,
+    "apkSha256":  "27f47712046cfc8112ac243d9b7028f934a1b5a8b9a8c86a323eb893c7ba5970",
+    "publishedAt":  "2026-07-03T09:30:50Z",
+    "body":  "- 首页“纪念日与安排”改为“本月安排”，把日历计划、纪念日安排和近期纪念日放到同一块信息里。\n- 日历中新增的未来计划现在会在首页本月安排中显示，并可直接进入对应计划详情。\n- 本月安排里的普通计划会显示“计划 / 今日 / 逾期”状态，方便区分未来安排和已经需要处理的事项。\n- 近期纪念日会和本月安排自动去重，已经有安排覆盖的纪念日不再重复出现在下方提示里。"
 }
