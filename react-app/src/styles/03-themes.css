@@ -951,6 +951,83 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   line-height: 1.5;
 }
 
+.home-anniversary-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.monthly-plan-list {
+  display: grid;
+  gap: 8px;
+}
+
+.monthly-plan-card {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  text-align: left;
+}
+
+.monthly-plan-status {
+  min-width: 42px;
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.monthly-plan-status.doing {
+  color: #a86100;
+  background: color-mix(in srgb, #fdcb6e 24%, transparent);
+}
+
+.monthly-plan-status.done {
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 14%, transparent);
+}
+
+.monthly-plan-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.monthly-plan-copy strong,
+.monthly-plan-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monthly-plan-copy strong {
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.monthly-plan-copy small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.monthly-plan-card em {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .home-empty-card button,
 .home-empty-actions button {
   min-height: 44px;

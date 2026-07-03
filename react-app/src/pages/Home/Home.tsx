@@ -1,5 +1,5 @@
-import { Calendar, CheckCircle2, ChevronDown, Clock, Gift, Heart, History, MapPin, PenLine, Sparkles, Star, Users } from "lucide-react";
-import { MouseEvent, useEffect, useMemo, useState } from "react";
+import { Calendar, CheckCircle2, ChevronDown, Clock, Gift, Heart, History, MapPin, Sparkles, Star, Users } from "lucide-react";
+import { MouseEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -8,7 +8,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
-import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries, todayLabel } from "../../utils/date";
+import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries } from "../../utils/date";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, isMemoryPlan } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
@@ -23,19 +23,20 @@ export default function Home() {
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
   const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
-  const [inboxText, setInboxText] = useState(() => loadQuickInboxDraft());
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const [todayQueueOpen, setTodayQueueOpen] = useState(false);
   const [taskQueueOpen, setTaskQueueOpen] = useState(false);
-  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [homeLibraryOpen, setHomeLibraryOpen] = useState(false);
+  const monthlyPlans = buildCurrentMonthPlans(state.anniversaryPlans);
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .map((item) => ({
       ...item,
       planStatus: buildUpcomingPlanStatus(state.anniversaryPlans, item)
     }));
-  const upcoming = upcomingWithPlanStatus.slice(0, 3);
+  const upcoming = upcomingWithPlanStatus
+    .filter((item) => !isUpcomingCoveredByMonthlyPlan(item, monthlyPlans))
+    .slice(0, 3);
   const favorites = state.people.filter((person) => person.favorite).slice(0, 3);
   const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
   const recentEntries = [...state.memories].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
@@ -54,10 +55,6 @@ export default function Home() {
       ? `收藏 ${favorites.length} 人 · 常去 ${featuredPlaces.length} 处 · 最近 ${recentEntries.length} 条`
       : "人物、地点、记录会在这里汇总";
 
-  useEffect(() => {
-    saveQuickInboxDraft(inboxText);
-  }, [inboxText]);
-
   function openQuickMemory(options: OpenMemoryOptions | string[] = {}, legacyPlaceIds: string[] = [], legacyPlanId: string | null = null) {
     const nextOptions = Array.isArray(options)
       ? { personIds: options, placeIds: legacyPlaceIds, pendingPlanId: legacyPlanId }
@@ -73,36 +70,6 @@ export default function Home() {
     setInitialMemoryDate(initialDate);
     setPendingMemoryPlanId(pendingPlanId || null);
     setEntrySheetType("memory");
-  }
-
-  function openSuggestedMemory(text: string, personIds: string[] = [], placeIds: string[] = [], options: OpenSuggestedMemoryOptions = {}) {
-    const normalized = text.trim();
-    if (normalized) {
-      window.localStorage.setItem("lifelog:quick-inbox-prefill", normalized);
-    }
-    openQuickMemory({
-      personIds,
-      placeIds,
-      initialDate: options.initialDate,
-      pendingPlanId: options.pendingPlanId
-    });
-  }
-
-  function openInboxMemory() {
-    const text = inboxText.trim();
-    if (!text) {
-      openQuickMemory();
-      return;
-    }
-
-    setInitialMemoryPersonIds([]);
-    setInitialMemoryPlaceIds([]);
-    setInitialMemoryDate(undefined);
-    setPendingMemoryPlanId(null);
-    setInboxText("");
-    setEntrySheetType("memory");
-    window.localStorage.setItem("lifelog:quick-inbox-prefill", text);
-    clearQuickInboxDraft();
   }
 
   const tasks = [
@@ -141,29 +108,6 @@ export default function Home() {
     onOpenCalendar: () => navigate("/calendar"),
     actionPrefs
   });
-  const recordSuggestions = buildRecordSuggestions({
-    state,
-    upcoming: upcomingWithPlanStatus,
-    getPersonName,
-    getPlaceName,
-    onOpenPerson: (personId, hash = "") => navigate(`/people/${personId}${hash}`),
-    onOpenCalendar: () => navigate("/calendar"),
-    onOpenMemory: openSuggestedMemory,
-  });
-  const dailyFocus = buildDailyFocus({
-    todayActions,
-    recordSuggestions,
-    fallback: {
-      id: "daily-focus-record",
-      icon: <PenLine />,
-      title: inboxText.trim() ? "把刚才那句话存成回忆" : "今天先记一件小事",
-      desc: inboxText.trim() ? "草稿已经在这里，保存后可以再补人物、地点和照片。" : "不用写完整，一句话也能成为今天的记录。",
-      actionLabel: inboxText.trim() ? "存成回忆" : "写一句",
-      onClick: inboxText.trim() ? openInboxMemory : () => openQuickMemory()
-    }
-  });
-  const secondaryTodayActions = todayActions.filter((action) => action.id !== dailyFocus.id);
-
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
       ...actionPrefs,
@@ -177,7 +121,6 @@ export default function Home() {
     <>
       <section className="section home-hero-section">
         <div className="home-hero-copy">
-          <span>{todayLabel()}</span>
           <h1>今天的 LifeLog</h1>
           <p>先记一件小事，需要时再补人物、地点和照片。</p>
         </div>
@@ -201,57 +144,7 @@ export default function Home() {
         </GlassCard>
       </section>
 
-      <section className="section">
-        <GlassCard className={`daily-focus-card ${dailyFocus.tone || ""}`}>
-          <button className="daily-focus-main" type="button" onClick={dailyFocus.onClick}>
-            <span className="daily-focus-icon">{dailyFocus.icon}</span>
-            <div>
-              <small>今天先做这件事</small>
-              <strong>{dailyFocus.title}</strong>
-              <span>{dailyFocus.desc}</span>
-            </div>
-            <em>{dailyFocus.actionLabel}</em>
-          </button>
-          <div className="daily-focus-inbox">
-            <textarea
-              value={inboxText}
-              onChange={(event) => setInboxText(event.target.value)}
-              placeholder="例如：今天和小林在湖滨吃了晚饭，聊到下次去看展"
-            />
-            <button type="button" onClick={openInboxMemory}>
-              <PenLine />
-              {inboxText.trim() ? "保存" : "写一句"}
-            </button>
-          </div>
-          <button className="daily-focus-more" type="button" onClick={() => setQuickActionsOpen((open) => !open)}>
-            <span>其他快捷入口</span>
-            <em>{quickActionsOpen ? "收起" : "展开"}</em>
-            <ChevronDown />
-          </button>
-          {quickActionsOpen && (
-            <div className="daily-focus-shortcuts">
-              <button type="button" onClick={() => openQuickMemory()}>
-                <PenLine />
-                写一句
-              </button>
-              <button type="button" onClick={() => setEntrySheetType("person")}>
-                <Heart />
-                记人物
-              </button>
-              <button type="button" onClick={() => setEntrySheetType("place")}>
-                <MapPin />
-                记地点
-              </button>
-              <button type="button" onClick={() => navigate("/calendar")}>
-                <Gift />
-                日历
-              </button>
-            </div>
-          )}
-        </GlassCard>
-      </section>
-
-      {secondaryTodayActions.length > 0 && (
+      {todayActions.length > 0 && (
         <section className="section">
           <GlassCard className={`today-queue-card ${todayQueueOpen ? "open" : ""}`}>
             <button className="today-queue-summary" type="button" onClick={() => setTodayQueueOpen((open) => !open)}>
@@ -259,8 +152,8 @@ export default function Home() {
                 <Sparkles />
               </span>
               <span className="today-queue-copy">
-                <strong>还有 {secondaryTodayActions.length} 个待处理</strong>
-                <small>{secondaryTodayActions[0].title}</small>
+                <strong>今天还有 {todayActions.length} 个待处理</strong>
+                <small>{todayActions[0].title}</small>
               </span>
               <span className="today-queue-toggle">
                 {todayQueueOpen ? "收起" : "展开"}
@@ -269,7 +162,7 @@ export default function Home() {
             </button>
             {todayQueueOpen && (
               <div className="today-queue-list">
-                {secondaryTodayActions.map((action) => (
+                {todayActions.map((action) => (
                   <div className={`today-action-card ${action.tone || ""}`} key={action.id}>
                     <button className="today-action-main" type="button" onClick={action.onClick}>
                       <span className="today-action-icon">{action.icon}</span>
@@ -331,36 +224,58 @@ export default function Home() {
             查看
           </button>
         </div>
-        {upcoming.length > 0 ? (
-          <div className="anniversary-scroll-wrapper">
-            <div className="anniversary-scroll">
-              {upcoming.map((item, index) => (
-                <button
-                  key={`${item.personId}-${item.title}-${item.kind}-${item.date}-${"milestoneDay" in item ? item.milestoneDay : ""}`}
-                  className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""} ${item.kind === "milestone" ? "milestone" : ""}`}
-                  onClick={() => navigate(`/people/${item.personId}${buildPersonAnniversarySuffix(getUpcomingAnniversaryLinkTarget(item))}`)}
-                >
-                  <div className="a-title">
-                    {item.personName} · {item.title}
-                  </div>
-                  <div className="a-days">
-                    {item.days}
-                    <span>天</span>
-                  </div>
-                  <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
-                  <div className="a-date">{item.yearLabel}</div>
-                  <div className={`a-plan-status ${item.planStatus.tone}`}>{item.planStatus.label}</div>
-                  <div className="a-date">{formatMonthDay(item.date)}</div>
-                  <div className="a-date">{formatLunarDate(item.date)}</div>
-                </button>
-              ))}
-            </div>
+        {monthlyPlans.length > 0 || upcoming.length > 0 ? (
+          <div className="home-anniversary-stack">
+            {monthlyPlans.length > 0 && (
+              <div className="monthly-plan-list">
+                {monthlyPlans.map((plan) => (
+                  <button
+                    className="monthly-plan-card glass-card"
+                    key={plan.id}
+                    type="button"
+                    onClick={() => navigate(`/people/${plan.personId}${buildPersonAnniversarySuffix({ title: plan.anniversaryTitle, date: plan.anniversaryDate })}`)}
+                  >
+                    <span className={`monthly-plan-status ${plan.status}`}>{formatPlanStatus(plan)}</span>
+                    <span className="monthly-plan-copy">
+                      <strong>{getPersonName(plan.personId)} · {formatAnniversaryPlanTargetTitle(plan)}</strong>
+                      <small>{plan.title}</small>
+                    </span>
+                    <em>{formatMonthDay(plan.targetDate)}</em>
+                  </button>
+                ))}
+              </div>
+            )}
+            {upcoming.length > 0 && (
+              <div className="anniversary-scroll-wrapper">
+                <div className="anniversary-scroll">
+                  {upcoming.map((item, index) => (
+                    <button
+                      key={`${item.personId}-${item.title}-${item.kind}-${item.date}-${"milestoneDay" in item ? item.milestoneDay : ""}`}
+                      className={`anniversary-card glass-card ${index % 2 ? "secondary" : ""} ${item.kind === "milestone" ? "milestone" : ""}`}
+                      onClick={() => navigate(`/people/${item.personId}${buildPersonAnniversarySuffix(getUpcomingAnniversaryLinkTarget(item))}`)}
+                    >
+                      <div className="a-title">
+                        {item.personName} · {item.title}
+                      </div>
+                      <div className="a-days">
+                        {item.days}
+                        <span>天</span>
+                      </div>
+                      <div className="a-date">{item.label === "今天" ? "就是今天" : item.label}</div>
+                      <div className="a-date">{item.yearLabel}</div>
+                      <div className={`a-plan-status ${item.planStatus.tone}`}>{item.planStatus.label}</div>
+                      <div className="a-date">{formatMonthDay(item.date)}</div>
+                      <div className="a-date">{formatLunarDate(item.date)}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <GlassCard className="home-empty-card">
-            <strong>未来 30 天暂无纪念日</strong>
-            <span>补充人物生日或纪念日后，这里会显示即将到来的安排。</span>
-            <button onClick={() => setEntrySheetType("person")}>添加人物</button>
+            <strong>本月暂无纪念日安排</strong>
+            <span>有计划或近期纪念日时，这里会自动显示。</span>
           </GlassCard>
         )}
       </section>
@@ -629,248 +544,11 @@ interface TodayAction {
 
 type TodayActionPrefs = Record<string, number | "dismissed">;
 
-type DailyFocusItem = Pick<TodayAction, "id" | "icon" | "title" | "desc" | "tone" | "onClick"> & {
-  actionLabel: string;
-};
-
 interface OpenMemoryOptions {
   personIds?: string[];
   placeIds?: string[];
   initialDate?: string;
   pendingPlanId?: string | null;
-}
-
-interface OpenSuggestedMemoryOptions {
-  initialDate?: string;
-  pendingPlanId?: string | null;
-}
-
-interface RecordSuggestion {
-  id: string;
-  icon: JSX.Element;
-  title: string;
-  desc: string;
-  actionLabel: string;
-  tone?: "warm" | "cool";
-  onClick: () => void;
-}
-
-function buildDailyFocus({
-  todayActions,
-  recordSuggestions,
-  fallback
-}: {
-  todayActions: TodayAction[];
-  recordSuggestions: RecordSuggestion[];
-  fallback: DailyFocusItem;
-}): DailyFocusItem {
-  const action = todayActions[0];
-  if (action) {
-    return {
-      id: action.id,
-      icon: action.icon,
-      title: action.title,
-      desc: action.desc,
-      tone: action.tone,
-      actionLabel: action.meta || "处理",
-      onClick: action.onClick
-    };
-  }
-
-  const suggestion = recordSuggestions[0];
-  if (suggestion) {
-    return {
-      id: suggestion.id,
-      icon: suggestion.icon,
-      title: suggestion.title,
-      desc: suggestion.desc,
-      tone: suggestion.tone,
-      actionLabel: suggestion.actionLabel,
-      onClick: suggestion.onClick
-    };
-  }
-
-  return fallback;
-}
-
-function buildRecordSuggestions({
-  state,
-  upcoming,
-  getPersonName,
-  getPlaceName,
-  onOpenPerson,
-  onOpenCalendar,
-  onOpenMemory
-}: {
-  state: ReturnType<typeof useLifeLog>["state"];
-  upcoming: Array<ReturnType<typeof getUpcomingAnniversaries>[number] & { planStatus: { label: string; tone: string } }>;
-  getPersonName: (id: string) => string;
-  getPlaceName: (id: string) => string;
-  onOpenPerson: (personId: string, hash?: string) => void;
-  onOpenCalendar: () => void;
-  onOpenMemory: (text: string, personIds?: string[], placeIds?: string[], options?: OpenSuggestedMemoryOptions) => void;
-}): RecordSuggestion[] {
-  const suggestions: RecordSuggestion[] = [];
-  const todayKey = toDateKey(new Date());
-  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory));
-  const memoryIds = new Set(state.memories.map((memory) => memory.id));
-  const todayMemoryCount = actualMemories.filter((memory) => memory.date === todayKey).length;
-
-  const completedPlan = state.anniversaryPlans
-    .filter((plan) =>
-      plan.status === "done" &&
-      plan.targetDate <= todayKey &&
-      daysBetweenToday(plan.targetDate) <= 45 &&
-      (!plan.memoryId || !memoryIds.has(plan.memoryId))
-    )
-    .sort((left, right) => right.targetDate.localeCompare(left.targetDate) || right.updatedAt.localeCompare(left.updatedAt))[0];
-  if (completedPlan) {
-    const personName = getPersonName(completedPlan.personId);
-    const placeNames = (completedPlan.placeIds || []).map(getPlaceName).filter(Boolean);
-    suggestions.push({
-      id: `plan-memory-${completedPlan.id}`,
-      icon: <Gift />,
-      title: `把 ${personName} 的安排补成回忆`,
-      desc: `${formatAnniversaryPlanTargetTitle(completedPlan)} · ${completedPlan.title}`,
-      actionLabel: "补回忆",
-      tone: "warm",
-      onClick: () => onOpenMemory(
-        `${personName} 的${formatAnniversaryPlanTargetTitle(completedPlan)}：${completedPlan.title}`,
-        [completedPlan.personId],
-        completedPlan.placeIds || [],
-        {
-          initialDate: completedPlan.targetDate,
-          pendingPlanId: completedPlan.id
-        }
-      )
-    });
-    if (placeNames.length) {
-      suggestions[0].desc = `${suggestions[0].desc} · ${placeNames.slice(0, 2).join("、")}`;
-    }
-  }
-
-  const missingPlan = upcoming.find((item) =>
-    item.days >= 0 &&
-    item.days <= 14 &&
-    (item.planStatus.tone === "urgent" || item.planStatus.tone === "missing")
-  );
-  if (missingPlan) {
-    const title = buildSuggestionAnniversaryTitle(missingPlan);
-    suggestions.push({
-      id: `anniversary-plan-${missingPlan.personId}-${missingPlan.title}-${missingPlan.date}`,
-      icon: <Calendar />,
-      title: `给 ${missingPlan.personName} 的${title}留个安排`,
-      desc: `${missingPlan.label} · 先写一个想法，后面再补细节`,
-      actionLabel: "去安排",
-      tone: missingPlan.days <= 3 ? "warm" : "cool",
-      onClick: () => onOpenPerson(missingPlan.personId, buildPersonAnniversarySuffix(getUpcomingAnniversaryLinkTarget(missingPlan)))
-    });
-  }
-
-  if (!todayMemoryCount) {
-    suggestions.push({
-      id: "today-memory",
-      icon: <PenLine />,
-      title: "今天还没有留下记录",
-      desc: "不用写很完整，一句话也可以先保存。",
-      actionLabel: "记一句",
-      onClick: () => onOpenMemory("今天值得记下的一件小事：")
-    });
-  }
-
-  const personPrompt = findRecordSuggestionPerson(state.people, actualMemories);
-  if (personPrompt) {
-    suggestions.push({
-      id: `person-memory-${personPrompt.personId}`,
-      icon: <Heart />,
-      title: `给 ${personPrompt.name} 补一条近况`,
-      desc: personPrompt.daysSinceContact === null ? "还没有共同回忆，可以先记一次互动。" : `上次相关记录在 ${personPrompt.daysSinceContact} 天前。`,
-      actionLabel: "记互动",
-      tone: "warm",
-      onClick: () => onOpenMemory(`和 ${personPrompt.name} 最近的一次互动：`, [personPrompt.personId])
-    });
-  }
-
-  const placePrompt = findRecordSuggestionPlace(state.places, actualMemories);
-  if (placePrompt) {
-    suggestions.push({
-      id: `place-memory-${placePrompt.id}`,
-      icon: <MapPin />,
-      title: `给 ${buildPlaceDisplayName(placePrompt)} 留一次印象`,
-      desc: buildHomePlaceSubtitle(placePrompt),
-      actionLabel: "记地点",
-      tone: "cool",
-      onClick: () => onOpenMemory(`在 ${buildPlaceDisplayName(placePrompt)} 的印象：`, [], [placePrompt.id])
-    });
-  }
-
-  if (!suggestions.length && (state.people.length || state.places.length || state.memories.length)) {
-    suggestions.push({
-      id: "calendar-review",
-      icon: <History />,
-      title: "从日历里找一个日子回看",
-      desc: "按日期回到某一天，再补一条当时没有写下的细节。",
-      actionLabel: "看日历",
-      onClick: onOpenCalendar
-    });
-  }
-
-  return dedupeRecordSuggestions(suggestions).slice(0, 3);
-}
-
-function dedupeRecordSuggestions(suggestions: RecordSuggestion[]) {
-  const seen = new Set<string>();
-  return suggestions.filter((suggestion) => {
-    if (seen.has(suggestion.id)) return false;
-    seen.add(suggestion.id);
-    return true;
-  });
-}
-
-function buildSuggestionAnniversaryTitle(item: ReturnType<typeof getUpcomingAnniversaries>[number]) {
-  if (item.kind === "milestone" && "milestoneLabel" in item) {
-    return `${item.title}${item.milestoneLabel}`;
-  }
-  return item.title;
-}
-
-function findRecordSuggestionPerson(
-  people: Array<{ id: string; name: string; favorite: boolean }>,
-  memories: MemoryEvent[]
-) {
-  const candidates = people
-    .filter((person) => person.favorite)
-    .map((person) => {
-      const latestMemory = memories
-        .filter((memory) => (memory.personIds || []).includes(person.id))
-        .sort((a, b) => b.date.localeCompare(a.date))[0];
-      const daysSinceContact = latestMemory ? daysBetweenToday(latestMemory.date) : null;
-      return {
-        personId: person.id,
-        name: person.name,
-        daysSinceContact,
-        score: daysSinceContact ?? 365
-      };
-    });
-
-  return candidates
-    .filter((item) => item.daysSinceContact === null || item.daysSinceContact >= 14)
-    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name, "zh-CN"))[0];
-}
-
-function findRecordSuggestionPlace(places: Place[], memories: MemoryEvent[]) {
-  const visitedPlaceIds = new Set<string>();
-  memories.forEach((memory) => {
-    if (memory.placeId) visitedPlaceIds.add(memory.placeId);
-    (memory.placeIds || []).forEach((placeId) => visitedPlaceIds.add(placeId));
-  });
-
-  return places
-    .filter((place) => !visitedPlaceIds.has(place.id))
-    .sort((left, right) =>
-      Number(right.favorite) - Number(left.favorite) ||
-      buildPlaceDisplayName(left).localeCompare(buildPlaceDisplayName(right), "zh-CN")
-    )[0];
 }
 
 function buildTodayActions({
@@ -995,33 +673,6 @@ function getTodayActionPrefKey() {
   return `lifelog:today-actions:${toDateKey(new Date())}`;
 }
 
-function loadQuickInboxDraft() {
-  if (typeof window === "undefined") return "";
-  return window.localStorage.getItem("lifelog:quick-inbox-draft") || "";
-}
-
-function saveQuickInboxDraft(value: string) {
-  if (typeof window === "undefined") return;
-  try {
-    const text = value.trim();
-    if (text) {
-      window.localStorage.setItem("lifelog:quick-inbox-draft", value);
-    } else {
-      clearQuickInboxDraft();
-    }
-  } catch {
-    // 草稿只是辅助恢复，不影响首页记录流程。
-  }
-}
-
-function clearQuickInboxDraft() {
-  try {
-    window.localStorage.removeItem("lifelog:quick-inbox-draft");
-  } catch {
-    // 忽略本地草稿清理失败。
-  }
-}
-
 function findDueMemoryPlan(memories: MemoryEvent[]) {
   const today = toDateKey(new Date());
   return memories
@@ -1128,6 +779,50 @@ function getUpcomingAnniversaryLinkTarget(item: ReturnType<typeof getUpcomingAnn
     title: item.title,
     date: item.kind === "milestone" ? item.sourceDate : item.date
   };
+}
+
+function buildCurrentMonthPlans(plans: AnniversaryPlan[]) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
+
+  return plans
+    .filter((plan) => {
+      if (plan.status === "skipped") return false;
+      const time = new Date(`${plan.targetDate}T00:00:00`).getTime();
+      return time >= monthStart && time < nextMonthStart;
+    })
+    .sort((left, right) => {
+      const statusScore = getPlanSortScore(right) - getPlanSortScore(left);
+      return statusScore || left.targetDate.localeCompare(right.targetDate) || right.updatedAt.localeCompare(left.updatedAt);
+    })
+    .slice(0, 4);
+}
+
+function isUpcomingCoveredByMonthlyPlan(
+  item: ReturnType<typeof getUpcomingAnniversaries>[number],
+  plans: AnniversaryPlan[]
+) {
+  const sourceDate = item.kind === "milestone" ? item.sourceDate : item.date;
+  return plans.some((plan) =>
+    plan.personId === item.personId &&
+    plan.anniversaryTitle === item.title &&
+    plan.anniversaryDate === sourceDate &&
+    plan.targetDate === item.date
+  );
+}
+
+function getPlanSortScore(plan: AnniversaryPlan) {
+  if (plan.status === "doing") return 3;
+  if (plan.status === "todo") return 2;
+  if (plan.status === "done") return 1;
+  return 0;
+}
+
+function formatPlanStatus(plan: AnniversaryPlan) {
+  if (plan.status === "done") return "完成";
+  if (plan.status === "doing") return "准备";
+  return "待办";
 }
 
 function compareHomePlaceRows(

@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.116",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.116",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.116/lifelog-v0.1.0-test.116.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.116.apk",
-    "apkName":  "lifelog-v0.1.0-test.116.apk",
-    "apkSize":  3745981,
-    "apkSha256":  "a2dbbc3e23be1b64df2722993d028e2b49d17fd25f9d9558612d896262a28875",
-    "publishedAt":  "2026-07-03T07:45:29Z",
-    "body":  "- 人物生日信息统一展示公历日期、年龄、星座、农历和干支，列表、详情、编辑预览、搜索、Notion 同步和可读导出都能识别星座。\n- 快速记录的关联人物 / 地点改为折叠式上下文入口，默认可先写内容，需要时再展开关联，隐藏状态仍保留已选人物和地点。\n- 人物和地点选择器默认突出已关联、最近常用和可先不关联，减少新增回忆时的搜索框和大按钮干扰。\n- 首页今日行动只保留到期计划、今日纪念日安排和真实提醒，联系建议和历年今日回看回到记录建议 / 历年今日区块，减少重复。"
+    "version":  "0.1.0-test.117",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.117",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.117/lifelog-v0.1.0-test.117.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.117.apk",
+    "apkName":  "lifelog-v0.1.0-test.117.apk",
+    "apkSize":  3744669,
+    "apkSha256":  "f7b517d73f020e8f3693b8434b80843bf6a99f46e7e9b1e942c570c8991007ef",
+    "publishedAt":  "2026-07-03T08:48:42Z",
+    "body":  "- 首页去掉标题上方重复日期，只保留“今天的 LifeLog”和核心统计，减少首屏重复信息。\n- 移除首页“今天先做这件事”主卡和快捷新增入口，新增记录继续通过底部 `+` 进入，首页不再重复承担新增入口。\n- 今日待处理改为只在确实有到期计划、今日安排或提醒时显示的折叠队列。\n- 纪念日与安排优先显示本月已有计划，并过滤已被本月计划覆盖的近期纪念日，空状态不再出现突兀的“添加人物”按钮。"
 }
