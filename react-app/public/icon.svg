@@ -1,22 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LifeLog">
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="64" y1="40" x2="456" y2="472" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1A665E"/>
-      <stop offset="1" stop-color="#2DA194"/>
+      <stop stop-color="#4A9FE0"/>
+      <stop offset="1" stop-color="#3578C0"/>
     </linearGradient>
-    <filter id="shadow" x="82" y="74" width="350" height="388" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#0C3A36" flood-opacity=".28"/>
-    </filter>
   </defs>
-  <rect x="10" y="10" width="492" height="492" rx="108" fill="url(#bg)"/>
-  <ellipse cx="164" cy="114" rx="132" ry="84" fill="#FFFFFF" opacity=".15"/>
-  <g filter="url(#shadow)">
-    <path d="M180 92h140l66 66v198c0 30-24 54-54 54H180c-30 0-54-24-54-54V146c0-30 24-54 54-54Z" fill="#FFF8E8"/>
-    <path d="M320 92v66h66L320 92Z" fill="#EFDCC0"/>
-    <path d="M212 176c74 18 26 76-24 84-68 12-4 84 66 66 62-16 78 40 30 56" fill="none" stroke="#1F776D" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="210" cy="176" r="24" fill="#F4A259" stroke="#FFF8E8" stroke-width="14"/>
-    <circle cx="188" cy="260" r="22" fill="#EB6B5B" stroke="#FFF8E8" stroke-width="14"/>
-    <circle cx="254" cy="326" r="22" fill="#46B999" stroke="#FFF8E8" stroke-width="14"/>
-    <circle cx="284" cy="382" r="20" fill="#F4A259" stroke="#FFF8E8" stroke-width="14"/>
-  </g>
+
+  <!-- Solid blue background like TapTap's green bg -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Bold geometric lowercase "life" in WHITE — high contrast on blue -->
+  <!-- Style: chunky rounded geometric, like Plex's lowercase wordmark -->
+
+  <!-- Letter: l -->
+  <path d="M88,142 L88,338 Q88,362 112,362 L128,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Letter: i -->
+  <path d="M190,222 L190,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round"/>
+  <!-- Dot — a playful accent: slightly larger, offset upward -->
+  <circle cx="190" cy="168" r="26" fill="#FFFFFF"/>
+
+  <!-- Letter: f -->
+  <path d="M294,172 Q294,148 278,142 Q262,138 252,148 Q242,158 242,178 L242,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Crossbar -->
+  <path d="M210,228 L292,228"
+        fill="none" stroke="#FFFFFF" stroke-width="36" stroke-linecap="round"/>
+
+  <!-- Letter: e -->
+  <path d="M334,290 L412,290 Q426,290 426,272 Q426,240 390,224 Q354,210 334,236 Q314,262 326,302 Q340,342 378,348 Q402,348 422,328"
+        fill="none" stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

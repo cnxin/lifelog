@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.120",
+    date: "2026-07-06",
+    title: "Life 字标应用图标",
+    highlights: [
+      "应用图标改为蓝底白色 life 字标，使用用户确认的 concept_q 方案作为新的视觉源。",
+      "Web favicon、PWA 图标和 Android 各分辨率启动图标统一更新，避免不同入口显示不同图标。",
+      "Android adaptive icon 的前景字形和背景色同步调整，适配系统圆形和自适应图标裁切。",
+      "网页主题色和 PWA manifest 主题色更新为新图标的蓝色，保持安装后系统界面一致。"
+    ]
+  },
+  {
     version: "0.1.0-test.119",
     date: "2026-07-06",
     title: "计划闭环和应用图标刷新",

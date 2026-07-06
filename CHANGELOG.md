@@ -4,6 +4,20 @@
 
 - 暂无未发布变更。
 
+## v0.1.0-test.120 (2026-07-06)
+
+### 使用体验
+
+- 应用图标改为蓝底白色 life 字标，使用用户确认的 concept_q 方案作为新的视觉源。
+- Web favicon、PWA 图标和 Android 各分辨率启动图标统一更新，避免不同入口显示不同图标。
+- Android adaptive icon 的前景字形和背景色同步调整，适配系统圆形和自适应图标裁切。
+- 网页主题色和 PWA manifest 主题色更新为新图标的蓝色，保持安装后系统界面一致。
+
+### 验证
+
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.120.apk`。
+- Android `versionCode` 更新为 `120`，`versionName` 更新为 `0.1.0-test.120`。
+
 ## v0.1.0-test.119 (2026-07-06)
 
 ### 使用体验
