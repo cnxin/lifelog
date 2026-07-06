@@ -18,7 +18,7 @@ import {
 } from "../../utils/placeMeta";
 import { buildMemoryDisplayContext, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
-import { openExternalUrl, openPlaceMap } from "../../utils/externalLinks";
+import { openNativeStoreUrl, openPlaceMap } from "../../utils/externalLinks";
 import { buildMallVisitStats, buildPlaceVisitStats } from "../../utils/placeVisitStats";
 
 export default function MallDetail() {
@@ -130,7 +130,7 @@ export default function MallDetail() {
               if (source.latitude && source.longitude) {
                 void openPlaceMap(source);
               } else {
-                void openExternalUrl(`https://uri.amap.com/search?keyword=${encodeURIComponent(displayAddress || mallInfo.mall)}`);
+                void openNativeStoreUrl(`https://uri.amap.com/search?keyword=${encodeURIComponent(displayAddress || mallInfo.mall)}`, "amap");
               }
             }}
           >

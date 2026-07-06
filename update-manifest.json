@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.122",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.122",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.122/lifelog-v0.1.0-test.122.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.122.apk",
-    "apkName":  "lifelog-v0.1.0-test.122.apk",
-    "apkSize":  3733793,
-    "apkSha256":  "e93b885b745786731409cdf581fb38871a21fe7f5639d032c5bd10141d7a3d09",
-    "publishedAt":  "2026-07-06T12:18:57Z",
-    "body":  "- 日期选择器的年月滚轮改为松手后自动应用，不再需要额外点击应用年月。\n- 日历月视图支持在日期网格上左右滑动切换上个月或下个月，并减少滑动后误选日期。\n- 回忆照片上传增强 Android 图片兼容，压缩失败时会自动尝试 Canvas 回退处理。\n- 照片上传失败会显示更明确的原因，HEIC/HEIF 会提示先转为 JPG，同一张图片失败后也可以重新选择重试。"
+    "version":  "0.1.0-test.123",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.123",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.123/lifelog-v0.1.0-test.123.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.123.apk",
+    "apkName":  "lifelog-v0.1.0-test.123.apk",
+    "apkSize":  3734825,
+    "apkSha256":  "ae2c64a46c84ebcbd8889d5d6e417f8cde1957cc96098e1bfee340b8a697c30b",
+    "publishedAt":  "2026-07-06T13:43:57Z",
+    "body":  "- 地点导航优先尝试高德 App 路线规划，减少 Android 把导航链接交给 Chrome 打开的情况。\n- 商场导航和平台入口统一走原生 App 打开链路，美团、大众点评会优先尝试 App 内搜索或网页。\n- 外部链接增加多候选 App scheme，目标 App 不可用时再回退到原网页链接。\n- 新增或编辑回忆时，上传后的照片缩略图可以直接点开放大查看，并支持多图切换。"
 }

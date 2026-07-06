@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { Photo } from "../types";
 import { compressImage, validateImageFile, blobToObjectURL } from "../utils/imageCompression";
 import { useToast } from "../context/ToastContext";
+import { PhotoViewer } from "./PhotoViewer";
 
 interface PhotoUploaderProps {
   photos: Photo[];
@@ -25,6 +26,7 @@ export function PhotoUploader({
   const [uploadProgress, setUploadProgress] = useState<string>("");
   const [dragActive, setDragActive] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -154,6 +156,7 @@ export function PhotoUploader({
               key={photo.id}
               photo={photo}
               index={index}
+              onOpen={() => setViewerIndex(index)}
               onRemove={() => handleRemovePhoto(photo.id)}
               onReorder={handleReorder}
               disabled={disabled}
@@ -211,6 +214,15 @@ export function PhotoUploader({
           {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
         </div>
       )}
+
+      {viewerIndex !== null && photos.length > 0 && (
+        <PhotoViewer
+          key={`upload-photo-viewer-${viewerIndex}`}
+          photos={photos}
+          initialIndex={Math.min(viewerIndex, photos.length - 1)}
+          onClose={() => setViewerIndex(null)}
+        />
+      )}
     </div>
   );
 }
@@ -223,12 +235,13 @@ function getUploadErrorMessage(error: unknown) {
 interface PhotoPreviewProps {
   photo: Photo;
   index: number;
+  onOpen: () => void;
   onRemove: () => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   disabled: boolean;
 }
 
-function PhotoPreview({ photo, index, onRemove, disabled }: PhotoPreviewProps) {
+function PhotoPreview({ photo, index, onOpen, onRemove, disabled }: PhotoPreviewProps) {
   const [previewUrl, setPreviewUrl] = useState("");
 
   useEffect(() => {
@@ -256,7 +269,19 @@ function PhotoPreview({ photo, index, onRemove, disabled }: PhotoPreviewProps) {
   }, [photo.thumbnailBlob]);
 
   return (
-    <div className="photo-preview">
+    <div
+      className="photo-preview"
+      role="button"
+      tabIndex={0}
+      title="查看大图"
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+    >
       {previewUrl ? (
         <img src={previewUrl} alt={`照片 ${index + 1}`} />
       ) : (
@@ -268,7 +293,10 @@ function PhotoPreview({ photo, index, onRemove, disabled }: PhotoPreviewProps) {
         <button
           type="button"
           className="photo-remove-btn"
-          onClick={onRemove}
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove();
+          }}
           title="删除照片"
         >
           <X size={16} />

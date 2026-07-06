@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.123",
+    date: "2026-07-06",
+    title: "外部 App 导航和照片预览修复",
+    highlights: [
+      "地点导航优先尝试高德 App 路线规划，减少 Android 把导航链接交给 Chrome 打开的情况。",
+      "商场导航和平台入口统一走原生 App 打开链路，美团、大众点评会优先尝试 App 内搜索或网页。",
+      "外部链接增加多候选 App scheme，目标 App 不可用时再回退到原网页链接。",
+      "新增或编辑回忆时，上传后的照片缩略图可以直接点开放大查看，并支持多图切换。"
+    ]
+  },
+  {
     version: "0.1.0-test.122",
     date: "2026-07-06",
     title: "日历滑动和照片上传修复",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Photo } from "../types";
 import { blobToDataURL } from "../utils/imageCompression";
@@ -99,7 +100,7 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
     setDragOffset(0);
   };
 
-  return (
+  const viewer = (
     <div className="photo-viewer-overlay" onClick={handleBackdropClick}>
       <div
         className="photo-viewer-container"
@@ -184,6 +185,8 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
       </div>
     </div>
   );
+
+  return createPortal(viewer, document.body);
 }
 
 function formatFileSize(bytes: number): string {

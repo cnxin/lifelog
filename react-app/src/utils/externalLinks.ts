@@ -11,7 +11,7 @@ interface NativeExternalBrowserPlugin {
 }
 
 interface NativeLaunchTarget {
-  url: string;
+  urls: string[];
   fallbackUrl: string;
   packageName: string;
 }
@@ -33,7 +33,7 @@ export async function openExternalUrl(rawUrl: string) {
 
   if (Capacitor.isNativePlatform()) {
     const target = getNativeLaunchTarget(url);
-    await openNativeViewUrl(target.url, target.packageName, target.fallbackUrl);
+    await openNativeViewUrl(target.urls, target.packageName, target.fallbackUrl);
     return;
   }
 
@@ -109,7 +109,7 @@ export async function openNativeStoreUrl(rawUrl: string, platform?: PlaceLinkPla
 
   if (Capacitor.isNativePlatform()) {
     const target = getNativeLaunchTarget(url, platform);
-    await openNativeViewUrl(target.url, target.packageName, target.fallbackUrl);
+    await openNativeViewUrl(target.urls, target.packageName, target.fallbackUrl);
     return;
   }
 
@@ -117,23 +117,10 @@ export async function openNativeStoreUrl(rawUrl: string, platform?: PlaceLinkPla
 }
 
 export async function openPlaceMap(place: Place) {
-  if (Capacitor.isNativePlatform() && place.latitude && place.longitude) {
-    const url = buildAmapUrl(place);
-    if (url) {
-      await openNativeViewUrl(url, getNativePackageName("amap"));
-      return;
-    }
-  }
+  const amapUrls = buildAmapUrls(place);
 
-  if (place.mapUrl) {
-    await openExternalUrl(place.mapUrl);
-    return;
-  }
-
-  const amapUrl = buildAmapUrl(place);
-
-  if (Capacitor.isNativePlatform() && amapUrl) {
-    await openNativeViewUrl(amapUrl, getNativePackageName("amap"));
+  if (Capacitor.isNativePlatform() && amapUrls.length) {
+    await openNativeViewUrl(amapUrls, getNativePackageName("amap"), place.mapUrl || buildAmapWebUrl(place));
     return;
   }
 
@@ -143,8 +130,19 @@ export async function openPlaceMap(place: Place) {
     return;
   }
 
-  if (amapUrl) {
-    openSchemeUrl(amapUrl);
+  if (place.mapUrl) {
+    await openNativeStoreUrl(place.mapUrl, "amap");
+    return;
+  }
+
+  const searchUrl = buildAmapWebSearchUrl(place);
+  if (searchUrl) {
+    await openExternalUrl(searchUrl);
+    return;
+  }
+
+  if (amapUrls[0]) {
+    openSchemeUrl(amapUrls[0]);
   }
 }
 
@@ -152,7 +150,7 @@ function openSchemeUrl(url: string) {
   window.location.href = url;
 }
 
-async function openNativeViewUrl(url: string, packageName = "", fallbackUrl = "") {
+async function openNativeViewUrl(url: string | string[], packageName = "", fallbackUrl = "") {
   let lastError: unknown;
   for (const attempt of buildNativeOpenAttempts(url, packageName, fallbackUrl)) {
     try {
@@ -164,7 +162,7 @@ async function openNativeViewUrl(url: string, packageName = "", fallbackUrl = ""
   }
 
   console.warn("原生外部链接打开失败，回退到系统链接:", lastError);
-  const fallback = fallbackUrl || url;
+  const fallback = fallbackUrl || (Array.isArray(url) ? url[0] : url);
   window.location.href = /^https?:\/\//i.test(fallback) ? buildAndroidViewIntentUrl(fallback) : fallback;
 }
 
@@ -177,8 +175,9 @@ async function openNativeApkInstaller(url: string, fileName = "", fallbackUrl = 
   }
 }
 
-function buildNativeOpenAttempts(url: string, packageName = "", fallbackUrl = "") {
+function buildNativeOpenAttempts(url: string | string[], packageName = "", fallbackUrl = "") {
   const attempts: Array<{ url: string; packageName?: string }> = [];
+  const urls = Array.isArray(url) ? url : [url];
   const add = (nextUrl: string, nextPackageName = "") => {
     if (!nextUrl) return;
     const key = `${nextUrl}|${nextPackageName}`;
@@ -186,18 +185,18 @@ function buildNativeOpenAttempts(url: string, packageName = "", fallbackUrl = ""
     attempts.push(nextPackageName ? { url: nextUrl, packageName: nextPackageName } : { url: nextUrl });
   };
 
-  add(url, packageName);
+  urls.forEach((item) => add(item, packageName));
   add(fallbackUrl, packageName);
-  add(url);
+  urls.forEach((item) => add(item));
   add(fallbackUrl);
   return attempts;
 }
 
 function getNativeLaunchTarget(rawUrl: string, platform?: PlaceLinkPlatform | string): NativeLaunchTarget {
   const detectedPlatform = platform || inferPlatformFromLink(rawUrl);
-  const nativeUrl = buildNativeAppDeepLink(rawUrl, detectedPlatform);
+  const nativeUrls = buildNativeAppDeepLinkVariants(rawUrl, detectedPlatform);
   return {
-    url: nativeUrl || rawUrl,
+    urls: nativeUrls.length ? nativeUrls : [rawUrl],
     fallbackUrl: rawUrl,
     packageName: getNativePackageName(detectedPlatform)
   };
@@ -231,6 +230,47 @@ export function buildNativeAppDeepLink(rawUrl: string, platform?: PlaceLinkPlatf
   }
 }
 
+function buildNativeAppDeepLinkVariants(rawUrl: string, platform?: PlaceLinkPlatform | string) {
+  const url = rawUrl.trim();
+  if (!url) return [];
+  const detectedPlatform = platform || inferPlatformFromLink(url);
+  const keyword = /^https?:\/\//i.test(url) ? getPlatformSearchKeyword(url, detectedPlatform) : "";
+  const encodedKeyword = keyword ? encodeURIComponent(keyword) : "";
+  const variants: string[] = [];
+  const add = (value: string) => {
+    if (value && !variants.includes(value)) variants.push(value);
+  };
+
+  add(buildNativeAppDeepLink(url, detectedPlatform));
+
+  if (/^https?:\/\//i.test(url)) {
+    switch (detectedPlatform) {
+      case "amap":
+        add(buildAmapDeepLinkFromWebUrl(url));
+        break;
+      case "meituan":
+        if (encodedKeyword) {
+          add(`imeituan://www.meituan.com/search?q=${encodedKeyword}`);
+        }
+        add(`imeituan://www.meituan.com/web?url=${encodeURIComponent(url)}`);
+        add(`meituan://www.meituan.com/web?url=${encodeURIComponent(url)}`);
+        break;
+      case "dianping":
+        if (encodedKeyword) {
+          add(`dianping://searchshoplist?keyword=${encodedKeyword}`);
+        }
+        add(`dianping://web?url=${encodeURIComponent(url)}`);
+        add(`dianpingapp://web?url=${encodeURIComponent(url)}`);
+        break;
+      default:
+        break;
+    }
+  }
+
+  add(url);
+  return variants;
+}
+
 function buildAmapDeepLinkFromWebUrl(rawUrl: string) {
   try {
     const webUrl = new URL(rawUrl);
@@ -246,7 +286,7 @@ function buildAmapDeepLinkFromWebUrl(rawUrl: string) {
     const [lon, lat] = position.split(",").map((item) => item.trim());
     if (lon && lat) {
       const name = webUrl.searchParams.get("name") || "地点";
-      return `amapuri://poi/detail?sourceApplication=LifeLog&poiname=${encodeURIComponent(name)}&lat=${lat}&lon=${lon}&dev=0`;
+      return buildAmapRouteUrl({ lat, lon, name });
     }
   } catch {
     return "";
@@ -259,18 +299,55 @@ export function buildAndroidViewIntentUrl(url: string) {
   return `intent://${url.replace(/^https?:\/\//i, "")}#Intent;scheme=${url.startsWith("https://") ? "https" : "http"};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
 }
 
-function buildAmapUrl(place: Place) {
+function buildAmapUrls(place: Place) {
   const source = "LifeLog";
-  const name = encodeURIComponent(place.name);
+  const name = buildAmapPlaceName(place);
+  const coords = getPlaceCoordinates(place);
+  const urls: string[] = [];
+  const add = (url: string) => {
+    if (url && !urls.includes(url)) urls.push(url);
+  };
 
-  if (place.latitude && place.longitude) {
-    return `amapuri://poi/detail?sourceApplication=${source}&poiname=${name}&lat=${place.latitude}&lon=${place.longitude}&dev=0`;
+  if (coords) {
+    add(buildAmapRouteUrl({ ...coords, name }));
+    add(`androidamap://viewMap?sourceApplication=${source}&poiname=${encodeURIComponent(name)}&lat=${coords.lat}&lon=${coords.lon}&dev=0`);
+    add(`amapuri://poi/detail?sourceApplication=${source}&poiname=${encodeURIComponent(name)}&lat=${coords.lat}&lon=${coords.lon}&dev=0`);
   }
 
-  const query = getAmapQuery(place.mapUrl) || [place.city, place.area, place.name].filter(Boolean).join(" ");
-  if (!query.trim()) return "";
+  const query = getAmapQuery(place.mapUrl) || buildAmapSearchKeyword(place);
+  if (query.trim()) {
+    add(`amapuri://poi/around?sourceApplication=${source}&keywords=${encodeURIComponent(query.trim())}&dev=0`);
+  }
 
-  return `amapuri://poi/around?sourceApplication=${source}&keywords=${encodeURIComponent(query.trim())}&dev=0`;
+  return urls;
+}
+
+function buildAmapRouteUrl(target: { lat: string | number; lon: string | number; name: string }) {
+  return `androidamap://route/plan/?sourceApplication=LifeLog&dlat=${target.lat}&dlon=${target.lon}&dname=${encodeURIComponent(target.name)}&dev=0&t=0`;
+}
+
+function buildAmapWebUrl(place: Place) {
+  return buildAmapWebMarkerUrl(place) || place.mapUrl || buildAmapWebSearchUrl(place);
+}
+
+function buildAmapWebSearchUrl(place: Place) {
+  const keyword = buildAmapSearchKeyword(place);
+  return keyword ? `https://uri.amap.com/search?keyword=${encodeURIComponent(keyword)}` : "";
+}
+
+function buildAmapSearchKeyword(place: Place) {
+  return [place.city, place.area, place.address, place.mall, place.name, place.storeName].filter(Boolean).join(" ").trim();
+}
+
+function buildAmapPlaceName(place: Place) {
+  return [place.name, place.mall, place.storeName].filter(Boolean).join(" ") || "地点";
+}
+
+function getPlaceCoordinates(place: Place): { lat: string; lon: string } | null {
+  if (place.latitude && place.longitude) {
+    return { lat: String(place.latitude), lon: String(place.longitude) };
+  }
+  return getAmapCoordinates(place.mapUrl);
 }
 
 function getNativePackageName(platform?: PlaceLinkPlatform | string) {
@@ -342,8 +419,32 @@ function getAmapQuery(rawUrl: string) {
   try {
     const url = new URL(rawUrl);
     if (!/amap\.com$/i.test(url.hostname) && !/\.amap\.com$/i.test(url.hostname)) return "";
-    return url.searchParams.get("query") || url.searchParams.get("keywords") || "";
+    return url.searchParams.get("query") || url.searchParams.get("keyword") || url.searchParams.get("keywords") || url.searchParams.get("name") || "";
   } catch {
     return "";
   }
+}
+
+function getAmapCoordinates(rawUrl: string): { lat: string; lon: string } | null {
+  if (!rawUrl) return null;
+
+  try {
+    const url = new URL(rawUrl);
+    if (!/amap\.com$/i.test(url.hostname) && !/\.amap\.com$/i.test(url.hostname)) return null;
+    const position = url.searchParams.get("position") || url.searchParams.get("location") || "";
+    const [lon, lat] = position.split(",").map((item) => item.trim());
+    if (isCoordinate(lat) && isCoordinate(lon)) return { lat, lon };
+
+    const nextLat = url.searchParams.get("lat") || url.searchParams.get("latitude") || "";
+    const nextLon = url.searchParams.get("lon") || url.searchParams.get("lng") || url.searchParams.get("longitude") || "";
+    if (isCoordinate(nextLat) && isCoordinate(nextLon)) return { lat: nextLat, lon: nextLon };
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function isCoordinate(value: string) {
+  return /^-?\d+(?:\.\d+)?$/.test(value);
 }
