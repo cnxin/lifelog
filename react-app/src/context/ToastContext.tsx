@@ -9,8 +9,10 @@ interface ToastAction {
 }
 
 interface ToastOptions {
+  title?: string;
   message: string;
   tone?: ToastTone;
+  variant?: "toast" | "followup";
   actionLabel?: string;
   onAction?: () => void;
   actions?: ToastAction[];
@@ -19,8 +21,10 @@ interface ToastOptions {
 
 interface ActiveToast {
   id: number;
+  title?: string;
   message: string;
   tone: ToastTone;
+  variant: "toast" | "followup";
   actions?: ToastAction[];
 }
 
@@ -35,8 +39,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const actions = options.actions || (options.actionLabel && options.onAction ? [{ label: options.actionLabel, onClick: options.onAction }] : undefined);
     const nextToast = {
       id: Date.now(),
+      title: options.title,
       message: options.message,
       tone: options.tone || "info",
+      variant: options.variant || "toast",
       actions
     };
     setToast(nextToast);
@@ -53,8 +59,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={notify}>
       {children}
       {toast && (
-        <div className={`toast-message ${toast.tone}`} role="status" aria-live="polite" key={toast.id}>
-          <span>{toast.message}</span>
+        <div className={`toast-message ${toast.tone} ${toast.variant}`} role="status" aria-live="polite" key={toast.id}>
+          <span className="toast-copy">
+            {toast.title && <strong>{toast.title}</strong>}
+            <em>{toast.message}</em>
+          </span>
           {toast.actions?.length ? (
             <div className="toast-actions">
               {toast.actions.map((action) => (

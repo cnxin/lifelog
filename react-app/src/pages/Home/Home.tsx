@@ -9,7 +9,7 @@ import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
 import { formatLunarDate, formatMonthDay, getUpcomingAnniversaries } from "../../utils/date";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, isMemoryPlan } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, isActiveMemoryPlan, isMemoryPlan } from "../../utils/memoryDisplay";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
@@ -27,12 +27,14 @@ export default function Home() {
   const [todayQueueOpen, setTodayQueueOpen] = useState(false);
   const [taskQueueOpen, setTaskQueueOpen] = useState(false);
   const [homeLibraryOpen, setHomeLibraryOpen] = useState(false);
-  const monthlyScheduleItems = buildCurrentMonthScheduleItems({
+  const monthlySchedule = buildCurrentMonthScheduleItems({
     anniversaryPlans: state.anniversaryPlans,
     memories: state.memories,
     getPersonName,
     getPlaceName
   });
+  const monthlyScheduleItems = monthlySchedule.items;
+  const hiddenMonthlyScheduleCount = Math.max(0, monthlySchedule.total - monthlyScheduleItems.length);
   const upcomingWithPlanStatus = getUpcomingAnniversaries(state.people)
     .filter((item) => item.days >= 0 && item.days <= 30)
     .map((item) => ({
@@ -55,6 +57,8 @@ export default function Home() {
   );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(actualMemories);
   const onThisDayMemories = buildOnThisDayMemories(actualMemories, getPersonName, getPlaceName).slice(0, 3);
+  const hasMonthlySchedule = monthlyScheduleItems.length > 0 || upcoming.length > 0;
+  const hasHomeLibrary = favorites.length > 0 || featuredPlaces.length > 0 || recentEntries.length > 0;
   const homeLibrarySummary =
     favorites.length || featuredPlaces.length || recentEntries.length
       ? `收藏 ${favorites.length} 人 · 常去 ${featuredPlaces.length} 处 · 最近 ${recentEntries.length} 条`
@@ -220,16 +224,16 @@ export default function Home() {
         </section>
       )}
 
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Calendar /> 本月安排
-          </h2>
-          <button className="see-all" onClick={() => navigate("/calendar")}>
-            查看
-          </button>
-        </div>
-        {monthlyScheduleItems.length > 0 || upcoming.length > 0 ? (
+      {hasMonthlySchedule && (
+        <section className="section">
+          <div className="section-header">
+            <h2>
+              <Calendar /> 本月安排
+            </h2>
+            <button className="see-all" onClick={() => navigate("/calendar")}>
+              查看
+            </button>
+          </div>
           <div className="home-anniversary-stack">
             {monthlyScheduleItems.length > 0 && (
               <div className="monthly-plan-list">
@@ -248,6 +252,11 @@ export default function Home() {
                     <em>{formatMonthDay(item.date)}</em>
                   </button>
                 ))}
+                {hiddenMonthlyScheduleCount > 0 && (
+                  <button className="monthly-plan-more glass-card" type="button" onClick={() => navigate("/calendar")}>
+                    还有 {hiddenMonthlyScheduleCount} 条安排 · 去日历查看
+                  </button>
+                )}
               </div>
             )}
             {upcoming.length > 0 && (
@@ -277,13 +286,8 @@ export default function Home() {
               </div>
             )}
           </div>
-        ) : (
-          <GlassCard className="home-empty-card">
-            <strong>本月暂无安排</strong>
-            <span>日历计划、纪念日安排或近期纪念日会显示在这里。</span>
-          </GlassCard>
-        )}
-      </section>
+        </section>
+      )}
 
       {tasks.length > 0 && (
         <section className="section">
@@ -320,6 +324,7 @@ export default function Home() {
         </section>
       )}
 
+      {hasHomeLibrary && (
       <section className="section home-library-section">
         <div className="section-header">
           <h2>
@@ -465,6 +470,7 @@ export default function Home() {
           </div>
         )}
       </section>
+      )}
 
       <EntrySheet
         type={entrySheetType}
@@ -695,7 +701,7 @@ function getTodayActionPrefKey() {
 function findDueMemoryPlan(memories: MemoryEvent[]) {
   const today = toDateKey(new Date());
   return memories
-    .filter((memory) => isMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= today)
+    .filter((memory) => isActiveMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= today)
     .sort((a, b) => b.date.localeCompare(a.date))[0];
 }
 
@@ -810,7 +816,7 @@ function buildCurrentMonthScheduleItems({
   memories: MemoryEvent[];
   getPersonName: (id: string) => string;
   getPlaceName: (id: string) => string;
-}): MonthlyScheduleItem[] {
+}): { items: MonthlyScheduleItem[]; total: number } {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
@@ -837,7 +843,7 @@ function buildCurrentMonthScheduleItems({
 
   const memoryPlanItems: MonthlyScheduleItem[] = memories
     .filter((memory) => {
-      if (!isMemoryPlan(memory) || !/^\d{4}-\d{2}-\d{2}$/.test(memory.date)) return false;
+      if (!isActiveMemoryPlan(memory) || !/^\d{4}-\d{2}-\d{2}$/.test(memory.date)) return false;
       const time = new Date(`${memory.date}T00:00:00`).getTime();
       return time >= monthStart && time < nextMonthStart;
     })
@@ -859,12 +865,16 @@ function buildCurrentMonthScheduleItems({
       };
     });
 
-  return [...anniversaryItems, ...memoryPlanItems]
+  const sorted = [...anniversaryItems, ...memoryPlanItems]
     .sort((left, right) => {
       const statusScore = right.sortScore - left.sortScore;
       return statusScore || left.date.localeCompare(right.date) || right.updatedAt.localeCompare(left.updatedAt);
-    })
-    .slice(0, 4);
+    });
+
+  return {
+    items: sorted.slice(0, 4),
+    total: sorted.length
+  };
 }
 
 function isUpcomingCoveredByMonthlySchedule(

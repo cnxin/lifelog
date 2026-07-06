@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.118",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.118",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.118/lifelog-v0.1.0-test.118.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.118.apk",
-    "apkName":  "lifelog-v0.1.0-test.118.apk",
-    "apkSize":  3745117,
-    "apkSha256":  "27f47712046cfc8112ac243d9b7028f934a1b5a8b9a8c86a323eb893c7ba5970",
-    "publishedAt":  "2026-07-03T09:30:50Z",
-    "body":  "- 首页“纪念日与安排”改为“本月安排”，把日历计划、纪念日安排和近期纪念日放到同一块信息里。\n- 日历中新增的未来计划现在会在首页本月安排中显示，并可直接进入对应计划详情。\n- 本月安排里的普通计划会显示“计划 / 今日 / 逾期”状态，方便区分未来安排和已经需要处理的事项。\n- 近期纪念日会和本月安排自动去重，已经有安排覆盖的纪念日不再重复出现在下方提示里。"
+    "version":  "0.1.0-test.119",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.119",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.119/lifelog-v0.1.0-test.119.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.119.apk",
+    "apkName":  "lifelog-v0.1.0-test.119.apk",
+    "apkSize":  3783641,
+    "apkSha256":  "47654e50966d5c820047dd7de4a3bea363aef9d3a6b77b75384a2af2516c9d4d",
+    "publishedAt":  "2026-07-06T07:53:16Z",
+    "body":  "- 应用图标和 PWA 图标更新为新的 LifeLog 视觉，Android 各分辨率启动图标和网页 manifest 同步更新。\n- 首页继续减负，本月没有安排时不再显示空模块，最近看看也只在有内容时出现，超过 4 条安排会引导去日历查看。\n- 到期计划新增完成、改天和没发生处理，改天支持明天、本周末和自选日期，没发生的计划可恢复。\n- 快速记录保存后会出现补充面板，可直接加照片、补人物地点或查看详情，减少保存后的跳转成本。"
 }

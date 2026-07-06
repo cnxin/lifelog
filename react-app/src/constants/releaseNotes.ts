@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.119",
+    date: "2026-07-06",
+    title: "计划闭环和应用图标刷新",
+    highlights: [
+      "应用图标和 PWA 图标更新为新的 LifeLog 视觉，Android 各分辨率启动图标和网页 manifest 同步更新。",
+      "首页继续减负，本月没有安排时不再显示空模块，最近看看也只在有内容时出现，超过 4 条安排会引导去日历查看。",
+      "到期计划新增完成、改天和没发生处理，改天支持明天、本周末和自选日期，没发生的计划可恢复。",
+      "快速记录保存后会出现补充面板，可直接加照片、补人物地点或查看详情，减少保存后的跳转成本。"
+    ]
+  },
+  {
     version: "0.1.0-test.118",
     date: "2026-07-03",
     title: "首页本月安排整合",

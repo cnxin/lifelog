@@ -1043,6 +1043,19 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   white-space: nowrap;
 }
 
+.monthly-plan-more {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  padding: 0 12px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .home-empty-card button,
 .home-empty-actions button {
   min-height: 44px;

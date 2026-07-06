@@ -13,7 +13,7 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import type { MemoryEvent } from "../../types";
-import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, isActiveMemoryPlan, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
@@ -439,7 +439,7 @@ function buildDuePlanFocusDesc(
 }
 
 function isDuePlan(memory: MemoryEvent, todayKey: string) {
-  return isMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= todayKey;
+  return isActiveMemoryPlan(memory) && /^\d{4}-\d{2}-\d{2}$/.test(memory.date) && memory.date <= todayKey;
 }
 
 function parseImportedIds(value: string | null) {

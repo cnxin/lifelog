@@ -2,6 +2,7 @@ import { ArrowLeft, Calendar, CheckCircle2, Heart, Image as ImageIcon, MapPin, P
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
+import DateInput from "../../components/DateInput";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
@@ -11,13 +12,14 @@ import NotionRecordAction from "../../components/NotionRecordAction";
 import { PhotoGrid } from "../../components/PhotoGrid";
 import { PhotoViewer } from "../../components/PhotoViewer";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useToast } from "../../context/ToastContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
 import { buildPlanAnniversaryPath } from "../../utils/anniversaryLinks";
 import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } from "../../utils/anniversaryPlans";
 import { formatMonthDay } from "../../utils/date";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { buildPlaceContextLine } from "../../utils/placeMeta";
-import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../../utils/memoryDisplay";
+import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isActiveMemoryPlan, isMemoryPlan, isSkippedMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { toCalendarDateKey } from "../../utils/calendarItems";
 import type { AnniversaryPlan, MemoryEvent, Photo } from "../../types";
@@ -26,7 +28,8 @@ export default function MemoryDetail() {
   const { memoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { state, getPersonName, getPlaceName, loadMemoryPhotos } = useLifeLog();
+  const notify = useToast();
+  const { state, getPersonName, getPlaceName, loadMemoryPhotos, saveMemory } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -36,6 +39,8 @@ export default function MemoryDetail() {
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [addingRelatedMemory, setAddingRelatedMemory] = useState(false);
   const [completingPlan, setCompletingPlan] = useState(false);
+  const [reschedulingPlan, setReschedulingPlan] = useState(false);
+  const [customPlanDate, setCustomPlanDate] = useState(toCalendarDateKey(addDays(new Date(), 1)));
   const memory = state.memories.find((item) => item.id === memoryId);
   const personIds = memory?.personIds || [];
   const tags = memory?.tags || [];
@@ -113,6 +118,33 @@ export default function MemoryDetail() {
   const firstPersonId = personIds[0];
   const firstPlaceId = placeIds[0];
   const planDueState = getPlanDueState(memory);
+  const skippedPlan = isSkippedMemoryPlan(memory);
+
+  async function handleReschedulePlan(date: string) {
+    if (!memory) return;
+    await saveMemory(buildPlanUpdateFormData(memory, {
+      date,
+      tags: removePlanSkipTags(memory.tags)
+    }), memory.id);
+    setReschedulingPlan(false);
+    notify({ message: `计划已改到 ${formatMonthDay(date)}`, tone: "success" });
+  }
+
+  async function handleSkipPlan() {
+    if (!memory) return;
+    await saveMemory(buildPlanUpdateFormData(memory, {
+      tags: uniqueLabels([...memory.tags, PLAN_SKIPPED_TAG])
+    }), memory.id);
+    notify({ message: "已标记为没发生，首页不会再提醒", tone: "info" });
+  }
+
+  async function handleRestorePlan() {
+    if (!memory) return;
+    await saveMemory(buildPlanUpdateFormData(memory, {
+      tags: removePlanSkipTags(memory.tags)
+    }), memory.id);
+    notify({ message: "计划已恢复，到了日期会继续提醒", tone: "success" });
+  }
 
   return (
     <>
@@ -197,9 +229,63 @@ export default function MemoryDetail() {
               <strong>{planDueState.title}</strong>
               <span>{planDueState.desc}</span>
             </div>
-            <button type="button" onClick={() => setCompletingPlan(true)}>
-              补成回忆
+            <div className="plan-completion-actions">
+              <button type="button" onClick={() => setCompletingPlan(true)}>
+                完成了
+              </button>
+              <button className="secondary" type="button" onClick={() => setReschedulingPlan(true)}>
+                改天
+              </button>
+              <button className="ghost" type="button" onClick={() => void handleSkipPlan()}>
+                没发生
+              </button>
+            </div>
+          </GlassCard>
+        </section>
+      )}
+
+      {skippedPlan && (
+        <section className="section">
+          <GlassCard className="plan-cancelled-card">
+            <div>
+              <strong>这条计划已标记为没发生</strong>
+              <span>它不会再出现在首页待处理里，恢复后会按当前日期继续提醒。</span>
+            </div>
+            <button type="button" onClick={() => void handleRestorePlan()}>
+              恢复计划
             </button>
+          </GlassCard>
+        </section>
+      )}
+
+      {reschedulingPlan && (
+        <section className="plan-reschedule-modal" role="dialog" aria-label="改天">
+          <button className="plan-reschedule-backdrop" type="button" aria-label="关闭改天面板" onClick={() => setReschedulingPlan(false)} />
+          <GlassCard className="plan-reschedule-panel">
+            <div className="plan-reschedule-head">
+              <strong>把计划改到哪天？</strong>
+              <span>选择后会保留原来的内容、人物和地点。</span>
+            </div>
+            <div className="plan-reschedule-presets">
+              <button type="button" onClick={() => void handleReschedulePlan(toCalendarDateKey(addDays(new Date(), 1)))}>
+                明天
+              </button>
+              <button type="button" onClick={() => void handleReschedulePlan(getNextWeekendDate())}>
+                本周末
+              </button>
+            </div>
+            <label className="plan-reschedule-date">
+              自选日期
+              <DateInput name="planRescheduleDate" label="选择新计划日期" value={customPlanDate} onChange={setCustomPlanDate} />
+            </label>
+            <div className="plan-reschedule-actions">
+              <button className="ghost-btn" type="button" onClick={() => setReschedulingPlan(false)}>
+                取消
+              </button>
+              <button className="primary-btn" type="button" onClick={() => void handleReschedulePlan(customPlanDate)}>
+                确定改天
+              </button>
+            </div>
           </GlassCard>
         </section>
       )}
@@ -379,7 +465,7 @@ function formatLinkedPlanStatus(plan: Pick<AnniversaryPlan, "status" | "memoryId
 }
 
 function getPlanDueState(memory: MemoryEvent) {
-  if (!isMemoryPlan(memory)) return null;
+  if (!isActiveMemoryPlan(memory)) return null;
   const todayKey = toCalendarDateKey(new Date());
   if (!/^\d{4}-\d{2}-\d{2}$/.test(memory.date) || memory.date > todayKey) return null;
   const days = Math.abs(diffDateKeys(memory.date, todayKey));
@@ -537,4 +623,39 @@ function dateKeyToUtcTime(dateKey: string) {
   const [year, month, day] = dateKey.split("-").map(Number);
   if (!year || !month || !day) return 0;
   return Date.UTC(year, month - 1, day);
+}
+
+const PLAN_SKIPPED_TAG = "计划取消";
+
+function buildPlanUpdateFormData(memory: MemoryEvent, patch: { date?: string; tags?: string[] }) {
+  const formData = new FormData();
+  formData.set("memoryId", memory.id);
+  formData.set("date", patch.date || memory.date);
+  formData.set("title", memory.title || "");
+  formData.set("content", memory.content || "");
+  formData.set("mood", memory.mood || "");
+  formData.set("tags", (patch.tags || memory.tags || []).join("、"));
+  formData.set("memoryKind", "plan");
+  (memory.personIds || []).forEach((personId) => formData.append("personIds", personId));
+  const placeIds = getMemoryPlaceIds(memory);
+  placeIds.forEach((placeId) => formData.append("placeIds", placeId));
+  formData.set("placeId", placeIds[0] || "");
+  return formData;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getNextWeekendDate() {
+  const today = new Date();
+  const day = today.getDay();
+  const daysUntilSaturday = day === 6 ? 7 : (6 - day + 7) % 7 || 7;
+  return toCalendarDateKey(addDays(today, daysUntilSaturday));
+}
+
+function removePlanSkipTags(tags: string[]) {
+  return tags.filter((tag) => tag.trim() !== PLAN_SKIPPED_TAG && tag.trim() !== "没发生");
 }

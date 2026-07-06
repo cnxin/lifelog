@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F8F9FA",
-  "theme_color": "#6C5CE7",
+  "theme_color": "#1A665E",
   "lang": "zh-CN",
   "categories": ["lifestyle", "productivity", "personalization"],
   "icons": [
@@ -18,10 +18,16 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/ingot.png",
-      "sizes": "128x128",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [

@@ -10,6 +10,14 @@ export function isMemoryPlan(memory: Pick<MemoryEvent, "kind">): boolean {
   return memory.kind === "plan";
 }
 
+export function isSkippedMemoryPlan(memory: Pick<MemoryEvent, "kind" | "tags">): boolean {
+  return isMemoryPlan(memory) && (memory.tags || []).some((tag) => isPlanSkipTag(tag));
+}
+
+export function isActiveMemoryPlan(memory: Pick<MemoryEvent, "kind" | "tags">): boolean {
+  return isMemoryPlan(memory) && !isSkippedMemoryPlan(memory);
+}
+
 export function getMemoryKindLabel(memory: Pick<MemoryEvent, "kind">): string {
   return isMemoryPlan(memory) ? "计划" : "回忆";
 }
@@ -77,4 +85,8 @@ export function buildMemoryMetaLine(ctx: MemoryDisplayContext) {
   return [ctx.personNames.join("、"), compactPlaceNames(ctx.placeNames)]
     .filter(Boolean)
     .join(" · ");
+}
+
+function isPlanSkipTag(tag: string) {
+  return ["计划取消", "没发生"].includes(tag.trim());
 }

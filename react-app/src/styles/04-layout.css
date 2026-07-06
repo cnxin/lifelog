@@ -438,7 +438,7 @@
 
 .plan-completion-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 14px;
@@ -477,6 +477,13 @@
   line-height: 1.45;
 }
 
+.plan-completion-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
 .plan-completion-card button {
   min-height: 38px;
   border: 0;
@@ -488,6 +495,125 @@
   font-size: 12px;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.plan-completion-card button.secondary {
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.plan-completion-card button.ghost {
+  color: var(--text-sub);
+  background: rgba(99, 110, 114, 0.1);
+}
+
+.plan-cancelled-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.plan-cancelled-card div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.plan-cancelled-card strong {
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.plan-cancelled-card span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.plan-cancelled-card button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 12px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.plan-reschedule-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 62;
+  display: grid;
+  align-items: end;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.plan-reschedule-backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  background: rgba(28, 31, 46, 0.28);
+  pointer-events: auto;
+}
+
+.plan-reschedule-panel {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  pointer-events: auto;
+}
+
+.plan-reschedule-head {
+  display: grid;
+  gap: 4px;
+}
+
+.plan-reschedule-head strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.plan-reschedule-head span,
+.plan-reschedule-date {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.plan-reschedule-presets,
+.plan-reschedule-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.plan-reschedule-presets button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.plan-reschedule-date {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
 }
 
 .memory-plan-original-card {

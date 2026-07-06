@@ -193,6 +193,7 @@ export default function EntrySheet({
         savedPersonId,
         savedPlaceId,
         savedMemoryId,
+        memoryMode,
         notionQueued: canSyncNotionRecord(notionSettings, entryType),
         navigate
       }));
@@ -392,6 +393,7 @@ export default function EntrySheet({
                 savedPersonId: "",
                 savedPlaceId: savedId,
                 savedMemoryId: "",
+                memoryMode,
                 notionQueued: canSyncNotionRecord(notionSettings, "place"),
                 navigate
               }));
@@ -411,6 +413,7 @@ export default function EntrySheet({
                   savedPersonId: "",
                   savedPlaceId: savedId,
                   savedMemoryId: "",
+                  memoryMode,
                   notionQueued: canSyncNotionRecord(notionSettings, "place"),
                   navigate
                 }),
@@ -432,6 +435,7 @@ function buildSaveToast({
   savedPersonId,
   savedPlaceId,
   savedMemoryId,
+  memoryMode,
   notionQueued,
   navigate
 }: {
@@ -440,6 +444,7 @@ function buildSaveToast({
   savedPersonId: string;
   savedPlaceId: string;
   savedMemoryId: string;
+  memoryMode: "quick" | "full";
   notionQueued: boolean;
   navigate: ReturnType<typeof useNavigate>;
 }) {
@@ -463,14 +468,23 @@ function buildSaveToast({
     };
   }
   if (type === "memory" && savedMemoryId) {
+    const isQuickMemory = !isEditing && memoryMode === "quick";
     return {
+      title: "已留下这一条",
       message,
       tone: "success" as const,
-      actions: [
-        { label: "看回忆", onClick: () => navigate(`/memories/${savedMemoryId}`) },
-        { label: "补照片/地点", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
-      ],
-      durationMs: 6800
+      variant: isQuickMemory ? "followup" as const : "toast" as const,
+      actions: isQuickMemory
+        ? [
+          { label: "加照片", onClick: () => navigate(`/memories/${savedMemoryId}?edit=photos`) },
+          { label: "补人物/地点", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) },
+          { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) }
+        ]
+        : [
+          { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) },
+          { label: "继续补充", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
+        ],
+      durationMs: isQuickMemory ? 9000 : 6800
     };
   }
   return {
