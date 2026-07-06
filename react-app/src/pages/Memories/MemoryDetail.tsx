@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, CheckCircle2, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, ChevronDown, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
@@ -37,6 +37,7 @@ export default function MemoryDetail() {
   const [viewerIndex, setViewerIndex] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [moreInfoOpen, setMoreInfoOpen] = useState(false);
   const [addingRelatedMemory, setAddingRelatedMemory] = useState(false);
   const [completingPlan, setCompletingPlan] = useState(false);
   const [reschedulingPlan, setReschedulingPlan] = useState(false);
@@ -184,9 +185,6 @@ export default function MemoryDetail() {
               <span>正文</span>
               <small>{getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood || "日常"}</small>
             </div>
-            <button className="memory-reader-share" type="button" onClick={() => setShareOpen(true)}>
-              <QrCode /> 分享
-            </button>
           </div>
           <div className={`memory-reader-body ${memory.content.trim() ? "" : "empty"}`}>
             {memory.content.trim() || copy.emptyBody}
@@ -197,25 +195,65 @@ export default function MemoryDetail() {
               <span key={fact}>{fact}</span>
             ))}
           </div>
-          <div className="memory-reader-actions">
+          <div className="memory-reader-actions compact">
             <button type="button" onClick={() => setEditing(true)}>
               <PenLine /> {memory.content.trim() ? copy.detailAction : copy.emptyAction}
             </button>
-            {firstPersonId ? (
-              <button type="button" onClick={() => navigate(`/people/${firstPersonId}`)}>
-                <Users /> 看 TA
-              </button>
-            ) : firstPlaceId ? (
-              <button type="button" onClick={() => navigate(`/places/${firstPlaceId}`)}>
-                <MapPin /> 看地点
-              </button>
-            ) : (
-              <button type="button" onClick={() => setEditing(true)}>
-                <Sparkles /> 补关联
-              </button>
-            )}
-            <NotionRecordAction entityType="memory" entityId={memory.id} label="打开 Notion" className="" />
+            <button type="button" onClick={() => setShareOpen(true)}>
+              <QrCode /> 分享
+            </button>
           </div>
+          <button className={`memory-more-toggle ${moreInfoOpen ? "open" : ""}`} type="button" onClick={() => setMoreInfoOpen((open) => !open)}>
+            <span>人物、地点和同步</span>
+            <em>{moreInfoOpen ? "收起" : buildMemoryMoreSummary(personIds.length, placeIds.length)}</em>
+            <ChevronDown />
+          </button>
+          {moreInfoOpen && (
+            <div className="memory-more-panel">
+              <div className="memory-related-object-group">
+                <strong>人物</strong>
+                <div className="tap-chip-row">
+                  {personIds.map((personId) => (
+                    <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
+                      {getPersonName(personId)}
+                    </button>
+                  ))}
+                  {!personIds.length && <span className="memory-related-empty">未关联人物</span>}
+                </div>
+              </div>
+              <div className="memory-related-object-group">
+                <strong>地点</strong>
+                {places.length ? (
+                  <div className="memory-related-place-list compact">
+                    {places.map((place) => (
+                      <button className="memory-place-row detail-button" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
+                        <strong className="truncate-text">{getPlaceName(place.id)}</strong>
+                        <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="memory-related-empty">未关联地点</span>
+                )}
+              </div>
+              <div className="memory-more-actions">
+                {firstPersonId ? (
+                  <button type="button" onClick={() => navigate(`/people/${firstPersonId}`)}>
+                    <Users /> 看 TA
+                  </button>
+                ) : firstPlaceId ? (
+                  <button type="button" onClick={() => navigate(`/places/${firstPlaceId}`)}>
+                    <MapPin /> 看地点
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => setEditing(true)}>
+                    <Sparkles /> 补关联
+                  </button>
+                )}
+                <NotionRecordAction entityType="memory" entityId={memory.id} label="打开 Notion" className="" />
+              </div>
+            </div>
+          )}
         </GlassCard>
       </section>
 
@@ -344,42 +382,6 @@ export default function MemoryDetail() {
           </div>
         </section>
       )}
-
-      <section className="section">
-        <div className="section-header">
-          <h2>
-            <Users /> 相关对象
-          </h2>
-        </div>
-        <GlassCard className="memory-related-object-card">
-          <div className="memory-related-object-group">
-            <strong>人物</strong>
-            <div className="tap-chip-row">
-              {personIds.map((personId) => (
-                <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
-                  {getPersonName(personId)}
-                </button>
-              ))}
-              {!personIds.length && <span className="memory-related-empty">未关联人物</span>}
-            </div>
-          </div>
-          <div className="memory-related-object-group">
-            <strong>地点</strong>
-            {places.length ? (
-              <div className="memory-related-place-list">
-                {places.map((place) => (
-                  <button className="memory-place-row detail-button" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
-                    <strong className="truncate-text">{getPlaceName(place.id)}</strong>
-                    <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <span className="memory-related-empty">未关联地点，点击“{copy.editLabel}”可以补充。</span>
-            )}
-          </div>
-        </GlassCard>
-      </section>
 
       <CompletionTipsSection
         tips={completionTips}
@@ -510,12 +512,20 @@ function buildMemoryDetailCopy(memory: MemoryEvent) {
 function buildMemoryStoryFacts(memory: MemoryEvent, ctx: ReturnType<typeof buildMemoryDisplayContext>, photoCount: number, planCount: number) {
   return [
     getMemoryKindLabel(memory),
-    ctx.personNames.length ? `${ctx.personNames.length} 位人物` : "未关联人物",
-    ctx.placeNames.length ? `${ctx.placeNames.length} 个地点` : "未关联地点",
-    photoCount ? `${photoCount} 张照片` : "暂无照片",
-    memory.tags.length ? `${memory.tags.slice(0, 2).join("、")}${memory.tags.length > 2 ? "..." : ""}` : "未加标签",
+    ctx.personNames.length ? `${ctx.personNames.length} 位人物` : "",
+    ctx.placeNames.length ? `${ctx.placeNames.length} 个地点` : "",
+    photoCount ? `${photoCount} 张照片` : "",
+    memory.tags.length ? `${memory.tags.slice(0, 2).join("、")}${memory.tags.length > 2 ? "..." : ""}` : "",
     planCount ? `${planCount} 个安排来源` : ""
   ].filter(Boolean);
+}
+
+function buildMemoryMoreSummary(personCount: number, placeCount: number) {
+  const parts = [
+    personCount ? `${personCount} 人` : "",
+    placeCount ? `${placeCount} 地点` : ""
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "可补充";
 }
 
 function formatPlaceAddressLine(place: {

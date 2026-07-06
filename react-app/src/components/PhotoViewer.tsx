@@ -15,7 +15,8 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
   const [imageUrl, setImageUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [dragOffset, setDragOffset] = useState(0);
-  const dragStartYRef = useRef<number | null>(null);
+  const [dragXOffset, setDragXOffset] = useState(0);
+  const dragStartRef = useRef<{ x: number; y: number; mode: "pending" | "horizontal" | "vertical" } | null>(null);
   const currentPhoto = photos[currentIndex];
 
   // 加载当前照片的原图
@@ -81,30 +82,52 @@ export function PhotoViewer({ photos, initialIndex, onClose }: PhotoViewerProps)
   };
 
   const handlePointerDown = (event: React.PointerEvent) => {
-    dragStartYRef.current = event.clientY;
+    dragStartRef.current = { x: event.clientX, y: event.clientY, mode: "pending" };
   };
 
   const handlePointerMove = (event: React.PointerEvent) => {
-    if (dragStartYRef.current === null) return;
-    const nextOffset = event.clientY - dragStartYRef.current;
-    if (Math.abs(nextOffset) < 4) return;
-    setDragOffset(nextOffset);
+    const start = dragStartRef.current;
+    if (!start) return;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (start.mode === "pending") {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 8) return;
+      start.mode = Math.abs(deltaX) > Math.abs(deltaY) * 1.2 ? "horizontal" : "vertical";
+    }
+    if (start.mode === "horizontal") {
+      setDragXOffset(deltaX);
+      return;
+    }
+    setDragOffset(deltaY);
   };
 
   const handlePointerUp = () => {
-    if (Math.abs(dragOffset) > 88) {
+    const mode = dragStartRef.current?.mode;
+    if (mode === "horizontal" && Math.abs(dragXOffset) > 72 && photos.length > 1) {
+      if (dragXOffset < 0) handleNext();
+      else handlePrevious();
+      dragStartRef.current = null;
+      setDragXOffset(0);
+      setDragOffset(0);
+      return;
+    }
+    if (mode === "vertical" && Math.abs(dragOffset) > 88) {
       onClose();
       return;
     }
-    dragStartYRef.current = null;
+    dragStartRef.current = null;
     setDragOffset(0);
+    setDragXOffset(0);
   };
 
   const viewer = (
     <div className="photo-viewer-overlay" onClick={handleBackdropClick}>
       <div
         className="photo-viewer-container"
-        style={{ transform: `translateY(${dragOffset}px)`, opacity: Math.max(0.35, 1 - Math.abs(dragOffset) / 260) }}
+        style={{
+          transform: `translate(${dragXOffset * 0.28}px, ${dragOffset}px)`,
+          opacity: Math.max(0.35, 1 - Math.max(Math.abs(dragOffset), Math.abs(dragXOffset) * 0.45) / 260)
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

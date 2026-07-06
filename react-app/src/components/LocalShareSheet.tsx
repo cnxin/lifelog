@@ -321,17 +321,12 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
             </button>
           </div>
           <button className={`local-share-advanced-toggle ${advancedOpen ? "open" : ""}`} type="button" onClick={() => setAdvancedOpen((open) => !open)}>
-            <span>{advancedOpen ? "收起更多设置" : "更多设置"}</span>
+            <span>{advancedOpen ? "收起分享设置" : "调整隐私或导出分享包"}</span>
             <ChevronDown size={16} />
           </button>
 
           {advancedOpen && (
             <div className="local-share-advanced-panel">
-              <div className="local-share-mode-grid" aria-label="分享方式说明">
-                <ShareModeCard title="立即分享" desc="适合聊天发送，默认保护敏感信息" />
-                <ShareModeCard title="二维码" desc="当面扫码，内容最精简" />
-                <ShareModeCard title="分享包" desc="适合完整迁移，可包含更多内容" />
-              </div>
               {target.type === "memory" ? (
                 <>
                   <ShareSwitch
@@ -406,27 +401,25 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           )}
         </div>
 
-        <div className="submit-row">
-          <button className="ghost-btn" type="button" onClick={onClose}>
-            取消
-          </button>
-          {advancedOpen && (
-            <>
-              <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isBusy}>
-                <Copy size={16} />
-                {isCopyingLink ? "生成中…" : "复制链接"}
-              </button>
-              <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isBusy}>
-                <QrCode size={16} />
-                二维码
-              </button>
-              <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isBusy}>
-                <Download size={16} />
-                {isExporting ? "生成中…" : "生成分享包"}
-              </button>
-            </>
-          )}
-        </div>
+        {advancedOpen && (
+          <div className="submit-row">
+            <button className="ghost-btn" type="button" onClick={onClose}>
+              取消
+            </button>
+            <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isBusy}>
+              <Copy size={16} />
+              {isCopyingLink ? "生成中…" : "复制链接"}
+            </button>
+            <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isBusy}>
+              <QrCode size={16} />
+              二维码
+            </button>
+            <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isBusy}>
+              <Download size={16} />
+              {isExporting ? "生成中…" : "生成分享包"}
+            </button>
+          </div>
+        )}
       </section>
       {qrPreviewOpen && qrImage && (
         <section className="qr-preview-modal" role="dialog" aria-modal="true" aria-label="分享二维码">
@@ -539,15 +532,6 @@ async function shareTextOrCopy(title: string, text: string, url: string): Promis
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
-}
-
-function ShareModeCard({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div>
-      <strong>{title}</strong>
-      <span>{desc}</span>
-    </div>
-  );
 }
 
 function ShareSwitch({

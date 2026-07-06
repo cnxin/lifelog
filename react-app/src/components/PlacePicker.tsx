@@ -61,6 +61,7 @@ export default function PlacePicker({
       .slice(0, 6),
     [places, recommendedIds, selected]
   );
+  const showRecommendations = isOpen && !query.trim() && recommendedPlaces.length > 0;
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -104,9 +105,9 @@ export default function PlacePicker({
         <input key={id} type="hidden" name={name} value={id} />
       ))}
 
-      <div className={`picker-surface place-picker-surface ${selectedPlaces.length || recommendedPlaces.length ? "has-context" : "empty-context"}`}>
+      <div className={`picker-surface place-picker-surface ${selectedPlaces.length ? "has-context" : "empty-context"}`}>
         <div className="picker-context-head">
-          <span>{selectedPlaces.length ? `已关联 ${selectedPlaces.length} 处` : recommendedPlaces.length ? "最近用过" : "可先不关联地点"}</span>
+          <span>{selectedPlaces.length ? `已关联 ${selectedPlaces.length} 处` : "可先不关联地点"}</span>
           {!isOpen && (
             <button className="picker-inline-add" type="button" onClick={openSearch}>
               <Plus size={14} />
@@ -143,8 +144,9 @@ export default function PlacePicker({
           </div>
         ) : (
           <>
-            {!query.trim() && recommendedPlaces.length > 0 && (
+            {showRecommendations && (
               <div className="picker-recommendations">
+                <span className="picker-recommendation-title">最近用过</span>
                 <div className="picker-recommendation-row">
                   {recommendedPlaces.map((place) => (
                     <button type="button" key={place.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>
@@ -155,7 +157,7 @@ export default function PlacePicker({
               </div>
             )}
 
-            {!isOpen && !selectedPlaces.length && !recommendedPlaces.length && (
+            {!isOpen && !selectedPlaces.length && (
               <button className="picker-add-button" type="button" onClick={openSearch}>
                 <Plus size={15} />
                 {selected.length ? "继续添加地点" : "添加地点"}

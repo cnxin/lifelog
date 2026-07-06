@@ -57,6 +57,8 @@ export default function Home() {
   );
   const monthlyMemoryCount = countMemoriesInCurrentMonth(actualMemories);
   const onThisDayMemories = buildOnThisDayMemories(actualMemories, getPersonName, getPlaceName).slice(0, 3);
+  const mainOnThisDay = onThisDayMemories[0];
+  const otherOnThisDayMemories = onThisDayMemories.slice(1);
   const hasMonthlySchedule = monthlyScheduleItems.length > 0 || upcoming.length > 0;
   const hasHomeLibrary = favorites.length > 0 || featuredPlaces.length > 0 || recentEntries.length > 0;
   const homeLibrarySummary =
@@ -124,6 +126,14 @@ export default function Home() {
     };
     setActionPrefs(next);
     saveTodayActionPrefs(next);
+  }
+
+  function recordAnotherOnThisDay(item: FlashbackItem) {
+    saveQuickInboxPrefill(buildOnThisDayQuickPrefill(item.memory, getPersonName, getPlaceName));
+    openQuickMemory({
+      personIds: item.memory.personIds || [],
+      placeIds: getMemoryPlaceIdsForHome(item.memory)
+    });
   }
 
   return (
@@ -209,17 +219,39 @@ export default function Home() {
               时间线
             </button>
           </div>
-          <div className="on-this-day-list">
-            {onThisDayMemories.map((item) => (
-              <button className="on-this-day-card glass-card" type="button" key={item.memory.id} onClick={() => navigate(`/memories/${item.memory.id}`)}>
-                <span className="on-this-day-year">{item.badge}</span>
-                <span className="on-this-day-copy">
-                  <strong>{item.title}</strong>
-                  <small>{item.desc}</small>
-                </span>
-                <em>{formatMonthDay(item.memory.date)}</em>
+          <div className="on-this-day-spotlight glass-card">
+            <button className="on-this-day-main" type="button" onClick={() => navigate(`/memories/${mainOnThisDay.memory.id}`)}>
+              <span className="on-this-day-year">{mainOnThisDay.badge}</span>
+              <span className="on-this-day-copy">
+                <strong>{mainOnThisDay.title}</strong>
+                <small>{mainOnThisDay.desc}</small>
+              </span>
+              <em>{formatMonthDay(mainOnThisDay.memory.date)}</em>
+            </button>
+            <div className="on-this-day-actions">
+              <button type="button" onClick={() => navigate(`/memories/${mainOnThisDay.memory.id}`)}>
+                回看
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => recordAnotherOnThisDay(mainOnThisDay)}
+              >
+                今天再记一条
+              </button>
+            </div>
+            {otherOnThisDayMemories.length > 0 && (
+              <div className="on-this-day-list compact">
+                {otherOnThisDayMemories.map((item) => (
+                  <button className="on-this-day-card" type="button" key={item.memory.id} onClick={() => navigate(`/memories/${item.memory.id}`)}>
+                    <span className="on-this-day-year">{item.badge}</span>
+                    <span className="on-this-day-copy">
+                      <strong>{item.title}</strong>
+                      <small>{item.desc}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -540,6 +572,35 @@ function buildOnThisDayMemories(
 function buildMemoryContextLine(memory: MemoryEvent, getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {
   const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
   return [ctx.personNames.join("、"), ctx.placeNames.join("、")].filter(Boolean).join(" · ");
+}
+
+function getMemoryPlaceIdsForHome(memory: MemoryEvent) {
+  return Array.from(new Set([...(memory.placeIds || []), memory.placeId || ""].filter(Boolean)));
+}
+
+function buildOnThisDayQuickPrefill(
+  memory: MemoryEvent,
+  getPersonName: (id: string) => string,
+  getPlaceName: (id: string) => string
+) {
+  const context = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+  const people = context.personNames.slice(0, 2).join("、");
+  const place = context.placeNames[0] || "";
+  if (people && place) return `今天和${people}在${place}又有了一点新的记录`;
+  if (people) return `今天和${people}又有了一点新的记录`;
+  if (place) return `今天在${place}又有了一点新的记录`;
+  const title = memory.title?.trim();
+  if (title && title !== "新的回忆") return `今天又想起了「${title}」`;
+  return "今天又有了一点新的记录";
+}
+
+function saveQuickInboxPrefill(value: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem("lifelog:quick-inbox-prefill", value);
+  } catch {
+    // Ignore storage failures; quick record can still open normally.
+  }
 }
 
 interface TodayAction {

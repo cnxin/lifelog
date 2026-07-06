@@ -53,6 +53,7 @@ export default function PersonPicker({
       .slice(0, 6),
     [people, recommendedIds, selected]
   );
+  const showRecommendations = isOpen && !query.trim() && recommendedPeople.length > 0;
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -96,9 +97,9 @@ export default function PersonPicker({
         <input key={id} type="hidden" name={name} value={id} />
       ))}
 
-      <div className={`picker-surface ${selectedPeople.length || recommendedPeople.length ? "has-context" : "empty-context"}`}>
+      <div className={`picker-surface ${selectedPeople.length ? "has-context" : "empty-context"}`}>
         <div className="picker-context-head">
-          <span>{selectedPeople.length ? `已关联 ${selectedPeople.length} 人` : recommendedPeople.length ? "最近常用" : "可先不关联人物"}</span>
+          <span>{selectedPeople.length ? `已关联 ${selectedPeople.length} 人` : "可先不关联人物"}</span>
           {!isOpen && (
             <button className="picker-inline-add" type="button" onClick={openSearch}>
               <Plus size={14} />
@@ -134,8 +135,9 @@ export default function PersonPicker({
           </div>
         ) : (
           <>
-            {!query.trim() && recommendedPeople.length > 0 && (
+            {showRecommendations && (
               <div className="picker-recommendations">
+                <span className="picker-recommendation-title">最近常用</span>
                 <div className="picker-recommendation-row">
                   {recommendedPeople.map((person) => (
                     <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
@@ -146,7 +148,7 @@ export default function PersonPicker({
               </div>
             )}
 
-            {!isOpen && !selectedPeople.length && !recommendedPeople.length && (
+            {!isOpen && !selectedPeople.length && (
               <button className="picker-add-button picker-add-button-subtle" type="button" onClick={openSearch}>
                 <Plus size={15} />
                 {selected.length ? "继续添加人物" : "添加人物"}

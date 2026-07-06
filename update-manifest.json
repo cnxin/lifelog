@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.123",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.123",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.123/lifelog-v0.1.0-test.123.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.123.apk",
-    "apkName":  "lifelog-v0.1.0-test.123.apk",
-    "apkSize":  3734825,
-    "apkSha256":  "ae2c64a46c84ebcbd8889d5d6e417f8cde1957cc96098e1bfee340b8a697c30b",
-    "publishedAt":  "2026-07-06T13:43:57Z",
-    "body":  "- 地点导航优先尝试高德 App 路线规划，减少 Android 把导航链接交给 Chrome 打开的情况。\n- 商场导航和平台入口统一走原生 App 打开链路，美团、大众点评会优先尝试 App 内搜索或网页。\n- 外部链接增加多候选 App scheme，目标 App 不可用时再回退到原网页链接。\n- 新增或编辑回忆时，上传后的照片缩略图可以直接点开放大查看，并支持多图切换。"
+    "version":  "0.1.0-test.124",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.124",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.124/lifelog-v0.1.0-test.124.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.124.apk",
+    "apkName":  "lifelog-v0.1.0-test.124.apk",
+    "apkSize":  3735721,
+    "apkSha256":  "3031919759b05d82ace8b303f285946ad60a34c262ccbb9e9168e722c0e3c976",
+    "publishedAt":  "2026-07-06T14:32:46Z",
+    "body":  "- 首页“历年今日”改为主回忆卡片，支持回看和“今天再记一条”，再次记录会自动带入相关人物、地点和一句可编辑开头。\n- 快速记录增加常用场景和心情快捷选择，更多设置文案会按今天、补记或未来计划自动切换。\n- 回忆详情改为正文优先，只保留编辑和分享两个高频动作，人物、地点和 Notion 同步收进折叠区。\n- 本地分享面板默认只显示立即分享和二维码，隐私设置、复制链接和分享包收进高级设置。\n- 新增回忆时的人物、地点选择器默认更轻，只在点击添加后显示最近常用推荐。\n- 照片查看器支持左右滑动切换图片，并保留上下滑关闭。"
 }

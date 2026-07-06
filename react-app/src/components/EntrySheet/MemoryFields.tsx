@@ -17,6 +17,7 @@ import {
 } from "./draftValues";
 
 const MOOD_PRESETS = ["开心", "平静", "感动", "怀念", "疲惫", "焦虑"];
+const QUICK_MOOD_PRESETS = ["开心", "平静", "感动", "期待"];
 const QUICK_SCENE_PRESETS = [
   {
     id: "meal",
@@ -215,6 +216,36 @@ export function MemoryFields({
             placeholder={quickCopy.titlePlaceholder}
           />
         </label>
+        <div className="quick-one-tap-row" aria-label="快速选择记录场景">
+          {QUICK_SCENE_PRESETS.slice(0, 5).map((scene) => (
+            <button
+              type="button"
+              className={`quick-scene-chip ${activeSceneId === scene.id ? "active" : ""}`}
+              key={scene.id}
+              onClick={() => {
+                setActiveSceneId(scene.id);
+                setQuickContent((current) => current.trim() ? current : scene.title);
+                setMood(scene.mood);
+                setQuickTags((current) => current.trim() ? current : scene.tags);
+                setQuickDetailsContent((current) => current.trim() ? current : scene.content);
+              }}
+            >
+              {scene.label}
+            </button>
+          ))}
+        </div>
+        <div className="quick-mood-row" aria-label="快速选择心情">
+          {QUICK_MOOD_PRESETS.map((preset) => (
+            <button
+              type="button"
+              key={preset}
+              className={`quick-mood-chip ${mood === preset ? "active" : ""}`}
+              onClick={() => setMood(preset)}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
         <label className="inline-field">
           <span className="inline-field-label">{quickCopy.dateLabel}</span>
           <DateInput name="date" label={quickCopy.dateLabel} value={quickDate} onChange={setQuickDate} required />
@@ -268,7 +299,7 @@ export function MemoryFields({
             });
           }}
         >
-          {detailsOpen ? "收起更多" : "更多设置"}
+          {detailsOpen ? "收起更多" : quickCopy.detailToggle}
           {detailsOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
         {detailsOpen && (

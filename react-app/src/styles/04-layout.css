@@ -408,6 +408,10 @@
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
 
+.memory-reader-actions.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .memory-reader-actions button {
   min-width: 0;
   min-height: 40px;
@@ -434,6 +438,80 @@
   flex: 0 0 auto;
   width: 15px;
   height: 15px;
+}
+
+.memory-more-toggle {
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--text-sub) 7%, transparent);
+  font: inherit;
+  text-align: left;
+}
+
+.memory-more-toggle span {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.memory-more-toggle em {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.memory-more-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-sub);
+  transition: transform 0.16s ease;
+}
+
+.memory-more-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.memory-more-panel {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.memory-more-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.memory-more-actions button {
+  min-width: 0;
+  min-height: 38px;
+  border: 0;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.memory-more-actions svg {
+  width: 14px;
+  height: 14px;
 }
 
 .plan-completion-card {
@@ -2002,7 +2080,17 @@ button.person-pref-line {
   gap: 8px;
 }
 
-.memory-related-object-card .memory-place-row {
+.memory-related-place-list.compact {
+  gap: 6px;
+}
+
+.memory-related-place-list.compact .memory-place-row {
+  border-radius: 13px;
+  padding: 10px;
+}
+
+.memory-related-object-card .memory-place-row,
+.memory-more-panel .memory-place-row {
   border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--line));
   border-radius: 16px;
   background: color-mix(in srgb, var(--primary) 4%, transparent);

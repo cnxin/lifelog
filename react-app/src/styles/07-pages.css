@@ -332,6 +332,60 @@
   text-align: left;
 }
 
+.on-this-day-spotlight {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 58%),
+    var(--card-bg);
+}
+
+.on-this-day-main {
+  border: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.on-this-day-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.on-this-day-actions button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.on-this-day-actions button:last-child {
+  color: white;
+  background: var(--primary);
+}
+
+.on-this-day-list.compact {
+  gap: 6px;
+}
+
+.on-this-day-list.compact .on-this-day-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 8px;
+  background: color-mix(in srgb, var(--card-solid, #fff) 78%, transparent);
+}
+
 .on-this-day-year {
   min-width: 58px;
   border-radius: 999px;
@@ -5548,6 +5602,21 @@
   scrollbar-width: none;
 }
 
+.quick-one-tap-row,
+.quick-mood-row {
+  display: flex;
+  gap: 8px;
+  margin-top: -2px;
+  padding: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quick-one-tap-row::-webkit-scrollbar,
+.quick-mood-row::-webkit-scrollbar {
+  display: none;
+}
+
 .quick-scene-strip::-webkit-scrollbar {
   display: none;
 }
@@ -5570,6 +5639,26 @@
   border-color: transparent;
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.quick-mood-chip {
+  flex: 0 0 auto;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--line));
+  border-radius: 999px;
+  padding: 0 11px;
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--card-bg) 86%, var(--soft-purple) 14%);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quick-mood-chip.active {
+  border-color: transparent;
+  color: var(--primary);
+  background: var(--soft-purple);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 16%, transparent);
 }
 
 .quick-context-eyebrow {
