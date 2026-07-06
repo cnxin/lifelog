@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.120",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.120",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.120/lifelog-v0.1.0-test.120.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.120.apk",
-    "apkName":  "lifelog-v0.1.0-test.120.apk",
-    "apkSize":  3987477,
-    "apkSha256":  "2fc8847c58680eefb4a88aa67fe04b0e910413807a472b0a13b70762b3e925f3",
-    "publishedAt":  "2026-07-06T09:38:32Z",
-    "body":  "- 应用图标改为蓝底白色 life 字标，使用用户确认的 concept_q 方案作为新的视觉源。\n- Web favicon、PWA 图标和 Android 各分辨率启动图标统一更新，避免不同入口显示不同图标。\n- Android adaptive icon 的前景字形和背景色同步调整，适配系统圆形和自适应图标裁切。\n- 网页主题色和 PWA manifest 主题色更新为新图标的蓝色，保持安装后系统界面一致。"
+    "version":  "0.1.0-test.121",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.121",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.121/lifelog-v0.1.0-test.121.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.121.apk",
+    "apkName":  "lifelog-v0.1.0-test.121.apk",
+    "apkSize":  3732489,
+    "apkSha256":  "e4a0bf082bb7732718a606af501f604c85d496f09cd8ea242639b2945d804a72",
+    "publishedAt":  "2026-07-06T10:10:05Z",
+    "body":  "- 修复上一版桌面图标在部分 Android 启动器中显示过大的问题，避免 `l` 和 `e` 被圆形或大圆角图标裁切。\n- Web/PWA 图标和 Android 各分辨率启动图标统一增加安全边距，保留蓝底白色 life 字标但整体更居中。\n- Android adaptive icon 的前景图改为透明背景白色字标，让系统自适应裁切只处理背景和安全区内字形。\n- 新增图标生成脚本，后续修改图标时可统一生成 Web、PWA 和 Android 资源，减少各入口显示不一致的风险。"
 }

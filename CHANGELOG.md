@@ -4,6 +4,20 @@
 
 - 暂无未发布变更。
 
+## v0.1.0-test.121 (2026-07-06)
+
+### 使用体验
+
+- 修复上一版桌面图标在部分 Android 启动器中显示过大的问题，避免 `l` 和 `e` 被圆形或大圆角图标裁切。
+- Web/PWA 图标和 Android 各分辨率启动图标统一增加安全边距，保留蓝底白色 life 字标但整体更居中。
+- Android adaptive icon 的前景图改为透明背景白色字标，让系统自适应裁切只处理背景和安全区内字形。
+- 新增图标生成脚本，后续修改图标时可统一生成 Web、PWA 和 Android 资源，减少各入口显示不一致的风险。
+
+### 验证
+
+- 生成签名 Android release APK：`downloads/lifelog-v0.1.0-test.121.apk`。
+- Android `versionCode` 更新为 `121`，`versionName` 更新为 `0.1.0-test.121`。
+
 ## v0.1.0-test.120 (2026-07-06)
 
 ### 使用体验
