@@ -1,5 +1,5 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Heart, PenLine } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -31,6 +31,8 @@ export default function Calendar() {
   const [selectedDate, setSelectedDateState] = useState(initialSelectedDate);
   const [addingMemory, setAddingMemory] = useState(false);
   const [showLunar, setShowLunar] = useState(true);
+  const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+  const suppressNextDateClickRef = useRef(false);
 
   const monthDays = useMemo(() => buildCalendarMonthDays(cursor), [cursor]);
   const calendarRange = useMemo(
@@ -84,6 +86,37 @@ export default function Calendar() {
     const next = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
     setCursor(next);
     setSelectedDate(toCalendarDateKey(new Date(next.getFullYear(), next.getMonth(), 1)));
+  }
+
+  function handleCalendarPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    swipeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: event.pointerId
+    };
+  }
+
+  function handleCalendarPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || start.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    if (absX < 56 || absX < absY * 1.35) return;
+
+    suppressNextDateClickRef.current = true;
+    moveMonth(deltaX < 0 ? 1 : -1);
+    window.setTimeout(() => {
+      suppressNextDateClickRef.current = false;
+    }, 220);
+  }
+
+  function handleCalendarPointerCancel() {
+    swipeStartRef.current = null;
   }
 
   function backToToday() {
@@ -146,7 +179,13 @@ export default function Calendar() {
             ))}
           </div>
 
-          <div className={`calendar-grid ${showLunar ? "with-lunar" : ""}`}>
+          <div
+            className={`calendar-grid ${showLunar ? "with-lunar" : ""}`}
+            onPointerDown={handleCalendarPointerDown}
+            onPointerUp={handleCalendarPointerUp}
+            onPointerCancel={handleCalendarPointerCancel}
+            onPointerLeave={handleCalendarPointerCancel}
+          >
             {monthDays.map((day) => {
               const dateItems = itemsByDate[day.dateKey] || [];
               return (
@@ -155,7 +194,10 @@ export default function Calendar() {
                     selectedDate === day.dateKey ? "active" : ""
                   } ${day.dateKey === todayKey ? "today" : ""}`}
                   key={day.dateKey}
-                  onClick={() => setSelectedDate(day.dateKey)}
+                  onClick={() => {
+                    if (suppressNextDateClickRef.current) return;
+                    setSelectedDate(day.dateKey);
+                  }}
                 >
                   <span>{day.date.getDate()}</span>
                   {showLunar && <small>{getLunarDateInfo(day.dateKey)?.cellText}</small>}

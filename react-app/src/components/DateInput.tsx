@@ -30,8 +30,13 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
   const yearWheelRef = useRef<HTMLDivElement | null>(null);
   const monthWheelRef = useRef<HTMLDivElement | null>(null);
   const scrollTimersRef = useRef<{ year?: number; month?: number }>({});
+  const latestPendingRef = useRef({ year: pendingYear, month: pendingMonth });
   const calendarDays = useMemo(() => buildCalendarDays(viewYear, viewMonth), [viewMonth, viewYear]);
   const hasPendingYearMonth = pendingYear !== viewYear || pendingMonth !== viewMonth;
+
+  useEffect(() => {
+    latestPendingRef.current = { year: pendingYear, month: pendingMonth };
+  }, [pendingMonth, pendingYear]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,11 +49,18 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
     scrollTimersRef.current[type] = window.setTimeout(() => {
       const index = Math.round(element.scrollTop / wheelItemHeight);
       if (type === "year") {
-        setPendingYear(1900 + Math.min(Math.max(index, 0), yearOptions.length - 1));
+        const clampedIndex = clamp(index, 0, yearOptions.length - 1);
+        const nextYear = 1900 + clampedIndex;
+        setPendingYear(nextYear);
+        applyPendingYearMonth(nextYear, latestPendingRef.current.month);
+        scrollWheelToValue(element, clampedIndex);
       } else {
-        setPendingMonth(Math.min(Math.max(index + 1, 1), 12));
+        const clampedIndex = clamp(index, 0, monthOptions.length - 1);
+        const nextMonth = clampedIndex + 1;
+        setPendingMonth(nextMonth);
+        applyPendingYearMonth(latestPendingRef.current.year, nextMonth);
+        scrollWheelToValue(element, clampedIndex);
       }
-      scrollWheelToValue(element, index);
     }, 90);
   }
 
@@ -87,8 +99,8 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
     setDraftValue(formatDateValue(normalizedYear, normalizedMonth, Math.min(draftDay, maxDay)));
   }
 
-  function applyPendingYearMonth() {
-    setDateParts(pendingYear, pendingMonth);
+  function applyPendingYearMonth(year = pendingYear, month = pendingMonth) {
+    setDateParts(year, month);
   }
 
   function selectToday() {
@@ -110,7 +122,7 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
           <div className="date-calendar-title">
             <strong>{viewYear}年 {String(viewMonth).padStart(2, "0")}月</strong>
             {hasPendingYearMonth && (
-              <span>待应用 {pendingYear}年 {String(pendingMonth).padStart(2, "0")}月</span>
+              <span>松手后自动切换到 {pendingYear}年 {String(pendingMonth).padStart(2, "0")}月</span>
             )}
           </div>
           <button type="button" aria-label="下个月" onClick={() => moveMonth(1)}>
@@ -130,7 +142,10 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
                 className={year === pendingYear ? "active" : ""}
                 type="button"
                 key={year}
-                onClick={() => setPendingYear(year)}
+                onClick={() => {
+                  setPendingYear(year);
+                  applyPendingYearMonth(year, pendingMonth);
+                }}
               >
                 {year}年
               </button>
@@ -149,7 +164,10 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
                 className={month === pendingMonth ? "active" : ""}
                 type="button"
                 key={month}
-                onClick={() => setPendingMonth(month)}
+                onClick={() => {
+                  setPendingMonth(month);
+                  applyPendingYearMonth(pendingYear, month);
+                }}
               >
                 {String(month).padStart(2, "0")}月
               </button>
@@ -160,7 +178,7 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
         </div>
         <div className="date-wheel-actions">
           <button className="date-today-button" type="button" onClick={selectToday}>回到今天</button>
-          <button className="date-apply-button" type="button" disabled={!hasPendingYearMonth} onClick={applyPendingYearMonth}>应用年月</button>
+          <span className="date-auto-apply-note">年月会自动应用</span>
         </div>
         <button
           className={`date-lunar-toggle ${showLunar ? "active" : ""}`}
@@ -268,4 +286,8 @@ function formatLunarDay(date: string) {
 
 function formatDateValue(year: number, month: number, day: number) {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }

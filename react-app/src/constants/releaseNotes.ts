@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.122",
+    date: "2026-07-06",
+    title: "日历滑动和照片上传修复",
+    highlights: [
+      "日期选择器的年月滚轮改为松手后自动应用，不再需要额外点击应用年月。",
+      "日历月视图支持在日期网格上左右滑动切换上个月或下个月，并减少滑动后误选日期。",
+      "回忆照片上传增强 Android 图片兼容，压缩失败时会自动尝试 Canvas 回退处理。",
+      "照片上传失败会显示更明确的原因，HEIC/HEIF 会提示先转为 JPG，同一张图片失败后也可以重新选择重试。"
+    ]
+  },
+  {
     version: "0.1.0-test.121",
     date: "2026-07-06",
     title: "桌面图标安全区修复",

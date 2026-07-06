@@ -5211,6 +5211,7 @@
 
 .date-today-button,
 .date-apply-button,
+.date-auto-apply-note,
 .date-lunar-toggle {
   border: 0;
   border-radius: 16px;
@@ -5219,6 +5220,15 @@
   background: var(--soft-purple);
   font-size: 14px;
   font-weight: 800;
+}
+
+.date-auto-apply-note {
+  display: grid;
+  place-items: center;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--text-sub) 8%, transparent);
+  font-size: 12px;
+  text-align: center;
 }
 
 .date-apply-button:disabled {

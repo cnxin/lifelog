@@ -26,7 +26,11 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
       preserveExif: true,
     };
 
-    const compressedOriginal = await imageCompression(file, originalOptions);
+    const compressedOriginal = await compressWithFallback(file, originalOptions, {
+      maxWidthOrHeight: 1920,
+      quality: 0.82,
+      fallbackType: getOutputMimeType(file)
+    });
 
     // 生成缩略图：200x200px，质量 0.7，目标 50KB
     const thumbnailOptions = {
@@ -36,7 +40,11 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
       initialQuality: 0.7,
     };
 
-    const thumbnail = await imageCompression(file, thumbnailOptions);
+    const thumbnail = await compressWithFallback(file, thumbnailOptions, {
+      maxWidthOrHeight: 240,
+      quality: 0.72,
+      fallbackType: "image/jpeg"
+    });
 
     // 获取图片尺寸
     const dimensions = await getImageDimensions(compressedOriginal);
@@ -53,8 +61,71 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
     };
   } catch (error) {
     console.error('图片压缩失败:', error);
-    throw new Error('图片压缩失败，请重试');
+    throw new Error(getImageProcessingErrorMessage(error));
   }
+}
+
+async function compressWithFallback(
+  file: File,
+  options: Parameters<typeof imageCompression>[1],
+  fallback: { maxWidthOrHeight: number; quality: number; fallbackType: string }
+) {
+  try {
+    return await imageCompression(file, options);
+  } catch (error) {
+    console.warn("browser-image-compression 失败，尝试 Canvas 回退:", error);
+    return compressImageWithCanvas(file, fallback);
+  }
+}
+
+async function compressImageWithCanvas(
+  file: File,
+  options: { maxWidthOrHeight: number; quality: number; fallbackType: string }
+): Promise<Blob> {
+  const source = await loadImageFromFile(file);
+  try {
+    const ratio = Math.min(1, options.maxWidthOrHeight / Math.max(source.width, source.height));
+    const width = Math.max(1, Math.round(source.width * ratio));
+    const height = Math.max(1, Math.round(source.height * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("当前设备不支持图片处理");
+    context.drawImage(source.image, 0, 0, width, height);
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("图片导出失败"));
+          return;
+        }
+        resolve(blob);
+      }, options.fallbackType, options.quality);
+    });
+  } finally {
+    source.dispose();
+  }
+}
+
+function loadImageFromFile(file: File): Promise<{ image: HTMLImageElement; width: number; height: number; dispose: () => void }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      resolve({
+        image,
+        width: image.naturalWidth || image.width,
+        height: image.naturalHeight || image.height,
+        dispose: () => URL.revokeObjectURL(url)
+      });
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("无法读取图片，请确认图片格式可被当前设备打开"));
+    };
+    image.src = url;
+  });
 }
 
 /**
@@ -101,9 +172,18 @@ async function extractExifData(file: File): Promise<{ capturedAt?: string }> {
  * 验证文件是否为有效的图片
  */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
+  const fileName = file.name.toLowerCase();
+  if (/\.(heic|heif)$/.test(fileName) || ["image/heic", "image/heif"].includes(file.type)) {
+    return {
+      valid: false,
+      error: "暂不支持 HEIC/HEIF，请在相册中另存为 JPG 后再上传",
+    };
+  }
+
   // 检查文件类型
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (!validTypes.includes(file.type)) {
+  const validExtensions = /\.(jpe?g|png|gif|webp)$/;
+  if (!validTypes.includes(file.type) && !validExtensions.test(fileName)) {
     return {
       valid: false,
       error: '不支持的图片格式，请上传 JPG、PNG、GIF 或 WebP 格式',
@@ -120,6 +200,19 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
   }
 
   return { valid: true };
+}
+
+function getOutputMimeType(file: File) {
+  if (file.type === "image/png" || file.type === "image/webp") return file.type;
+  return "image/jpeg";
+}
+
+function getImageProcessingErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  if (/heic|heif/i.test(message)) return "暂不支持 HEIC/HEIF，请先转为 JPG";
+  if (/load|decode|读取|格式/i.test(message)) return "无法读取这张图片，请换一张或先在相册中另存为 JPG";
+  if (/canvas|support|支持/i.test(message)) return "当前设备不支持处理这张图片，请换一张较小的 JPG";
+  return "图片处理失败，请换一张或先截图/压缩后再上传";
 }
 
 /**

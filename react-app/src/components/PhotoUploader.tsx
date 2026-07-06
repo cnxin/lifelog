@@ -85,7 +85,7 @@ export function PhotoUploader({
         newPhotos.push(photo);
       } catch (error) {
         console.error(`处理 ${file.name} 失败:`, error);
-        nextErrors.push(`${file.name}: 处理失败，请重试`);
+        nextErrors.push(`${file.name}: ${getUploadErrorMessage(error)}`);
       }
     }
 
@@ -174,16 +174,19 @@ export function PhotoUploader({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept="image/*,.jpg,.jpeg,.png,.gif,.webp"
             multiple
-            onChange={(e) => handleFileSelect(e.target.files)}
+            onChange={(event) => {
+              void handleFileSelect(event.target.files);
+              event.currentTarget.value = "";
+            }}
             style={{ display: "none" }}
             disabled={disabled}
           />
           <Upload size={32} />
           <p>点击或拖拽上传照片</p>
           <p className="upload-hint">
-            支持 JPG、PNG、GIF、WebP 格式，最多 {maxPhotos} 张
+            支持 JPG、PNG、GIF、WebP，最多 {maxPhotos} 张
           </p>
           <p className="upload-hint">
             已上传 {photos.length}/{maxPhotos} 张
@@ -210,6 +213,11 @@ export function PhotoUploader({
       )}
     </div>
   );
+}
+
+function getUploadErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  return "处理失败，请重试";
 }
 
 interface PhotoPreviewProps {
