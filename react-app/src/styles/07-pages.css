@@ -6703,6 +6703,37 @@
   flex: 0 0 auto;
 }
 
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 14px;
+  padding: 3px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+}
+
+.view-mode-toggle button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--text-sub);
+  background: transparent;
+}
+
+.view-mode-toggle button.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.view-mode-toggle svg {
+  width: 15px;
+  height: 15px;
+}
+
 .filter-clear-button,
 .filter-toggle-button {
   min-height: 36px;
@@ -7467,6 +7498,22 @@
   color: var(--text-sub);
 }
 
+.photo-upload-progress-bar {
+  width: min(180px, 72%);
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--line));
+}
+
+.photo-upload-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 0.18s ease;
+}
+
 .photo-upload-errors {
   display: grid;
   gap: 6px;
@@ -7488,6 +7535,22 @@
   font-size: 12px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+.photo-upload-errors button {
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
+  border-radius: 999px;
+  margin-top: 2px;
+  padding: 7px 10px;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, white);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.photo-upload-errors button:disabled {
+  opacity: 0.55;
 }
 
 .photo-preview {

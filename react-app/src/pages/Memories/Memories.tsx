@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, ChevronDown, Heart, Plus, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { AlignJustify, CalendarDays, CheckCircle2, ChevronDown, Heart, Plus, RotateCcw, SlidersHorizontal, StretchVertical } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import CardActions from "../../components/CardActions";
@@ -12,6 +12,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
+import { useUserPreferences } from "../../hooks/useUserPreferences";
 import type { MemoryEvent } from "../../types";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, isActiveMemoryPlan, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
@@ -24,6 +25,7 @@ export default function Memories() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
+  const { prefs, updatePreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   const importedMemoryIds = useMemo(() => parseImportedIds(searchParams.get("imported")), [searchParams]);
   const importedMemoryIdSet = useMemo(() => new Set(importedMemoryIds), [importedMemoryIds]);
@@ -45,6 +47,7 @@ export default function Memories() {
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
   const [timeMapOpen, setTimeMapOpen] = useState(false);
+  const denseList = prefs.listViewMode === "compact";
 
   const duePlans = useMemo(
     () => state.memories.filter((memory) => isDuePlan(memory, todayKey)).sort((a, b) => b.date.localeCompare(a.date)),
@@ -191,6 +194,26 @@ export default function Memories() {
             </span>
           </div>
           <div className="list-filter-actions">
+            <div className="view-mode-toggle" role="group" aria-label="记录列表密度">
+              <button
+                className={denseList ? "active" : ""}
+                type="button"
+                title="紧凑列表"
+                aria-label="紧凑列表"
+                onClick={() => updatePreference("listViewMode", "compact")}
+              >
+                <AlignJustify />
+              </button>
+              <button
+                className={!denseList ? "active" : ""}
+                type="button"
+                title="详细列表"
+                aria-label="详细列表"
+                onClick={() => updatePreference("listViewMode", "detailed")}
+              >
+                <StretchVertical />
+              </button>
+            </div>
             {hasActiveFilters && (
               <button className="filter-clear-button" type="button" onClick={clearFilters}>
                 <RotateCcw /> 清除
@@ -309,6 +332,7 @@ export default function Memories() {
                         onOpen={() => navigate(`/memories/${memory.id}`)}
                         showPhotoCount
                         collapseExtras
+                        dense={denseList}
                         syncMeta={getNotionRecordSyncMeta({
                           enabled: Boolean(notionSettings.enabled && notionSettings.memoriesDatabaseId),
                           entityType: "memory",

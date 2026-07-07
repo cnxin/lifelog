@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.124",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.124",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.124/lifelog-v0.1.0-test.124.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.124.apk",
-    "apkName":  "lifelog-v0.1.0-test.124.apk",
-    "apkSize":  3735721,
-    "apkSha256":  "3031919759b05d82ace8b303f285946ad60a34c262ccbb9e9168e722c0e3c976",
-    "publishedAt":  "2026-07-06T14:32:46Z",
-    "body":  "- 首页“历年今日”改为主回忆卡片，支持回看和“今天再记一条”，再次记录会自动带入相关人物、地点和一句可编辑开头。\n- 快速记录增加常用场景和心情快捷选择，更多设置文案会按今天、补记或未来计划自动切换。\n- 回忆详情改为正文优先，只保留编辑和分享两个高频动作，人物、地点和 Notion 同步收进折叠区。\n- 本地分享面板默认只显示立即分享和二维码，隐私设置、复制链接和分享包收进高级设置。\n- 新增回忆时的人物、地点选择器默认更轻，只在点击添加后显示最近常用推荐。\n- 照片查看器支持左右滑动切换图片，并保留上下滑关闭。"
+    "version":  "0.1.0-test.125",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.125",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.125/lifelog-v0.1.0-test.125.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.125.apk",
+    "apkName":  "lifelog-v0.1.0-test.125.apk",
+    "apkSize":  3739021,
+    "apkSha256":  "6b5a69cc2c91e3c8171940e7367baffa515c3b92bcdc3d0a76e6419a2428d2e5",
+    "publishedAt":  "2026-07-07T02:42:26Z",
+    "body":  "- 首页根据数据量和待处理事项智能调整展开状态，并记住今日队列、任务队列和最近看看等模块的展开偏好。\n- 快速记录保存后改为轻量提示，可直接补照片或查看详情，减少保存后的打断感。\n- 全局搜索支持最近搜索、推荐搜索和数据概览，按 `Ctrl/Cmd+K` 可快速打开，打开结果后会记录搜索词。\n- 首页快捷新增只保留高频记录动作，添加人物、添加地点、导入分享和扫码入口移到右上角 `+` 菜单。\n- 记录页新增紧凑/详细列表切换，并记住选择，数据较多时可以更快浏览。\n- 回忆和地点照片上传增加处理进度、明确格式提示和失败重试入口，HEIC/HEIF 会提示先另存为 JPG。"
 }

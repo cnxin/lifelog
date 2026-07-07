@@ -14,6 +14,11 @@ interface PhotoUploaderProps {
   disabled?: boolean;
 }
 
+interface FailedUpload {
+  file: File;
+  message: string;
+}
+
 export function PhotoUploader({
   photos,
   memoryId,
@@ -24,15 +29,28 @@ export function PhotoUploader({
   const notify = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+  const [uploadPercent, setUploadPercent] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [failedUploads, setFailedUploads] = useState<FailedUpload[]>([]);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     if (disabled) return;
+    await processFiles(Array.from(files));
+  };
+
+  async function retryFailedUploads() {
+    if (!failedUploads.length || disabled) return;
+    await processFiles(failedUploads.map((item) => item.file));
+  }
+
+  async function processFiles(selectedFiles: File[]) {
     setErrors([]);
+    setFailedUploads([]);
+    setUploadPercent(0);
 
     const remainingSlots = maxPhotos - photos.length;
     if (remainingSlots <= 0) {
@@ -42,9 +60,9 @@ export function PhotoUploader({
       return;
     }
 
-    const selectedFiles = Array.from(files);
     const filesToProcess = selectedFiles.slice(0, remainingSlots);
     const nextErrors: string[] = [];
+    const nextFailedUploads: FailedUpload[] = [];
     if (selectedFiles.length > remainingSlots) {
       nextErrors.push(`已达到上限，只处理前 ${remainingSlots} 张照片。`);
     }
@@ -55,11 +73,14 @@ export function PhotoUploader({
 
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
+      setUploadPercent(Math.round((i / filesToProcess.length) * 100));
 
       // 验证文件
       const validation = validateImageFile(file);
       if (!validation.valid) {
-        nextErrors.push(`${file.name}: ${validation.error}`);
+        const message = validation.error || "不支持的图片格式";
+        nextErrors.push(`${file.name}: ${message}`);
+        nextFailedUploads.push({ file, message });
         continue;
       }
 
@@ -87,13 +108,17 @@ export function PhotoUploader({
         newPhotos.push(photo);
       } catch (error) {
         console.error(`处理 ${file.name} 失败:`, error);
-        nextErrors.push(`${file.name}: ${getUploadErrorMessage(error)}`);
+        const message = getUploadErrorMessage(error);
+        nextErrors.push(`${file.name}: ${message}`);
+        nextFailedUploads.push({ file, message });
       }
     }
 
     setUploading(false);
     setUploadProgress("");
+    setUploadPercent(100);
     setErrors(nextErrors);
+    setFailedUploads(nextFailedUploads);
 
     if (newPhotos.length > 0) {
       onPhotosChange([...photos, ...newPhotos]);
@@ -104,7 +129,7 @@ export function PhotoUploader({
     } else if (nextErrors.length) {
       notify({ message: nextErrors[0], tone: "error" });
     }
-  };
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -189,7 +214,7 @@ export function PhotoUploader({
           <Upload size={32} />
           <p>点击或拖拽上传照片</p>
           <p className="upload-hint">
-            支持 JPG、PNG、GIF、WebP，最多 {maxPhotos} 张
+            支持 JPG、PNG、GIF、WebP；HEIC 请先在相册另存为 JPG
           </p>
           <p className="upload-hint">
             已上传 {photos.length}/{maxPhotos} 张
@@ -202,6 +227,9 @@ export function PhotoUploader({
         <div className="photo-upload-progress">
           <div className="spinner"></div>
           <p>{uploadProgress}</p>
+          <div className="photo-upload-progress-bar" aria-hidden="true">
+            <span style={{ width: `${uploadPercent}%` }} />
+          </div>
         </div>
       )}
 
@@ -212,6 +240,11 @@ export function PhotoUploader({
             <span key={error}>{error}</span>
           ))}
           {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
+          {failedUploads.length > 0 && (
+            <button type="button" onClick={() => void retryFailedUploads()} disabled={disabled || uploading}>
+              重试未处理照片
+            </button>
+          )}
         </div>
       )}
 

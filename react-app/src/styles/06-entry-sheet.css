@@ -2555,6 +2555,16 @@ button:disabled,
   opacity: 0.55;
 }
 
+.place-photo-processing {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--primary) 8%, white);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .place-photo-errors {
   display: grid;
   gap: 5px;
@@ -2576,4 +2586,20 @@ button:disabled,
   font-size: 12px;
   line-height: 1.4;
   overflow-wrap: anywhere;
+}
+
+.place-photo-errors button {
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
+  border-radius: 999px;
+  margin-top: 2px;
+  padding: 7px 10px;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, white);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.place-photo-errors button:disabled {
+  opacity: 0.55;
 }

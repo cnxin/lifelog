@@ -11,6 +11,11 @@ interface PlacePhotoInputProps {
   disabled?: boolean;
 }
 
+interface FailedPlacePhoto {
+  file: File;
+  message: string;
+}
+
 export default function PlacePhotoInput({
   value,
   defaultValue = "",
@@ -21,7 +26,9 @@ export default function PlacePhotoInput({
   const notify = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingText, setProcessingText] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [failedPhotos, setFailedPhotos] = useState<FailedPlacePhoto[]>([]);
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState(defaultValue);
   const currentValue = isControlled ? value : internalValue;
@@ -34,7 +41,18 @@ export default function PlacePhotoInput({
 
   async function handleFiles(files: FileList | null) {
     if (!files || !files.length || disabled) return;
+    await processFiles(Array.from(files));
+  }
+
+  async function retryFailedPhotos() {
+    if (!failedPhotos.length || disabled) return;
+    await processFiles(failedPhotos.map((item) => item.file));
+  }
+
+  async function processFiles(selectedFiles: File[]) {
     setErrors([]);
+    setFailedPhotos([]);
+    setProcessingText("");
     const remaining = maxPhotos - photos.length;
     if (remaining <= 0) {
       const message = `最多只能添加 ${maxPhotos} 张地点照片`;
@@ -44,29 +62,37 @@ export default function PlacePhotoInput({
     }
 
     setIsProcessing(true);
+    setProcessingText("正在准备图片...");
     const nextPhotos = [...photos];
     const nextErrors: string[] = [];
-    const selectedFiles = Array.from(files);
+    const nextFailedPhotos: FailedPlacePhoto[] = [];
     const filesToProcess = selectedFiles.slice(0, remaining);
     if (selectedFiles.length > remaining) {
       nextErrors.push(`已达到上限，只处理前 ${remaining} 张照片。`);
     }
     try {
-      for (const file of filesToProcess) {
+      for (let index = 0; index < filesToProcess.length; index += 1) {
+        const file = filesToProcess[index];
+        setProcessingText(`正在处理 ${index + 1}/${filesToProcess.length} 张图片`);
         const validation = validateImageFile(file);
         if (!validation.valid) {
-          nextErrors.push(`${file.name}: ${validation.error}`);
+          const message = validation.error || "不支持的图片格式";
+          nextErrors.push(`${file.name}: ${message}`);
+          nextFailedPhotos.push({ file, message });
           continue;
         }
         try {
           const compressed = await compressImage(file);
           nextPhotos.push(await blobToDataURL(compressed.original));
-        } catch {
-          nextErrors.push(`${file.name}: 处理失败，请重试`);
+        } catch (error) {
+          const message = getPlacePhotoErrorMessage(error);
+          nextErrors.push(`${file.name}: ${message}`);
+          nextFailedPhotos.push({ file, message });
         }
       }
       commit(nextPhotos.join("\n"));
       setErrors(nextErrors);
+      setFailedPhotos(nextFailedPhotos);
       const addedCount = nextPhotos.length - photos.length;
       if (addedCount > 0) {
         notify({
@@ -78,6 +104,7 @@ export default function PlacePhotoInput({
       }
     } finally {
       setIsProcessing(false);
+      setProcessingText("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -131,6 +158,11 @@ export default function PlacePhotoInput({
         {isProcessing ? <ImageIcon size={16} /> : <Upload size={16} />}
         {isProcessing ? "正在处理图片" : "上传本地图片"}
       </button>
+      {isProcessing && processingText && (
+        <div className="place-photo-processing" role="status" aria-live="polite">
+          <span>{processingText}</span>
+        </div>
+      )}
       {errors.length > 0 && (
         <div className="place-photo-errors" role="status" aria-live="polite">
           <strong>{errors.length === 1 ? "有一项未处理" : `${errors.length} 项未处理`}</strong>
@@ -138,9 +170,14 @@ export default function PlacePhotoInput({
             <span key={error}>{error}</span>
           ))}
           {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
+          {failedPhotos.length > 0 && (
+            <button type="button" onClick={() => void retryFailedPhotos()} disabled={disabled || isProcessing}>
+              重试未处理图片
+            </button>
+          )}
         </div>
       )}
-      <p className="form-hint">本地图片会压缩后保存到地点资料中；最多 {maxPhotos} 张，详情页展示前 3 张。</p>
+      <p className="form-hint">支持 JPG、PNG、GIF、WebP；HEIC 请先在相册另存为 JPG。本地图片会压缩后保存到地点资料中，最多 {maxPhotos} 张。</p>
     </div>
   );
 }
@@ -150,4 +187,9 @@ function splitPhotoLines(value: string) {
     .split(/\n+/)
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function getPlacePhotoErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  return "处理失败，请重试";
 }

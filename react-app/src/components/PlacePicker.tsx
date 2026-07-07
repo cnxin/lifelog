@@ -31,11 +31,12 @@ export default function PlacePicker({
   recommendedIds = []
 }: PlacePickerProps) {
   const isControlled = value !== undefined;
+  const initialSelectedIds = (value || defaultSelected).filter(Boolean);
   const [internalSelected, setInternalSelected] = useState<string[]>(() =>
     defaultSelected.filter((id) => places.some((place) => place.id === id))
   );
   const [query, setQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => initialSelectedIds.length === 0);
   const [isCreating, setIsCreating] = useState(false);
   const selected = isControlled ? value : internalSelected;
 

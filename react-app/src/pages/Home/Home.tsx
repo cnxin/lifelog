@@ -5,6 +5,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { getBooleanPreference, useUserPreferences } from "../../hooks/useUserPreferences";
 import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
 import { findPlanForAnniversaryTarget, formatAnniversaryPlanTargetTitle } from "../../utils/anniversaryPlans";
@@ -18,15 +19,13 @@ import { initials } from "../../utils/text";
 export default function Home() {
   const navigate = useNavigate();
   const { state, reminderSettings, getPersonName, getPlaceName, saveAnniversaryPlan } = useLifeLog();
+  const { prefs, updatePreference } = useUserPreferences();
   const [entrySheetType, setEntrySheetType] = useState<EntryType | null>(null);
   const [initialMemoryPersonIds, setInitialMemoryPersonIds] = useState<string[]>([]);
   const [initialMemoryPlaceIds, setInitialMemoryPlaceIds] = useState<string[]>([]);
   const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
   const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
-  const [todayQueueOpen, setTodayQueueOpen] = useState(false);
-  const [taskQueueOpen, setTaskQueueOpen] = useState(false);
-  const [homeLibraryOpen, setHomeLibraryOpen] = useState(false);
   const monthlySchedule = buildCurrentMonthScheduleItems({
     anniversaryPlans: state.anniversaryPlans,
     memories: state.memories,
@@ -59,6 +58,8 @@ export default function Home() {
   const onThisDayMemories = buildOnThisDayMemories(actualMemories, getPersonName, getPlaceName).slice(0, 3);
   const mainOnThisDay = onThisDayMemories[0];
   const otherOnThisDayMemories = onThisDayMemories.slice(1);
+  const totalRecords = state.people.length + state.places.length + actualMemories.length;
+  const isNewUser = totalRecords < 10;
   const hasMonthlySchedule = monthlyScheduleItems.length > 0 || upcoming.length > 0;
   const hasHomeLibrary = favorites.length > 0 || featuredPlaces.length > 0 || recentEntries.length > 0;
   const homeLibrarySummary =
@@ -119,6 +120,18 @@ export default function Home() {
     onOpenCalendar: () => navigate("/calendar"),
     actionPrefs
   });
+  const defaultTodayQueueOpen = todayActions.length > 0;
+  const defaultTaskQueueOpen = isNewUser && tasks.length > 0;
+  const defaultHomeLibraryOpen = totalRecords > 30 && hasHomeLibrary;
+  const todayQueueOpen = getBooleanPreference(prefs, "homeTodayQueueExpanded", defaultTodayQueueOpen);
+  const taskQueueOpen = getBooleanPreference(prefs, "homeTaskQueueExpanded", defaultTaskQueueOpen);
+  const homeLibraryOpen = getBooleanPreference(prefs, "homeLibraryExpanded", defaultHomeLibraryOpen);
+  const setTodayQueueOpen = (updater: boolean | ((value: boolean) => boolean)) =>
+    updatePreference("homeTodayQueueExpanded", typeof updater === "function" ? updater(todayQueueOpen) : updater);
+  const setTaskQueueOpen = (updater: boolean | ((value: boolean) => boolean)) =>
+    updatePreference("homeTaskQueueExpanded", typeof updater === "function" ? updater(taskQueueOpen) : updater);
+  const setHomeLibraryOpen = (updater: boolean | ((value: boolean) => boolean)) =>
+    updatePreference("homeLibraryExpanded", typeof updater === "function" ? updater(homeLibraryOpen) : updater);
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
       ...actionPrefs,

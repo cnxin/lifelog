@@ -7,7 +7,7 @@ import BackToTopButton from "./BackToTopButton";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
 import GlobalSearchPanel from "./GlobalSearchPanel";
-import Header from "./Header";
+import Header, { type HeaderCreateAction } from "./Header";
 import NetworkBanner from "./NetworkBanner";
 import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, QrCode, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
@@ -75,6 +75,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       setSearchOpen(false);
       return true;
     }
+    const closeHeaderMenuEvent = new Event("lifelog:request-close-header-create-menu", { cancelable: true });
+    window.dispatchEvent(closeHeaderMenuEvent);
+    if (closeHeaderMenuEvent.defaultPrevented) return true;
     const closeSheetEvent = new Event("lifelog:request-close-entry-sheet", { cancelable: true });
     window.dispatchEvent(closeSheetEvent);
     return closeSheetEvent.defaultPrevented;
@@ -85,6 +88,48 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       delete document.documentElement.dataset.themeStyle;
     };
   }, [settings.themeStyle]);
+  useEffect(() => {
+    function handleGlobalShortcut(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isEditable = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      const isCommand = (event.metaKey || event.ctrlKey) && !event.altKey;
+      const key = event.key.toLowerCase();
+      if (isCommand && key === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+        return;
+      }
+
+      if (isCommand && !isEditable && key === "n") {
+        event.preventDefault();
+        openSheet("memory", event.shiftKey ? "full" : "quick");
+        return;
+      }
+
+      if (isCommand && !isEditable) {
+        const shortcutRoutes: Record<string, string> = {
+          "1": "/",
+          "2": "/people",
+          "3": "/memories",
+          "4": "/calendar"
+        };
+        const route = shortcutRoutes[key];
+        if (route) {
+          event.preventDefault();
+          navigate(route);
+          return;
+        }
+      }
+
+      if (!isEditable && event.key === "Escape" && searchOpen) {
+        event.preventDefault();
+        setSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleGlobalShortcut);
+    return () => document.removeEventListener("keydown", handleGlobalShortcut);
+  }, [navigate, searchOpen]);
   useEffect(() => {
     function handleDeepLink(event: Event) {
       const url = String((event as CustomEvent<{ url?: unknown }>).detail?.url || "");
@@ -212,11 +257,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
     onMemoryForDate: (date) => openSheet("memory", "quick", { date })
   });
+  const headerCreateActions = buildHeaderCreateActions({
+    pathname: location.pathname,
+    onPerson: () => openSheet("person"),
+    onPlace: () => openSheet("place"),
+    onImportLifeLogShare: () => void openLifeLogShareImport(),
+    onScanLifeLogShare: () => navigate("/share/import?scan=1")
+  });
 
   return (
     <div className={`app-container theme-${settings.themeStyle} ${settings.privacyMode ? "privacy-mode" : ""} ${settings.hidePhotoThumbnails ? "hide-photo-thumbnails" : ""}`}>
       <NetworkBanner />
-      <Header dateLabel={location.pathname === "/" ? todayLabel() : ""} title={meta.title} subtitle={meta.subtitle} onSearch={() => setSearchOpen(true)} />
+      <Header
+        dateLabel={location.pathname === "/" ? todayLabel() : ""}
+        title={meta.title}
+        subtitle={meta.subtitle}
+        onSearch={() => setSearchOpen(true)}
+        createActions={headerCreateActions}
+      />
       <main className="main-content">
         {isLoading ? (
           <div className="app-loading" role="status" aria-live="polite">
@@ -413,23 +471,41 @@ function buildFloatingActions({
       icon: <Camera />,
       onClick: onPhotoMemory
     },
+    placeShareAction(onPastePlaceShare)
+  ];
+}
+
+function buildHeaderCreateActions({
+  pathname,
+  onPerson,
+  onPlace,
+  onImportLifeLogShare,
+  onScanLifeLogShare
+}: {
+  pathname: string;
+  onPerson: () => void;
+  onPlace: () => void;
+  onImportLifeLogShare: () => void;
+  onScanLifeLogShare: () => void;
+}): HeaderCreateAction[] {
+  if (isUtilityPage(pathname)) return [];
+  return [
     {
       id: "new-person",
-      label: "记一个人",
-      desc: "生日、喜好、重要日子以后再补",
+      label: "添加人物",
+      desc: "生日、喜好和重要日子",
       icon: <UserPlus />,
       onClick: onPerson
     },
     {
       id: "new-place",
-      label: "记一个地方",
-      desc: "想再去、想推荐、想避雷都可以",
+      label: "添加地点",
+      desc: "餐厅、店铺、景点都可以",
       icon: <MapPinPlus />,
       onClick: onPlace
     },
     lifeLogShareAction(onImportLifeLogShare),
-    scanShareAction(onScanLifeLogShare),
-    placeShareAction(onPastePlaceShare)
+    scanShareAction(onScanLifeLogShare)
   ];
 }
 

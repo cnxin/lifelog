@@ -470,21 +470,20 @@ function buildSaveToast({
   if (type === "memory" && savedMemoryId) {
     const isQuickMemory = !isEditing && memoryMode === "quick";
     return {
-      title: "已留下这一条",
-      message,
+      title: isQuickMemory ? undefined : "已留下这一条",
+      message: isQuickMemory ? "已保存" : message,
       tone: "success" as const,
-      variant: isQuickMemory ? "followup" as const : "toast" as const,
+      variant: "toast" as const,
       actions: isQuickMemory
         ? [
-          { label: "加照片", onClick: () => navigate(`/memories/${savedMemoryId}?edit=photos`) },
-          { label: "补人物/地点", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) },
-          { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) }
+          { label: "补照片", onClick: () => navigate(`/memories/${savedMemoryId}?edit=photos`) },
+          { label: "查看详情", onClick: () => navigate(`/memories/${savedMemoryId}`) }
         ]
         : [
           { label: "查看", onClick: () => navigate(`/memories/${savedMemoryId}`) },
           { label: "继续补充", onClick: () => navigate(`/memories/${savedMemoryId}?edit=details`) }
         ],
-      durationMs: isQuickMemory ? 9000 : 6800
+      durationMs: isQuickMemory ? 3600 : 6800
     };
   }
   return {

@@ -363,6 +363,94 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   box-shadow: var(--press-shadow);
 }
 
+.header-icon-button.active {
+  color: white;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.header-create-menu {
+  position: relative;
+}
+
+.header-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  border: 0;
+  background: transparent;
+}
+
+.header-create-panel {
+  position: absolute;
+  z-index: 42;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(280px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  background: var(--card-solid, #fff);
+  box-shadow: 0 18px 46px rgba(31, 34, 54, 0.18);
+  animation: fab-menu-in 0.18s ease;
+}
+
+.header-create-panel button {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  color: var(--text-main);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.header-create-panel button:active {
+  transform: scale(0.98);
+  background: var(--soft-purple);
+}
+
+.header-create-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.header-create-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.header-create-panel strong,
+.header-create-panel small {
+  display: block;
+  min-width: 0;
+}
+
+.header-create-panel strong {
+  margin-bottom: 2px;
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.header-create-panel small {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .avatar {
   width: 48px;
   height: 48px;
@@ -476,20 +564,119 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
 
 .global-search-empty {
   display: grid;
-  gap: 8px;
-  padding: 28px 18px;
-  text-align: center;
+  gap: 14px;
+  padding: 14px;
+  text-align: left;
 }
 
-.global-search-empty strong {
+.global-search-empty-card {
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.global-search-empty-card > strong {
   color: var(--text-main);
   font-size: 16px;
 }
 
-.global-search-empty span {
+.global-search-empty-card > span {
   color: var(--text-sub);
   font-size: 13px;
   line-height: 1.55;
+}
+
+.global-search-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.global-search-stats span {
+  min-width: 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  background: var(--soft-purple);
+  text-align: center;
+}
+
+.global-search-stats strong {
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.global-search-stats small {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.global-search-section {
+  display: grid;
+  gap: 10px;
+}
+
+.global-search-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.global-search-section-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.global-search-section-head svg {
+  width: 15px;
+  height: 15px;
+  color: var(--primary);
+}
+
+.global-search-section-head button {
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--text-sub) 8%, transparent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.global-search-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.global-search-chips button {
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 11px;
+  color: var(--text-main);
+  background: var(--card-bg);
+  box-shadow: 0 8px 18px rgba(45, 52, 78, 0.06);
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-search-chips button:active {
+  transform: scale(0.97);
+  background: var(--soft-purple);
 }
 
 .global-search-count {

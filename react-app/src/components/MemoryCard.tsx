@@ -25,6 +25,7 @@ interface MemoryCardProps {
   icon?: ReactNode;
   syncMeta?: NotionRecordSyncMeta;
   collapseExtras?: boolean;
+  dense?: boolean;
 }
 
 export default function MemoryCard({
@@ -36,7 +37,8 @@ export default function MemoryCard({
   showPhotoCount = false,
   icon,
   syncMeta,
-  collapseExtras = false
+  collapseExtras = false,
+  dense = false
 }: MemoryCardProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
   const displayTitle = getMemoryDisplayTitle(memory, ctx);
@@ -45,10 +47,10 @@ export default function MemoryCard({
   const photoCount = (memory.photos || []).length;
   const kindLabel = getMemoryKindLabel(memory);
   const hasTags = Boolean(memory.mood?.trim() || (memory.tags || []).length);
-  const hasCollapsedExtras = collapseExtras && (showContentLine || hasTags || (showPhotoCount && photoCount > 0));
+  const hasCollapsedExtras = !dense && collapseExtras && (showContentLine || hasTags || (showPhotoCount && photoCount > 0));
 
   return (
-    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${extrasOpen ? "extras-open" : ""}`}>
+    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${extrasOpen ? "extras-open" : ""}`}>
       <button className="place-tap" onClick={onOpen} type="button">
         <div className="memory-badge">{icon || <Heart />}</div>
       </button>
@@ -69,7 +71,18 @@ export default function MemoryCard({
             {!collapseExtras && showContentLine && <p className="memory-desc">{memory.content}</p>}
           </>
         )}
-        {!collapseExtras && (
+        {dense && hasCollapsedExtras && (
+          <div className="memory-tags-line dense-tags-line">
+            <MemoryTags mood={memory.mood} tags={(memory.tags || []).slice(0, 2)} />
+            {showPhotoCount && photoCount > 0 && (
+              <span className="memory-photo-count">
+                <ImageIcon size={12} />
+                {photoCount}
+              </span>
+            )}
+          </div>
+        )}
+        {!collapseExtras && !dense && (
           <div className="memory-tags-line">
             <MemoryTags mood={memory.mood} tags={memory.tags || []} />
             {showPhotoCount && photoCount > 0 && (

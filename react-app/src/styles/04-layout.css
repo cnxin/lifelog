@@ -117,6 +117,54 @@
   height: 24px;
 }
 
+.dense-memory-card {
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.dense-memory-card .memory-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.dense-memory-card .memory-badge svg {
+  width: 19px;
+  height: 19px;
+}
+
+.dense-memory-card .memory-title {
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.dense-memory-card .memory-desc {
+  display: -webkit-box;
+  max-height: 34px;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.dense-memory-card .place-title-actions {
+  gap: 4px;
+}
+
+.dense-memory-card .dense-tags-line {
+  margin-top: 4px;
+}
+
+.dense-memory-card .dense-tags-line .memory-tags {
+  gap: 4px;
+}
+
+.dense-memory-card .memory-kind-pill,
+.dense-memory-card .place-rating {
+  font-size: 10px;
+}
+
 .place-info,
 .person-info,
 .memory-info {

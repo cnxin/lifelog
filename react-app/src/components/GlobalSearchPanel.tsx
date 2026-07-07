@@ -1,7 +1,8 @@
-import { Heart, MapPin, Search, User, X } from "lucide-react";
+import { Clock3, Heart, MapPin, Search, Sparkles, User, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLifeLog } from "../context/LifeLogContext";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { formatMonthDay } from "../utils/date";
 import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../utils/memoryPlaces";
@@ -28,11 +29,14 @@ interface SearchResult {
   scoreBase: number;
 }
 
+const RECENT_SEARCH_LIMIT = 8;
+
 export default function GlobalSearchPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = usePersistentState<string[]>("lifelog:recent-searches", [], isStringArray);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -150,6 +154,15 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   }, [getPersonName, getPlaceName, state.memories, state.people, state.places]);
 
   const queryTokens = useMemo(() => normalizeSearchText(query).split(" ").filter(Boolean), [query]);
+  const overview = useMemo(
+    () => ({
+      memories: state.memories.length,
+      people: state.people.length,
+      places: state.places.length
+    }),
+    [state.memories.length, state.people.length, state.places.length]
+  );
+  const suggestions = useMemo(() => buildSearchSuggestions(state, getPersonName, getPlaceName), [getPersonName, getPlaceName, state.memories, state.people, state.places]);
   const results = useMemo(() => {
     if (!queryTokens.length) return [];
     return index
@@ -196,8 +209,21 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   }, [open, onClose, results, selectedIndex]);
 
   function openPath(path: string) {
+    saveRecentSearch(query);
     navigate(path);
     onClose();
+  }
+
+  function saveRecentSearch(value: string) {
+    const text = value.trim();
+    if (!text) return;
+    const normalized = normalizeSearchText(text);
+    setRecentSearches((current) => [text, ...current.filter((item) => normalizeSearchText(item) !== normalized)].slice(0, RECENT_SEARCH_LIMIT));
+  }
+
+  function applyQuery(value: string) {
+    setQuery(value);
+    window.setTimeout(() => inputRef.current?.focus(), 0);
   }
 
   if (!open) return null;
@@ -228,8 +254,61 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
 
         {!queryTokens.length ? (
           <div className="global-search-empty">
-            <strong>输入关键词开始搜索</strong>
-            <span>可以搜索回忆、计划、人物、地点、标签、地址、喜好或平台链接。</span>
+            <div className="global-search-empty-card glass-card">
+              <strong>想找什么都可以直接搜</strong>
+              <span>支持回忆、计划、人物、地点、标签、地址、喜好和平台链接。</span>
+              <div className="global-search-stats" aria-label="数据概览">
+                <span>
+                  <strong>{overview.memories}</strong>
+                  <small>记录</small>
+                </span>
+                <span>
+                  <strong>{overview.people}</strong>
+                  <small>人物</small>
+                </span>
+                <span>
+                  <strong>{overview.places}</strong>
+                  <small>地点</small>
+                </span>
+              </div>
+            </div>
+            {recentSearches.length > 0 && (
+              <div className="global-search-section">
+                <div className="global-search-section-head">
+                  <span>
+                    <Clock3 />
+                    最近搜索
+                  </span>
+                  <button type="button" onClick={() => setRecentSearches([])}>
+                    清空
+                  </button>
+                </div>
+                <div className="global-search-chips">
+                  {recentSearches.map((item) => (
+                    <button type="button" key={item} onClick={() => applyQuery(item)}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {suggestions.length > 0 && (
+              <div className="global-search-section">
+                <div className="global-search-section-head">
+                  <span>
+                    <Sparkles />
+                    推荐搜索
+                  </span>
+                </div>
+                <div className="global-search-chips">
+                  {suggestions.map((item) => (
+                    <button type="button" key={item} onClick={() => applyQuery(item)}>
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : results.length ? (
           <div className="global-search-results">
@@ -338,6 +417,44 @@ function kindLabel(kind: SearchKind) {
   return "记录";
 }
 
+function buildSearchSuggestions(
+  state: ReturnType<typeof useLifeLog>["state"],
+  getPersonName: (id: string) => string,
+  getPlaceName: (id: string) => string
+) {
+  const values: string[] = [];
+
+  for (const person of state.people) {
+    if (person.favorite || values.length < 3) values.push(person.name, person.nickname || "", person.relationship || "");
+  }
+
+  for (const place of state.places) {
+    if (place.favorite || values.length < 7) values.push(buildPlaceDisplayName(place), place.category || "", place.mall || "");
+  }
+
+  for (const memory of state.memories.slice(0, 24)) {
+    values.push(memory.mood || "", getMemoryKindLabel(memory));
+    values.push(...safeArray(memory.tags));
+    values.push(...safeArray(memory.personIds).map(getPersonName));
+    values.push(...getMemoryPlaceIds(memory).map(getPlaceName));
+  }
+
+  return uniqueSearchTerms(values).slice(0, 10);
+}
+
+function uniqueSearchTerms(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const text = value.trim();
+    const normalized = normalizeSearchText(text);
+    if (!normalized || normalized.length < 2 || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(text);
+  }
+  return result;
+}
+
 function keyword(field: SearchField, value?: string | null): SearchKeyword | null {
   const text = String(value || "").trim();
   return text ? { field, value: text } : null;
@@ -349,4 +466,8 @@ function isSearchKeyword(value: SearchKeyword | null | undefined | false | ""): 
 
 function safeArray<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [];
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
