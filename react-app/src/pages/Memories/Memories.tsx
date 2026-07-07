@@ -1,9 +1,11 @@
-import { AlignJustify, CalendarDays, CheckCircle2, ChevronDown, Heart, Plus, RotateCcw, SlidersHorizontal, StretchVertical } from "lucide-react";
-import { useMemo, useState, type CSSProperties } from "react";
+import { CalendarDays, CheckCircle2, CheckSquare, ChevronDown, Download, Heart, Plus, RotateCcw, SlidersHorizontal, Square, Tags, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import BatchActionToolbar from "../../components/BatchActionToolbar";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ListViewModeToggle from "../../components/ListViewModeToggle";
 import MemoryCard from "../../components/MemoryCard";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import SearchBar from "../../components/SearchBar";
@@ -13,7 +15,9 @@ import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { useUserPreferences } from "../../hooks/useUserPreferences";
-import type { MemoryEvent } from "../../types";
+import type { LifeLogState, MemoryEvent } from "../../types";
+import { saveReadableFile } from "../../utils/backupExport";
+import { buildReadableMarkdownForSelection } from "../../utils/readableExport";
 import { buildMemoryDisplayContext, getMemoryDisplayTitle, getMemoryKindLabel, isActiveMemoryPlan, isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
@@ -21,7 +25,19 @@ import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { toCalendarDateKey } from "../../utils/calendarItems";
 
 export default function Memories() {
-  const { state, notionSettings, notionPageMappings, notionSyncQueue, getPersonName, getPlaceName, deleteEntry, getDeleteSnapshot, restoreDeletedEntry } = useLifeLog();
+  const {
+    state,
+    notionSettings,
+    notionPageMappings,
+    notionSyncQueue,
+    getPersonName,
+    getPlaceName,
+    deleteEntry,
+    getDeleteSnapshot,
+    restoreDeletedEntry,
+    updateMemoriesBulk,
+    restoreMemoriesBulk
+  } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
@@ -47,6 +63,8 @@ export default function Memories() {
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
   const [timeMapOpen, setTimeMapOpen] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedMemoryIds, setSelectedMemoryIds] = useState<string[]>([]);
   const denseList = prefs.listViewMode === "compact";
 
   const duePlans = useMemo(
@@ -99,6 +117,18 @@ export default function Memories() {
   const groupedMemories = useMemo(() => groupMemoriesByMonth(memories), [memories]);
   const yearAnchors = useMemo(() => buildYearAnchors(groupedMemories), [groupedMemories]);
   const yearMapItems = useMemo(() => buildYearMapItems(groupedMemories), [groupedMemories]);
+  const selectableMemoryIds = useMemo(() => memories.map((memory) => memory.id), [memories]);
+  const selectedMemoryCount = selectedMemoryIds.length;
+  const allVisibleMemoriesSelected =
+    selectableMemoryIds.length > 0 &&
+    selectedMemoryCount === selectableMemoryIds.length &&
+    selectableMemoryIds.every((id) => selectedMemoryIds.includes(id));
+
+  useEffect(() => {
+    if (!batchMode) return;
+    const visibleIdSet = new Set(selectableMemoryIds);
+    setSelectedMemoryIds((current) => current.filter((id) => visibleIdSet.has(id)));
+  }, [batchMode, selectableMemoryIds]);
 
   async function handleDelete(id: string) {
     const accepted = await confirm({
@@ -124,6 +154,88 @@ export default function Memories() {
         ]
       });
     }
+  }
+
+  function toggleMemorySelection(id: string) {
+    setSelectedMemoryIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  function closeBatchMode() {
+    setBatchMode(false);
+    setSelectedMemoryIds([]);
+  }
+
+  async function handleBatchDelete() {
+    if (!selectedMemoryCount) return;
+    const ids = [...selectedMemoryIds];
+    const accepted = await confirm({
+      title: "批量删除记录",
+      message: `确认删除选中的 ${ids.length} 条记录？`,
+      confirmText: "删除"
+    });
+    if (!accepted) return;
+
+    const snapshotResults = await Promise.all(ids.map((id) => getDeleteSnapshot("memory", id)));
+    await Promise.all(ids.map((id) => deleteEntry("memory", id)));
+    const snapshots = snapshotResults.filter((snapshot) => snapshot !== null);
+    closeBatchMode();
+    notify({
+      message: `已删除 ${ids.length} 条记录`,
+      tone: "info",
+      actions: snapshots.length
+        ? [
+            {
+              label: "撤销",
+              onClick: async () => {
+                await Promise.all(snapshots.map((snapshot) => restoreDeletedEntry(snapshot)));
+                notify({ message: `已恢复 ${snapshots.length} 条记录`, tone: "success" });
+              }
+            }
+          ]
+        : undefined
+    });
+  }
+
+  async function handleBatchExport() {
+    if (!selectedMemoryCount) return;
+    const selectedMemories = state.memories.filter((memory) => selectedMemoryIds.includes(memory.id));
+    const relatedPersonIds = Array.from(new Set(selectedMemories.flatMap((memory) => memory.personIds || [])));
+    const relatedPlaceIds = Array.from(new Set(selectedMemories.flatMap((memory) => getMemoryPlaceIds(memory))));
+    const content = buildReadableMarkdownForSelection(state, {
+      memories: selectedMemoryIds,
+      people: relatedPersonIds,
+      places: relatedPlaceIds
+    } satisfies Partial<Record<keyof LifeLogState, string[]>>);
+    const result = await saveReadableFile(`lifelog-memories-${formatExportDate()}.md`, content, "text/markdown;charset=utf-8");
+    notify({
+      message: `已导出 ${selectedMemoryCount} 条记录：${result.locationLabel}`,
+      tone: "success",
+      durationMs: 4200
+    });
+  }
+
+  async function handleBatchAddTags() {
+    if (!selectedMemoryCount) return;
+    const tags = parseBatchTags(window.prompt("输入要添加的标签，用逗号、顿号或空格分隔") || "");
+    if (!tags.length) return;
+    const result = await updateMemoriesBulk(selectedMemoryIds, { appendTags: tags });
+    if (!result.count) {
+      notify({ message: "选中的记录已经包含这些标签", tone: "info" });
+      return;
+    }
+    notify({
+      message: `已给 ${result.count} 条记录添加标签`,
+      tone: "success",
+      actions: [
+        {
+          label: "撤销",
+          onClick: async () => {
+            const restored = await restoreMemoriesBulk(result.before);
+            notify({ message: restored ? `已恢复 ${restored} 条记录` : "没有可恢复的记录", tone: restored ? "success" : "info" });
+          }
+        }
+      ]
+    });
   }
 
   function clearFilters() {
@@ -194,26 +306,25 @@ export default function Memories() {
             </span>
           </div>
           <div className="list-filter-actions">
-            <div className="view-mode-toggle" role="group" aria-label="记录列表密度">
+            <ListViewModeToggle
+              dense={denseList}
+              ariaLabel="记录列表密度"
+              onChange={(mode) => updatePreference("listViewMode", mode)}
+            />
+            {memories.length > 0 && (
               <button
-                className={denseList ? "active" : ""}
+                aria-pressed={batchMode}
+                className={`filter-toggle-button ${batchMode ? "active" : ""}`}
                 type="button"
-                title="紧凑列表"
-                aria-label="紧凑列表"
-                onClick={() => updatePreference("listViewMode", "compact")}
+                onClick={() => {
+                  setBatchMode((current) => !current);
+                  setSelectedMemoryIds([]);
+                }}
               >
-                <AlignJustify />
+                <CheckSquare />
+                管理
               </button>
-              <button
-                className={!denseList ? "active" : ""}
-                type="button"
-                title="详细列表"
-                aria-label="详细列表"
-                onClick={() => updatePreference("listViewMode", "detailed")}
-              >
-                <StretchVertical />
-              </button>
-            </div>
+            )}
             {hasActiveFilters && (
               <button className="filter-clear-button" type="button" onClick={clearFilters}>
                 <RotateCcw /> 清除
@@ -283,6 +394,22 @@ export default function Memories() {
         )}
       </section>
       <section className="section">
+        {batchMode && (
+          <BatchActionToolbar
+            className="memory-batch-toolbar"
+            selectedCount={selectedMemoryCount}
+            itemLabel="条记录"
+            hint="可统一导出、追加标签，或集中清理重复和误记。"
+            allSelected={allVisibleMemoriesSelected}
+            onToggleAll={() => setSelectedMemoryIds(allVisibleMemoriesSelected ? [] : selectableMemoryIds)}
+            onClose={closeBatchMode}
+            actions={[
+              { id: "export", label: "导出", icon: <Download size={14} />, disabled: !selectedMemoryCount, onClick: () => void handleBatchExport() },
+              { id: "tags", label: "加标签", icon: <Tags size={14} />, disabled: !selectedMemoryCount, onClick: () => void handleBatchAddTags() },
+              { id: "delete", label: "删除", icon: <Trash2 size={14} />, tone: "danger", disabled: !selectedMemoryCount, onClick: () => void handleBatchDelete() }
+            ]}
+          />
+        )}
         {yearMapItems.length > 1 && (
           <div className={`memory-time-map ${timeMapOpen ? "open" : ""}`} aria-label="记录时间地图">
             <button className="memory-time-map-summary" type="button" aria-expanded={timeMapOpen} onClick={() => setTimeMapOpen((open) => !open)}>
@@ -324,12 +451,20 @@ export default function Memories() {
                 <div className="list">
                   {group.memories.map((memory) => {
                     const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
+                    const selected = selectedMemoryIds.includes(memory.id);
                     return (
                       <MemoryCard
                         key={memory.id}
                         memory={memory}
                         ctx={ctx}
-                        onOpen={() => navigate(`/memories/${memory.id}`)}
+                        className={`${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`}
+                        onOpen={() => {
+                          if (batchMode) {
+                            toggleMemorySelection(memory.id);
+                            return;
+                          }
+                          navigate(`/memories/${memory.id}`);
+                        }}
                         showPhotoCount
                         collapseExtras
                         dense={denseList}
@@ -340,7 +475,27 @@ export default function Memories() {
                           mappings: notionPageMappings,
                           queue: notionSyncQueue
                         })}
-                        actions={<CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />}
+                        selectionControl={
+                          batchMode ? (
+                            <button
+                              className="memory-select-toggle"
+                              type="button"
+                              aria-pressed={selected}
+                              aria-label={selected ? "取消选择记录" : "选择记录"}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleMemorySelection(memory.id);
+                              }}
+                            >
+                              {selected ? <CheckSquare size={18} /> : <Square size={18} />}
+                            </button>
+                          ) : null
+                        }
+                        actions={
+                          batchMode ? null : (
+                            <CardActions onEdit={() => setEditingId(memory.id)} onDelete={() => handleDelete(memory.id)} />
+                          )
+                        }
                       />
                     );
                   })}
@@ -471,6 +626,14 @@ function parseImportedIds(value: string | null) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function parseBatchTags(value: string) {
+  return Array.from(new Set(value.split(/[\s,，、;；]+/).map((tag) => tag.trim()).filter(Boolean)));
+}
+
+function formatExportDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function buildFilterOptions(memories: MemoryEvent[], getPersonName: (id: string) => string, getPlaceName: (id: string) => string) {

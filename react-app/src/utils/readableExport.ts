@@ -70,6 +70,19 @@ export function buildReadableMarkdown(state: LifeLogState) {
   return lines.filter((line, index, array) => line || array[index - 1] !== "").join("\n");
 }
 
+export function buildReadableMarkdownForSelection(state: LifeLogState, selection: Partial<Record<keyof LifeLogState, string[]>>) {
+  const people = filterByIds(state.people, selection.people);
+  const places = filterByIds(state.places, selection.places);
+  const memories = filterByIds(state.memories, selection.memories);
+  return buildReadableMarkdown({
+    ...state,
+    people,
+    places,
+    memories,
+    anniversaryPlans: []
+  });
+}
+
 export function buildReadableHtml(state: LifeLogState) {
   const markdown = buildReadableMarkdown(state);
   const body = markdown
@@ -111,4 +124,10 @@ function escapeHtml(value: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function filterByIds<T extends { id: string }>(items: T[], ids: string[] | undefined) {
+  if (!ids?.length) return [];
+  const idSet = new Set(ids);
+  return items.filter((item) => idSet.has(item.id));
 }

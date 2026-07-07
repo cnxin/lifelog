@@ -20,12 +20,14 @@ interface MemoryCardProps {
   ctx: MemoryDisplayContext;
   onOpen: () => void;
   actions?: ReactNode;
+  className?: string;
   renderMeta?: (memory: MemoryEvent, ctx: MemoryDisplayContext, showContentLine: boolean) => ReactNode;
   showPhotoCount?: boolean;
   icon?: ReactNode;
   syncMeta?: NotionRecordSyncMeta;
   collapseExtras?: boolean;
   dense?: boolean;
+  selectionControl?: ReactNode;
 }
 
 export default function MemoryCard({
@@ -33,12 +35,14 @@ export default function MemoryCard({
   ctx,
   onOpen,
   actions,
+  className = "",
   renderMeta,
   showPhotoCount = false,
   icon,
   syncMeta,
   collapseExtras = false,
-  dense = false
+  dense = false,
+  selectionControl
 }: MemoryCardProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
   const displayTitle = getMemoryDisplayTitle(memory, ctx);
@@ -50,7 +54,8 @@ export default function MemoryCard({
   const hasCollapsedExtras = !dense && collapseExtras && (showContentLine || hasTags || (showPhotoCount && photoCount > 0));
 
   return (
-    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${extrasOpen ? "extras-open" : ""}`}>
+    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${extrasOpen ? "extras-open" : ""} ${className}`}>
+      {selectionControl}
       <button className="place-tap" onClick={onOpen} type="button">
         <div className="memory-badge">{icon || <Heart />}</div>
       </button>

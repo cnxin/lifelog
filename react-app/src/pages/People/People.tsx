@@ -1,9 +1,11 @@
-import { ArrowDownUp, MapPin, Plus, RotateCcw, Star, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowDownUp, CheckSquare, Download, MapPin, Plus, RotateCcw, Square, Star, Trash2, Users } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import BatchActionToolbar from "../../components/BatchActionToolbar";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ListViewModeToggle from "../../components/ListViewModeToggle";
 import NotionSyncBadge from "../../components/NotionSyncBadge";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
@@ -12,11 +14,14 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
-import type { Person } from "../../types";
+import { useUserPreferences } from "../../hooks/useUserPreferences";
+import type { LifeLogState, Person } from "../../types";
 import { anniversaryRelativeLabel, anniversaryYearLabel, buildBirthdayInfo, getWesternZodiacSign } from "../../utils/date";
 import { buildRelationshipHealth, type RelationshipHealth } from "../../utils/relationshipHealth";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { initials } from "../../utils/text";
+import { saveReadableFile } from "../../utils/backupExport";
+import { buildReadableMarkdownForSelection } from "../../utils/readableExport";
 
 type PeopleSortMode = "smart" | "recent" | "name";
 interface PeopleFilterState {
@@ -25,10 +30,23 @@ interface PeopleFilterState {
 }
 
 export default function People() {
-  const { state, notionSettings, notionPageMappings, notionSyncQueue, deleteEntry, getDeleteSnapshot, restoreDeletedEntry, togglePersonFavorite, updatePersonProfile } = useLifeLog();
+  const {
+    state,
+    notionSettings,
+    notionPageMappings,
+    notionSyncQueue,
+    deleteEntry,
+    getDeleteSnapshot,
+    restoreDeletedEntry,
+    togglePersonFavorite,
+    updatePersonProfile,
+    updatePeopleBulk,
+    restorePeopleBulk
+  } = useLifeLog();
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
+  const { prefs, updatePreference } = useUserPreferences();
   const [filters, setFilters] = usePersistentState<PeopleFilterState>(
     "lifelog:filters:people",
     { query: "", sortMode: "smart" },
@@ -37,11 +55,14 @@ export default function People() {
   const [editingId, setEditingId] = useState<string | undefined>();
   const [creatingNew, setCreatingNew] = useState(false);
   const [preferenceEditor, setPreferenceEditor] = useState<{ personId: string; mode: PersonPreferenceMode } | null>(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedPersonIds, setSelectedPersonIds] = useState<string[]>([]);
   const query = filters.query;
   const sortMode = filters.sortMode;
   const normalizedQuery = query.trim().toLowerCase();
   const isCustomSort = sortMode !== "smart";
   const [sortOpen, setSortOpen] = useState(isCustomSort);
+  const denseList = prefs.listViewMode === "compact";
 
   const peopleRows = useMemo(() => {
     return state.people
@@ -60,6 +81,18 @@ export default function People() {
       .map((person) => ({ person, health: buildRelationshipHealth(person.id, state.memories) }))
       .sort((left, right) => comparePeopleRows(left, right, sortMode));
   }, [normalizedQuery, sortMode, state.memories, state.people]);
+  const selectablePersonIds = useMemo(() => peopleRows.map(({ person }) => person.id), [peopleRows]);
+  const selectedPersonCount = selectedPersonIds.length;
+  const allVisiblePeopleSelected =
+    selectablePersonIds.length > 0 &&
+    selectedPersonCount === selectablePersonIds.length &&
+    selectablePersonIds.every((id) => selectedPersonIds.includes(id));
+
+  useEffect(() => {
+    if (!batchMode) return;
+    const visibleIdSet = new Set(selectablePersonIds);
+    setSelectedPersonIds((current) => current.filter((id) => visibleIdSet.has(id)));
+  }, [batchMode, selectablePersonIds]);
 
   function clearSearch() {
     setFilters({ query: "", sortMode: "smart" });
@@ -100,6 +133,81 @@ export default function People() {
     }
   }
 
+  function togglePersonSelection(id: string) {
+    setSelectedPersonIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  function closeBatchMode() {
+    setBatchMode(false);
+    setSelectedPersonIds([]);
+  }
+
+  async function handleBatchDeletePeople() {
+    if (!selectedPersonCount) return;
+    const ids = [...selectedPersonIds];
+    const accepted = await confirm({
+      title: "批量删除人物",
+      message: `确认删除选中的 ${ids.length} 个人物？相关回忆中的人物关联也会被移除。`,
+      confirmText: "删除"
+    });
+    if (!accepted) return;
+
+    const snapshotResults = await Promise.all(ids.map((id) => getDeleteSnapshot("person", id)));
+    await Promise.all(ids.map((id) => deleteEntry("person", id)));
+    const snapshots = snapshotResults.filter((snapshot) => snapshot !== null);
+    closeBatchMode();
+    notify({
+      message: `已删除 ${ids.length} 个人物`,
+      tone: "info",
+      actions: snapshots.length
+        ? [
+            {
+              label: "撤销",
+              onClick: async () => {
+                await Promise.all(snapshots.map((snapshot) => restoreDeletedEntry(snapshot)));
+                notify({ message: `已恢复 ${snapshots.length} 个人物`, tone: "success" });
+              }
+            }
+          ]
+        : undefined
+    });
+  }
+
+  async function handleBatchExportPeople() {
+    if (!selectedPersonCount) return;
+    const content = buildReadableMarkdownForSelection(state, {
+      people: selectedPersonIds
+    } satisfies Partial<Record<keyof LifeLogState, string[]>>);
+    const result = await saveReadableFile(`lifelog-people-${formatExportDate()}.md`, content, "text/markdown;charset=utf-8");
+    notify({
+      message: `已导出 ${selectedPersonCount} 个人物：${result.locationLabel}`,
+      tone: "success",
+      durationMs: 4200
+    });
+  }
+
+  async function handleBatchFavoritePeople(favorite: boolean) {
+    if (!selectedPersonCount) return;
+    const result = await updatePeopleBulk(selectedPersonIds, { favorite });
+    if (!result.count) {
+      notify({ message: favorite ? "选中的人物已全部收藏" : "选中的人物均未收藏", tone: "info" });
+      return;
+    }
+    notify({
+      message: favorite ? `已收藏 ${result.count} 个人物` : `已取消收藏 ${result.count} 个人物`,
+      tone: "success",
+      actions: [
+        {
+          label: "撤销",
+          onClick: async () => {
+            const restored = await restorePeopleBulk(result.before);
+            notify({ message: restored ? `已恢复 ${restored} 个人物` : "没有可恢复的人物", tone: restored ? "success" : "info" });
+          }
+        }
+      ]
+    });
+  }
+
   return (
     <>
       <PageSegmentNav
@@ -118,6 +226,25 @@ export default function People() {
             </span>
           </div>
           <div className="list-filter-actions">
+            <ListViewModeToggle
+              dense={denseList}
+              ariaLabel="人物列表密度"
+              onChange={(mode) => updatePreference("listViewMode", mode)}
+            />
+            {peopleRows.length > 0 && (
+              <button
+                aria-pressed={batchMode}
+                className={`filter-toggle-button ${batchMode ? "active" : ""}`}
+                type="button"
+                onClick={() => {
+                  setBatchMode((current) => !current);
+                  setSelectedPersonIds([]);
+                }}
+              >
+                <CheckSquare />
+                管理
+              </button>
+            )}
             {(normalizedQuery || isCustomSort) && (
               <button className="filter-clear-button" type="button" onClick={clearSearch}>
                 <RotateCcw /> 清除
@@ -157,16 +284,66 @@ export default function People() {
         )}
       </section>
       <section className="section">
+        {batchMode && (
+          <BatchActionToolbar
+            className="people-batch-toolbar"
+            selectedCount={selectedPersonCount}
+            itemLabel="个人物"
+            hint="可统一导出、收藏，或集中清理重复和误建档案。"
+            allSelected={allVisiblePeopleSelected}
+            onToggleAll={() => setSelectedPersonIds(allVisiblePeopleSelected ? [] : selectablePersonIds)}
+            onClose={closeBatchMode}
+            actions={[
+              { id: "export", label: "导出", icon: <Download size={14} />, disabled: !selectedPersonCount, onClick: () => void handleBatchExportPeople() },
+              { id: "favorite", label: "收藏", icon: <Star size={14} />, disabled: !selectedPersonCount, onClick: () => void handleBatchFavoritePeople(true) },
+              { id: "unfavorite", label: "取消收藏", icon: <Star size={14} />, disabled: !selectedPersonCount, onClick: () => void handleBatchFavoritePeople(false) },
+              { id: "delete", label: "删除", icon: <Trash2 size={14} />, tone: "danger", disabled: !selectedPersonCount, onClick: () => void handleBatchDeletePeople() }
+            ]}
+          />
+        )}
         <div className="list">
           {peopleRows.map(({ person, health }) => {
             const anniversary = person.anniversaries[0];
             const birthdayInfo = buildBirthdayInfo(person.birthday);
+            const selected = selectedPersonIds.includes(person.id);
             return (
-              <GlassCard className="person-card" key={person.id}>
-                <button className="person-open" onClick={() => navigate(`/people/${person.id}`)}>
+              <GlassCard className={`person-card ${denseList ? "dense-person-card" : ""} ${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`} key={person.id}>
+                {batchMode && (
+                  <button
+                    className="person-select-toggle"
+                    type="button"
+                    aria-pressed={selected}
+                    aria-label={selected ? "取消选择人物" : "选择人物"}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      togglePersonSelection(person.id);
+                    }}
+                  >
+                    {selected ? <CheckSquare size={18} /> : <Square size={18} />}
+                  </button>
+                )}
+                <button
+                  className="person-open"
+                  onClick={() => {
+                    if (batchMode) {
+                      togglePersonSelection(person.id);
+                      return;
+                    }
+                    navigate(`/people/${person.id}`);
+                  }}
+                >
                   <div className="person-photo">{initials(person.name)}</div>
                 </button>
-                <div className="person-info" onClick={() => navigate(`/people/${person.id}`)}>
+                <div
+                  className="person-info"
+                  onClick={() => {
+                    if (batchMode) {
+                      togglePersonSelection(person.id);
+                      return;
+                    }
+                    navigate(`/people/${person.id}`);
+                  }}
+                >
                   <div className="person-name">
                     <span>
                       {person.name}
@@ -189,6 +366,10 @@ export default function People() {
                       aria-label={person.favorite ? "取消收藏" : "收藏"}
                       onClick={(event) => {
                         event.stopPropagation();
+                        if (batchMode) {
+                          togglePersonSelection(person.id);
+                          return;
+                        }
                         void togglePersonFavorite(person.id);
                       }}
                     >
@@ -206,14 +387,27 @@ export default function People() {
                     <span>{health.detail}</span>
                     {health.memoryCount > 0 && <span>{health.memoryCount} 条回忆</span>}
                   </div>
-                  <PreferenceLines
-                    preferences={person.preferences}
-                    dislikes={person.dislikes}
-                    onEdit={(mode) => setPreferenceEditor({ personId: person.id, mode })}
-                  />
+                  {!denseList && !batchMode && (
+                    <PreferenceLines
+                      preferences={person.preferences}
+                      dislikes={person.dislikes}
+                      onEdit={(mode) => setPreferenceEditor({ personId: person.id, mode })}
+                    />
+                  )}
                 </div>
                 <div className="person-side-actions">
-                  <CardActions onEdit={() => setEditingId(person.id)} onDelete={() => handleDelete(person.id)} />
+                  {batchMode ? (
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label={selected ? "取消选择人物" : "选择人物"}
+                      onClick={() => togglePersonSelection(person.id)}
+                    >
+                      {selected ? <CheckSquare /> : <Square />}
+                    </button>
+                  ) : (
+                    <CardActions onEdit={() => setEditingId(person.id)} onDelete={() => handleDelete(person.id)} />
+                  )}
                 </div>
               </GlassCard>
             );
@@ -287,6 +481,10 @@ function comparePeopleRows(
     right.health.memoryCount - left.health.memoryCount ||
     comparePeopleName(left.person, right.person)
   );
+}
+
+function formatExportDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function compareFavorite(left: boolean, right: boolean) {

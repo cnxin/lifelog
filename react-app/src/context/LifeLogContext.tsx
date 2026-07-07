@@ -107,8 +107,12 @@ type DeletedEntrySnapshot =
 
 type BackupExportResult = BackupExportTarget;
 type BackupImportOptions = { safeMode?: boolean };
-type PlaceBulkPatch = Partial<Pick<Place, "category" | "mall" | "area">> & { appendTags?: string[] };
-type PlaceBulkSnapshot = Pick<Place, "id" | "category" | "mall" | "area" | "tags">;
+type PersonBulkPatch = { favorite?: boolean };
+type PersonBulkSnapshot = Pick<Person, "id" | "favorite">;
+type MemoryBulkPatch = { appendTags?: string[] };
+type MemoryBulkSnapshot = Pick<MemoryEvent, "id" | "tags">;
+type PlaceBulkPatch = Partial<Pick<Place, "category" | "mall" | "area" | "favorite">> & { appendTags?: string[] };
+type PlaceBulkSnapshot = Pick<Place, "id" | "category" | "mall" | "area" | "tags" | "favorite">;
 
 interface LifeLogContextValue {
   state: LifeLogState;
@@ -121,6 +125,8 @@ interface LifeLogContextValue {
   isLoading: boolean;
   savePerson: (formData: FormData, id?: string) => Promise<string>;
   updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
+  updatePeopleBulk: (personIds: string[], patch: PersonBulkPatch) => Promise<{ count: number; before: PersonBulkSnapshot[] }>;
+  restorePeopleBulk: (snapshots: PersonBulkSnapshot[]) => Promise<number>;
   togglePersonFavorite: (id: string) => Promise<void>;
   saveAnniversaryPlan: (plan: AnniversaryPlan) => Promise<string>;
   deleteAnniversaryPlan: (id: string) => Promise<void>;
@@ -130,6 +136,8 @@ interface LifeLogContextValue {
   restorePlacesBulk: (snapshots: PlaceBulkSnapshot[]) => Promise<number>;
   togglePlaceFavorite: (id: string) => Promise<void>;
   saveMemory: (formData: FormData, id?: string, photos?: Photo[]) => Promise<string>;
+  updateMemoriesBulk: (memoryIds: string[], patch: MemoryBulkPatch) => Promise<{ count: number; before: MemoryBulkSnapshot[] }>;
+  restoreMemoriesBulk: (snapshots: MemoryBulkSnapshot[]) => Promise<number>;
   deleteEntry: (type: EntryType, id: string) => Promise<void>;
   restoreDeletedEntry: (snapshot: DeletedEntrySnapshot) => Promise<void>;
   getDeleteSnapshot: (type: EntryType, id: string) => Promise<DeletedEntrySnapshot | null>;
@@ -331,6 +339,59 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       syncSavedNotionTarget({ entityType: "person", entityId: next.id }, nextState, `更新人物：${next.name || "未命名"}`);
     }
 
+    async function updatePeopleBulk(personIds: string[], patch: PersonBulkPatch) {
+      const targetIds = new Set(personIds);
+      if (!targetIds.size || typeof patch.favorite !== "boolean") return { count: 0, before: [] };
+      const before = state.people
+        .filter((person) => targetIds.has(person.id))
+        .map((person) => ({
+          id: person.id,
+          favorite: person.favorite
+        }));
+      const changedPeople = state.people
+        .filter((person) => targetIds.has(person.id) && person.favorite !== patch.favorite)
+        .map((person) => ({
+          ...person,
+          favorite: patch.favorite!
+        }));
+      if (!changedPeople.length) return { count: 0, before: [] };
+
+      await Promise.all(changedPeople.map(savePersonRecord));
+      const nextState: LifeLogState = {
+        ...state,
+        people: state.people.map((person) => changedPeople.find((item) => item.id === person.id) || person)
+      };
+      setState((current) => ({
+        ...current,
+        people: current.people.map((person) => changedPeople.find((item) => item.id === person.id) || person)
+      }));
+      syncSavedNotionTargets(
+        changedPeople.map((person) => ({ entityType: "person", entityId: person.id })),
+        nextState,
+        `批量更新人物：${changedPeople.length} 条`
+      );
+      return { count: changedPeople.length, before };
+    }
+
+    async function restorePeopleBulk(snapshots: PersonBulkSnapshot[]) {
+      if (!snapshots.length) return 0;
+      const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+      const restoredPeople = state.people
+        .filter((person) => snapshotById.has(person.id))
+        .map((person) => ({
+          ...person,
+          favorite: snapshotById.get(person.id)!.favorite
+        }));
+      if (!restoredPeople.length) return 0;
+
+      await Promise.all(restoredPeople.map(savePersonRecord));
+      setState((current) => ({
+        ...current,
+        people: current.people.map((person) => restoredPeople.find((item) => item.id === person.id) || person)
+      }));
+      return restoredPeople.length;
+    }
+
     async function togglePlaceFavorite(id: string) {
       if (favoritePendingRef.current.places.has(id)) return;
       const place = state.places.find((item) => item.id === id);
@@ -426,7 +487,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       const mall = patch.mall?.trim();
       const area = patch.area?.trim();
       const appendTags = Array.from(new Set((patch.appendTags || []).map((tag) => tag.trim()).filter(Boolean)));
-      if (!category && !mall && !area && !appendTags.length) return { count: 0, before: [] };
+      const shouldUpdateFavorite = typeof patch.favorite === "boolean";
+      if (!category && !mall && !area && !appendTags.length && !shouldUpdateFavorite) return { count: 0, before: [] };
       const before = state.places
         .filter((place) => targetIds.has(place.id))
         .map((place) => ({
@@ -434,7 +496,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           category: place.category,
           mall: place.mall,
           area: place.area,
-          tags: [...place.tags]
+          tags: [...place.tags],
+          favorite: place.favorite
         }));
 
       const nextPlaces = state.places.map((place) => {
@@ -444,7 +507,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
           category: category || place.category,
           mall: mall || place.mall,
           area: area || place.area,
-          tags: appendTags.length ? Array.from(new Set([...place.tags, ...appendTags])) : place.tags
+          tags: appendTags.length ? Array.from(new Set([...place.tags, ...appendTags])) : place.tags,
+          favorite: shouldUpdateFavorite ? patch.favorite! : place.favorite
         };
       });
       const changedPlaces = nextPlaces.filter((place) => targetIds.has(place.id));
@@ -479,7 +543,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
             category: snapshot.category,
             mall: snapshot.mall,
             area: snapshot.area,
-            tags: [...snapshot.tags]
+            tags: [...snapshot.tags],
+            favorite: snapshot.favorite
           };
         });
       if (!restoredPlaces.length) return 0;
@@ -526,6 +591,64 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       syncSavedNotionTarget({ entityType: "memory", entityId: memory.id }, nextState, `保存记录：${memory.title || "未命名"}`);
 
       return memory.id;
+    }
+
+    async function updateMemoriesBulk(memoryIds: string[], patch: MemoryBulkPatch) {
+      const targetIds = new Set(memoryIds);
+      const appendTags = Array.from(new Set((patch.appendTags || []).map((tag) => tag.trim()).filter(Boolean)));
+      if (!targetIds.size || !appendTags.length) return { count: 0, before: [] };
+      const before = state.memories
+        .filter((memory) => targetIds.has(memory.id))
+        .map((memory) => ({
+          id: memory.id,
+          tags: [...memory.tags]
+        }));
+      const changedMemories = state.memories
+        .filter((memory) => targetIds.has(memory.id))
+        .map((memory) => ({
+          ...memory,
+          tags: Array.from(new Set([...memory.tags, ...appendTags]))
+        }))
+        .filter((memory) => {
+          const original = state.memories.find((item) => item.id === memory.id);
+          return original ? original.tags.join("|") !== memory.tags.join("|") : true;
+        });
+      if (!changedMemories.length) return { count: 0, before: [] };
+
+      await Promise.all(changedMemories.map(saveMemoryRecord));
+      const nextState: LifeLogState = {
+        ...state,
+        memories: state.memories.map((memory) => changedMemories.find((item) => item.id === memory.id) || memory)
+      };
+      setState((current) => ({
+        ...current,
+        memories: current.memories.map((memory) => changedMemories.find((item) => item.id === memory.id) || memory)
+      }));
+      syncSavedNotionTargets(
+        changedMemories.map((memory) => ({ entityType: "memory", entityId: memory.id })),
+        nextState,
+        `批量更新记录：${changedMemories.length} 条`
+      );
+      return { count: changedMemories.length, before };
+    }
+
+    async function restoreMemoriesBulk(snapshots: MemoryBulkSnapshot[]) {
+      if (!snapshots.length) return 0;
+      const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+      const restoredMemories = state.memories
+        .filter((memory) => snapshotById.has(memory.id))
+        .map((memory) => ({
+          ...memory,
+          tags: [...snapshotById.get(memory.id)!.tags]
+        }));
+      if (!restoredMemories.length) return 0;
+
+      await Promise.all(restoredMemories.map(saveMemoryRecord));
+      setState((current) => ({
+        ...current,
+        memories: current.memories.map((memory) => restoredMemories.find((item) => item.id === memory.id) || memory)
+      }));
+      return restoredMemories.length;
     }
 
     async function deleteEntry(type: EntryType, id: string) {
@@ -1154,6 +1277,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       isLoading,
       savePerson,
       updatePersonProfile,
+      updatePeopleBulk,
+      restorePeopleBulk,
       togglePersonFavorite,
       saveAnniversaryPlan,
       deleteAnniversaryPlan,
@@ -1163,6 +1288,8 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       restorePlacesBulk,
       togglePlaceFavorite,
       saveMemory,
+      updateMemoriesBulk,
+      restoreMemoriesBulk,
       deleteEntry,
       restoreDeletedEntry,
       getDeleteSnapshot,

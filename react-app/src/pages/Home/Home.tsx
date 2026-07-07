@@ -5,6 +5,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
 import { useLifeLog } from "../../context/LifeLogContext";
+import { useHomeLayout } from "../../hooks/useHomeLayout";
 import { getBooleanPreference, useUserPreferences } from "../../hooks/useUserPreferences";
 import type { AnniversaryPlan, EntryType, MemoryEvent, Place } from "../../types";
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
@@ -26,6 +27,7 @@ export default function Home() {
   const [initialMemoryDate, setInitialMemoryDate] = useState<string | undefined>();
   const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
+  const [smartPromptPrefs, setSmartPromptPrefs] = useState<TodayActionPrefs>(() => loadSmartPromptPrefs());
   const monthlySchedule = buildCurrentMonthScheduleItems({
     anniversaryPlans: state.anniversaryPlans,
     memories: state.memories,
@@ -120,12 +122,30 @@ export default function Home() {
     onOpenCalendar: () => navigate("/calendar"),
     actionPrefs
   });
-  const defaultTodayQueueOpen = todayActions.length > 0;
-  const defaultTaskQueueOpen = isNewUser && tasks.length > 0;
-  const defaultHomeLibraryOpen = totalRecords > 30 && hasHomeLibrary;
-  const todayQueueOpen = getBooleanPreference(prefs, "homeTodayQueueExpanded", defaultTodayQueueOpen);
-  const taskQueueOpen = getBooleanPreference(prefs, "homeTaskQueueExpanded", defaultTaskQueueOpen);
-  const homeLibraryOpen = getBooleanPreference(prefs, "homeLibraryExpanded", defaultHomeLibraryOpen);
+  const smartPrompts = todayActions.length
+    ? []
+    : buildSmartPrompts({
+      state,
+      actualMemories,
+      getPersonName,
+      upcoming: upcomingWithPlanStatus,
+      onOpenPerson: (personId) => navigate(`/people/${personId}`),
+      onOpenPlace: (placeId) => navigate(`/places/${placeId}`),
+      onQuickMemory: openQuickMemory,
+      promptPrefs: smartPromptPrefs
+    });
+  const homeLayout = useHomeLayout({
+    totalRecords,
+    todayActionCount: todayActions.length,
+    smartPromptCount: smartPrompts.length,
+    onThisDayCount: onThisDayMemories.length,
+    monthlyScheduleCount: monthlySchedule.total,
+    taskCount: tasks.length,
+    hasHomeLibrary
+  });
+  const todayQueueOpen = getBooleanPreference(prefs, "homeTodayQueueExpanded", homeLayout.defaultTodayQueueOpen);
+  const taskQueueOpen = getBooleanPreference(prefs, "homeTaskQueueExpanded", homeLayout.defaultTaskQueueOpen);
+  const homeLibraryOpen = getBooleanPreference(prefs, "homeLibraryExpanded", homeLayout.defaultHomeLibraryOpen);
   const setTodayQueueOpen = (updater: boolean | ((value: boolean) => boolean)) =>
     updatePreference("homeTodayQueueExpanded", typeof updater === "function" ? updater(todayQueueOpen) : updater);
   const setTaskQueueOpen = (updater: boolean | ((value: boolean) => boolean)) =>
@@ -140,6 +160,14 @@ export default function Home() {
     setActionPrefs(next);
     saveTodayActionPrefs(next);
   }
+  function updateSmartPromptPref(promptId: string, mode: "snooze" | "dismiss") {
+    const next: TodayActionPrefs = {
+      ...smartPromptPrefs,
+      [promptId]: mode === "snooze" ? buildSnoozeUntil() : "dismissed"
+    };
+    setSmartPromptPrefs(next);
+    saveSmartPromptPrefs(next);
+  }
 
   function recordAnotherOnThisDay(item: FlashbackItem) {
     saveQuickInboxPrefill(buildOnThisDayQuickPrefill(item.memory, getPersonName, getPlaceName));
@@ -150,7 +178,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="home-layout-flow">
       <section className="section home-hero-section">
         <div className="home-hero-copy">
           <h1>今天的 LifeLog</h1>
@@ -177,7 +205,7 @@ export default function Home() {
       </section>
 
       {todayActions.length > 0 && (
-        <section className="section">
+        <section className="section" style={{ order: homeLayout.getSectionOrder("todayQueue") }}>
           <GlassCard className={`today-queue-card ${todayQueueOpen ? "open" : ""}`}>
             <button className="today-queue-summary" type="button" onClick={() => setTodayQueueOpen((open) => !open)}>
               <span className="today-queue-icon">
@@ -222,8 +250,31 @@ export default function Home() {
         </section>
       )}
 
+      {smartPrompts.length > 0 && (
+        <section className="section" style={{ order: homeLayout.getSectionOrder("smartPrompt") }}>
+          <GlassCard className={`home-smart-prompt-card ${smartPrompts[0].tone || ""}`}>
+            <button className="home-smart-prompt-main" type="button" onClick={smartPrompts[0].onClick}>
+              <span className="home-smart-prompt-icon">{smartPrompts[0].icon}</span>
+              <span className="home-smart-prompt-copy">
+                <strong>{smartPrompts[0].title}</strong>
+                <small>{smartPrompts[0].desc}</small>
+              </span>
+              <em>{smartPrompts[0].meta}</em>
+            </button>
+            <span className="home-smart-prompt-tools">
+              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0].id, "snooze"))}>
+                稍后
+              </button>
+              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0].id, "dismiss"))}>
+                今天忽略
+              </button>
+            </span>
+          </GlassCard>
+        </section>
+      )}
+
       {onThisDayMemories.length > 0 && (
-        <section className="section">
+        <section className="section" style={{ order: homeLayout.getSectionOrder("flashback") }}>
           <div className="section-header">
             <h2>
               <History /> 历年今日
@@ -270,7 +321,7 @@ export default function Home() {
       )}
 
       {hasMonthlySchedule && (
-        <section className="section">
+        <section className="section" style={{ order: homeLayout.getSectionOrder("monthlySchedule") }}>
           <div className="section-header">
             <h2>
               <Calendar /> 本月安排
@@ -335,7 +386,7 @@ export default function Home() {
       )}
 
       {tasks.length > 0 && (
-        <section className="section">
+        <section className="section" style={{ order: homeLayout.getSectionOrder("taskQueue") }}>
           <GlassCard className={`today-queue-card profile-queue-card ${taskQueueOpen ? "open" : ""}`}>
             <button className="today-queue-summary" type="button" onClick={() => setTaskQueueOpen((open) => !open)}>
               <span className="today-queue-icon">
@@ -370,7 +421,7 @@ export default function Home() {
       )}
 
       {hasHomeLibrary && (
-      <section className="section home-library-section">
+      <section className="section home-library-section" style={{ order: homeLayout.getSectionOrder("homeLibrary") }}>
         <div className="section-header">
           <h2>
             <Clock /> 最近看看
@@ -542,7 +593,7 @@ export default function Home() {
           });
         }}
       />
-    </>
+    </div>
   );
 }
 
@@ -628,6 +679,17 @@ interface TodayAction {
 }
 
 type TodayActionPrefs = Record<string, number | "dismissed">;
+
+interface SmartPrompt {
+  id: string;
+  icon: JSX.Element;
+  title: string;
+  desc: string;
+  meta: string;
+  tone?: "warm" | "cool";
+  priority: number;
+  onClick: () => void;
+}
 
 interface OpenMemoryOptions {
   personIds?: string[];
@@ -757,6 +819,24 @@ function saveTodayActionPrefs(prefs: TodayActionPrefs) {
   }
 }
 
+function loadSmartPromptPrefs(): TodayActionPrefs {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = window.localStorage.getItem(getSmartPromptPrefKey());
+    return stored ? JSON.parse(stored) as TodayActionPrefs : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSmartPromptPrefs(prefs: TodayActionPrefs) {
+  try {
+    window.localStorage.setItem(getSmartPromptPrefKey(), JSON.stringify(prefs));
+  } catch {
+    // 本地偏好失败时不影响首页建议显示。
+  }
+}
+
 function isActionSuppressed(actionId: string, prefs: TodayActionPrefs) {
   const value = prefs[actionId];
   if (value === "dismissed") return true;
@@ -770,6 +850,177 @@ function buildSnoozeUntil() {
 
 function getTodayActionPrefKey() {
   return `lifelog:today-actions:${toDateKey(new Date())}`;
+}
+
+function getSmartPromptPrefKey() {
+  return `lifelog:smart-prompts:${toDateKey(new Date())}`;
+}
+
+function buildSmartPrompts({
+  state,
+  actualMemories,
+  getPersonName,
+  upcoming,
+  onOpenPerson,
+  onOpenPlace,
+  onQuickMemory,
+  promptPrefs
+}: {
+  state: ReturnType<typeof useLifeLog>["state"];
+  actualMemories: MemoryEvent[];
+  getPersonName: (id: string) => string;
+  upcoming: Array<ReturnType<typeof getUpcomingAnniversaries>[number] & { planStatus: ReturnType<typeof buildUpcomingPlanStatus> }>;
+  onOpenPerson: (personId: string) => void;
+  onOpenPlace: (placeId: string) => void;
+  onQuickMemory: (options?: OpenMemoryOptions) => void;
+  promptPrefs: TodayActionPrefs;
+}): SmartPrompt[] {
+  const prompts: SmartPrompt[] = [
+    buildAnniversaryPrepPrompt(upcoming, onOpenPerson),
+    buildContactPrompt(state, actualMemories, onOpenPerson),
+    buildProfilePrompt(state, onOpenPerson),
+    buildFrequentPlacePrompt(state, actualMemories, getPersonName, onOpenPlace),
+    buildRecordGapPrompt(actualMemories, onQuickMemory)
+  ].filter((item): item is SmartPrompt => Boolean(item));
+
+  return prompts
+    .filter((prompt) => !isActionSuppressed(prompt.id, promptPrefs))
+    .sort((left, right) => right.priority - left.priority)
+    .slice(0, 1);
+}
+
+function buildAnniversaryPrepPrompt(
+  upcoming: Array<ReturnType<typeof getUpcomingAnniversaries>[number] & { planStatus: ReturnType<typeof buildUpcomingPlanStatus> }>,
+  onOpenPerson: (personId: string) => void
+): SmartPrompt | null {
+  const candidate = upcoming
+    .filter((item) => item.days > 0 && item.days <= 14 && (item.planStatus.tone === "missing" || item.planStatus.tone === "urgent"))
+    .sort((left, right) => left.days - right.days)[0];
+  if (!candidate) return null;
+  return {
+    id: `anniversary-prep-${candidate.personId}-${candidate.title}-${candidate.date}`,
+    icon: <Gift />,
+    title: `${candidate.personName}的${candidate.title}还有 ${candidate.days} 天`,
+    desc: "可以提前想一下安排、礼物或当天要记录的事。",
+    meta: "纪念日",
+    tone: candidate.days <= 3 ? "warm" : "cool",
+    priority: candidate.days <= 3 ? 92 : 66 - candidate.days,
+    onClick: () => onOpenPerson(candidate.personId)
+  };
+}
+
+function buildContactPrompt(
+  state: ReturnType<typeof useLifeLog>["state"],
+  actualMemories: MemoryEvent[],
+  onOpenPerson: (personId: string) => void
+): SmartPrompt | null {
+  const candidate = state.people
+    .filter((person) => person.favorite)
+    .map((person) => {
+      const related = actualMemories
+        .filter((memory) => memory.personIds.includes(person.id))
+        .sort((left, right) => right.date.localeCompare(left.date));
+      const latestDate = related[0]?.date || "";
+      return {
+        person,
+        memoryCount: related.length,
+        daysSinceLast: latestDate ? daysBetweenToday(latestDate) : null
+      };
+    })
+    .filter((item) => item.memoryCount > 0 && item.daysSinceLast !== null && item.daysSinceLast >= 21)
+    .sort((left, right) => (right.daysSinceLast || 0) - (left.daysSinceLast || 0))[0];
+
+  if (!candidate || candidate.daysSinceLast === null) return null;
+  return {
+    id: `contact-${candidate.person.id}`,
+    icon: <Users />,
+    title: `${candidate.person.name} 已经 ${candidate.daysSinceLast} 天没有新记录`,
+    desc: `上次共同回忆在 ${formatMonthDayOffset(candidate.daysSinceLast)}，可以回看一下最近的互动。`,
+    meta: "人物",
+    tone: "cool",
+    priority: Math.min(80, candidate.daysSinceLast),
+    onClick: () => onOpenPerson(candidate.person.id)
+  };
+}
+
+function buildProfilePrompt(
+  state: ReturnType<typeof useLifeLog>["state"],
+  onOpenPerson: (personId: string) => void
+): SmartPrompt | null {
+  const candidate = state.people.find((person) =>
+    person.favorite &&
+    !person.preferences.length &&
+    !person.dislikes.length &&
+    (person.birthday || person.anniversaries.length > 0)
+  );
+  if (!candidate) return null;
+  return {
+    id: `profile-${candidate.id}`,
+    icon: <Heart />,
+    title: `${candidate.name} 还没有喜好档案`,
+    desc: "补几条喜欢和避雷信息，之后准备礼物或约饭会更省心。",
+    meta: "档案",
+    tone: "cool",
+    priority: 42,
+    onClick: () => onOpenPerson(candidate.id)
+  };
+}
+
+function buildFrequentPlacePrompt(
+  state: ReturnType<typeof useLifeLog>["state"],
+  actualMemories: MemoryEvent[],
+  getPersonName: (id: string) => string,
+  onOpenPlace: (placeId: string) => void
+): SmartPrompt | null {
+  const candidate = state.places
+    .filter((place) => !place.favorite)
+    .map((place) => ({
+      place,
+      stats: buildPlaceVisitStats(place.id, actualMemories, getPersonName)
+    }))
+    .filter((item) => item.stats.visitCount >= 3)
+    .sort((left, right) => right.stats.visitCount - left.stats.visitCount || compareDateDesc(left.stats.latestDate, right.stats.latestDate))[0];
+
+  if (!candidate) return null;
+  return {
+    id: `place-favorite-${candidate.place.id}`,
+    icon: <MapPin />,
+    title: `${buildPlaceDisplayName(candidate.place)} 去过 ${candidate.stats.visitCount} 次`,
+    desc: candidate.stats.topPeople.length
+      ? `常和 ${candidate.stats.topPeople.map((item) => item.label).slice(0, 2).join("、")} 一起去，可以考虑设为收藏。`
+      : "这个地点已经多次出现，可以考虑设为收藏，之后更容易找到。",
+    meta: "地点",
+    tone: "warm",
+    priority: 48 + candidate.stats.visitCount,
+    onClick: () => onOpenPlace(candidate.place.id)
+  };
+}
+
+function buildRecordGapPrompt(
+  actualMemories: MemoryEvent[],
+  onQuickMemory: (options?: OpenMemoryOptions) => void
+): SmartPrompt | null {
+  if (actualMemories.length < 5) return null;
+  const latest = actualMemories.slice().sort((left, right) => right.date.localeCompare(left.date))[0];
+  if (!latest) return null;
+  const days = daysBetweenToday(latest.date);
+  if (days < 10) return null;
+  return {
+    id: "record-gap",
+    icon: <Sparkles />,
+    title: `${days} 天没有新记录了`,
+    desc: "不用补很多，先写一句最近值得留下的小事就够了。",
+    meta: "记录",
+    tone: "cool",
+    priority: Math.min(45, days),
+    onClick: () => onQuickMemory()
+  };
+}
+
+function formatMonthDayOffset(daysAgo: number) {
+  if (daysAgo <= 0) return "今天";
+  if (daysAgo === 1) return "昨天";
+  return `${daysAgo} 天前`;
 }
 
 function findDueMemoryPlan(memories: MemoryEvent[]) {

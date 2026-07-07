@@ -564,6 +564,11 @@
   gap: 6px;
 }
 
+.picker-recommendations.compact {
+  gap: 7px;
+  padding: 6px 0 2px;
+}
+
 .picker-recommendations > span {
   color: var(--text-sub);
   font-size: 11px;
@@ -2556,13 +2561,18 @@ button:disabled,
 }
 
 .place-photo-processing {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 6px 10px;
+  display: grid;
+  gap: 7px;
+  border-radius: 14px;
+  padding: 9px 10px;
   color: var(--text-sub);
   background: color-mix(in srgb, var(--primary) 8%, white);
   font-size: 12px;
   font-weight: 700;
+}
+
+.place-photo-processing .photo-upload-progress-bar {
+  width: 100%;
 }
 
 .place-photo-errors {

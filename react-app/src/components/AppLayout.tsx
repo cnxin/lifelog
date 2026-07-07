@@ -7,14 +7,16 @@ import BackToTopButton from "./BackToTopButton";
 import EntrySheet from "./EntrySheet";
 import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
 import GlobalSearchPanel from "./GlobalSearchPanel";
-import Header, { type HeaderCreateAction } from "./Header";
+import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
+import ShortcutHelpPanel from "./ShortcutHelpPanel";
 import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, QrCode, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
+import { useUserPreferences } from "../hooks/useUserPreferences";
 import { buildLifeLogShareImportPathFromUrl, extractLifeLogShareHashFromText } from "../utils/lifelogShareLink";
 import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
@@ -25,7 +27,8 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/memories": { title: "记录", subtitle: "回看回忆，也提前安排想做的事" },
   "/calendar": { title: "日历", subtitle: "重要日子和想提前准备的事" },
   "/settings": { title: "设置", subtitle: "默认值、提醒和视觉风格" },
-  "/account": { title: "设置", subtitle: "账号、应用、数据和关于" }
+  "/account": { title: "设置", subtitle: "账号、应用、数据和关于" },
+  "/stats": { title: "统计", subtitle: "用轻量视角回看记录节奏" }
 };
 
 function getPageMeta(pathname: string) {
@@ -62,9 +65,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [initialPlaceShareReview, setInitialPlaceShareReview] = useState<PlaceDraft | undefined>();
   const [placeDraftKey, setPlaceDraftKey] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const seenShareTextsRef = useRef(new Set<string>());
   const meta = getPageMeta(location.pathname);
   const { isLoading, settings } = useLifeLog();
+  const { prefs } = useUserPreferences();
   const notify = useToast();
 
   useLayoutEffect(() => {
@@ -75,12 +80,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       setSearchOpen(false);
       return true;
     }
-    const closeHeaderMenuEvent = new Event("lifelog:request-close-header-create-menu", { cancelable: true });
-    window.dispatchEvent(closeHeaderMenuEvent);
-    if (closeHeaderMenuEvent.defaultPrevented) return true;
+    if (shortcutHelpOpen) {
+      setShortcutHelpOpen(false);
+      return true;
+    }
+    const closeFabMenuEvent = new Event("lifelog:request-close-fab-menu", { cancelable: true });
+    window.dispatchEvent(closeFabMenuEvent);
+    if (closeFabMenuEvent.defaultPrevented) return true;
     const closeSheetEvent = new Event("lifelog:request-close-entry-sheet", { cancelable: true });
     window.dispatchEvent(closeSheetEvent);
-    return closeSheetEvent.defaultPrevented;
+    if (closeSheetEvent.defaultPrevented) return true;
+    const closeFloatingPanelEvent = new Event("lifelog:request-close-floating-panel", { cancelable: true });
+    window.dispatchEvent(closeFloatingPanelEvent);
+    return closeFloatingPanelEvent.defaultPrevented;
   });
   useEffect(() => {
     document.documentElement.dataset.themeStyle = settings.themeStyle;
@@ -100,9 +112,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (isCommand && key === "/") {
+        event.preventDefault();
+        setShortcutHelpOpen(true);
+        return;
+      }
+
       if (isCommand && !isEditable && key === "n") {
         event.preventDefault();
-        openSheet("memory", event.shiftKey ? "full" : "quick");
+        openSheet("memory", event.shiftKey ? "full" : prefs.defaultMemoryMode);
         return;
       }
 
@@ -111,7 +129,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           "1": "/",
           "2": "/people",
           "3": "/memories",
-          "4": "/calendar"
+          "4": "/places",
+          "5": "/calendar"
         };
         const route = shortcutRoutes[key];
         if (route) {
@@ -124,12 +143,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       if (!isEditable && event.key === "Escape" && searchOpen) {
         event.preventDefault();
         setSearchOpen(false);
+        return;
+      }
+
+      if (!isEditable && event.key === "Escape" && shortcutHelpOpen) {
+        event.preventDefault();
+        setShortcutHelpOpen(false);
       }
     }
 
     document.addEventListener("keydown", handleGlobalShortcut);
     return () => document.removeEventListener("keydown", handleGlobalShortcut);
-  }, [navigate, searchOpen]);
+  }, [navigate, prefs.defaultMemoryMode, searchOpen, shortcutHelpOpen]);
   useEffect(() => {
     function handleDeepLink(event: Event) {
       const url = String((event as CustomEvent<{ url?: unknown }>).detail?.url || "");
@@ -245,26 +270,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const floatingActions = buildFloatingActions({
     pathname: location.pathname,
-    onQuickMemory: () => openSheet("memory", "quick"),
+    defaultMemoryMode: prefs.defaultMemoryMode,
+    onQuickMemory: () => openSheet("memory", prefs.defaultMemoryMode),
     onPhotoMemory: () => openSheet("memory", "full"),
     onPerson: () => openSheet("person"),
     onPlace: () => openSheet("place"),
     onPastePlaceShare: () => void openPlaceShareFromClipboard(),
     onImportLifeLogShare: () => void openLifeLogShareImport(),
     onScanLifeLogShare: () => navigate("/share/import?scan=1"),
-    onMemoryForPerson: (personId) => openSheet("memory", "quick", { personIds: [personId] }),
+    onMemoryForPerson: (personId) => openSheet("memory", prefs.defaultMemoryMode, { personIds: [personId] }),
     onEditPerson: (personId) => openSheet("person", "full", { itemId: personId }),
-    onMemoryForPlace: (placeId) => openSheet("memory", "quick", { placeIds: [placeId] }),
-    onMemoryForDate: (date) => openSheet("memory", "quick", { date })
+    onMemoryForPlace: (placeId) => openSheet("memory", prefs.defaultMemoryMode, { placeIds: [placeId] }),
+    onMemoryForDate: (date) => openSheet("memory", prefs.defaultMemoryMode, { date })
   });
-  const headerCreateActions = buildHeaderCreateActions({
-    pathname: location.pathname,
-    onPerson: () => openSheet("person"),
-    onPlace: () => openSheet("place"),
-    onImportLifeLogShare: () => void openLifeLogShareImport(),
-    onScanLifeLogShare: () => navigate("/share/import?scan=1")
-  });
-
   return (
     <div className={`app-container theme-${settings.themeStyle} ${settings.privacyMode ? "privacy-mode" : ""} ${settings.hidePhotoThumbnails ? "hide-photo-thumbnails" : ""}`}>
       <NetworkBanner />
@@ -273,7 +291,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         title={meta.title}
         subtitle={meta.subtitle}
         onSearch={() => setSearchOpen(true)}
-        createActions={headerCreateActions}
       />
       <main className="main-content">
         {isLoading ? (
@@ -312,12 +329,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         }}
       />
       <GlobalSearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <ShortcutHelpPanel open={shortcutHelpOpen} onClose={() => setShortcutHelpOpen(false)} />
     </div>
   );
 }
 
 function buildFloatingActions({
   pathname,
+  defaultMemoryMode,
   onQuickMemory,
   onPhotoMemory,
   onPerson,
@@ -331,6 +350,7 @@ function buildFloatingActions({
   onMemoryForDate
 }: {
   pathname: string;
+  defaultMemoryMode: SheetMode;
   onQuickMemory: () => void;
   onPhotoMemory: () => void;
   onPerson: () => void;
@@ -429,7 +449,7 @@ function buildFloatingActions({
 
   if (pathname.startsWith("/memories")) {
     return [
-      quickMemoryAction(onQuickMemory, true),
+      quickMemoryAction(onQuickMemory, true, defaultMemoryMode),
       {
         id: "photo-memory",
         label: "带照片记录",
@@ -463,7 +483,7 @@ function buildFloatingActions({
   }
 
   return [
-    quickMemoryAction(onQuickMemory, true),
+    quickMemoryAction(onQuickMemory, true, defaultMemoryMode),
     {
       id: "photo-memory",
       label: "带照片记录",
@@ -471,49 +491,17 @@ function buildFloatingActions({
       icon: <Camera />,
       onClick: onPhotoMemory
     },
-    placeShareAction(onPastePlaceShare)
-  ];
-}
-
-function buildHeaderCreateActions({
-  pathname,
-  onPerson,
-  onPlace,
-  onImportLifeLogShare,
-  onScanLifeLogShare
-}: {
-  pathname: string;
-  onPerson: () => void;
-  onPlace: () => void;
-  onImportLifeLogShare: () => void;
-  onScanLifeLogShare: () => void;
-}): HeaderCreateAction[] {
-  if (isUtilityPage(pathname)) return [];
-  return [
-    {
-      id: "new-person",
-      label: "添加人物",
-      desc: "生日、喜好和重要日子",
-      icon: <UserPlus />,
-      onClick: onPerson
-    },
-    {
-      id: "new-place",
-      label: "添加地点",
-      desc: "餐厅、店铺、景点都可以",
-      icon: <MapPinPlus />,
-      onClick: onPlace
-    },
+    placeShareAction(onPastePlaceShare),
     lifeLogShareAction(onImportLifeLogShare),
     scanShareAction(onScanLifeLogShare)
   ];
 }
 
-function quickMemoryAction(onClick: () => void, primary = false): FloatingAction {
+function quickMemoryAction(onClick: () => void, primary = false, mode: SheetMode = "quick"): FloatingAction {
   return {
     id: "quick-memory",
-    label: "记一件事",
-    desc: "先写一句今天发生了什么",
+    label: mode === "full" ? "完整记录" : "记一件事",
+    desc: mode === "full" ? "直接打开完整表单" : "先写一句今天发生了什么",
     icon: <PenLine />,
     primary,
     onClick

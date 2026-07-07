@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 
 export interface FloatingAction {
@@ -14,6 +14,16 @@ export interface FloatingAction {
 export default function FloatingActionButton({ actions }: { actions: FloatingAction[] }) {
   const [open, setOpen] = useState(false);
   const primaryAction = actions.find((action) => action.primary) || actions[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function handleRequestClose(event: Event) {
+      event.preventDefault();
+      setOpen(false);
+    }
+    window.addEventListener("lifelog:request-close-fab-menu", handleRequestClose);
+    return () => window.removeEventListener("lifelog:request-close-fab-menu", handleRequestClose);
+  }, [open]);
 
   function runAction(action: FloatingAction) {
     setOpen(false);

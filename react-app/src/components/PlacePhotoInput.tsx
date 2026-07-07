@@ -1,7 +1,8 @@
 import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useToast } from "../context/ToastContext";
-import { blobToDataURL, compressImage, validateImageFile } from "../utils/imageCompression";
+import { blobToDataURL, compressImage, validateImageFile, SUPPORTED_IMAGE_ACCEPT, SUPPORTED_IMAGE_FORMAT_LABEL } from "../utils/imageCompression";
+import PhotoUploadQueue, { type PhotoUploadQueueItem } from "./PhotoUploadQueue";
 
 interface PlacePhotoInputProps {
   value?: string;
@@ -27,8 +28,10 @@ export default function PlacePhotoInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingText, setProcessingText] = useState("");
+  const [processingPercent, setProcessingPercent] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
   const [failedPhotos, setFailedPhotos] = useState<FailedPlacePhoto[]>([]);
+  const [queueItems, setQueueItems] = useState<PhotoUploadQueueItem[]>([]);
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = useState(defaultValue);
   const currentValue = isControlled ? value : internalValue;
@@ -53,6 +56,8 @@ export default function PlacePhotoInput({
     setErrors([]);
     setFailedPhotos([]);
     setProcessingText("");
+    setProcessingPercent(0);
+    setQueueItems([]);
     const remaining = maxPhotos - photos.length;
     if (remaining <= 0) {
       const message = `最多只能添加 ${maxPhotos} 张地点照片`;
@@ -67,29 +72,44 @@ export default function PlacePhotoInput({
     const nextErrors: string[] = [];
     const nextFailedPhotos: FailedPlacePhoto[] = [];
     const filesToProcess = selectedFiles.slice(0, remaining);
+    const nextQueueItems = filesToProcess.map((file, index) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+      name: file.name || `地点照片 ${index + 1}`,
+      status: "queued" as const,
+      message: "等待处理"
+    }));
+    setQueueItems(nextQueueItems);
     if (selectedFiles.length > remaining) {
       nextErrors.push(`已达到上限，只处理前 ${remaining} 张照片。`);
     }
     try {
       for (let index = 0; index < filesToProcess.length; index += 1) {
         const file = filesToProcess[index];
-        setProcessingText(`正在处理 ${index + 1}/${filesToProcess.length} 张图片`);
+        const queueId = nextQueueItems[index]?.id;
+        setProcessingPercent(Math.round((index / filesToProcess.length) * 100));
+        const isHeic = isHeicFile(file);
+        setProcessingText(isHeic ? `正在转换 ${index + 1}/${filesToProcess.length} 张 HEIC 图片` : `正在处理 ${index + 1}/${filesToProcess.length} 张图片`);
+        if (queueId) updateQueueItem(queueId, { status: "processing", message: isHeic ? "正在转换 HEIC 并压缩" : "正在压缩图片" });
         const validation = validateImageFile(file);
         if (!validation.valid) {
           const message = validation.error || "不支持的图片格式";
           nextErrors.push(`${file.name}: ${message}`);
           nextFailedPhotos.push({ file, message });
+          if (queueId) updateQueueItem(queueId, { status: "error", message });
           continue;
         }
         try {
           const compressed = await compressImage(file);
           nextPhotos.push(await blobToDataURL(compressed.original));
+          if (queueId) updateQueueItem(queueId, { status: "done", message: "已添加" });
         } catch (error) {
           const message = getPlacePhotoErrorMessage(error);
           nextErrors.push(`${file.name}: ${message}`);
           nextFailedPhotos.push({ file, message });
+          if (queueId) updateQueueItem(queueId, { status: "error", message });
         }
       }
+      setProcessingPercent(100);
       commit(nextPhotos.join("\n"));
       setErrors(nextErrors);
       setFailedPhotos(nextFailedPhotos);
@@ -107,6 +127,10 @@ export default function PlacePhotoInput({
       setProcessingText("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  }
+
+  function updateQueueItem(id: string, patch: Partial<PhotoUploadQueueItem>) {
+    setQueueItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
   function removePhoto(index: number) {
@@ -144,7 +168,7 @@ export default function PlacePhotoInput({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
+        accept={SUPPORTED_IMAGE_ACCEPT}
         multiple
         hidden
         onChange={(event) => void handleFiles(event.target.files)}
@@ -161,8 +185,12 @@ export default function PlacePhotoInput({
       {isProcessing && processingText && (
         <div className="place-photo-processing" role="status" aria-live="polite">
           <span>{processingText}</span>
+          <div className="photo-upload-progress-bar" aria-hidden="true">
+            <span style={{ width: `${processingPercent}%` }} />
+          </div>
         </div>
       )}
+      <PhotoUploadQueue items={queueItems} />
       {errors.length > 0 && (
         <div className="place-photo-errors" role="status" aria-live="polite">
           <strong>{errors.length === 1 ? "有一项未处理" : `${errors.length} 项未处理`}</strong>
@@ -177,7 +205,7 @@ export default function PlacePhotoInput({
           )}
         </div>
       )}
-      <p className="form-hint">支持 JPG、PNG、GIF、WebP；HEIC 请先在相册另存为 JPG。本地图片会压缩后保存到地点资料中，最多 {maxPhotos} 张。</p>
+      <p className="form-hint">支持 {SUPPORTED_IMAGE_FORMAT_LABEL}；HEIC 会自动尝试转换。本地图片会压缩后保存到地点资料中，最多 {maxPhotos} 张。</p>
     </div>
   );
 }
@@ -192,4 +220,8 @@ function splitPhotoLines(value: string) {
 function getPlacePhotoErrorMessage(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   return "处理失败，请重试";
+}
+
+function isHeicFile(file: File) {
+  return ["image/heic", "image/heif"].includes(file.type) || /\.(heic|heif)$/i.test(file.name);
 }

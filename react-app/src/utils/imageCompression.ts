@@ -1,4 +1,8 @@
 import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
+
+export const SUPPORTED_IMAGE_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.gif,.webp,.heic,.heif";
+export const SUPPORTED_IMAGE_FORMAT_LABEL = "JPG、PNG、GIF、WebP、HEIC";
 
 export interface CompressedImageResult {
   original: Blob;
@@ -17,6 +21,7 @@ export interface CompressedImageResult {
  */
 export async function compressImage(file: File): Promise<CompressedImageResult> {
   try {
+    const sourceFile = await normalizeImageFile(file);
     // 压缩原图：最大宽度 1920px，质量 0.8，目标 500KB
     const originalOptions = {
       maxSizeMB: 0.5,
@@ -26,10 +31,10 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
       preserveExif: true,
     };
 
-    const compressedOriginal = await compressWithFallback(file, originalOptions, {
+    const compressedOriginal = await compressWithFallback(sourceFile, originalOptions, {
       maxWidthOrHeight: 1920,
       quality: 0.82,
-      fallbackType: getOutputMimeType(file)
+      fallbackType: getOutputMimeType(sourceFile)
     });
 
     // 生成缩略图：200x200px，质量 0.7，目标 50KB
@@ -40,7 +45,7 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
       initialQuality: 0.7,
     };
 
-    const thumbnail = await compressWithFallback(file, thumbnailOptions, {
+    const thumbnail = await compressWithFallback(sourceFile, thumbnailOptions, {
       maxWidthOrHeight: 240,
       quality: 0.72,
       fallbackType: "image/jpeg"
@@ -50,7 +55,7 @@ export async function compressImage(file: File): Promise<CompressedImageResult> 
     const dimensions = await getImageDimensions(compressedOriginal);
 
     // 提取 EXIF 数据
-    const exif = await extractExifData(file);
+    const exif = await extractExifData(sourceFile);
 
     return {
       original: compressedOriginal,
@@ -173,20 +178,14 @@ async function extractExifData(file: File): Promise<{ capturedAt?: string }> {
  */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
   const fileName = file.name.toLowerCase();
-  if (/\.(heic|heif)$/.test(fileName) || ["image/heic", "image/heif"].includes(file.type)) {
-    return {
-      valid: false,
-      error: "暂不支持 HEIC/HEIF，请在相册中另存为 JPG 后再上传",
-    };
-  }
 
   // 检查文件类型
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const validExtensions = /\.(jpe?g|png|gif|webp)$/;
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+  const validExtensions = /\.(jpe?g|png|gif|webp|heic|heif)$/;
   if (!validTypes.includes(file.type) && !validExtensions.test(fileName)) {
     return {
       valid: false,
-      error: '不支持的图片格式，请上传 JPG、PNG、GIF 或 WebP 格式',
+      error: `不支持的图片格式，请上传 ${SUPPORTED_IMAGE_FORMAT_LABEL} 格式`,
     };
   }
 
@@ -207,9 +206,39 @@ function getOutputMimeType(file: File) {
   return "image/jpeg";
 }
 
+async function normalizeImageFile(file: File) {
+  if (!isHeicFile(file)) return file;
+
+  try {
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9
+    });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    if (!blob) throw new Error("HEIC 转换失败");
+    return new File([blob], replaceImageExtension(file.name, "jpg"), {
+      type: "image/jpeg",
+      lastModified: file.lastModified
+    });
+  } catch (error) {
+    console.warn("HEIC/HEIF 转换失败:", error);
+    throw new Error("HEIC/HEIF 自动转换失败，请在相册中另存为 JPG 后再上传");
+  }
+}
+
+function isHeicFile(file: File) {
+  return ["image/heic", "image/heif"].includes(file.type) || /\.(heic|heif)$/i.test(file.name);
+}
+
+function replaceImageExtension(fileName: string, extension: string) {
+  const trimmed = fileName.trim() || `photo.${extension}`;
+  return /\.(heic|heif)$/i.test(trimmed) ? trimmed.replace(/\.(heic|heif)$/i, `.${extension}`) : `${trimmed}.${extension}`;
+}
+
 function getImageProcessingErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
-  if (/heic|heif/i.test(message)) return "暂不支持 HEIC/HEIF，请先转为 JPG";
+  if (/heic|heif/i.test(message)) return message;
   if (/load|decode|读取|格式/i.test(message)) return "无法读取这张图片，请换一张或先在相册中另存为 JPG";
   if (/canvas|support|支持/i.test(message)) return "当前设备不支持处理这张图片，请换一张较小的 JPG";
   return "图片处理失败，请换一张或先截图/压缩后再上传";

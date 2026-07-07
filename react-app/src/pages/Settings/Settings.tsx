@@ -1,4 +1,4 @@
-import { BarChart3, Bell, BellOff, Check, ChevronDown, EyeOff, ExternalLink, GitMerge, HeartPulse, SlidersHorizontal, X } from "lucide-react";
+import { BarChart3, Bell, BellOff, Check, ChevronDown, Copy, EyeOff, ExternalLink, GitMerge, HeartPulse, SlidersHorizontal, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DateInput from "../../components/DateInput";
@@ -14,6 +14,7 @@ import { formatAnniversaryPlanTargetTitle, normalizeAnniversaryPlanTargetKind } 
 import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildPlaceDisplayName } from "../../utils/placeMeta";
+import { copyTextToClipboard } from "../../utils/diagnostics";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
 import ReminderSettings from "./ReminderSettings";
 
@@ -105,6 +106,7 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
   );
   const healthReport = useMemo(() => buildDataHealthReport(state), [state]);
   const memoryStats = useMemo(() => buildRecordStats(state.memories), [state.memories]);
+  const yearlyReview = useMemo(() => buildYearlyReview(state), [state]);
   const reminderCenterItems = useMemo(() => {
     const dismissed = new Set(dismissedReminderIds);
     return previewUpcomingReminders(state.people, state.memories, reminderSettings, { days: 30, limit: 12 })
@@ -216,6 +218,15 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
     });
   }
 
+  async function copyYearlyReview() {
+    const copied = await copyTextToClipboard(buildYearlyReviewSummary(yearlyReview));
+    notify({
+      message: copied ? "年度回顾摘要已复制" : "当前环境无法复制摘要",
+      tone: copied ? "success" : "info",
+      durationMs: 3200
+    });
+  }
+
   return (
     <>
       {show("visual") && <section className="section">
@@ -247,6 +258,9 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
           <h2>
             <BarChart3 /> 数据概览
           </h2>
+          <button className="see-all" type="button" onClick={() => navigate("/stats")}>
+            详细统计
+          </button>
         </div>
         <GlassCard className="insight-card">
           <div className="metric">
@@ -278,6 +292,47 @@ function SettingsContent({ sections }: { sections?: SettingsSection[] }) {
           <div className="metric">
             <strong>{cityCount}</strong>
             <span>去过的城市</span>
+          </div>
+        </GlassCard>
+        <GlassCard className="year-review-card">
+          <div className="year-review-head">
+            <div>
+              <strong>{yearlyReview.year} 年回顾</strong>
+              <span>
+                {yearlyReview.total
+                  ? `今年记录 ${yearlyReview.total} 条，本月 ${yearlyReview.currentMonthTotal} 条。`
+                  : "今年还没有回忆记录。"}
+              </span>
+            </div>
+            <div className="year-review-actions">
+              <em>{yearlyReview.activeMonths} 个月有记录</em>
+              <button type="button" onClick={() => void copyYearlyReview()}>
+                <Copy size={14} />
+                复制摘要
+              </button>
+            </div>
+          </div>
+          <div className="year-review-chart" aria-label="月度记录分布">
+            {yearlyReview.months.map((month) => (
+              <span key={month.label} className={month.count ? "active" : ""}>
+                <i style={{ height: `${month.height}px` }} />
+                <em>{month.label}</em>
+              </span>
+            ))}
+          </div>
+          <div className="year-review-highlights">
+            <span>
+              <strong>{yearlyReview.topMood.label}</strong>
+              <small>常见心情</small>
+            </span>
+            <span>
+              <strong>{yearlyReview.topPerson.label}</strong>
+              <small>常关联人物</small>
+            </span>
+            <span>
+              <strong>{yearlyReview.topPlace.label}</strong>
+              <small>常关联地点</small>
+            </span>
           </div>
         </GlassCard>
       </section>}
@@ -657,6 +712,79 @@ function buildRecordStats(memories: MemoryEvent[]) {
   return {
     memories: memories.length - plans,
     plans
+  };
+}
+
+function buildYearlyReview(state: LifeLogState) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const actualMemories = state.memories.filter((memory) => !isMemoryPlan(memory) && memory.date.startsWith(`${year}-`));
+  const monthCounts = Array.from({ length: 12 }, (_, index) => ({
+    index,
+    label: `${index + 1}月`,
+    count: 0
+  }));
+  const moodCounts = new Map<string, number>();
+  const personCounts = new Map<string, number>();
+  const placeCounts = new Map<string, number>();
+
+  actualMemories.forEach((memory) => {
+    const month = Number(memory.date.slice(5, 7));
+    if (month >= 1 && month <= 12) monthCounts[month - 1].count += 1;
+    if (memory.mood.trim()) addCount(moodCounts, memory.mood.trim());
+    memory.personIds.forEach((personId) => addCount(personCounts, personId));
+    getMemoryPlaceIds(memory).forEach((placeId) => addCount(placeCounts, placeId));
+  });
+
+  const maxMonthCount = Math.max(1, ...monthCounts.map((month) => month.count));
+
+  return {
+    year,
+    total: actualMemories.length,
+    currentMonthTotal: monthCounts[now.getMonth()]?.count || 0,
+    activeMonths: monthCounts.filter((month) => month.count > 0).length,
+    months: monthCounts.map((month) => ({
+      ...month,
+      height: month.count ? Math.max(8, Math.round((month.count / maxMonthCount) * 44)) : 4
+    })),
+    topMood: buildTopLabel(moodCounts, (mood) => mood, "暂无"),
+    topPerson: buildTopLabel(personCounts, (personId) => state.people.find((person) => person.id === personId)?.name || "", "暂无"),
+    topPlace: buildTopLabel(placeCounts, (placeId) => {
+      const place = state.places.find((item) => item.id === placeId);
+      return place ? buildPlaceDisplayName(place) : "";
+    }, "暂无"),
+    topMonth: buildTopLabel(
+      new Map(monthCounts.filter((month) => month.count > 0).map((month) => [month.label, month.count])),
+      (month) => month,
+      "暂无"
+    )
+  };
+}
+
+function buildYearlyReviewSummary(review: ReturnType<typeof buildYearlyReview>) {
+  return [
+    `LifeLog ${review.year} 年回顾`,
+    review.total
+      ? `今年记录 ${review.total} 条回忆，${review.activeMonths} 个月有记录，本月 ${review.currentMonthTotal} 条。`
+      : "今年还没有回忆记录。",
+    `记录最多月份：${review.topMonth.label}`,
+    `常见心情：${review.topMood.label}`,
+    `常关联人物：${review.topPerson.label}`,
+    `常关联地点：${review.topPlace.label}`
+  ].join("\n");
+}
+
+function addCount(map: Map<string, number>, key: string) {
+  if (!key) return;
+  map.set(key, (map.get(key) || 0) + 1);
+}
+
+function buildTopLabel(counts: Map<string, number>, resolveLabel: (key: string) => string, fallback: string) {
+  const [key, count] = Array.from(counts.entries()).sort((left, right) => right[1] - left[1])[0] || ["", 0];
+  const label = key ? resolveLabel(key) : "";
+  return {
+    label: label ? `${label}${count ? ` · ${count}` : ""}` : fallback,
+    count
   };
 }
 

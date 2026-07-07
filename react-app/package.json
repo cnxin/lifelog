@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.125",
+  "version": "0.1.0-test.126",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -50,6 +50,7 @@
     "@vitejs/plugin-react": "latest",
     "browser-image-compression": "^2.0.2",
     "dexie": "^4.4.2",
+    "heic2any": "^0.0.4",
     "lucide-react": "latest",
     "lunar-javascript": "^1.7.7",
     "qrcode": "^1.5.4",

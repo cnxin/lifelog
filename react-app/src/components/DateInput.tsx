@@ -44,6 +44,16 @@ export default function DateInput({ name, value, defaultValue = "", label, requi
     scrollWheelToValue(monthWheelRef.current, pendingMonth - 1);
   }, [isOpen, pendingMonth, pendingYear]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleCloseRequest(event: Event) {
+      event.preventDefault();
+      setIsOpen(false);
+    }
+    window.addEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+    return () => window.removeEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+  }, [isOpen]);
+
   function handleWheelScroll(type: "year" | "month", element: HTMLDivElement) {
     window.clearTimeout(scrollTimersRef.current[type]);
     scrollTimersRef.current[type] = window.setTimeout(() => {

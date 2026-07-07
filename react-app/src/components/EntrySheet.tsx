@@ -135,11 +135,16 @@ export default function EntrySheet({
     if (!type) return;
     function handleRequestClose(event: Event) {
       event.preventDefault();
+      if (mergePreview) {
+        setMergePreview(null);
+        setPendingPlaceFormData(null);
+        return;
+      }
       void requestClose();
     }
     window.addEventListener("lifelog:request-close-entry-sheet", handleRequestClose);
     return () => window.removeEventListener("lifelog:request-close-entry-sheet", handleRequestClose);
-  }, [type, photos.length]);
+  }, [type, photos.length, mergePreview]);
 
   if (!type) return null;
 

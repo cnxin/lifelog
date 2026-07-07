@@ -1121,7 +1121,7 @@
 
 .local-share-primary-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(82px, auto));
   gap: 9px;
 }
 
@@ -1133,6 +1133,49 @@
 .local-share-primary-actions .ghost-btn {
   min-width: 92px;
   min-height: 44px;
+}
+
+.local-share-card-template-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 7px 8px 7px 12px;
+  background: color-mix(in srgb, var(--text-sub) 6%, transparent);
+}
+
+.local-share-card-template-row > span {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.local-share-card-template-row > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(54px, 1fr));
+  gap: 5px;
+  width: min(216px, 100%);
+}
+
+.local-share-card-template-row button {
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0 9px;
+  color: var(--text-sub);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.local-share-card-template-row button.active {
+  border-color: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  background: var(--card-bg);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 10%, transparent);
 }
 
 .local-share-summary {
@@ -6022,6 +6065,375 @@
   white-space: nowrap;
 }
 
+.year-review-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.year-review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.year-review-head > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.year-review-head strong {
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.year-review-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.year-review-head em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--primary);
+  background: var(--soft-purple);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.year-review-actions {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.year-review-actions button {
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.year-review-actions button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.year-review-chart {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 5px;
+  align-items: end;
+  min-height: 66px;
+  border-radius: 16px;
+  padding: 10px 8px 8px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.year-review-chart span {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  gap: 5px;
+}
+
+.year-review-chart i {
+  width: 100%;
+  max-width: 12px;
+  min-height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-sub) 22%, transparent);
+  transition: height 0.18s ease;
+}
+
+.year-review-chart span.active i {
+  background: linear-gradient(180deg, var(--secondary), var(--primary));
+}
+
+.year-review-chart em {
+  color: var(--text-sub);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.year-review-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.year-review-highlights span {
+  min-width: 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  background: var(--soft-purple);
+}
+
+.year-review-highlights strong,
+.year-review-highlights small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.year-review-highlights strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.year-review-highlights small {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stats-summary-card {
+  margin-top: 0;
+}
+
+.stats-heatmap-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.stats-heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(53, minmax(0, 1fr));
+  grid-auto-rows: 8px;
+  grid-auto-flow: column;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.stats-heatmap-grid span,
+.stats-legend i {
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-sub) 10%, transparent);
+}
+
+.stats-heatmap-grid .level-1,
+.stats-legend .level-1 {
+  background: color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+.stats-heatmap-grid .level-2,
+.stats-legend .level-2 {
+  background: color-mix(in srgb, var(--primary) 52%, transparent);
+}
+
+.stats-heatmap-grid .level-3,
+.stats-legend .level-3 {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.stats-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stats-legend i {
+  width: 12px;
+  height: 12px;
+}
+
+.stats-grid-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats-rank-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.stats-rank-card h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-main);
+  font-size: 14px;
+}
+
+.stats-rank-card h3 svg {
+  width: 17px;
+  height: 17px;
+  color: var(--primary);
+}
+
+.stats-rank-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stats-chart-card {
+  min-height: 188px;
+}
+
+.stats-month-chart {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 5px;
+  align-items: end;
+  min-height: 116px;
+  border-radius: 16px;
+  padding: 12px 8px 8px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.stats-month-chart span {
+  min-width: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: end;
+  gap: 6px;
+}
+
+.stats-month-chart i {
+  width: 100%;
+  max-width: 13px;
+  min-height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--secondary), var(--primary));
+}
+
+.stats-month-chart small {
+  color: var(--text-sub);
+  font-size: 9px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stats-rank-row {
+  display: grid;
+  gap: 6px;
+}
+
+.stats-rank-row > span {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stats-rank-row strong,
+.stats-rank-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-rank-row strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.stats-rank-row small {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stats-rank-row > i {
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-sub) 10%, transparent);
+}
+
+.stats-rank-row > i > em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+.stats-empty-text {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stats-rhythm-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stats-rhythm-list span {
+  min-width: 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 8px;
+  text-align: center;
+  background: var(--soft-purple);
+}
+
+.stats-rhythm-list strong {
+  color: var(--text-main);
+  font-size: 18px;
+}
+
+.stats-rhythm-list small {
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.stats-review-card p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.stats-review-card .mini-action {
+  justify-self: start;
+}
+
+@media (max-width: 620px) {
+  .stats-grid-section {
+    grid-template-columns: 1fr;
+  }
+}
+
 .theme-selector-row {
   display: flex;
   gap: 10px;
@@ -6998,6 +7410,16 @@
   gap: 5px;
 }
 
+.batch-share-toolbar .mini-action.danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.memory-batch-toolbar,
+.people-batch-toolbar {
+  top: 8px;
+}
+
 .place-card.selectable {
   position: relative;
   border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
@@ -7551,6 +7973,105 @@
 
 .photo-upload-errors button:disabled {
   opacity: 0.55;
+}
+
+.photo-upload-queue {
+  display: grid;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: 16px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.photo-upload-queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.photo-upload-queue-head strong {
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.photo-upload-queue-head span {
+  color: var(--text-sub);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.photo-upload-queue-list {
+  display: grid;
+  gap: 6px;
+}
+
+.photo-upload-queue-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border-radius: 13px;
+  padding: 8px;
+  background: var(--card-bg);
+}
+
+.photo-upload-queue-item.done {
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+}
+
+.photo-upload-queue-item.error {
+  background: var(--danger-soft);
+}
+
+.photo-upload-queue-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--soft-purple);
+}
+
+.photo-upload-queue-item.error .photo-upload-queue-icon {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.photo-upload-queue-item.processing .photo-upload-queue-icon svg {
+  animation: spin 1s linear infinite;
+}
+
+.photo-upload-queue-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.photo-upload-queue-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.photo-upload-queue-copy strong,
+.photo-upload-queue-copy small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-upload-queue-copy strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.photo-upload-queue-copy small {
+  color: var(--text-sub);
+  font-size: 11px;
 }
 
 .photo-preview {

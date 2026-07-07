@@ -1,10 +1,12 @@
-import { Building2, CheckSquare, ChevronDown, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Users, X } from "lucide-react";
+import { Building2, CheckSquare, ChevronDown, Download, GitMerge, MapPin, Plus, RotateCcw, Share2, SlidersHorizontal, Square, Star, Store, Trash2, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import BatchActionToolbar from "../../components/BatchActionToolbar";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ListViewModeToggle from "../../components/ListViewModeToggle";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import NotionSyncBadge from "../../components/NotionSyncBadge";
 import PageSegmentNav from "../../components/PageSegmentNav";
@@ -12,14 +14,17 @@ import PlaceMergeWorkbench from "../../components/PlaceMergeWorkbench";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
 import Tags from "../../components/Tags";
-import type { Place, PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
+import type { LifeLogState, Place, PlaceDuplicateGroup, PlaceMergePreview } from "../../types";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { usePlaceLocationFilter } from "../../hooks/usePlaceLocationFilter";
+import { useUserPreferences } from "../../hooks/useUserPreferences";
 import { buildGroupMergePreview } from "../../utils/placeDedup";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
+import { saveReadableFile } from "../../utils/backupExport";
+import { buildReadableMarkdownForSelection } from "../../utils/readableExport";
 import { buildMallVisitStats, buildPlaceVisitStats, type MallVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import {
   buildMallKey,
@@ -71,6 +76,7 @@ export default function Places() {
   const confirm = useConfirm();
   const notify = useToast();
   const navigate = useNavigate();
+  const { prefs, updatePreference } = useUserPreferences();
   const [searchParams, setSearchParams] = useSearchParams();
   const importedPlaceIds = useMemo(() => parseImportedIds(searchParams.get("imported")), [searchParams]);
   const importedPlaceIdSet = useMemo(() => new Set(importedPlaceIds), [importedPlaceIds]);
@@ -128,6 +134,8 @@ export default function Places() {
   );
   const normalizedQuery = query.trim().toLowerCase();
   const isCustomSort = sortMode !== "smart";
+  const denseList = prefs.listViewMode === "compact";
+  const defaultPlaceCardExpanded = !denseList && prefs.placeCardExpanded;
   const activeAdvancedFilterCount = [country !== "全部", province !== "全部", city !== "全部", area !== "全部", category !== "全部", isCustomSort].filter(Boolean).length;
   const hasAdvancedFilters = activeAdvancedFilterCount > 0;
   const hasActiveFilters = Boolean(normalizedQuery || hasAdvancedFilters);
@@ -379,9 +387,48 @@ export default function Places() {
     });
   }
 
-  const storePlaceRows = placeRows.filter(({ place }) => !isMallRecord(place));
-  const selectablePlaceIds = storePlaceRows.map(({ place }) => place.id);
+  async function handleBatchExportPlaces() {
+    if (!selectedShareCount) return;
+    const content = buildReadableMarkdownForSelection(state, {
+      places: selectedSharePlaceIds
+    } satisfies Partial<Record<keyof LifeLogState, string[]>>);
+    const result = await saveReadableFile(`lifelog-places-${formatExportDate()}.md`, content, "text/markdown;charset=utf-8");
+    notify({
+      message: `已导出 ${selectedShareCount} 个地点：${result.locationLabel}`,
+      tone: "success",
+      durationMs: 4200
+    });
+  }
+
+  async function handleBatchFavoritePlaces(favorite: boolean) {
+    if (!selectedShareCount) return;
+    const result = await updatePlacesBulk(selectedSharePlaceIds, { favorite });
+    if (!result.count) {
+      notify({ message: favorite ? "选中的地点已全部收藏" : "选中的地点均未收藏", tone: "info" });
+      return;
+    }
+    notify({
+      message: favorite ? `已收藏 ${result.count} 个地点` : `已取消收藏 ${result.count} 个地点`,
+      tone: "success",
+      actions: [
+        {
+          label: "撤销",
+          onClick: async () => {
+            const restored = await restorePlacesBulk(result.before);
+            notify({ message: restored ? `已恢复 ${restored} 个地点` : "没有可恢复的地点", tone: restored ? "success" : "info" });
+          }
+        }
+      ]
+    });
+  }
+
+  const storePlaceRows = useMemo(() => placeRows.filter(({ place }) => !isMallRecord(place)), [placeRows]);
+  const selectablePlaceIds = useMemo(() => storePlaceRows.map(({ place }) => place.id), [storePlaceRows]);
   const selectedShareCount = selectedSharePlaceIds.length;
+  const allVisiblePlacesSelected =
+    selectablePlaceIds.length > 0 &&
+    selectedShareCount === selectablePlaceIds.length &&
+    selectablePlaceIds.every((id) => selectedSharePlaceIds.includes(id));
   const batchPreview = useMemo(
     () => buildPlaceBatchPreview(storePlaceRows.map(({ place }) => place), selectedSharePlaceIds, batchDraft),
     [batchDraft, selectedSharePlaceIds, storePlaceRows]
@@ -399,6 +446,50 @@ export default function Places() {
     }),
     isCustomSort ? `排序：${currentSortLabel}` : ""
   ].filter(Boolean);
+
+  useEffect(() => {
+    if (!batchShareMode) return;
+    const visibleIdSet = new Set(selectablePlaceIds);
+    setSelectedSharePlaceIds((current) => current.filter((id) => visibleIdSet.has(id)));
+  }, [batchShareMode, selectablePlaceIds]);
+
+  function closeBatchTools() {
+    setBatchShareMode(false);
+    setSelectedSharePlaceIds([]);
+    setBatchDraft({ category: "", mall: "", area: "", tags: "" });
+    setBatchPreviewOpen(false);
+  }
+
+  async function handleBatchDeletePlaces() {
+    if (!selectedShareCount) return;
+    const ids = [...selectedSharePlaceIds];
+    const accepted = await confirm({
+      title: "批量删除地点",
+      message: `确认删除选中的 ${ids.length} 个地点？相关回忆中的地点关联也会被清空。`,
+      confirmText: "删除"
+    });
+    if (!accepted) return;
+
+    const snapshotResults = await Promise.all(ids.map((id) => getDeleteSnapshot("place", id)));
+    await Promise.all(ids.map((id) => deleteEntry("place", id)));
+    const snapshots = snapshotResults.filter((snapshot) => snapshot !== null);
+    closeBatchTools();
+    notify({
+      message: `已删除 ${ids.length} 个地点`,
+      tone: "info",
+      actions: snapshots.length
+        ? [
+            {
+              label: "撤销",
+              onClick: async () => {
+                await Promise.all(snapshots.map((snapshot) => restoreDeletedEntry(snapshot)));
+                notify({ message: `已恢复 ${snapshots.length} 个地点`, tone: "success" });
+              }
+            }
+          ]
+        : undefined
+    });
+  }
 
   return (
     <>
@@ -435,6 +526,14 @@ export default function Places() {
             </span>
           </div>
           <div className="list-filter-actions">
+            <ListViewModeToggle
+              dense={denseList}
+              ariaLabel="地点列表密度"
+              onChange={(mode) => {
+                updatePreference("listViewMode", mode);
+                if (mode === "compact") updatePreference("placeCardExpanded", false);
+              }}
+            />
             {hasActiveFilters && (
               <button className="filter-clear-button" type="button" onClick={clearFilters}>
                 <RotateCcw /> 清除
@@ -696,41 +795,23 @@ export default function Places() {
           </div>
         </div>
         {batchShareMode && (
-          <GlassCard className="batch-share-toolbar">
-            <div>
-              <strong>已选择 {selectedShareCount} 个地点</strong>
-              <span>可批量分享，也可以统一补充分类、商场、区域或标签。</span>
-            </div>
-            <div>
-              <button
-                className="mini-action"
-                type="button"
-                onClick={() => setSelectedSharePlaceIds(selectedShareCount === selectablePlaceIds.length ? [] : selectablePlaceIds)}
-              >
-                {selectedShareCount === selectablePlaceIds.length ? <Square size={14} /> : <CheckSquare size={14} />}
-                {selectedShareCount === selectablePlaceIds.length ? "取消全选" : "全选"}
-              </button>
-              <button
-                className="mini-action add"
-                type="button"
-                disabled={!selectedShareCount}
-                onClick={() => setShareOpen(true)}
-              >
-                <Share2 size={14} />
-                分享
-              </button>
-              <button
-                className="mini-action"
-                type="button"
-                onClick={() => {
-                  setBatchShareMode(false);
-                  setSelectedSharePlaceIds([]);
-                  setBatchDraft({ category: "", mall: "", area: "", tags: "" });
-                }}
-              >
-                <X size={14} />
-              </button>
-            </div>
+          <>
+            <BatchActionToolbar
+              className="places-batch-toolbar"
+              selectedCount={selectedShareCount}
+              itemLabel="个地点"
+              hint="可统一分享、导出、收藏，也可以补充分类、商场、区域或标签。"
+              allSelected={allVisiblePlacesSelected}
+              onToggleAll={() => setSelectedSharePlaceIds(allVisiblePlacesSelected ? [] : selectablePlaceIds)}
+              onClose={closeBatchTools}
+              actions={[
+                { id: "share", label: "分享", icon: <Share2 size={14} />, disabled: !selectedShareCount, onClick: () => setShareOpen(true) },
+                { id: "export", label: "导出", icon: <Download size={14} />, disabled: !selectedShareCount, onClick: () => void handleBatchExportPlaces() },
+                { id: "favorite", label: "收藏", icon: <Star size={14} />, disabled: !selectedShareCount, onClick: () => void handleBatchFavoritePlaces(true) },
+                { id: "unfavorite", label: "取消收藏", icon: <Star size={14} />, disabled: !selectedShareCount, onClick: () => void handleBatchFavoritePlaces(false) },
+                { id: "delete", label: "删除", icon: <Trash2 size={14} />, tone: "danger", disabled: !selectedShareCount, onClick: () => void handleBatchDeletePlaces() }
+              ]}
+            />
             <div className="batch-edit-grid">
               <label>
                 分类
@@ -801,15 +882,15 @@ export default function Places() {
                 </div>
               </div>
             )}
-          </GlassCard>
+          </>
         )}
         <div className="list">
           {storePlaceRows.map(({ place, visitStats }) => {
             const selected = selectedSharePlaceIds.includes(place.id);
-            const expanded = expandedPlaceId === place.id;
+            const expanded = defaultPlaceCardExpanded || expandedPlaceId === place.id;
             const hasExtraDetail = Boolean(place.address || place.desc || place.tags.length || visitStats.topPeople.length);
             return (
-              <GlassCard className={`place-card compact-place-card ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`} key={place.id}>
+              <GlassCard className={`place-card ${denseList ? "compact-place-card dense-place-card" : ""} ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`} key={place.id}>
                 {batchShareMode && (
                   <button
                     className="place-share-select"
@@ -865,7 +946,10 @@ export default function Places() {
                         aria-label={place.favorite ? "取消收藏" : "收藏"}
                         onClick={(event) => {
                           event.stopPropagation();
-                          if (batchShareMode) return;
+                          if (batchShareMode) {
+                            toggleSharePlace(place.id, setSelectedSharePlaceIds);
+                            return;
+                          }
                           void togglePlaceFavorite(place.id);
                         }}
                       >
@@ -883,7 +967,7 @@ export default function Places() {
                     <span>{visitStats.visitCount ? `去过 ${visitStats.visitCount} 次` : "还没有到访"}</span>
                     <span>{visitStats.latestLabel}</span>
                   </div>
-                  {hasExtraDetail && (
+                  {hasExtraDetail && !defaultPlaceCardExpanded && (
                     <button
                       className="place-card-detail-toggle"
                       type="button"
@@ -1028,6 +1112,10 @@ function isPlaceFilterState(value: unknown): value is PlaceFilterState {
     typeof candidate.category === "string" &&
     ["smart", "recent", "rating", "name"].includes(String(candidate.sortMode))
   );
+}
+
+function formatExportDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function toggleSharePlace(placeId: string, setSelected: (updater: (current: string[]) => string[]) => void) {

@@ -1,5 +1,5 @@
 import { Clock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface TimePickerProps {
@@ -15,6 +15,16 @@ export default function TimePicker({ value, onChange, label }: TimePickerProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [panelAnchor, setPanelAnchor] = useState({ top: 0, left: 0 });
   const [hourValue, minuteValue] = useMemo(() => parseTimeValue(value), [value]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleCloseRequest(event: Event) {
+      event.preventDefault();
+      setIsOpen(false);
+    }
+    window.addEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+    return () => window.removeEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+  }, [isOpen]);
 
   function togglePanel(element: HTMLButtonElement) {
     if (isOpen) {

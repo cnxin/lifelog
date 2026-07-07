@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 export interface SelectPickerOption {
@@ -37,6 +37,16 @@ export default function SelectPicker({
     () => options.find((option) => option.value === selectedValue)?.label || placeholder,
     [options, placeholder, selectedValue]
   );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleCloseRequest(event: Event) {
+      event.preventDefault();
+      setIsOpen(false);
+    }
+    window.addEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+    return () => window.removeEventListener("lifelog:request-close-floating-panel", handleCloseRequest);
+  }, [isOpen]);
 
   function togglePanel(element: HTMLButtonElement) {
     if (isOpen) {

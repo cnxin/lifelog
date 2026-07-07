@@ -2,9 +2,10 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Photo } from "../types";
-import { compressImage, validateImageFile, blobToObjectURL } from "../utils/imageCompression";
+import { compressImage, validateImageFile, blobToObjectURL, SUPPORTED_IMAGE_ACCEPT, SUPPORTED_IMAGE_FORMAT_LABEL } from "../utils/imageCompression";
 import { useToast } from "../context/ToastContext";
 import { PhotoViewer } from "./PhotoViewer";
+import PhotoUploadQueue, { type PhotoUploadQueueItem } from "./PhotoUploadQueue";
 
 interface PhotoUploaderProps {
   photos: Photo[];
@@ -34,6 +35,7 @@ export function PhotoUploader({
   const [errors, setErrors] = useState<string[]>([]);
   const [failedUploads, setFailedUploads] = useState<FailedUpload[]>([]);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [queueItems, setQueueItems] = useState<PhotoUploadQueueItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (files: FileList | null) => {
@@ -51,6 +53,7 @@ export function PhotoUploader({
     setErrors([]);
     setFailedUploads([]);
     setUploadPercent(0);
+    setQueueItems([]);
 
     const remainingSlots = maxPhotos - photos.length;
     if (remainingSlots <= 0) {
@@ -61,6 +64,13 @@ export function PhotoUploader({
     }
 
     const filesToProcess = selectedFiles.slice(0, remainingSlots);
+    const nextQueueItems = filesToProcess.map((file, index) => ({
+      id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+      name: file.name || `照片 ${index + 1}`,
+      status: "queued" as const,
+      message: "等待处理"
+    }));
+    setQueueItems(nextQueueItems);
     const nextErrors: string[] = [];
     const nextFailedUploads: FailedUpload[] = [];
     if (selectedFiles.length > remainingSlots) {
@@ -73,7 +83,10 @@ export function PhotoUploader({
 
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
+      const queueId = nextQueueItems[i]?.id;
       setUploadPercent(Math.round((i / filesToProcess.length) * 100));
+      const isHeic = isHeicFile(file);
+      if (queueId) updateQueueItem(queueId, { status: "processing", message: isHeic ? "正在转换 HEIC 并压缩" : "正在压缩和生成缩略图" });
 
       // 验证文件
       const validation = validateImageFile(file);
@@ -81,6 +94,7 @@ export function PhotoUploader({
         const message = validation.error || "不支持的图片格式";
         nextErrors.push(`${file.name}: ${message}`);
         nextFailedUploads.push({ file, message });
+        if (queueId) updateQueueItem(queueId, { status: "error", message });
         continue;
       }
 
@@ -106,11 +120,13 @@ export function PhotoUploader({
         };
 
         newPhotos.push(photo);
+        if (queueId) updateQueueItem(queueId, { status: "done", message: "已添加" });
       } catch (error) {
         console.error(`处理 ${file.name} 失败:`, error);
         const message = getUploadErrorMessage(error);
         nextErrors.push(`${file.name}: ${message}`);
         nextFailedUploads.push({ file, message });
+        if (queueId) updateQueueItem(queueId, { status: "error", message });
       }
     }
 
@@ -129,6 +145,10 @@ export function PhotoUploader({
     } else if (nextErrors.length) {
       notify({ message: nextErrors[0], tone: "error" });
     }
+  }
+
+  function updateQueueItem(id: string, patch: Partial<PhotoUploadQueueItem>) {
+    setQueueItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -202,7 +222,7 @@ export function PhotoUploader({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,.jpg,.jpeg,.png,.gif,.webp"
+            accept={SUPPORTED_IMAGE_ACCEPT}
             multiple
             onChange={(event) => {
               void handleFileSelect(event.target.files);
@@ -214,7 +234,7 @@ export function PhotoUploader({
           <Upload size={32} />
           <p>点击或拖拽上传照片</p>
           <p className="upload-hint">
-            支持 JPG、PNG、GIF、WebP；HEIC 请先在相册另存为 JPG
+            支持 {SUPPORTED_IMAGE_FORMAT_LABEL}；HEIC 会自动尝试转换
           </p>
           <p className="upload-hint">
             已上传 {photos.length}/{maxPhotos} 张
@@ -232,6 +252,8 @@ export function PhotoUploader({
           </div>
         </div>
       )}
+
+      <PhotoUploadQueue items={queueItems} />
 
       {errors.length > 0 && (
         <div className="photo-upload-errors" role="status" aria-live="polite">
@@ -263,6 +285,10 @@ export function PhotoUploader({
 function getUploadErrorMessage(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   return "处理失败，请重试";
+}
+
+function isHeicFile(file: File) {
+  return ["image/heic", "image/heif"].includes(file.type) || /\.(heic|heif)$/i.test(file.name);
 }
 
 interface PhotoPreviewProps {

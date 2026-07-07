@@ -63,6 +63,7 @@ export default function PlacePicker({
     [places, recommendedIds, selected]
   );
   const showRecommendations = isOpen && !query.trim() && recommendedPlaces.length > 0;
+  const showCollapsedRecommendations = !isOpen && !query.trim() && selected.length === 0 && recommendedPlaces.length > 0;
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -148,6 +149,19 @@ export default function PlacePicker({
             {showRecommendations && (
               <div className="picker-recommendations">
                 <span className="picker-recommendation-title">最近用过</span>
+                <div className="picker-recommendation-row">
+                  {recommendedPlaces.map((place) => (
+                    <button type="button" key={place.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>
+                      {formatPlaceOptionTitle(place)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showCollapsedRecommendations && (
+              <div className="picker-recommendations compact">
+                <span className="picker-recommendation-title">最近用过，点一下关联</span>
                 <div className="picker-recommendation-row">
                   {recommendedPlaces.map((place) => (
                     <button type="button" key={place.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(place.id)}>

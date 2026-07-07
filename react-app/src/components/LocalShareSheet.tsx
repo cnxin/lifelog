@@ -1,4 +1,4 @@
-import { ChevronDown, Copy, Download, QrCode, Share2, X } from "lucide-react";
+import { ChevronDown, Copy, Download, ImageDown, QrCode, Share2, X } from "lucide-react";
 import { useState } from "react";
 import QRCode from "qrcode";
 import { useLifeLog } from "../context/LifeLogContext";
@@ -7,7 +7,7 @@ import { copyTextToClipboard } from "../utils/diagnostics";
 import { saveImageToGallery, shareImageFile } from "../utils/imageShare";
 import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
 import { buildLifeLogShareLink, buildLifeLogShareQrCode, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
-import type { MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
+import type { LifeLogSharePayload, MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
 
 type ShareTarget =
   | {
@@ -28,6 +28,8 @@ interface LocalShareSheetProps {
   onClose: () => void;
 }
 
+type ShareCardTemplate = "clean" | "warm" | "night";
+
 const peopleModeOptions: Array<{ value: SharedPeopleMode; label: string; desc: string }> = [
   { value: "public", label: "公开姓名", desc: "接收方可看到关联人物名称" },
   { value: "anonymous", label: "匿名同行人", desc: "保留人数，不暴露姓名" },
@@ -40,17 +42,25 @@ const placeModeOptions: Array<{ value: SharedMemoryPlaceMode; label: string; des
   { value: "hidden", label: "隐藏地点", desc: "不导出地点关联" }
 ];
 
+const shareCardTemplateOptions: Array<{ value: ShareCardTemplate; label: string }> = [
+  { value: "clean", label: "简洁" },
+  { value: "warm", label: "暖色" },
+  { value: "night", label: "夜色" }
+];
+
 export default function LocalShareSheet({ target, onClose }: LocalShareSheetProps) {
   const { buildMemoryShare, buildPlacesShare, exportMemoryShare, exportPlacesShare } = useLifeLog();
   const notify = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isCopyingLink, setIsCopyingLink] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isSharingCard, setIsSharingCard] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [qrImage, setQrImage] = useState("");
   const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
   const [qrSaveStatus, setQrSaveStatus] = useState("");
+  const [shareCardTemplate, setShareCardTemplate] = useState<ShareCardTemplate>("clean");
   const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>({
     includeContent: true,
     peopleMode: "public",
@@ -66,7 +76,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
 
   if (!target) return null;
 
-  const isBusy = isExporting || isCopyingLink || isSharing;
+  const isBusy = isExporting || isCopyingLink || isSharing || isSharingCard;
 
   async function handleExport() {
     if (!target) return;
@@ -181,6 +191,30 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
       notify({ message: `分享失败：${message}`, tone: error instanceof ShareLinkTooLargeError ? "info" : "error" });
     } finally {
       setIsSharing(false);
+    }
+  }
+
+  async function handleShareCardImage() {
+    if (!target) return;
+    setIsSharingCard(true);
+    try {
+      const payload = await buildQuickSharePayload(true);
+      const dataUrl = await buildShareCardImage(payload, shareCardTemplate);
+      await shareImageFile(buildShareCardFileName(target.title), dataUrl, "分享 LifeLog 卡片");
+      const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
+      addShareHistoryEntry({
+        direction: "export",
+        method: "file",
+        status: "created",
+        title: target.title,
+        summary: formatShareHistoryCounts(counts) || "分享图片卡片",
+        counts
+      });
+      notify({ message: "已打开系统分享面板", tone: "success", durationMs: 2600 });
+    } catch {
+      notify({ message: "生成分享图片失败，请改用链接或二维码。", tone: "error", durationMs: 3600 });
+    } finally {
+      setIsSharingCard(false);
     }
   }
 
@@ -315,10 +349,29 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               <Share2 size={16} />
               {isSharing ? "准备中…" : "立即分享"}
             </button>
+            <button className="ghost-btn" type="button" onClick={() => void handleShareCardImage()} disabled={isBusy}>
+              <ImageDown size={16} />
+              {isSharingCard ? "生成中…" : "图片"}
+            </button>
             <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr("quick")} disabled={isBusy}>
               <QrCode size={16} />
               二维码
             </button>
+          </div>
+          <div className="local-share-card-template-row" role="group" aria-label="分享图片模板">
+            <span>图片模板</span>
+            <div>
+              {shareCardTemplateOptions.map((option) => (
+                <button
+                  className={shareCardTemplate === option.value ? "active" : ""}
+                  type="button"
+                  key={option.value}
+                  onClick={() => setShareCardTemplate(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
           <button className={`local-share-advanced-toggle ${advancedOpen ? "open" : ""}`} type="button" onClick={() => setAdvancedOpen((open) => !open)}>
             <span>{advancedOpen ? "收起分享设置" : "调整隐私或导出分享包"}</span>
@@ -467,6 +520,11 @@ function buildQrFileName(title: string) {
   return `lifelog-qr-${slug}.png`;
 }
 
+function buildShareCardFileName(title: string) {
+  const slug = title.replace(/[\\/:*?"<>|]/g, "_").trim().slice(0, 24) || "lifelog-share";
+  return `lifelog-card-${slug}.png`;
+}
+
 function getQuickShareSummary(target: ShareTarget) {
   if (target.type === "memory") {
     return "默认分享正文、日期、人物姓名和地点名称，不包含照片和精准定位。";
@@ -532,6 +590,179 @@ async function shareTextOrCopy(title: string, text: string, url: string): Promis
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+async function buildShareCardImage(payload: LifeLogSharePayload, template: ShareCardTemplate) {
+  const width = 1080;
+  const height = 1440;
+  const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  const canvas = document.createElement("canvas");
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("当前环境无法生成分享图片。");
+  ctx.scale(scale, scale);
+
+  const palette = getShareCardPalette(payload.shareType, template);
+  const title = clampCardText(payload.title || "LifeLog 分享", 34);
+  const subtitle = payload.shareType === "memory" ? "回忆分享" : "地点分享";
+  const summaryLines = buildShareCardSummary(payload);
+
+  ctx.fillStyle = palette.background;
+  ctx.fillRect(0, 0, width, height);
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, palette.accent);
+  gradient.addColorStop(1, palette.secondary);
+  ctx.fillStyle = gradient;
+  roundRect(ctx, 70, 70, width - 140, height - 140, 48);
+  ctx.fill();
+
+  ctx.fillStyle = palette.card;
+  roundRect(ctx, 116, 120, width - 232, height - 240, 36);
+  ctx.fill();
+
+  ctx.fillStyle = palette.accent;
+  ctx.font = "800 36px sans-serif";
+  ctx.fillText("LifeLog", 164, 206);
+  ctx.fillStyle = palette.muted;
+  ctx.font = "600 24px sans-serif";
+  ctx.fillText(subtitle, 164, 248);
+
+  ctx.fillStyle = palette.text;
+  ctx.font = "900 56px sans-serif";
+  drawWrappedText(ctx, title, 164, 360, width - 328, 74, 3);
+
+  ctx.fillStyle = palette.body;
+  ctx.font = "600 28px sans-serif";
+  let y = 620;
+  for (const line of summaryLines) {
+    drawWrappedText(ctx, line, 164, y, width - 328, 40, 2);
+    y += 116;
+  }
+
+  ctx.fillStyle = palette.footer;
+  roundRect(ctx, 164, height - 274, width - 328, 112, 28);
+  ctx.fill();
+  ctx.fillStyle = palette.text;
+  ctx.font = "800 30px sans-serif";
+  ctx.fillText("用 LifeLog 打开可导入这份分享", 196, height - 224);
+  ctx.fillStyle = palette.muted;
+  ctx.font = "600 22px sans-serif";
+  ctx.fillText(formatCardDate(payload.exportedAt), 196, height - 184);
+
+  return canvas.toDataURL("image/png", 0.95);
+}
+
+function getShareCardPalette(shareType: LifeLogSharePayload["shareType"], template: ShareCardTemplate) {
+  const typeAccent = shareType === "memory"
+    ? { accent: "#7c4dff", secondary: "#ff8a4c" }
+    : { accent: "#0f9f8f", secondary: "#58b4ff" };
+
+  if (template === "warm") {
+    return {
+      accent: shareType === "memory" ? "#d85c4a" : "#c87919",
+      secondary: shareType === "memory" ? "#f4b24b" : "#42a68c",
+      background: "#fff7ed",
+      card: "rgba(255,255,255,0.94)",
+      text: "#2f211c",
+      body: "rgba(47, 33, 28, 0.74)",
+      muted: "rgba(47, 33, 28, 0.58)",
+      footer: "rgba(216, 92, 74, 0.12)"
+    };
+  }
+
+  if (template === "night") {
+    return {
+      accent: shareType === "memory" ? "#a78bfa" : "#5eead4",
+      secondary: shareType === "memory" ? "#fb7185" : "#60a5fa",
+      background: "#15131d",
+      card: "rgba(28, 26, 38, 0.94)",
+      text: "#f7f4ff",
+      body: "rgba(247, 244, 255, 0.78)",
+      muted: "rgba(247, 244, 255, 0.58)",
+      footer: "rgba(255, 255, 255, 0.08)"
+    };
+  }
+
+  return {
+    ...typeAccent,
+    background: "#f8f5ef",
+    card: "rgba(255,255,255,0.94)",
+    text: "#242033",
+    body: "rgba(36, 32, 51, 0.72)",
+    muted: "rgba(40, 35, 55, 0.56)",
+    footer: "rgba(124, 77, 255, 0.1)"
+  };
+}
+
+function buildShareCardSummary(payload: LifeLogSharePayload) {
+  if (payload.shareType === "places") {
+    const places = payload.data.places.slice(0, 4).map((place) => {
+      const parts = [place.name || place.storeName || "未命名地点", place.city, place.mall || place.category].filter(Boolean);
+      return parts.join(" · ");
+    });
+    return places.length ? places : [`${payload.data.places.length} 个地点`];
+  }
+
+  const memory = payload.data.memories[0];
+  const people = payload.data.people.map((person) => person.name).filter(Boolean).slice(0, 4).join("、");
+  const places = payload.data.places.map((place) => place.name || place.storeName).filter(Boolean).slice(0, 3).join("、");
+  return [
+    memory?.date ? `日期：${memory.date}` : "",
+    people ? `人物：${people}` : "",
+    places ? `地点：${places}` : "",
+    memory?.mood ? `心情：${memory.mood}` : ""
+  ].filter(Boolean).slice(0, 4);
+}
+
+function clampCardText(value: string, maxLength: number) {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+}
+
+function formatCardDate(value: string) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return "LifeLog 本地分享";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function drawWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
+  const chars = Array.from(text);
+  let line = "";
+  let currentY = y;
+  let lines = 0;
+
+  for (const char of chars) {
+    const next = `${line}${char}`;
+    if (ctx.measureText(next).width > maxWidth && line) {
+      lines += 1;
+      ctx.fillText(lines >= maxLines ? `${line.slice(0, Math.max(1, line.length - 1))}…` : line, x, currentY);
+      if (lines >= maxLines) return;
+      line = char;
+      currentY += lineHeight;
+    } else {
+      line = next;
+    }
+  }
+
+  if (line && lines < maxLines) ctx.fillText(line, x, currentY);
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
 }
 
 function ShareSwitch({

@@ -15,6 +15,7 @@
 .place-card,
 .person-card,
 .memory-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -26,6 +27,37 @@
 
 .person-card {
   align-items: flex-start;
+}
+
+.person-card.selectable {
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.person-card.selected {
+  border-color: color-mix(in srgb, var(--primary) 42%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
+.person-card.selectable .person-photo {
+  opacity: 0.72;
+}
+
+.person-select-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--card-solid, #fff);
+  box-shadow: var(--shadow);
 }
 
 .person-open {
@@ -102,6 +134,37 @@
   background: linear-gradient(135deg, #22a06b, var(--primary));
 }
 
+.memory-card.selectable {
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.memory-card.selected {
+  border-color: color-mix(in srgb, var(--primary) 42%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), transparent 62%),
+    var(--card-bg);
+}
+
+.memory-card.selectable .memory-badge {
+  opacity: 0.72;
+}
+
+.memory-select-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: var(--card-solid, #fff);
+  box-shadow: var(--shadow);
+}
+
 .compact-memory-card {
   align-items: flex-start;
 }
@@ -163,6 +226,59 @@
 .dense-memory-card .memory-kind-pill,
 .dense-memory-card .place-rating {
   font-size: 10px;
+}
+
+.dense-person-card,
+.dense-place-card {
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.dense-person-card .person-photo,
+.dense-place-card .place-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+}
+
+.dense-person-card .person-photo {
+  font-size: 16px;
+}
+
+.dense-place-card .place-img svg {
+  width: 21px;
+  height: 21px;
+}
+
+.dense-person-card .person-name,
+.dense-place-card .place-name {
+  margin-bottom: 2px;
+  font-size: 14px;
+}
+
+.dense-person-card .person-desc,
+.dense-place-card .place-desc {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.dense-person-card .relationship-health-line,
+.dense-place-card .place-visit-line {
+  margin-top: 4px;
+  gap: 4px;
+}
+
+.dense-person-card .relationship-health-line,
+.dense-person-card .relationship-health-pill,
+.dense-place-card .place-visit-line,
+.dense-place-card .place-rating {
+  font-size: 10px;
+}
+
+.dense-person-card .relationship-health-pill,
+.dense-place-card .place-visit-line span {
+  min-height: 20px;
+  padding: 2px 6px;
 }
 
 .place-info,

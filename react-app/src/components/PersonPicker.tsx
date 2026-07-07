@@ -55,6 +55,7 @@ export default function PersonPicker({
     [people, recommendedIds, selected]
   );
   const showRecommendations = isOpen && !query.trim() && recommendedPeople.length > 0;
+  const showCollapsedRecommendations = !isOpen && !query.trim() && selected.length === 0 && recommendedPeople.length > 0;
 
   function setSelected(nextSelected: string[]) {
     if (!isControlled) setInternalSelected(nextSelected);
@@ -139,6 +140,19 @@ export default function PersonPicker({
             {showRecommendations && (
               <div className="picker-recommendations">
                 <span className="picker-recommendation-title">最近常用</span>
+                <div className="picker-recommendation-row">
+                  {recommendedPeople.map((person) => (
+                    <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
+                      {person.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showCollapsedRecommendations && (
+              <div className="picker-recommendations compact">
+                <span className="picker-recommendation-title">最近常用，点一下关联</span>
                 <div className="picker-recommendation-row">
                   {recommendedPeople.map((person) => (
                     <button type="button" key={person.id} onMouseDown={(event) => event.preventDefault()} onClick={() => add(person.id)}>
