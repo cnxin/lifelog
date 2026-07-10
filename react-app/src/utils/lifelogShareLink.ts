@@ -3,6 +3,8 @@ import type { LifeLogSharePayload } from "./lifelogShare";
 
 const SHARE_LINK_VERSION = "v1";
 const MAX_SHARE_LINK_LENGTH = 6200;
+const MAX_SHARE_IMPORT_HASH_LENGTH = 100000;
+const MAX_SHARE_DECOMPRESSED_BYTES = 2 * 1024 * 1024;
 const APP_SHARE_ORIGIN = "lifelog://share";
 const COMPACT_GZIP_PREFIX = "g1.";
 const COMPACT_BASE64_PREFIX = "b1.";
@@ -77,6 +79,9 @@ export async function buildLifeLogShareQrCode(payload: LifeLogSharePayload): Pro
 export async function parseLifeLogShareLinkHash(hash: string): Promise<LifeLogSharePayload> {
   const raw = hash.replace(/^#/, "").trim();
   if (!raw) throw new Error("分享链接缺少导入数据。");
+  if (raw.length > MAX_SHARE_IMPORT_HASH_LENGTH) {
+    throw new Error("分享链接超过导入大小限制。");
+  }
 
   if (raw.startsWith(QR_MINI_GZIP_PREFIX)) {
     const decoded = JSON.parse(await decodeCompressedBytes(base43ToBytes(raw.slice(QR_MINI_GZIP_PREFIX.length)))) as unknown;
@@ -440,7 +445,25 @@ async function decodeCompressedBytes(bytes: Uint8Array) {
   const stream = new Blob([safeBytes.buffer])
     .stream()
     .pipeThrough(new DecompressionStream("gzip"));
-  return await new Response(stream).text();
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let totalBytes = 0;
+  let output = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_SHARE_DECOMPRESSED_BYTES) {
+        await reader.cancel();
+        throw new Error("分享链接解压后超过导入大小限制。");
+      }
+      output += decoder.decode(value, { stream: true });
+    }
+    return output + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 function supportsCompressionStream() {

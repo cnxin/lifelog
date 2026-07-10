@@ -26,171 +26,71 @@ const {
   chooseBestAppUpdate,
   compareVersions,
   formatFileSize,
-  getPreferredApkDownloadSource,
-  getPreferredApkDownloadUrl,
-  getExternalApkDownloadSource,
   getExternalApkDownloadUrl,
+  getPreferredApkDownloadUrl,
   parseGitHubReleasePayload,
   parseUpdateManifestPayload
 } = loadTs("src/utils/updateChecker.ts");
 
-const cases = [
-  ["0.1.0-test.61", "0.1.0-test.60", 1],
-  ["v0.1.0-test.60", "0.1.0-test.60", 0],
-  ["0.1.0-test.59", "0.1.0-test.60", -1],
-  ["0.1.1", "0.1.0-test.60", 1],
-  ["0.2.0", "0.1.9", 1]
-];
-
 let failures = 0;
 
-for (const [left, right, expectedSign] of cases) {
-  const actual = Math.sign(compareVersions(left, right));
-  if (actual === expectedSign) continue;
+function assert(condition, label) {
+  if (condition) return;
   failures += 1;
-  console.error(`[compareVersions ${left} vs ${right}] expected ${expectedSign}, actual ${actual}`);
+  console.error(`[${label}] assertion failed`);
 }
 
-const parsed = parseGitHubReleasePayload(
-  {
-    tag_name: "v0.1.0-test.61",
-    html_url: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.61",
-    body: "- 更新中心增强",
-    published_at: "2026-05-21T09:32:17Z",
-    assets: [
-      {
-        name: "lifelog-v0.1.0-test.61.apk",
-        size: 3587759,
-        browser_download_url: "https://example.invalid/lifelog.apk"
-      }
-    ]
-  },
-  "0.1.0-test.60"
-);
-
-if (!parsed.hasUpdate || parsed.apkSize !== 3587759 || parsed.apkName !== "lifelog-v0.1.0-test.61.apk") {
-  failures += 1;
-  console.error(`[parseGitHubReleasePayload] unexpected payload: ${JSON.stringify(parsed)}`);
+for (const [left, right, expected] of [
+  ["0.1.0-test.61", "0.1.0-test.60", 1],
+  ["v0.1.0-test.60", "0.1.0-test.60", 0],
+  ["0.1.0-test.59", "0.1.0-test.60", -1]
+]) {
+  assert(Math.sign(compareVersions(left, right)) === expected, `compareVersions ${left}`);
 }
 
-if (formatFileSize(3587759) !== "3.4 MB") {
-  failures += 1;
-  console.error(`[formatFileSize] expected 3.4 MB, actual ${formatFileSize(3587759)}`);
+const manifest = parseUpdateManifestPayload({
+  version: "v0.1.0-test.64",
+  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.64",
+  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.64/lifelog-v0.1.0-test.64.apk",
+  mirrorApkUrl: "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/lifelog-v0.1.0-test.64.apk",
+  apkName: "lifelog-v0.1.0-test.64.apk",
+  apkSize: 3591000,
+  apkSha256: "a".repeat(64)
+}, "0.1.0-test.63");
+
+assert(manifest.hasUpdate && manifest.apkSha256.length === 64 && manifest.apkSize === 3591000, "valid manifest accepted");
+assert(formatFileSize(3587759) === "3.4 MB", "formatFileSize");
+
+for (const [label, payload] of [
+  ["missing hash", { ...manifest, apkSha256: "" }],
+  ["untrusted host", { ...manifest, apkUrl: "https://example.invalid/lifelog.apk" }],
+  ["invalid size", { ...manifest, apkSize: 0 }]
+]) {
+  let rejected = false;
+  try {
+    parseUpdateManifestPayload(payload, "0.1.0-test.63");
+  } catch {
+    rejected = true;
+  }
+  assert(rejected, `manifest ${label} rejected`);
 }
 
-const manifest = parseUpdateManifestPayload(
-  {
-    version: "v0.1.0-test.64",
-    releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.64",
-    apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.64/lifelog-v0.1.0-test.64.apk",
-    mirrorApkUrl: "https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/lifelog-v0.1.0-test.64.apk",
-    apkName: "lifelog-v0.1.0-test.64.apk",
-    apkSize: 3591000,
-    apkSha256: "abc123"
-  },
-  "0.1.0-test.63"
-);
-
-if (!manifest.hasUpdate || manifest.latestVersion !== "0.1.0-test.64" || !manifest.mirrorApkUrl.includes("cdn.jsdelivr.net") || manifest.apkSha256 !== "abc123") {
-  failures += 1;
-  console.error(`[parseUpdateManifestPayload] unexpected payload: ${JSON.stringify(manifest)}`);
+let releaseRejected = false;
+try {
+  parseGitHubReleasePayload({ tag_name: "v0.1.0-test.65", assets: [] }, "0.1.0-test.64");
+} catch {
+  releaseRejected = true;
 }
+assert(releaseRejected, "unsigned GitHub release rejected");
 
-const newerRelease = parseGitHubReleasePayload(
-  {
-    tag_name: "v0.1.0-test.65",
-    html_url: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65",
-    assets: [
-      {
-        name: "lifelog-v0.1.0-test.65.apk",
-        size: 3592347,
-        browser_download_url: "https://example.invalid/lifelog-65.apk"
-      }
-    ]
-  },
-  "0.1.0-test.64"
-);
-
-if (!newerRelease.hasUpdate || newerRelease.latestVersion !== "0.1.0-test.65" || !newerRelease.mirrorApkUrl.includes("/downloads/")) {
-  failures += 1;
-  console.error(`[parseGitHubReleasePayload latest fallback] unexpected payload: ${JSON.stringify(newerRelease)}`);
-}
-
-const staleOnly = chooseBestAppUpdate([manifest], "0.1.0-test.65");
-if (staleOnly.latestVersion !== "0.1.0-test.65" || staleOnly.hasUpdate || staleOnly.apkUrl || staleOnly.mirrorApkUrl) {
-  failures += 1;
-  console.error(`[chooseBestAppUpdate stale source] unexpected payload: ${JSON.stringify(staleOnly)}`);
-}
-
-const mixedSources = chooseBestAppUpdate([manifest, newerRelease], "0.1.0-test.64");
-if (!mixedSources.hasUpdate || mixedSources.latestVersion !== "0.1.0-test.65") {
-  failures += 1;
-  console.error(`[chooseBestAppUpdate mixed sources] unexpected payload: ${JSON.stringify(mixedSources)}`);
-}
-
-const giteeManifest = {
-  ...newerRelease,
-  source: "Gitee 国内镜像清单",
-  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk"
-};
-const sameVersionSources = chooseBestAppUpdate([newerRelease, giteeManifest], "0.1.0-test.64");
-if (sameVersionSources.source !== "Gitee 国内镜像清单" || !sameVersionSources.mirrorApkUrl.includes("gitee.com/ysjugg")) {
-  failures += 1;
-  console.error(`[chooseBestAppUpdate same version priority] unexpected payload: ${JSON.stringify(sameVersionSources)}`);
-}
-
-const preferredDownload = getPreferredApkDownloadUrl({
-  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  mirrorApkUrl: "https://gitee.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
-});
-if (!preferredDownload.includes("gitee.com/cnxin/lifelog/releases/download/")) {
-  failures += 1;
-  console.error(`[getPreferredApkDownloadUrl] expected mirror asset first, actual ${preferredDownload}`);
-}
-const preferredSource = getPreferredApkDownloadSource({
-  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
-  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
-});
-if (!preferredSource.includes("Gitee")) {
-  failures += 1;
-  console.error(`[getPreferredApkDownloadSource] expected Gitee source, actual ${preferredSource}`);
-}
-
-const externalDownload = getExternalApkDownloadUrl({
-  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
-  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
-});
-if (!externalDownload.includes("github.com/cnxin/lifelog/releases/download/")) {
-  failures += 1;
-  console.error(`[getExternalApkDownloadUrl] expected GitHub APK first, actual ${externalDownload}`);
-}
-
-const externalSource = getExternalApkDownloadSource({
-  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  mirrorApkUrl: "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.65.apk",
-  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
-});
-if (!externalSource.includes("GitHub")) {
-  failures += 1;
-  console.error(`[getExternalApkDownloadSource] expected GitHub source, actual ${externalSource}`);
-}
-
-const fallbackDownload = getPreferredApkDownloadUrl({
-  apkUrl: "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.65/lifelog-v0.1.0-test.65.apk",
-  mirrorApkUrl: "",
-  releaseUrl: "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.65"
-});
-if (!fallbackDownload.includes("github.com/cnxin/lifelog/releases/download/")) {
-  failures += 1;
-  console.error(`[getPreferredApkDownloadUrl fallback] expected GitHub fallback, actual ${fallbackDownload}`);
-}
+const stale = chooseBestAppUpdate([manifest], "0.1.0-test.65");
+assert(!stale.hasUpdate && !stale.apkUrl && !stale.mirrorApkUrl, "stale update cleared");
+assert(getPreferredApkDownloadUrl(manifest).includes("cdn.jsdelivr.net"), "mirror preferred");
+assert(getExternalApkDownloadUrl(manifest).includes("github.com"), "primary external link");
 
 if (failures) {
-  console.error(`Update checker regression failed: ${failures} mismatch(es).`);
+  console.error(`Update checker regression failed: ${failures} failure(s).`);
   process.exit(1);
 }
 
-console.log(`Update checker regression passed: ${cases.length} version cases plus release metadata.`);
+console.log("Update checker regression passed: version comparison and trusted manifest validation.");

@@ -7,7 +7,7 @@ $keystoreDir = Join-Path $env:USERPROFILE ".local\lifelog"
 $keystorePath = Join-Path $keystoreDir "lifelog-release.p12"
 $keystorePropertiesPath = Join-Path $projectRoot "android\keystore.properties"
 $alias = "lifelog"
-$password = "LifeLog-Local-Release-2026"
+$password = $env:LIFELOG_KEYSTORE_PASSWORD
 
 if (-not (Test-Path $keytool)) {
   throw "keytool not found at $keytool"
@@ -15,7 +15,20 @@ if (-not (Test-Path $keytool)) {
 
 New-Item -ItemType Directory -Force -Path $keystoreDir | Out-Null
 
-if (-not (Test-Path $keystorePath)) {
+if (Test-Path $keystorePath) {
+  if ([string]::IsNullOrWhiteSpace($password)) {
+    if (Test-Path $keystorePropertiesPath) {
+      Write-Host "Existing signing configuration preserved: $keystorePropertiesPath"
+      exit 0
+    }
+    throw "Existing keystore detected. Set LIFELOG_KEYSTORE_PASSWORD before recreating keystore.properties."
+  }
+} else {
+  if ([string]::IsNullOrWhiteSpace($password)) {
+    $randomBytes = New-Object byte[] 24
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($randomBytes)
+    $password = [Convert]::ToBase64String($randomBytes).Replace("+", "-").Replace("/", "_").TrimEnd("=")
+  }
   & $keytool -genkeypair `
     -v `
     -keystore $keystorePath `

@@ -31,6 +31,7 @@ function loadTs(relativeFile) {
 }
 
 const { buildAndroidViewIntentUrl, buildNativeAppDeepLink } = loadTs("src/utils/externalLinks.ts");
+const { normalizeHttpsUrl, normalizePlaceNavigationUrl } = loadTs("src/utils/placeLinks.ts");
 
 const cases = [
   {
@@ -39,7 +40,7 @@ const cases = [
   },
   {
     input: "http://example.invalid/app.apk",
-    expected: "intent://example.invalid/app.apk#Intent;scheme=http;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end"
+    expected: ""
   }
 ];
 
@@ -85,6 +86,23 @@ for (const item of nativeCases) {
   if (actual === item.expected) continue;
   failures += 1;
   console.error(`[buildNativeAppDeepLink] expected ${item.expected}, actual ${actual}`);
+}
+
+const blockedUrls = ["javascript:alert(1)", "data:text/html,unsafe", "file:///data/local/tmp/unsafe"];
+for (const input of blockedUrls) {
+  if (!normalizeHttpsUrl(input) && !normalizePlaceNavigationUrl(input)) continue;
+  failures += 1;
+  console.error(`[URL protocol guard] expected blocked URL, actual ${input}`);
+}
+
+if (normalizeHttpsUrl("https://example.invalid/path") !== "https://example.invalid/path") {
+  failures += 1;
+  console.error("[URL protocol guard] expected HTTPS URL to remain allowed");
+}
+
+if (normalizePlaceNavigationUrl("amapuri://poi/around?keywords=test") !== "amapuri://poi/around?keywords=test") {
+  failures += 1;
+  console.error("[URL protocol guard] expected allowlisted map scheme to remain allowed");
 }
 
 if (failures) {

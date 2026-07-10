@@ -16,6 +16,28 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.127",
+    date: "2026-07-10",
+    title: "安全加固与发布链路修复",
+    highlights: [
+      "地点链接、分享导入和原生外部跳转统一启用协议白名单，阻断不安全 URL 和任意 Intent 打开。",
+      "备份与分享导入增加文件、记录、照片和解压后的大小限制，降低恶意数据造成内存耗尽的风险。",
+      "应用内 APK 更新强制校验受信 HTTPS 地址、文件大小和 SHA-256，Android 原生下载也会验证重定向目标。",
+      "升级 React Router 和 Vite，并移除 Android 发布密钥的固定口令。"
+    ]
+  },
+  {
+    version: "0.1.0-test.127",
+    date: "2026-07-10",
+    title: "安全加固与发布链路修复",
+    highlights: [
+      "地点链接、分享导入和原生外部跳转统一启用协议白名单，阻断不安全 URL 和任意 Intent 打开。",
+      "备份与分享导入增加文件、记录、照片和解压后的大小限制，降低恶意数据造成内存耗尽的风险。",
+      "应用内 APK 更新强制校验受信 HTTPS 地址、文件大小和 SHA-256，Android 原生下载也会验证重定向目标。",
+      "升级 React Router 和 Vite，并移除 Android 发布密钥的固定口令。"
+    ]
+  },
+  {
     version: "0.1.0-test.126",
     date: "2026-07-07",
     title: "批量整理、轻量统计和年度回顾",

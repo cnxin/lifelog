@@ -13,7 +13,7 @@ import {
   normalizeAnniversaryMilestoneMode
 } from "./date";
 import { mergeMemoryPlaceReferences } from "./placeDedup";
-import { parsePlatformLinksText } from "./placeLinks";
+import { normalizeHttpsUrl, normalizePlaceNavigationUrl, parsePlatformLinksText } from "./placeLinks";
 import { inferMallName, inferProvince, isMallRecord, normalizeCityName, normalizePlaceText } from "./placeMeta";
 import { buildMemoryTitle, inferQuickMemory } from "./memoryInference";
 import { getMemoryPlaceIds, normalizeMemoryPlaceIds } from "./memoryPlaces";
@@ -124,8 +124,8 @@ export function buildPlaceFromFormData(formData: FormData, id: string | undefine
     address,
     latitude: parseOptionalNumber(formData.get("latitude")),
     longitude: parseOptionalNumber(formData.get("longitude")),
-    mapUrl: String(formData.get("mapUrl") || ""),
-    sourceUrl: String(formData.get("sourceUrl") || ""),
+    mapUrl: normalizePlaceNavigationUrl(formData.get("mapUrl")),
+    sourceUrl: normalizeHttpsUrl(formData.get("sourceUrl")),
     platformLinks: parsePlatformLinksText(formData.get("platformLinks")),
     photos: splitLines(formData.get("photos")),
     desc: String(formData.get("desc") || ""),

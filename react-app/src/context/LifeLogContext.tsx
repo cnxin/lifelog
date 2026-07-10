@@ -84,6 +84,7 @@ import {
 import {
   normalizeBackupPayload,
   serializeBackupPhoto,
+  MAX_BACKUP_FILE_BYTES,
   type FullBackupPayload
 } from "../utils/lifelogBackup";
 import {
@@ -784,6 +785,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
     }
 
     async function importData(file: File, options: BackupImportOptions = {}) {
+      if (file.size > MAX_BACKUP_FILE_BYTES) {
+        throw new Error("备份文件超过 128 MB 导入上限，请拆分后重试。");
+      }
       const text = await file.text();
       let parsed: unknown;
       try {

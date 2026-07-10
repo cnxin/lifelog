@@ -3,6 +3,12 @@ import { isRecord, uid } from "./lifelogHelpers";
 import { serializeBackupPhoto, type BackupPhotoRecord } from "./lifelogBackup";
 import { getMemoryKindLabel } from "./memoryDisplay";
 import { getMemoryPlaceIds } from "./memoryPlaces";
+import { normalizeHttpsUrl, normalizePlaceNavigationUrl, normalizePlacePlatformLinks } from "./placeLinks";
+
+const MAX_SHARE_RECORD_COUNT = 1000;
+const MAX_SHARE_PHOTO_COUNT = 24;
+const MAX_SHARE_PHOTO_DATA_URL_LENGTH = 8 * 1024 * 1024;
+const MAX_SHARE_TOTAL_PHOTO_DATA_URL_LENGTH = 24 * 1024 * 1024;
 
 export type LifeLogShareType = "memory" | "places";
 export type SharedPeopleMode = "public" | "anonymous" | "hidden";
@@ -178,10 +184,18 @@ export function normalizeLifeLogSharePayload(value: unknown): LifeLogSharePayloa
   }
 
   const data = value.data;
-  const people = Array.isArray(data.people) ? data.people.map(normalizeSharedPerson).filter(isPresent) : [];
-  const places = Array.isArray(data.places) ? data.places.map(normalizeSharedPlace).filter(isPresent) : [];
-  const memories = Array.isArray(data.memories) ? data.memories.map(normalizeSharedMemory).filter(isPresent) : [];
-  const photos = Array.isArray(data.photos) ? data.photos.filter(isBackupPhotoRecord) : [];
+  const incomingPeople = Array.isArray(data.people) ? data.people : [];
+  const incomingPlaces = Array.isArray(data.places) ? data.places : [];
+  const incomingMemories = Array.isArray(data.memories) ? data.memories : [];
+  const incomingPhotos = Array.isArray(data.photos) ? data.photos : [];
+  if (incomingPeople.length + incomingPlaces.length + incomingMemories.length + incomingPhotos.length > MAX_SHARE_RECORD_COUNT) {
+    throw new Error("分享包条目数量超过导入上限。");
+  }
+  const people = incomingPeople.map(normalizeSharedPerson).filter(isPresent);
+  const places = incomingPlaces.map(normalizeSharedPlace).filter(isPresent);
+  const memories = incomingMemories.map(normalizeSharedMemory).filter(isPresent);
+  const photos = incomingPhotos.filter(isBackupPhotoRecord);
+  validateSharePhotoLimits(photos);
   const payload: LifeLogSharePayload = {
     schemaVersion: 1,
     kind: "lifelog-share",
@@ -526,9 +540,9 @@ function sanitizeIncomingPlace(place: Place): Place {
     address: String(place.address || ""),
     latitude: typeof place.latitude === "number" ? place.latitude : undefined,
     longitude: typeof place.longitude === "number" ? place.longitude : undefined,
-    mapUrl: String(place.mapUrl || ""),
-    sourceUrl: String(place.sourceUrl || ""),
-    platformLinks: Array.isArray(place.platformLinks) ? place.platformLinks : [],
+    mapUrl: normalizePlaceNavigationUrl(place.mapUrl),
+    sourceUrl: normalizeHttpsUrl(place.sourceUrl),
+    platformLinks: normalizePlacePlatformLinks(place.platformLinks),
     photos: Array.isArray(place.photos) ? place.photos.map(String).filter(Boolean) : [],
     desc: String(place.desc || ""),
     tags: Array.isArray(place.tags) ? place.tags.map(String).filter(Boolean) : [],
@@ -732,8 +746,29 @@ async function restoreSharedPhoto(record: BackupPhotoRecord, memoryId: string, o
 }
 
 async function dataUrlToBlob(dataUrl: string) {
+  if (!isSafeImageDataUrl(dataUrl)) {
+    throw new Error("分享照片必须是图片 data URL。");
+  }
   const response = await fetch(dataUrl);
   return await response.blob();
+}
+
+function validateSharePhotoLimits(photos: BackupPhotoRecord[]) {
+  if (photos.length > MAX_SHARE_PHOTO_COUNT) {
+    throw new Error(`分享照片数量超过上限（${MAX_SHARE_PHOTO_COUNT} 张）。`);
+  }
+  let totalLength = 0;
+  for (const photo of photos) {
+    const length = photo.originalDataUrl.length + photo.thumbnailDataUrl.length;
+    if (length > MAX_SHARE_PHOTO_DATA_URL_LENGTH || totalLength + length > MAX_SHARE_TOTAL_PHOTO_DATA_URL_LENGTH) {
+      throw new Error("分享照片数据超过导入大小限制。");
+    }
+    totalLength += length;
+  }
+}
+
+function isSafeImageDataUrl(value: string) {
+  return /^data:image\/(?:avif|gif|heic|heif|jpe?g|png|webp);base64,[a-z0-9+/=\s]+$/i.test(value);
 }
 
 function normalizeDate(value: string) {

@@ -1,6 +1,6 @@
 import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 import type { Place, PlaceLinkPlatform } from "../types";
-import { buildAmapWebMarkerUrl, inferPlatformFromLink } from "./placeLinks";
+import { buildAmapWebMarkerUrl, inferPlatformFromLink, normalizeHttpsUrl, normalizePlaceNavigationUrl } from "./placeLinks";
 
 interface NativeExternalBrowserPlugin {
   open(options: { url: string; packageName?: string }): Promise<void>;
@@ -28,7 +28,7 @@ export interface ApkDownloadProgress {
 }
 
 export async function openExternalUrl(rawUrl: string) {
-  const url = rawUrl.trim();
+  const url = normalizeHttpsUrl(rawUrl);
   if (!url) return;
 
   if (Capacitor.isNativePlatform()) {
@@ -37,19 +37,14 @@ export async function openExternalUrl(rawUrl: string) {
     return;
   }
 
-  if (/^https?:\/\//i.test(url)) {
-    window.open(url, "_blank", "noopener,noreferrer");
-    return;
-  }
-
-  window.location.href = url;
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 export async function openApkDownloadUrl(rawUrl: string) {
-  const url = rawUrl.trim();
+  const url = normalizeHttpsUrl(rawUrl);
   if (!url) return;
 
-  if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
+  if (Capacitor.isNativePlatform()) {
     await openNativeApkInstaller(url);
     return;
   }
@@ -60,7 +55,7 @@ export async function openApkDownloadUrl(rawUrl: string) {
 export async function openApkDownload(update: { apkUrl?: string; mirrorApkUrl?: string; releaseUrl?: string; apkName?: string; apkSha256?: string; apkSize?: number } | null | undefined) {
   if (!update) return;
   const primaryUrl = update.mirrorApkUrl || update.apkUrl || update.releaseUrl || "";
-  const fallbackUrl = primaryUrl === update.apkUrl ? update.releaseUrl || "" : update.apkUrl || update.releaseUrl || "";
+  const fallbackUrl = primaryUrl === update.apkUrl ? update.mirrorApkUrl || "" : update.apkUrl || "";
   await openApkDownloadUrlWithFallback(primaryUrl, update.apkName, fallbackUrl, update.apkSha256, update.apkSize);
 }
 
@@ -91,11 +86,14 @@ export function addApkDownloadProgressListener(listener: (progress: ApkDownloadP
 }
 
 export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = "", rawFallbackUrl = "", expectedSha256 = "", expectedSize = 0) {
-  const url = rawUrl.trim();
-  const fallbackUrl = rawFallbackUrl.trim();
+  const url = normalizeHttpsUrl(rawUrl);
+  const fallbackUrl = normalizeHttpsUrl(rawFallbackUrl);
   if (!url) return;
+  if (!/^[a-f0-9]{64}$/i.test(expectedSha256) || !Number.isSafeInteger(expectedSize) || expectedSize < 1024) {
+    throw new Error("Update package integrity information is missing or invalid");
+  }
 
-  if (Capacitor.isNativePlatform() && /^https?:\/\//i.test(url)) {
+  if (Capacitor.isNativePlatform()) {
     await openNativeApkInstaller(url, fileName, fallbackUrl, expectedSha256, expectedSize);
     return;
   }
@@ -104,7 +102,7 @@ export async function openApkDownloadUrlWithFallback(rawUrl: string, fileName = 
 }
 
 export async function openNativeStoreUrl(rawUrl: string, platform?: PlaceLinkPlatform | string) {
-  const url = rawUrl.trim();
+  const url = normalizePlaceNavigationUrl(rawUrl);
   if (!url) return;
 
   if (Capacitor.isNativePlatform()) {
@@ -162,8 +160,9 @@ async function openNativeViewUrl(url: string | string[], packageName = "", fallb
   }
 
   console.warn("原生外部链接打开失败，回退到系统链接:", lastError);
-  const fallback = fallbackUrl || (Array.isArray(url) ? url[0] : url);
-  window.location.href = /^https?:\/\//i.test(fallback) ? buildAndroidViewIntentUrl(fallback) : fallback;
+  const fallback = normalizePlaceNavigationUrl(fallbackUrl || (Array.isArray(url) ? url[0] : url));
+  if (!fallback) throw new Error("Unsupported external URL");
+  window.location.href = fallback.startsWith("https://") ? buildAndroidViewIntentUrl(fallback) : fallback;
 }
 
 async function openNativeApkInstaller(url: string, fileName = "", fallbackUrl = "", expectedSha256 = "", expectedSize = 0) {
@@ -179,10 +178,11 @@ function buildNativeOpenAttempts(url: string | string[], packageName = "", fallb
   const attempts: Array<{ url: string; packageName?: string }> = [];
   const urls = Array.isArray(url) ? url : [url];
   const add = (nextUrl: string, nextPackageName = "") => {
-    if (!nextUrl) return;
-    const key = `${nextUrl}|${nextPackageName}`;
+    const safeUrl = normalizePlaceNavigationUrl(nextUrl);
+    if (!safeUrl) return;
+    const key = `${safeUrl}|${nextPackageName}`;
     if (attempts.some((attempt) => `${attempt.url}|${attempt.packageName || ""}` === key)) return;
-    attempts.push(nextPackageName ? { url: nextUrl, packageName: nextPackageName } : { url: nextUrl });
+    attempts.push(nextPackageName ? { url: safeUrl, packageName: nextPackageName } : { url: safeUrl });
   };
 
   urls.forEach((item) => add(item, packageName));
@@ -296,7 +296,9 @@ function buildAmapDeepLinkFromWebUrl(rawUrl: string) {
 }
 
 export function buildAndroidViewIntentUrl(url: string) {
-  return `intent://${url.replace(/^https?:\/\//i, "")}#Intent;scheme=${url.startsWith("https://") ? "https" : "http"};action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+  const safeUrl = normalizeHttpsUrl(url);
+  if (!safeUrl) return "";
+  return `intent://${safeUrl.replace(/^https:\/\//i, "")}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
 }
 
 function buildAmapUrls(place: Place) {

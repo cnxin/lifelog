@@ -21,14 +21,29 @@ import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @CapacitorPlugin(name = "NativeExternalBrowser")
 public class NativeExternalBrowserPlugin extends Plugin {
+    private static final long MAX_APK_SIZE_BYTES = 128L * 1024L * 1024L;
+    private static final Set<String> TRUSTED_APK_HOSTS = new HashSet<>(Arrays.asList(
+        "github.com",
+        "www.github.com",
+        "gitee.com",
+        "www.gitee.com",
+        "cdn.jsdelivr.net",
+        "objects.githubusercontent.com",
+        "release-assets.githubusercontent.com",
+        "github-releases.githubusercontent.com"
+    ));
+
     @PluginMethod
     public void open(PluginCall call) {
         String url = call.getString("url", "").trim();
-        if (url.isEmpty()) {
-            call.reject("Missing url");
+        if (!isAllowedExternalUrl(url)) {
+            call.reject("Unsupported external url");
             return;
         }
         String packageName = call.getString("packageName", "").trim();
@@ -81,16 +96,20 @@ public class NativeExternalBrowserPlugin extends Plugin {
     @PluginMethod
     public void installApk(PluginCall call) {
         String url = call.getString("url", "").trim();
-        if (url.isEmpty()) {
-            call.reject("Missing url");
-            return;
-        }
-
-        String fileName = sanitizeApkFileName(call.getString("fileName", ""));
         String fallbackUrl = call.getString("fallbackUrl", "").trim();
         String expectedSha256 = call.getString("expectedSha256", "").trim().toLowerCase();
         Double expectedSizeValue = call.getDouble("expectedSize", 0D);
         long expectedSize = expectedSizeValue == null ? 0L : Math.max(0L, Math.round(expectedSizeValue));
+        if (!isTrustedApkUrl(url) || (!fallbackUrl.isEmpty() && !isTrustedApkUrl(fallbackUrl))) {
+            call.reject("Untrusted APK download url");
+            return;
+        }
+        if (!isValidSha256(expectedSha256) || expectedSize < 1024L || expectedSize > MAX_APK_SIZE_BYTES) {
+            call.reject("Missing or invalid APK integrity information");
+            return;
+        }
+
+        String fileName = sanitizeApkFileName(call.getString("fileName", ""));
         execute(() -> downloadAndInstallApk(call, url, fileName, fallbackUrl, expectedSha256, expectedSize));
     }
 
@@ -142,7 +161,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
     }
 
     private void openFallbackOrReject(PluginCall call, String fallbackUrl, Exception originalError) {
-        if (!fallbackUrl.isEmpty()) {
+        if (!fallbackUrl.isEmpty() && isTrustedApkUrl(fallbackUrl)) {
             try {
                 notifyApkProgress("fallback", 0, 0, "", originalError.getMessage());
                 Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
@@ -165,13 +184,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
     private void downloadToFile(String rawUrl, File targetFile, String expectedSha256, long expectedSize) throws IOException {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(rawUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setConnectTimeout(15000);
-            connection.setReadTimeout(60000);
-            connection.setInstanceFollowRedirects(true);
-            connection.setRequestProperty("Accept", "application/vnd.android.package-archive,application/octet-stream,*/*");
-            connection.connect();
+            connection = openTrustedApkConnection(rawUrl);
 
             int statusCode = connection.getResponseCode();
             if (statusCode < 200 || statusCode >= 300) {
@@ -179,7 +192,10 @@ public class NativeExternalBrowserPlugin extends Plugin {
             }
 
             long contentLength = connection.getContentLengthLong();
-            long totalBytes = contentLength > 0 ? contentLength : Math.max(0, expectedSize);
+            if (contentLength > 0 && contentLength != expectedSize) {
+                throw new IOException("APK size does not match update manifest");
+            }
+            long totalBytes = expectedSize;
             notifyApkProgress("downloading", 0, totalBytes, targetFile.getName(), "");
             try (BufferedInputStream input = new BufferedInputStream(connection.getInputStream());
                  FileOutputStream output = new FileOutputStream(targetFile, false)) {
@@ -190,6 +206,9 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 while ((bytesRead = input.read(buffer)) != -1) {
                     output.write(buffer, 0, bytesRead);
                     downloadedBytes += bytesRead;
+                    if (downloadedBytes > expectedSize) {
+                        throw new IOException("APK exceeds expected size");
+                    }
                     if (downloadedBytes - lastNotifiedBytes >= 131072 || downloadedBytes == totalBytes) {
                         notifyApkProgress("downloading", downloadedBytes, totalBytes, targetFile.getName(), "");
                         lastNotifiedBytes = downloadedBytes;
@@ -197,8 +216,8 @@ public class NativeExternalBrowserPlugin extends Plugin {
                 }
             }
 
-            if (targetFile.length() < 1024) {
-                throw new IOException("Downloaded APK is too small");
+            if (targetFile.length() != expectedSize) {
+                throw new IOException("Downloaded APK size mismatch");
             }
 
             try (FileInputStream fileInput = new FileInputStream(targetFile)) {
@@ -209,7 +228,7 @@ public class NativeExternalBrowserPlugin extends Plugin {
 
             notifyApkProgress("verifying", targetFile.length(), targetFile.length(), targetFile.getName(), "");
             String actualSha256 = getSha256(targetFile);
-            if (!expectedSha256.isEmpty() && !expectedSha256.equals(actualSha256)) {
+            if (!expectedSha256.equals(actualSha256)) {
                 throw new IOException("APK SHA256 mismatch: " + actualSha256);
             }
         } finally {
@@ -225,6 +244,77 @@ public class NativeExternalBrowserPlugin extends Plugin {
             cleaned = "lifelog-update.apk";
         }
         return cleaned.toLowerCase().endsWith(".apk") ? cleaned : cleaned + ".apk";
+    }
+
+    private HttpURLConnection openTrustedApkConnection(String rawUrl) throws IOException {
+        URL url = new URL(rawUrl);
+        for (int redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+            if (!isTrustedApkUrl(url)) {
+                throw new IOException("APK redirect target is not trusted");
+            }
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(60000);
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestProperty("Accept", "application/vnd.android.package-archive,application/octet-stream,*/*");
+            connection.connect();
+            int statusCode = connection.getResponseCode();
+            if (statusCode < 300 || statusCode >= 400) {
+                return connection;
+            }
+            String location = connection.getHeaderField("Location");
+            connection.disconnect();
+            if (location == null || location.trim().isEmpty()) {
+                throw new IOException("APK redirect did not include a location");
+            }
+            url = new URL(url, location);
+        }
+        throw new IOException("APK download exceeded redirect limit");
+    }
+
+    private boolean isAllowedExternalUrl(String value) {
+        if (value == null || value.trim().isEmpty()) return false;
+        String scheme = Uri.parse(value).getScheme();
+        if (scheme == null) return false;
+        switch (scheme.toLowerCase()) {
+            case "https":
+            case "amapuri":
+            case "androidamap":
+            case "imeituan":
+            case "meituan":
+            case "meituanwaimai":
+            case "dianping":
+            case "dianpingapp":
+            case "dper":
+            case "snssdk1128":
+            case "xhsdiscover":
+            case "xiaohongshu":
+            case "baidumap":
+            case "bdmap":
+            case "bdapp":
+            case "qqmap":
+            case "tencentmap":
+            case "weixin":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private boolean isTrustedApkUrl(String value) {
+        try {
+            return isTrustedApkUrl(new URL(value));
+        } catch (Exception error) {
+            return false;
+        }
+    }
+
+    private boolean isTrustedApkUrl(URL url) {
+        return "https".equalsIgnoreCase(url.getProtocol()) && TRUSTED_APK_HOSTS.contains(url.getHost().toLowerCase());
+    }
+
+    private boolean isValidSha256(String value) {
+        return value != null && value.matches("[a-f0-9]{64}");
     }
 
     private String getSha256(File file) throws IOException {

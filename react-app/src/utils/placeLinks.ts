@@ -19,6 +19,51 @@ export const PLACE_LINK_PLATFORM_DEFS: Array<{
 ];
 
 const presetPlatformValues = new Set<PlaceLinkPlatform>(PLACE_LINK_PLATFORM_DEFS.map((item) => item.platform));
+const MAX_EXTERNAL_URL_LENGTH = 4096;
+const allowedNativeProtocols = new Set([
+  "amapuri:",
+  "androidamap:",
+  "imeituan:",
+  "meituan:",
+  "meituanwaimai:",
+  "dianping:",
+  "dianpingapp:",
+  "dper:",
+  "snssdk1128:",
+  "xhsdiscover:",
+  "xiaohongshu:",
+  "baidumap:",
+  "bdmap:",
+  "bdapp:",
+  "qqmap:",
+  "tencentmap:",
+  "weixin:"
+]);
+
+export function normalizeHttpsUrl(value: unknown) {
+  const raw = String(value || "").trim();
+  if (!raw || raw.length > MAX_EXTERNAL_URL_LENGTH) return "";
+
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+export function normalizePlaceNavigationUrl(value: unknown) {
+  const raw = String(value || "").trim();
+  if (!raw || raw.length > MAX_EXTERNAL_URL_LENGTH) return "";
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "https:") return url.toString();
+    return allowedNativeProtocols.has(url.protocol.toLowerCase()) ? raw : "";
+  } catch {
+    return "";
+  }
+}
 
 export function buildPlaceSearchKeyword(place: Place) {
   return [place.city, place.area, place.mall, place.name, place.storeName].filter(Boolean).join(" ").trim();
@@ -74,7 +119,7 @@ export function normalizePlacePlatformLinks(value: unknown): PlaceExternalLink[]
   return value
     .map((item) => {
       const link = item as Partial<PlaceExternalLink>;
-      const url = String(link.url || "").trim();
+      const url = normalizePlaceNavigationUrl(link.url);
       if (!url) return null;
       const label = String(link.label || "").trim();
 
@@ -101,7 +146,7 @@ export function platformLinksToText(links: PlaceExternalLink[] = []) {
 }
 
 export function createPlatformLink(url: string, label = ""): PlaceExternalLink | null {
-  const trimmedUrl = url.trim();
+  const trimmedUrl = normalizePlaceNavigationUrl(url);
   if (!trimmedUrl) return null;
 
   const platform = normalizePlatform(undefined, label, trimmedUrl);

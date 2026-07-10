@@ -9,6 +9,12 @@ import type {
 import { defaultAppSettings, defaultReminderSettings } from "../types";
 import { isRecord } from "./lifelogHelpers";
 
+export const MAX_BACKUP_FILE_BYTES = 128 * 1024 * 1024;
+const MAX_BACKUP_RECORD_COUNT = 50000;
+const MAX_BACKUP_PHOTO_COUNT = 500;
+const MAX_PHOTO_DATA_URL_LENGTH = 16 * 1024 * 1024;
+const MAX_TOTAL_PHOTO_DATA_URL_LENGTH = 96 * 1024 * 1024;
+
 export interface BackupPhotoRecord {
   id: string;
   memoryId: string;
@@ -82,6 +88,9 @@ export function blobToDataUrl(blob: Blob) {
 }
 
 async function dataUrlToBlob(dataUrl: string) {
+  if (!isSafeImageDataUrl(dataUrl)) {
+    throw new Error("Backup photo must be an image data URL");
+  }
   const response = await fetch(dataUrl);
   return await response.blob();
 }
@@ -91,6 +100,7 @@ export async function normalizeBackupPayload(input: Record<string, unknown>, opt
   if (!isBackupStateLike(sourceState)) {
     throw new Error("备份文件缺少人物、地点或回忆数据，导入已取消。");
   }
+  assertBackupRecordLimit(sourceState);
   const warnings: string[] = [];
   const nextState = normalizeState(sourceState as Partial<LifeLogState>);
   const settings = normalizeAppSettings(input.settings);
@@ -188,9 +198,17 @@ async function normalizeBackupPhotos(
       if (!photoOwnerById.has(photoId)) photoOwnerById.set(photoId, memory.id);
     });
   });
-  const result: Photo[] = [];
+  if (value.length > MAX_BACKUP_PHOTO_COUNT && !options.safeMode) {
+    throw new Error(`备份照片数量超过上限（${MAX_BACKUP_PHOTO_COUNT} 张），导入已取消。`);
+  }
+  if (value.length > MAX_BACKUP_PHOTO_COUNT) {
+    warnings.push(`照片数量超过上限，已仅恢复前 ${MAX_BACKUP_PHOTO_COUNT} 张。`);
+  }
 
-  for (const item of value) {
+  const result: Photo[] = [];
+  let totalPhotoDataLength = 0;
+
+  for (const item of value.slice(0, MAX_BACKUP_PHOTO_COUNT)) {
     if (!isBackupPhotoRecord(item)) {
       if (options.safeMode) {
         warnings.push("已跳过 1 张字段不完整的照片。");
@@ -202,6 +220,14 @@ async function normalizeBackupPhotos(
     if (!memoryId) {
       if (options.safeMode) warnings.push(`已跳过无法归属的照片：${item.id}`);
       continue;
+    }
+    const photoDataLength = item.originalDataUrl.length + item.thumbnailDataUrl.length;
+    if (photoDataLength > MAX_PHOTO_DATA_URL_LENGTH || totalPhotoDataLength + photoDataLength > MAX_TOTAL_PHOTO_DATA_URL_LENGTH) {
+      if (options.safeMode) {
+        warnings.push(`已跳过超过导入大小限制的照片：${item.id}`);
+        continue;
+      }
+      throw new Error("备份照片数据超过导入大小限制，导入已取消。");
     }
     try {
       result.push({
@@ -217,6 +243,7 @@ async function normalizeBackupPhotos(
         uploadedAt: item.uploadedAt,
         order: Number(item.order) || 0
       });
+      totalPhotoDataLength += photoDataLength;
     } catch {
       if (options.safeMode) {
         warnings.push(`已跳过无法读取的照片：${item.id}`);
@@ -232,6 +259,19 @@ async function normalizeBackupPhotos(
 function isBackupPhotoRecord(value: unknown): value is BackupPhotoRecord {
   if (!isRecord(value)) return false;
   return ["id", "memoryId", "originalDataUrl", "thumbnailDataUrl", "mimeType", "uploadedAt"].every((key) => typeof value[key] === "string");
+}
+
+function assertBackupRecordLimit(state: Record<string, unknown>) {
+  const recordCount = ["people", "places", "memories", "anniversaryPlans"]
+    .map((key) => Array.isArray(state[key]) ? state[key].length : 0)
+    .reduce((total, count) => total + count, 0);
+  if (recordCount > MAX_BACKUP_RECORD_COUNT) {
+    throw new Error(`备份记录数量超过上限（${MAX_BACKUP_RECORD_COUNT} 条），导入已取消。`);
+  }
+}
+
+function isSafeImageDataUrl(value: string) {
+  return /^data:image\/(?:avif|gif|heic|heif|jpe?g|png|webp);base64,[a-z0-9+/=\s]+$/i.test(value);
 }
 
 function validateIntegrity(

@@ -7,6 +7,14 @@ const RAW_UPDATE_MANIFEST_URL = "https://raw.githubusercontent.com/cnxin/lifelog
 const PRIMARY_CHECK_TIMEOUT_MS = 5200;
 const FALLBACK_CHECK_TIMEOUT_MS = 3500;
 const FIRST_VALID_RESULT_GRACE_MS = 900;
+const MAX_APK_SIZE_BYTES = 128 * 1024 * 1024;
+const trustedApkHosts = new Set([
+  "github.com",
+  "www.github.com",
+  "gitee.com",
+  "www.gitee.com",
+  "cdn.jsdelivr.net"
+]);
 
 export interface AppUpdateInfo {
   currentVersion: string;
@@ -76,8 +84,7 @@ type UpdateSourceResult =
 export async function checkLatestAppUpdate(): Promise<AppUpdateInfo> {
   const primarySources: UpdateSource[] = [
     { name: "Gitee 国内镜像清单", fetcher: () => fetchUpdateManifest(GITEE_UPDATE_MANIFEST_URL, PRIMARY_CHECK_TIMEOUT_MS) },
-    { name: "CDN 清单", fetcher: () => fetchUpdateManifest(UPDATE_MANIFEST_URL, PRIMARY_CHECK_TIMEOUT_MS) },
-    { name: "GitHub Release", fetcher: () => fetchLatestRelease(PRIMARY_CHECK_TIMEOUT_MS) }
+    { name: "CDN 清单", fetcher: () => fetchUpdateManifest(UPDATE_MANIFEST_URL, PRIMARY_CHECK_TIMEOUT_MS) }
   ];
   const primaryResults = await settleUpdateSources(primarySources, {
     timeoutMs: PRIMARY_CHECK_TIMEOUT_MS,
@@ -300,16 +307,29 @@ export function parseUpdateManifestPayload(payload: UpdateManifestPayload & { so
   if (!latestVersion) {
     throw new Error("更新清单没有版本号");
   }
+  const apkUrl = normalizeTrustedApkUrl(payload.apkUrl);
+  const mirrorApkUrl = normalizeTrustedApkUrl(payload.mirrorApkUrl);
+  const apkSha256 = normalizeSha256(payload.apkSha256);
+  const apkSize = normalizeApkSize(payload.apkSize);
+  if (!apkUrl && !mirrorApkUrl) {
+    throw new Error("更新清单没有受信任的 APK 下载地址");
+  }
+  if (!apkSha256) {
+    throw new Error("更新清单缺少有效的 APK SHA-256");
+  }
+  if (!apkSize) {
+    throw new Error("更新清单缺少有效的 APK 文件大小");
+  }
 
   return {
     currentVersion,
     latestVersion,
     releaseUrl: payload.releaseUrl || `https://github.com/cnxin/lifelog/releases/tag/v${latestVersion}`,
-    apkUrl: payload.apkUrl || "",
-    mirrorApkUrl: payload.mirrorApkUrl || "",
+    apkUrl,
+    mirrorApkUrl,
     apkName: payload.apkName || `lifelog-v${latestVersion}.apk`,
-    apkSize: typeof payload.apkSize === "number" ? payload.apkSize : 0,
-    apkSha256: payload.apkSha256 || "",
+    apkSize,
+    apkSha256,
     body: payload.body || "",
     publishedAt: payload.publishedAt || "",
     checkedAt: new Date().toISOString(),
@@ -320,28 +340,9 @@ export function parseUpdateManifestPayload(payload: UpdateManifestPayload & { so
 }
 
 export function parseGitHubReleasePayload(payload: GitHubReleasePayload, currentVersion = APP_VERSION): AppUpdateInfo {
-  const latestVersion = normalizeVersion(payload.tag_name || "");
-  if (!latestVersion) {
-    throw new Error("没有读取到最新版本号");
-  }
-
-  const apkAsset = (payload.assets || []).find((asset) => asset.name?.endsWith(".apk"));
-  return {
-    currentVersion,
-    latestVersion,
-    releaseUrl: payload.html_url || `https://github.com/cnxin/lifelog/releases/tag/v${latestVersion}`,
-    apkUrl: apkAsset?.browser_download_url || "",
-    mirrorApkUrl: apkAsset?.name ? buildJsDelivrApkUrl(latestVersion, apkAsset.name) : "",
-    apkName: apkAsset?.name || "",
-    apkSize: typeof apkAsset?.size === "number" ? apkAsset.size : 0,
-    apkSha256: "",
-    body: payload.body || "",
-    publishedAt: payload.published_at || "",
-    checkedAt: new Date().toISOString(),
-    source: "GitHub Release",
-    diagnostics: [],
-    hasUpdate: compareVersions(latestVersion, currentVersion) > 0
-  };
+  void payload;
+  void currentVersion;
+  throw new Error("GitHub Release 未提供可验证的 APK SHA-256，已拒绝用于应用内安装。");
 }
 
 function buildUpdateDiagnostics(
@@ -437,6 +438,27 @@ function formatDownloadSource(url: string) {
 
 function buildJsDelivrApkUrl(version: string, assetName: string) {
   return `https://cdn.jsdelivr.net/gh/cnxin/lifelog@main/downloads/${assetName || `lifelog-v${version}.apk`}`;
+}
+
+function normalizeTrustedApkUrl(value: unknown) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" && trustedApkHosts.has(url.hostname.toLowerCase()) ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function normalizeSha256(value: unknown) {
+  const hash = String(value || "").trim().toLowerCase();
+  return /^[a-f0-9]{64}$/.test(hash) ? hash : "";
+}
+
+function normalizeApkSize(value: unknown) {
+  const size = typeof value === "number" ? Math.round(value) : 0;
+  return Number.isSafeInteger(size) && size >= 1024 && size <= MAX_APK_SIZE_BYTES ? size : 0;
 }
 
 export function compareVersions(left: string, right: string) {

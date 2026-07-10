@@ -78,12 +78,12 @@ async function run() {
       {
         id: "photo-1",
         memoryId: "memory-stale",
-        originalDataUrl: "data:text/plain;base64,SGVsbG8=",
-        thumbnailDataUrl: "data:text/plain;base64,SGVsbG8=",
+        originalDataUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL4OQAAAABJRU5ErkJggg==",
+        thumbnailDataUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL4OQAAAABJRU5ErkJggg==",
         width: 1,
         height: 1,
         fileSize: 5,
-        mimeType: "text/plain",
+        mimeType: "image/png",
         uploadedAt: "2026-05-26T15:00:00.000Z",
         order: 0
       }

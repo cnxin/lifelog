@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.126",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.126",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.126/lifelog-v0.1.0-test.126.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.126.apk",
-    "apkName":  "lifelog-v0.1.0-test.126.apk",
-    "apkSize":  4095626,
-    "apkSha256":  "c28f296852297aae504a8ff65bab941a40eabcaa89c52b03dd4f3434843abd51",
-    "publishedAt":  "2026-07-07T09:16:25Z",
-    "body":  "- 人物、地点和回忆列表的批量管理入口统一为同一套操作栏，支持批量导出、收藏、标签和删除等高频整理动作。\n- 新增轻量统计页，可查看记录总览、年度热力、月度节奏、人物互动、地点分布、足迹城市、地点分类和心情趋势。\n- 统计页支持生成年度回顾图，可直接分享或保存，方便把 LifeLog 的全年摘要导出成图片。\n- 本地分享图片卡片增加简洁、暖色和夜色三种模板，默认一键分享不增加额外配置负担。\n- 首页智能建议增加纪念日提前安排和重要人物档案补全提示，同时提高断档记录提醒门槛，减少不必要打扰。\n- Android 返回键在地点合并预览中会先退出预览层，再处理表单关闭，避免误触导致整张表单放弃确认。"
+    "version":  "0.1.0-test.127",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.127",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.127/lifelog-v0.1.0-test.127.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.127.apk",
+    "apkName":  "lifelog-v0.1.0-test.127.apk",
+    "apkSize":  4099811,
+    "apkSha256":  "7df046ad64e0423d8400212974ac8384b86315780ec28bbda5d4e93605ff3b5d",
+    "publishedAt":  "2026-07-10T08:59:05Z",
+    "body":  "- 地点链接、分享导入和 Android 外部跳转统一校验 HTTPS 与受控 App scheme，阻断脚本 URL 和任意 Intent。\n- 备份、分享链接和照片恢复增加文件、记录、图片与解压大小限制；APK 更新强制受信下载地址、文件大小和 SHA-256 校验。\n- 移除 Android 发布密钥固定口令，收紧 FileProvider 路径，升级 Vite 与 React Router 的安全版本。"
 }
