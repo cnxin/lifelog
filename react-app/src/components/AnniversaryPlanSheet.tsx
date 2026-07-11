@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanStatus, AnniversaryPlanTargetKind, AnniversaryPlanTodo, Person, Place } from "../types";
 import { formatDaysUntilLabel } from "../utils/date";
 import PlacePicker from "./PlacePicker";
+import SheetPrimitive from "./motion/SheetPrimitive";
 
 interface AnniversaryPlanSheetProps {
   person: Person;
@@ -274,16 +275,14 @@ export default function AnniversaryPlanSheet({
   }
 
   return (
-    <div className="sheet anniversary-plan-sheet">
-      <button className="sheet-backdrop" type="button" aria-label="关闭安排" onClick={onClose} />
-      <section className="sheet-panel">
-        <div className="sheet-handle" />
+    <SheetPrimitive open onDismissRequest={onClose} className="anniversary-plan-sheet" ariaLabel={`${targetTitle}安排`}>
+        <div className="sheet-handle" data-sheet-drag-handle />
         <div className="sheet-header">
           <div>
             <p className="date-label">{formatDaysUntilLabel(daysUntilTarget)} · {targetDate}</p>
             <h2>{targetTitle}安排</h2>
           </div>
-          <button className="sheet-close" aria-label="关闭" onClick={onClose}>
+          <button className="sheet-close pressable" aria-label="关闭" onClick={onClose} type="button">
             ×
           </button>
         </div>
@@ -433,23 +432,22 @@ export default function AnniversaryPlanSheet({
 
           <div className="submit-row">
             {plan && onDelete ? (
-              <button type="button" className="ghost-btn danger-text" onClick={() => onDelete(plan.id)}>
+              <button type="button" className="ghost-btn danger-text pressable" onClick={() => onDelete(plan.id)}>
                 删除
               </button>
             ) : (
-              <button type="button" className="ghost-btn" onClick={onClose}>
+              <button type="button" className="ghost-btn pressable" onClick={onClose}>
                 取消
               </button>
             )}
-            <button type="button" className="ghost-btn" disabled={!plan} onClick={() => plan && onCreateMemory(plan)}>
+            <button type="button" className="ghost-btn pressable" disabled={!plan} onClick={() => plan && onCreateMemory(plan)}>
               记录回忆
             </button>
-            <button type="button" className="primary-btn" disabled={isSaving} onClick={handleSave}>
+            <button type="button" className="primary-btn pressable" disabled={isSaving} onClick={handleSave}>
               {isSaving ? "保存中..." : "保存安排"}
             </button>
           </div>
         </div>
-      </section>
-    </div>
+    </SheetPrimitive>
   );
 }

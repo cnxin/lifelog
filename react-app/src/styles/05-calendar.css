@@ -481,6 +481,10 @@
   animation: fab-menu-in 0.18s ease;
 }
 
+.fab-menu.fab-menu--fluid {
+  animation: none;
+}
+
 .fab-menu button {
   width: 100%;
   border: 0;

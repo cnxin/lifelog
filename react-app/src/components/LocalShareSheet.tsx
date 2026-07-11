@@ -8,6 +8,7 @@ import { saveImageToGallery, shareImageFile } from "../utils/imageShare";
 import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
 import { buildLifeLogShareLink, buildLifeLogShareQrCode, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
 import type { LifeLogSharePayload, MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
+import SheetPrimitive from "./motion/SheetPrimitive";
 
 type ShareTarget =
   | {
@@ -320,16 +321,15 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   }
 
   return (
-    <div className="sheet local-share-sheet">
-      <button className="sheet-backdrop" type="button" aria-label="关闭分享面板" onClick={onClose} />
-      <section className="sheet-panel">
-        <div className="sheet-handle" />
+    <>
+    <SheetPrimitive open onDismissRequest={onClose} className="local-share-sheet" ariaLabel="本地分享">
+        <div className="sheet-handle" data-sheet-drag-handle />
         <div className="sheet-header">
           <div>
             <h2>本地分享</h2>
             <p>{target.title}</p>
           </div>
-          <button className="sheet-close" aria-label="关闭" onClick={onClose}>
+          <button className="sheet-close pressable" aria-label="关闭" onClick={onClose} type="button">
             <X size={18} />
           </button>
         </div>
@@ -345,15 +345,15 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
             </div>
           </div>
           <div className="local-share-primary-actions">
-            <button className="primary-btn" type="button" onClick={() => void handleImmediateShare()} disabled={isBusy}>
+            <button className="primary-btn pressable" type="button" onClick={() => void handleImmediateShare()} disabled={isBusy}>
               <Share2 size={16} />
               {isSharing ? "准备中…" : "立即分享"}
             </button>
-            <button className="ghost-btn" type="button" onClick={() => void handleShareCardImage()} disabled={isBusy}>
+            <button className="ghost-btn pressable" type="button" onClick={() => void handleShareCardImage()} disabled={isBusy}>
               <ImageDown size={16} />
               {isSharingCard ? "生成中…" : "图片"}
             </button>
-            <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr("quick")} disabled={isBusy}>
+            <button className="ghost-btn pressable" type="button" onClick={() => void handleGenerateQr("quick")} disabled={isBusy}>
               <QrCode size={16} />
               二维码
             </button>
@@ -456,24 +456,24 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
 
         {advancedOpen && (
           <div className="submit-row">
-            <button className="ghost-btn" type="button" onClick={onClose}>
+            <button className="ghost-btn pressable" type="button" onClick={onClose}>
               取消
             </button>
-            <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isBusy}>
+            <button className="ghost-btn pressable" type="button" onClick={() => void handleCopyLink()} disabled={isBusy}>
               <Copy size={16} />
               {isCopyingLink ? "生成中…" : "复制链接"}
             </button>
-            <button className="ghost-btn" type="button" onClick={() => void handleGenerateQr()} disabled={isBusy}>
+            <button className="ghost-btn pressable" type="button" onClick={() => void handleGenerateQr()} disabled={isBusy}>
               <QrCode size={16} />
               二维码
             </button>
-            <button className="primary-btn" type="button" onClick={() => void handleExport()} disabled={isBusy}>
+            <button className="primary-btn pressable" type="button" onClick={() => void handleExport()} disabled={isBusy}>
               <Download size={16} />
               {isExporting ? "生成中…" : "生成分享包"}
             </button>
           </div>
         )}
-      </section>
+    </SheetPrimitive>
       {qrPreviewOpen && qrImage && (
         <section className="qr-preview-modal" role="dialog" aria-modal="true" aria-label="分享二维码">
           <button className="qr-preview-backdrop" type="button" aria-label="关闭二维码预览" onClick={() => setQrPreviewOpen(false)} />
@@ -495,15 +495,15 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
               </div>
             )}
             <div className="qr-preview-actions">
-              <button className="ghost-btn" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
+              <button className="ghost-btn pressable" type="button" onClick={() => void handleCopyLink()} disabled={isCopyingLink || isExporting}>
                 <Copy size={16} />
                 复制链接
               </button>
-              <button className="ghost-btn" type="button" onClick={() => void handleSaveQrImage()}>
+              <button className="ghost-btn pressable" type="button" onClick={() => void handleSaveQrImage()}>
                 <Download size={16} />
                 保存到相册
               </button>
-              <button className="primary-btn" type="button" onClick={() => void handleShareQrImage()}>
+              <button className="primary-btn pressable" type="button" onClick={() => void handleShareQrImage()}>
                 <Share2 size={16} />
                 分享图片
               </button>
@@ -511,7 +511,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
           </div>
         </section>
       )}
-    </div>
+    </>
   );
 }
 

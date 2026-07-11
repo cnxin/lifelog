@@ -1,0 +1,106 @@
+/* Fluid interaction layer — sheet gesture, pressable, reduced motion/transparency */
+
+.sheet-primitive--fluid .sheet-panel {
+  will-change: transform;
+  touch-action: pan-y;
+  transition: none;
+}
+
+.sheet-primitive.is-closing .sheet-panel {
+  pointer-events: none;
+}
+
+.sheet-primitive.is-closing .sheet-backdrop {
+  pointer-events: none;
+}
+
+.sheet-primitive--fluid .sheet-backdrop {
+  transition: none;
+  opacity: 0;
+}
+
+.sheet-primitive--static .sheet-backdrop {
+  opacity: 1;
+}
+
+.sheet-handle,
+[data-sheet-drag-handle] {
+  cursor: grab;
+  touch-action: none;
+  padding: 6px 0 10px;
+}
+
+.sheet-primitive.is-dragging .sheet-handle,
+.sheet-primitive.is-dragging [data-sheet-drag-handle] {
+  cursor: grabbing;
+}
+
+.pressable {
+  transition:
+    transform 100ms ease-out,
+    box-shadow 100ms ease-out,
+    filter 160ms ease,
+    background-color 160ms ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pressable:active,
+.pressable.is-pressed {
+  transform: scale(0.97);
+}
+
+.fab.pressable:active,
+.fab.pressable.is-pressed {
+  transform: scale(0.94);
+}
+
+.nav-item.pressable:active,
+.nav-item.pressable.is-pressed {
+  transform: scale(0.92);
+}
+
+.photo-viewer-container--fluid {
+  will-change: transform, opacity;
+  touch-action: none;
+  transition: none;
+  user-select: none;
+}
+
+.photo-viewer-container--fluid .photo-viewer-image {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.fab-menu button {
+  will-change: transform, opacity;
+}
+
+.fab-menu.fab-menu--fluid {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable:active,
+  .pressable.is-pressed,
+  .fab.pressable:active,
+  .nav-item.pressable:active {
+    transform: none;
+  }
+
+  .sheet-primitive--fluid .sheet-panel,
+  .photo-viewer-container--fluid {
+    will-change: auto;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .bottom-nav,
+  .sheet-panel,
+  .glass-card,
+  .toast-message {
+    backdrop-filter: none !important;
+    background: var(--card-solid, #fff) !important;
+  }
+}

@@ -41,3 +41,21 @@ export function buildPurchaseVerificationPayload(purchaseToken: string, productI
     clientCheckedAt: new Date().toISOString()
   };
 }
+
+/** UI fluid-interaction flags — flip to false for emergency rollback */
+export type FluidFeatureId = "fluidSheet" | "fluidPhotoViewer" | "fluidFab";
+
+const fluidFeatures: Record<FluidFeatureId, boolean> = {
+  fluidSheet: true,
+  fluidPhotoViewer: true,
+  fluidFab: true
+};
+
+export function isFluidFeatureEnabled(featureId: FluidFeatureId) {
+  return fluidFeatures[featureId] !== false;
+}
+
+/** Test / debug helper */
+export function setFluidFeatureEnabled(featureId: FluidFeatureId, enabled: boolean) {
+  fluidFeatures[featureId] = enabled;
+}

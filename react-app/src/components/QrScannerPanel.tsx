@@ -1,6 +1,7 @@
 import { Camera, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createQrBarcodeDetector, isQrCodeDetectionSupported } from "../utils/qrCodeReader";
+import SheetPrimitive from "./motion/SheetPrimitive";
 
 interface QrScannerPanelProps {
   open: boolean;
@@ -91,20 +92,18 @@ export default function QrScannerPanel({
   if (!open) return null;
 
   return (
-    <div className="sheet qr-scanner-sheet">
-      <button className="sheet-backdrop" type="button" aria-label="关闭扫码" onClick={onClose} />
-      <section className="sheet-panel">
-        <div className="sheet-handle" />
+    <SheetPrimitive open onDismissRequest={onClose} className="qr-scanner-sheet" ariaLabel={title}>
+        <div className="sheet-handle" data-sheet-drag-handle />
         <div className="sheet-header">
           <div>
             <h2>{title}</h2>
             <p>扫描 LifeLog 分享二维码后会进入导入预览。</p>
           </div>
-          <button className="sheet-close" aria-label="关闭" onClick={onClose}>
+          <button className="sheet-close pressable" aria-label="关闭" onClick={onClose} type="button">
             <X size={18} />
           </button>
         </div>
-        <div className="qr-scanner-frame">
+        <div className="qr-scanner-frame" data-no-sheet-drag>
           <video ref={videoRef} muted playsInline />
           <span className="qr-scanner-corners" aria-hidden="true" />
           <div className="qr-scanner-placeholder">
@@ -112,7 +111,6 @@ export default function QrScannerPanel({
           </div>
         </div>
         <p className="qr-scanner-status">{status}</p>
-      </section>
-    </div>
+    </SheetPrimitive>
   );
 }

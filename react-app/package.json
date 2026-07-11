@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.127",
+  "version": "0.1.0-test.128",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "test:memory": "node scripts/test-memory-inference.cjs",
     "test:display": "node scripts/test-memory-display.cjs",
     "test:location": "node scripts/test-place-location-filter.cjs",
+    "test:spring": "node scripts/test-spring-motion.cjs",
     "preview": "vite preview",
     "cap:add:android": "cap add android",
     "cap:add:ios": "cap add ios",

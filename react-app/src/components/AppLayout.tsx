@@ -10,14 +10,14 @@ import GlobalSearchPanel from "./GlobalSearchPanel";
 import Header from "./Header";
 import NetworkBanner from "./NetworkBanner";
 import ShortcutHelpPanel from "./ShortcutHelpPanel";
-import { Camera, CalendarPlus, ClipboardPaste, Link2, MapPinPlus, PenLine, QrCode, UserPlus } from "lucide-react";
+import { Camera, CalendarPlus, ClipboardPaste, MapPinPlus, PenLine, UserPlus } from "lucide-react";
 import { useAndroidBackButton } from "../hooks/useAndroidBackButton";
 import { useStatusBar } from "../hooks/useStatusBar";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import { useReminderScheduling } from "../hooks/useReminderScheduling";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import { buildLifeLogShareImportPathFromUrl, extractLifeLogShareHashFromText } from "../utils/lifelogShareLink";
+import { buildLifeLogShareImportPathFromUrl } from "../utils/lifelogShareLink";
 import { parsePlaceShare, type PlaceDraft } from "../utils/placeShareParser";
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -246,28 +246,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
   }
 
-  async function openLifeLogShareImport() {
-    if (!navigator.clipboard?.readText) {
-      navigate("/share/import");
-      notify({ message: "可在导入页粘贴 LifeLog 分享链接", tone: "info" });
-      return;
-    }
-
-    try {
-      const text = (await navigator.clipboard.readText()).trim();
-      const hash = extractLifeLogShareHashFromText(text);
-      if (!hash) {
-        navigate("/share/import");
-        notify({ message: "剪贴板里没有识别到 LifeLog 分享链接", tone: "info" });
-        return;
-      }
-      navigate(`/share/import#${hash}`);
-    } catch {
-      navigate("/share/import");
-      notify({ message: "无法读取剪贴板，可在导入页手动粘贴", tone: "info" });
-    }
-  }
-
   const floatingActions = buildFloatingActions({
     pathname: location.pathname,
     defaultMemoryMode: prefs.defaultMemoryMode,
@@ -276,8 +254,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     onPerson: () => openSheet("person"),
     onPlace: () => openSheet("place"),
     onPastePlaceShare: () => void openPlaceShareFromClipboard(),
-    onImportLifeLogShare: () => void openLifeLogShareImport(),
-    onScanLifeLogShare: () => navigate("/share/import?scan=1"),
     onMemoryForPerson: (personId) => openSheet("memory", prefs.defaultMemoryMode, { personIds: [personId] }),
     onEditPerson: (personId) => openSheet("person", "full", { itemId: personId }),
     onMemoryForPlace: (placeId) => openSheet("memory", prefs.defaultMemoryMode, { placeIds: [placeId] }),
@@ -342,8 +318,6 @@ function buildFloatingActions({
   onPerson,
   onPlace,
   onPastePlaceShare,
-  onImportLifeLogShare,
-  onScanLifeLogShare,
   onMemoryForPerson,
   onEditPerson,
   onMemoryForPlace,
@@ -356,8 +330,6 @@ function buildFloatingActions({
   onPerson: () => void;
   onPlace: () => void;
   onPastePlaceShare: () => void;
-  onImportLifeLogShare: () => void;
-  onScanLifeLogShare: () => void;
   onMemoryForPerson: (personId: string) => void;
   onEditPerson: (personId: string) => void;
   onMemoryForPlace: (placeId: string) => void;
@@ -491,9 +463,7 @@ function buildFloatingActions({
       icon: <Camera />,
       onClick: onPhotoMemory
     },
-    placeShareAction(onPastePlaceShare),
-    lifeLogShareAction(onImportLifeLogShare),
-    scanShareAction(onScanLifeLogShare)
+    placeShareAction(onPastePlaceShare)
   ];
 }
 
@@ -532,26 +502,6 @@ function placeShareAction(onClick: () => void): FloatingAction {
     label: "识别地点分享",
     desc: "从美团、高德、点评里带入地点",
     icon: <ClipboardPaste />,
-    onClick
-  };
-}
-
-function lifeLogShareAction(onClick: () => void): FloatingAction {
-  return {
-    id: "import-lifelog-share",
-    label: "收下别人分享",
-    desc: "粘贴 LifeLog 分享链接",
-    icon: <Link2 />,
-    onClick
-  };
-}
-
-function scanShareAction(onClick: () => void): FloatingAction {
-  return {
-    id: "scan-lifelog-share",
-    label: "扫描二维码",
-    desc: "扫描 LifeLog 分享二维码",
-    icon: <QrCode />,
     onClick
   };
 }

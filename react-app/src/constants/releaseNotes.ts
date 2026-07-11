@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-06-05",
+  date: "2026-07-11",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -16,14 +16,14 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
-    version: "0.1.0-test.127",
-    date: "2026-07-10",
-    title: "安全加固与发布链路修复",
+    version: "0.1.0-test.128",
+    date: "2026-07-11",
+    title: "Apple 流体交互与手感升级",
     highlights: [
-      "地点链接、分享导入和原生外部跳转统一启用协议白名单，阻断不安全 URL 和任意 Intent 打开。",
-      "备份与分享导入增加文件、记录、照片和解压后的大小限制，降低恶意数据造成内存耗尽的风险。",
-      "应用内 APK 更新强制校验受信 HTTPS 地址、文件大小和 SHA-256，Android 原生下载也会验证重定向目标。",
-      "升级 React Router 和 Vite，并移除 Android 发布密钥的固定口令。"
+      "记事、人物、地点、分享和扫码等底部面板支持跟手拖动、速度投影和可打断弹簧关闭。",
+      "照片浏览支持 1:1 横滑翻页、甩动切图和下拉关闭，手感更接近原生相册。",
+      "按钮、底栏和 FAB 增加即时按压反馈；首页快捷新增精简为记一件事、带照片和识别地点。",
+      "支持系统「减少动态效果 / 降低透明度」偏好，并提供流体交互功能开关便于回滚。"
     ]
   },
   {

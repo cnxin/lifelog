@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LifeLog · Apple Design 手感对比 Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #7c8cf8;
+      --primary-light: #aeb8ff;
+      --secondary: #f5a3ae;
+      --bg: #fafbff;
+      --card: #ffffff;
+      --text: #20263a;
+      --sub: #737b91;
+      --line: rgba(124, 140, 248, 0.12);
+      --soft: rgba(124, 140, 248, 0.09);
+      --shadow: 0 12px 32px rgba(124, 140, 248, 0.1);
+      --danger: #b94040;
+      --phone-w: 340px;
+      --phone-h: 700px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(124, 140, 248, 0.12), transparent 28%),
+        radial-gradient(circle at 90% 88%, rgba(245, 163, 174, 0.12), transparent 30%),
+        #eef1fb;
+      color: var(--text);
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body { padding: 28px 20px 48px; }
+
+    .page-head {
+      max-width: 1100px;
+      margin: 0 auto 22px;
+      text-align: center;
+    }
+
+    .page-head .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(124, 140, 248, 0.12);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .page-head h1 {
+      margin-top: 12px;
+      font-family: Outfit, Inter, sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: -0.03em;
+    }
+
+    .page-head p {
+      margin: 10px auto 0;
+      max-width: 620px;
+      color: var(--sub);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px auto 0;
+      max-width: 720px;
+    }
+
+    .tabs button {
+      border: 1px solid rgba(124, 140, 248, 0.16);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--sub);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 100ms ease-out, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .tabs button:active { transform: scale(0.97); }
+
+    .tabs button.active {
+      color: white;
+      background: linear-gradient(135deg, #7c8cf8, #9aa6ff);
+      box-shadow: 0 10px 22px rgba(124, 140, 248, 0.28);
+      border-color: transparent;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      max-width: 900px;
+      margin: 28px auto 0;
+      align-items: start;
+      justify-items: center;
+    }
+
+    @media (max-width: 860px) {
+      .compare {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+    }
+
+    .col-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge.before {
+      background: rgba(185, 64, 64, 0.1);
+      color: #b94040;
+    }
+
+    .badge.after {
+      background: rgba(18, 184, 134, 0.12);
+      color: #0f9f74;
+    }
+
+    .hint {
+      margin-top: 10px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.5;
+      max-width: var(--phone-w);
+    }
+
+    /* Phone chrome */
+    .phone {
+      position: relative;
+      width: var(--phone-w);
+      height: var(--phone-h);
+      border-radius: 36px;
+      padding: 12px;
+      background: linear-gradient(160deg, #2b3148, #1a1f33 60%, #121622);
+      box-shadow:
+        0 30px 60px rgba(32, 38, 58, 0.28),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .phone-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(124, 140, 248, 0.16), transparent 34%),
+        radial-gradient(circle at 88% 92%, rgba(245, 163, 174, 0.14), transparent 36%),
+        var(--bg);
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 4px 16px 10px;
+    }
+
+    .app-header h2 {
+      font-family: Outfit, Inter, sans-serif;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .app-header small {
+      display: block;
+      margin-top: 2px;
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .pill {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: var(--shadow);
+      color: var(--primary);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .content {
+      padding: 0 14px 88px;
+      height: calc(100% - 86px);
+      overflow: hidden;
+    }
+
+    .card {
+      border: 1px solid rgba(124, 140, 248, 0.1);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 8px 20px rgba(124, 140, 248, 0.06);
+    }
+
+    .card .kicker {
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .card strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 15px;
+    }
+
+    .card p {
+      margin-top: 4px;
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .row-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      color: white;
+      background: linear-gradient(135deg, #7c8cf8, #9aa6ff);
+      box-shadow: 0 10px 18px rgba(124, 140, 248, 0.24);
+    }
+
+    .btn.ghost {
+      color: var(--text);
+      background: rgba(124, 140, 248, 0.1);
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 8px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 10px 28px rgba(32, 38, 58, 0.1);
+      z-index: 5;
+    }
+
+    .nav-item {
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      border: 0;
+      background: transparent;
+      color: var(--sub);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 0;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .nav-item.active { color: var(--primary); background: rgba(124, 140, 248, 0.1); }
+    .nav-item .ico { font-size: 16px; line-height: 1; }
+
+    /* FAB */
+    .fab-wrap {
+      position: absolute;
+      right: 18px;
+      bottom: 78px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .fab {
+      width: 56px;
+      height: 56px;
+      border: 0;
+      border-radius: 20px;
+      color: white;
+      background: linear-gradient(135deg, #7c8cf8, #a0abff);
+      box-shadow: 0 14px 28px rgba(124, 140, 248, 0.36);
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .fab-menu {
+      display: grid;
+      gap: 8px;
+      width: 196px;
+    }
+
+    .fab-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 10px 12px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 10px 24px rgba(32, 38, 58, 0.12);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .fab-menu-item .mi {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(124, 140, 248, 0.12);
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    .fab-menu-item strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .fab-menu-item small {
+      color: var(--sub);
+      font-size: 11px;
+    }
+
+    .fab-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(32, 38, 58, 0.18);
+      z-index: 15;
+    }
+
+    /* Sheet */
+    .sheet-root {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .sheet-root.open { pointer-events: auto; }
+
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(32, 38, 58, 0.38);
+      opacity: 0;
+    }
+
+    .sheet-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-height: 78%;
+      border-radius: 28px 28px 0 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), #fff 80px),
+        #fff;
+      box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.18);
+      padding: 10px 18px 22px;
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .sheet-handle {
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      margin: 4px auto 14px;
+      background: rgba(99, 110, 114, 0.28);
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .sheet-header h3 {
+      font-family: Outfit, Inter, sans-serif;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .sheet-header .sub {
+      margin-top: 2px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .sheet-close {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(99, 110, 114, 0.1);
+      color: var(--sub);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid rgba(124, 140, 248, 0.14);
+      border-radius: 14px;
+      padding: 11px 12px;
+      background: rgba(124, 140, 248, 0.06);
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field textarea { min-height: 88px; resize: none; }
+
+    .sheet-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    /* Photo viewer */
+    .viewer {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(10, 12, 20, 0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .viewer.open { display: flex; }
+
+    .viewer-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform, opacity;
+    }
+
+    .photo-slide {
+      position: absolute;
+      width: 86%;
+      aspect-ratio: 3/4;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .photo-slide .art {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-family: Outfit, Inter, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .viewer-meta {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 28px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
+    .viewer-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.14);
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .thumb-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .thumb {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .thumb .art {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .press-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .press-card {
+      border: 1px solid rgba(124, 140, 248, 0.1);
+      border-radius: 16px;
+      padding: 14px 12px;
+      background: white;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      color: var(--text);
+      box-shadow: 0 6px 16px rgba(124, 140, 248, 0.06);
+    }
+
+    .press-card strong { display: block; font-size: 13px; }
+    .press-card span { display: block; margin-top: 3px; color: var(--sub); font-size: 11px; }
+
+    /* BEFORE: no press scale / short transitions */
+    .before .btn,
+    .before .pill,
+    .before .nav-item,
+    .before .press-card,
+    .before .fab,
+    .before .sheet-close {
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* AFTER: instant press feedback */
+    .after .pressable {
+      transition: transform 100ms ease-out, box-shadow 100ms ease-out, background 160ms ease;
+      transform-origin: center;
+    }
+
+    .after .pressable:active,
+    .after .pressable.is-pressed {
+      transform: scale(0.97);
+    }
+
+    .after .fab.pressable:active,
+    .after .fab.pressable.is-pressed {
+      transform: scale(0.94);
+      box-shadow: 0 8px 16px rgba(124, 140, 248, 0.28);
+    }
+
+    .after .nav-item.pressable:active {
+      transform: scale(0.94);
+    }
+
+    .scene { display: none; }
+    .scene.active { display: block; }
+
+    .toast {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 86px;
+      z-index: 30;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(32, 38, 58, 0.9);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .legend {
+      max-width: 900px;
+      margin: 28px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 860px) {
+      .legend { grid-template-columns: 1fr; }
+    }
+
+    .legend .item {
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(124, 140, 248, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .legend .item h4 {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .legend .item p {
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer-note {
+      max-width: 900px;
+      margin: 18px auto 0;
+      text-align: center;
+      color: var(--sub);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="page-head">
+    <div class="eyebrow">LifeLog · Apple Design 对比</div>
+    <h1>当前手感 vs 流体交互</h1>
+    <p>
+      左侧模拟现在的实现（静态出现、阈值硬切、弱按压反馈）；
+      右侧按 Apple fluid interfaces：按下即反馈、1:1 跟手、速度投影、可打断弹簧。
+      建议用鼠标拖或触屏直接试。
+    </p>
+    <div class="tabs" id="tabs">
+      <button class="active" data-scene="sheet">1. Bottom Sheet</button>
+      <button data-scene="photo">2. 照片浏览</button>
+      <button data-scene="press">3. 按压反馈</button>
+      <button data-scene="fab">4. FAB 菜单</button>
+    </div>
+  </header>
+
+  <div class="compare">
+    <!-- BEFORE -->
+    <section>
+      <div class="col-label">
+        <span class="badge before">Before</span>
+        当前实现
+      </div>
+      <div class="phone before" id="phone-before">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>LifeLog</span></div>
+          <div class="app-header">
+            <div>
+              <h2>首页</h2>
+              <small>今天有 2 件可处理</small>
+            </div>
+            <button class="pill" type="button">⌕</button>
+          </div>
+
+          <div class="content">
+            <!-- Sheet scene -->
+            <div class="scene active" data-scene="sheet">
+              <div class="card">
+                <div class="kicker">今日行动</div>
+                <strong>给小林发生日祝福</strong>
+                <p>还剩 1 天 · 可先记下礼物想法</p>
+                <div class="row-actions">
+                  <button class="btn ghost" type="button" data-before-open-sheet>打开记录</button>
+                  <button class="btn primary" type="button" data-before-open-sheet>记一件事</button>
+                </div>
+              </div>
+              <div class="card">
+                <div class="kicker">往年今日</div>
+                <strong>第一次去西湖</strong>
+                <p>和小林 · 杭州</p>
+              </div>
+              <p class="hint" style="margin:12px 2px 0;text-align:left">
+                点击打开 Sheet：瞬间出现，只能点遮罩/关闭；无拖动手势。
+              </p>
+            </div>
+
+            <!-- Photo scene -->
+            <div class="scene" data-scene="photo">
+              <div class="card">
+                <div class="kicker">回忆照片</div>
+                <strong>西湖春日</strong>
+                <p>点缩略图打开 · 横滑切图 · 下拉关闭</p>
+                <div class="thumb-row">
+                  <button class="thumb" data-before-photo="0"><div class="art" style="background:linear-gradient(135deg,#7c8cf8,#f5a3ae)">1</div></button>
+                  <button class="thumb" data-before-photo="1"><div class="art" style="background:linear-gradient(135deg,#12b886,#4dabf7)">2</div></button>
+                  <button class="thumb" data-before-photo="2"><div class="art" style="background:linear-gradient(135deg,#9f7b55,#ead7bd)">3</div></button>
+                </div>
+              </div>
+              <p class="hint" style="margin:12px 2px 0;text-align:left">
+                固定阈值硬切；无速度；跟手衰减；松手无弹簧。
+              </p>
+            </div>
+
+            <!-- Press scene -->
+            <div class="scene" data-scene="press">
+              <div class="card">
+                <div class="kicker">按压反馈</div>
+                <strong>点这些卡片试试</strong>
+                <p>Before：几乎没有按下缩放，像网页按钮</p>
+                <div class="press-grid">
+                  <button class="press-card" type="button"><strong>人物</strong><span>小林</span></button>
+                  <button class="press-card" type="button"><strong>地点</strong><span>西湖</span></button>
+                  <button class="press-card" type="button"><strong>回忆</strong><span>春游</span></button>
+                  <button class="press-card" type="button"><strong>计划</strong><span>生日</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAB scene -->
+            <div class="scene" data-scene="fab">
+              <div class="card">
+                <div class="kicker">快捷新增</div>
+                <strong>点右下角 +</strong>
+                <p>菜单条件渲染，进出偏“闪现”</p>
+              </div>
+            </div>
+          </div>
+
+          <nav class="bottom-nav">
+            <button class="nav-item active" type="button"><span class="ico">⌂</span>首页</button>
+            <button class="nav-item" type="button"><span class="ico">▤</span>档案</button>
+            <button class="nav-item" type="button"><span class="ico">♥</span>记录</button>
+          </nav>
+
+          <div class="fab-wrap">
+            <div class="fab-menu" id="before-fab-menu" hidden></div>
+            <button class="fab" id="before-fab" type="button">+</button>
+          </div>
+          <div class="fab-backdrop" id="before-fab-backdrop" hidden></div>
+
+          <!-- Before sheet: instant -->
+          <div class="sheet-root" id="before-sheet">
+            <div class="sheet-backdrop" id="before-sheet-backdrop"></div>
+            <div class="sheet-panel" id="before-sheet-panel" style="transform: translateY(110%)">
+              <div class="sheet-handle"></div>
+              <div class="sheet-header">
+                <div>
+                  <div class="sub">先写一句，之后再整理</div>
+                  <h3>记一件事</h3>
+                </div>
+                <button class="sheet-close" type="button" id="before-sheet-close">×</button>
+              </div>
+              <div class="field">
+                <label>标题</label>
+                <input value="给小林准备生日礼物" readonly />
+              </div>
+              <div class="field">
+                <label>内容</label>
+                <textarea readonly>想写一张手写卡片，再买她提过的护手霜。</textarea>
+              </div>
+              <div class="sheet-actions">
+                <button class="btn ghost" type="button" id="before-sheet-cancel">取消</button>
+                <button class="btn primary" type="button" id="before-sheet-save">留下这件事</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Before viewer -->
+          <div class="viewer" id="before-viewer">
+            <button class="viewer-close" type="button" id="before-viewer-close">×</button>
+            <div class="viewer-stage" id="before-viewer-stage">
+              <div class="photo-slide" id="before-photo">
+                <div class="art" id="before-photo-art">1</div>
+              </div>
+            </div>
+            <div class="viewer-meta" id="before-viewer-meta">1 / 3 · 阈值硬切</div>
+          </div>
+
+          <div class="toast" id="before-toast"></div>
+        </div>
+      </div>
+      <p class="hint" id="before-hint">点击「记一件事」打开 Sheet</p>
+    </section>
+
+    <!-- AFTER -->
+    <section>
+      <div class="col-label">
+        <span class="badge after">After</span>
+        Apple 流体
+      </div>
+      <div class="phone after" id="phone-after">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>LifeLog</span></div>
+          <div class="app-header">
+            <div>
+              <h2>首页</h2>
+              <small>今天有 2 件可处理</small>
+            </div>
+            <button class="pill pressable" type="button">⌕</button>
+          </div>
+
+          <div class="content">
+            <div class="scene active" data-scene="sheet">
+              <div class="card">
+                <div class="kicker">今日行动</div>
+                <strong>给小林发生日祝福</strong>
+                <p>还剩 1 天 · 可先记下礼物想法</p>
+                <div class="row-actions">
+                  <button class="btn ghost pressable" type="button" data-after-open-sheet>打开记录</button>
+                  <button class="btn primary pressable" type="button" data-after-open-sheet>记一件事</button>
+                </div>
+              </div>
+              <div class="card">
+                <div class="kicker">往年今日</div>
+                <strong>第一次去西湖</strong>
+                <p>和小林 · 杭州</p>
+              </div>
+              <p class="hint" style="margin:12px 2px 0;text-align:left">
+                拖 handle / 面板：1:1 跟手；甩一下可关闭；中途可抓回；松手有弹簧。
+              </p>
+            </div>
+
+            <div class="scene" data-scene="photo">
+              <div class="card">
+                <div class="kicker">回忆照片</div>
+                <strong>西湖春日</strong>
+                <p>点缩略图打开 · 横滑切图 · 下拉关闭</p>
+                <div class="thumb-row">
+                  <button class="thumb pressable" data-after-photo="0"><div class="art" style="background:linear-gradient(135deg,#7c8cf8,#f5a3ae)">1</div></button>
+                  <button class="thumb pressable" data-after-photo="1"><div class="art" style="background:linear-gradient(135deg,#12b886,#4dabf7)">2</div></button>
+                  <button class="thumb pressable" data-after-photo="2"><div class="art" style="background:linear-gradient(135deg,#9f7b55,#ead7bd)">3</div></button>
+                </div>
+              </div>
+              <p class="hint" style="margin:12px 2px 0;text-align:left">
+                1:1 跟手、速度投影吸附、竖滑 dismiss 带 rubber-band 与弹簧。
+              </p>
+            </div>
+
+            <div class="scene" data-scene="press">
+              <div class="card">
+                <div class="kicker">按压反馈</div>
+                <strong>点这些卡片试试</strong>
+                <p>After：pointerdown 即 scale(0.97)，像原生控件</p>
+                <div class="press-grid">
+                  <button class="press-card pressable" type="button"><strong>人物</strong><span>小林</span></button>
+                  <button class="press-card pressable" type="button"><strong>地点</strong><span>西湖</span></button>
+                  <button class="press-card pressable" type="button"><strong>回忆</strong><span>春游</span></button>
+                  <button class="press-card pressable" type="button"><strong>计划</strong><span>生日</span></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="scene" data-scene="fab">
+              <div class="card">
+                <div class="kicker">快捷新增</div>
+                <strong>点右下角 +</strong>
+                <p>菜单弹簧错开弹出，可打断关闭</p>
+              </div>
+            </div>
+          </div>
+
+          <nav class="bottom-nav">
+            <button class="nav-item pressable active" type="button"><span class="ico">⌂</span>首页</button>
+            <button class="nav-item pressable" type="button"><span class="ico">▤</span>档案</button>
+            <button class="nav-item pressable" type="button"><span class="ico">♥</span>记录</button>
+          </nav>
+
+          <div class="fab-wrap" style="z-index:20">
+            <div class="fab-menu" id="after-fab-menu" hidden></div>
+            <button class="fab pressable" id="after-fab" type="button">+</button>
+          </div>
+          <div class="fab-backdrop" id="after-fab-backdrop" hidden></div>
+
+          <!-- After sheet: fluid -->
+          <div class="sheet-root" id="after-sheet">
+            <div class="sheet-backdrop" id="after-sheet-backdrop"></div>
+            <div class="sheet-panel" id="after-sheet-panel" style="transform: translateY(110%)">
+              <div class="sheet-handle" id="after-sheet-handle"></div>
+              <div class="sheet-header">
+                <div>
+                  <div class="sub">先写一句，之后再整理</div>
+                  <h3>记一件事</h3>
+                </div>
+                <button class="sheet-close pressable" type="button" id="after-sheet-close">×</button>
+              </div>
+              <div class="field">
+                <label>标题</label>
+                <input value="给小林准备生日礼物" readonly />
+              </div>
+              <div class="field">
+                <label>内容</label>
+                <textarea readonly>想写一张手写卡片，再买她提过的护手霜。</textarea>
+              </div>
+              <div class="sheet-actions">
+                <button class="btn ghost pressable" type="button" id="after-sheet-cancel">取消</button>
+                <button class="btn primary pressable" type="button" id="after-sheet-save">留下这件事</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- After viewer -->
+          <div class="viewer" id="after-viewer">
+            <button class="viewer-close pressable" type="button" id="after-viewer-close">×</button>
+            <div class="viewer-stage" id="after-viewer-stage">
+              <div class="photo-slide" id="after-photo">
+                <div class="art" id="after-photo-art">1</div>
+              </div>
+            </div>
+            <div class="viewer-meta" id="after-viewer-meta">1 / 3 · 速度投影</div>
+          </div>
+
+          <div class="toast" id="after-toast"></div>
+        </div>
+      </div>
+      <p class="hint" id="after-hint">拖拽 Sheet 顶部或甩一下关闭</p>
+    </section>
+  </div>
+
+  <div class="legend">
+    <div class="item">
+      <h4>Response · 按下即反馈</h4>
+      <p>After 侧所有 pressable 在 pointerdown 就 scale，不等 click。Before 几乎无体感。</p>
+    </div>
+    <div class="item">
+      <h4>1:1 + 速度投影</h4>
+      <p>Sheet / 照片拖动全程跟手；松手用 velocity 决定关闭或吸附，不是死阈值。</p>
+    </div>
+    <div class="item">
+      <h4>可打断弹簧</h4>
+      <p>关闭动画过程中再次按下可抓回；从当前呈现值继续，不跳、不等结束。</p>
+    </div>
+  </div>
+  <p class="footer-note">文件：demo/apple-feel-compare.html · 纯静态，无构建。可直接用浏览器打开。</p>
+
+  <script>
+    /* ========== Spring engine (interruptible, velocity-aware) ========== */
+    function createSpring({ stiffness = 180, damping = 22, mass = 1 } = {}) {
+      // Map Apple-ish response/damping-ratio into critically/under-damped feel via stiffness/damping.
+      return { stiffness, damping, mass };
+    }
+
+    const SPRING_DEFAULT = createSpring({ stiffness: 210, damping: 26 }); // ~critically damped
+    const SPRING_BOUNCY = createSpring({ stiffness: 170, damping: 18 });  // slight overshoot for flicks
+
+    function animateSpring({
+      from,
+      to,
+      velocity = 0,
+      spring = SPRING_DEFAULT,
+      onUpdate,
+      onComplete,
+      restDelta = 0.1,
+      restSpeed = 0.1
+    }) {
+      let x = from;
+      let v = velocity;
+      let frame = 0;
+      let raf = 0;
+      let last = performance.now();
+      let stopped = false;
+
+      function step(now) {
+        if (stopped) return;
+        const dt = Math.min(0.032, (now - last) / 1000) || 0.016;
+        last = now;
+
+        // semi-implicit Euler
+        const force = -spring.stiffness * (x - to) - spring.damping * v;
+        const a = force / spring.mass;
+        v += a * dt;
+        x += v * dt;
+
+        onUpdate(x, v);
+
+        if (Math.abs(v) < restSpeed && Math.abs(x - to) < restDelta) {
+          onUpdate(to, 0);
+          onComplete?.(to);
+          return;
+        }
+        frame += 1;
+        if (frame > 600) {
+          onUpdate(to, 0);
+          onComplete?.(to);
+          return;
+        }
+        raf = requestAnimationFrame(step);
+      }
+
+      raf = requestAnimationFrame(step);
+      return {
+        stop() {
+          stopped = true;
+          cancelAnimationFrame(raf);
+        },
+        get value() { return x; },
+        get velocity() { return v; }
+      };
+    }
+
+    // Apple-like projection (exponential decay form)
+    function project(velocityPxPerSec, decelerationRate = 0.998) {
+      return (velocityPxPerSec / 1000) * decelerationRate / (1 - decelerationRate);
+    }
+
+    function rubberband(overshoot, dimension, constant = 0.55) {
+      return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
+    }
+
+    function showToast(el, message) {
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove("show"), 1600);
+    }
+
+    /* ========== Scene tabs ========== */
+    const tabs = document.getElementById("tabs");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-scene]");
+      if (!btn) return;
+      const scene = btn.dataset.scene;
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll(".scene").forEach((s) => {
+        s.classList.toggle("active", s.dataset.scene === scene);
+      });
+      // close overlays when switching
+      closeBeforeSheet(true);
+      closeAfterSheet(true);
+      closeBeforeViewer();
+      closeAfterViewer();
+      closeBeforeFab();
+      closeAfterFab(true);
+
+      const hints = {
+        sheet: ["点击「记一件事」打开 Sheet", "拖拽 Sheet 顶部或甩一下关闭"],
+        photo: ["点缩略图 · 横滑切图 · 下拉关闭", "甩一下翻页 / 下拉关闭，都有弹簧"],
+        press: ["点击卡片，几乎无缩放", "按下立刻 scale(0.97)"],
+        fab: ["点 + 打开菜单（闪现）", "点 + 打开菜单（弹簧错开）"]
+      };
+      document.getElementById("before-hint").textContent = hints[scene][0];
+      document.getElementById("after-hint").textContent = hints[scene][1];
+    });
+
+    /* ========== Pressable pointerdown feedback (after only, via CSS :active + class for mouse) ========== */
+    document.querySelectorAll(".after .pressable").forEach((el) => {
+      el.addEventListener("pointerdown", () => el.classList.add("is-pressed"));
+      el.addEventListener("pointerup", () => el.classList.remove("is-pressed"));
+      el.addEventListener("pointercancel", () => el.classList.remove("is-pressed"));
+      el.addEventListener("pointerleave", () => el.classList.remove("is-pressed"));
+    });
+
+    /* ========== BEFORE sheet: instant show/hide ========== */
+    const beforeSheet = document.getElementById("before-sheet");
+    const beforeBackdrop = document.getElementById("before-sheet-backdrop");
+    const beforePanel = document.getElementById("before-sheet-panel");
+
+    function openBeforeSheet() {
+      beforeSheet.classList.add("open");
+      beforeBackdrop.style.opacity = "1";
+      beforePanel.style.transition = "none";
+      beforePanel.style.transform = "translateY(0)";
+    }
+    function closeBeforeSheet() {
+      beforeSheet.classList.remove("open");
+      beforeBackdrop.style.opacity = "0";
+      beforePanel.style.transition = "none";
+      beforePanel.style.transform = "translateY(110%)";
+    }
+
+    document.querySelectorAll("[data-before-open-sheet]").forEach((b) => b.addEventListener("click", openBeforeSheet));
+    document.getElementById("before-sheet-close").addEventListener("click", closeBeforeSheet);
+    document.getElementById("before-sheet-cancel").addEventListener("click", closeBeforeSheet);
+    document.getElementById("before-sheet-save").addEventListener("click", () => {
+      closeBeforeSheet();
+      showToast(document.getElementById("before-toast"), "已保存（无动画）");
+    });
+    beforeBackdrop.addEventListener("click", closeBeforeSheet);
+
+    /* ========== AFTER sheet: drag + spring + velocity + interruptible ========== */
+    const afterSheet = document.getElementById("after-sheet");
+    const afterBackdrop = document.getElementById("after-sheet-backdrop");
+    const afterPanel = document.getElementById("after-sheet-panel");
+
+    let sheetY = 0; // 0 = open, positive = dragging down
+    let sheetAnim = null;
+    let sheetOpen = false;
+    const SHEET_H = () => afterPanel.getBoundingClientRect().height || 420;
+
+    function setSheetY(y, backdropMul = true) {
+      sheetY = Math.max(0, y);
+      afterPanel.style.transform = `translateY(${sheetY}px)`;
+      if (backdropMul) {
+        const h = SHEET_H();
+        const p = Math.min(1, sheetY / h);
+        afterBackdrop.style.opacity = String(1 - p * 0.92);
+      }
+    }
+
+    function openAfterSheet() {
+      afterSheet.classList.add("open");
+      sheetOpen = true;
+      if (sheetAnim) sheetAnim.stop();
+      // start from below
+      setSheetY(SHEET_H() + 40);
+      afterBackdrop.style.opacity = "0";
+      sheetAnim = animateSpring({
+        from: sheetY,
+        to: 0,
+        velocity: 0,
+        spring: SPRING_DEFAULT,
+        onUpdate: (v) => setSheetY(v),
+        onComplete: () => { sheetAnim = null; }
+      });
+    }
+
+    function closeAfterSheet(instant = false) {
+      if (!sheetOpen && !afterSheet.classList.contains("open")) return;
+      if (sheetAnim) sheetAnim.stop();
+      const h = SHEET_H() + 40;
+      if (instant) {
+        setSheetY(h);
+        afterBackdrop.style.opacity = "0";
+        afterSheet.classList.remove("open");
+        sheetOpen = false;
+        sheetAnim = null;
+        return;
+      }
+      const vel = sheetAnim ? sheetAnim.velocity : 0;
+      sheetAnim = animateSpring({
+        from: sheetY,
+        to: h,
+        velocity: Math.max(vel, 0),
+        spring: SPRING_DEFAULT,
+        onUpdate: (v) => setSheetY(v),
+        onComplete: () => {
+          sheetAnim = null;
+          afterSheet.classList.remove("open");
+          sheetOpen = false;
+        }
+      });
+    }
+
+    document.querySelectorAll("[data-after-open-sheet]").forEach((b) => b.addEventListener("click", openAfterSheet));
+    document.getElementById("after-sheet-close").addEventListener("click", () => closeAfterSheet());
+    document.getElementById("after-sheet-cancel").addEventListener("click", () => closeAfterSheet());
+    document.getElementById("after-sheet-save").addEventListener("click", () => {
+      closeAfterSheet();
+      showToast(document.getElementById("after-toast"), "已保存 · 弹簧收起");
+    });
+    afterBackdrop.addEventListener("click", () => closeAfterSheet());
+
+    // Drag on panel (handle area + whole panel for demo)
+    (function bindAfterSheetDrag() {
+      let dragging = false;
+      let startY = 0;
+      let startSheetY = 0;
+      let samples = [];
+
+      function onDown(e) {
+        if (!sheetOpen) return;
+        // don't steal from inputs
+        if (e.target.closest("input, textarea, button")) return;
+        if (sheetAnim) {
+          // interrupt: keep current presentation value & velocity conceptually by stopping
+          sheetAnim.stop();
+          sheetAnim = null;
+        }
+        dragging = true;
+        startY = e.clientY;
+        startSheetY = sheetY;
+        samples = [{ t: performance.now(), y: e.clientY }];
+        afterPanel.setPointerCapture?.(e.pointerId);
+      }
+
+      function onMove(e) {
+        if (!dragging) return;
+        const dy = e.clientY - startY;
+        let next = startSheetY + dy;
+        if (next < 0) {
+          // rubber-band upward resistance
+          next = -rubberband(-next, SHEET_H(), 0.35);
+        }
+        setSheetY(Math.max(0, next));
+        const now = performance.now();
+        samples.push({ t: now, y: e.clientY });
+        if (samples.length > 6) samples.shift();
+      }
+
+      function velocityFromSamples() {
+        if (samples.length < 2) return 0;
+        const a = samples[0];
+        const b = samples[samples.length - 1];
+        const dt = (b.t - a.t) / 1000;
+        if (dt <= 0) return 0;
+        return (b.y - a.y) / dt; // px/s, positive = down
+      }
+
+      function onUp() {
+        if (!dragging) return;
+        dragging = false;
+        const v = velocityFromSamples();
+        const h = SHEET_H();
+        // project resting position
+        const projected = sheetY + project(v, 0.995);
+        const shouldClose = projected > h * 0.28 || v > 900;
+        const target = shouldClose ? h + 40 : 0;
+        const spring = Math.abs(v) > 600 ? SPRING_BOUNCY : SPRING_DEFAULT;
+        sheetAnim = animateSpring({
+          from: sheetY,
+          to: target,
+          velocity: v,
+          spring,
+          onUpdate: (val) => setSheetY(Math.max(0, val)),
+          onComplete: () => {
+            sheetAnim = null;
+            if (shouldClose) {
+              afterSheet.classList.remove("open");
+              sheetOpen = false;
+            }
+          }
+        });
+      }
+
+      afterPanel.addEventListener("pointerdown", onDown);
+      afterPanel.addEventListener("pointermove", onMove);
+      afterPanel.addEventListener("pointerup", onUp);
+      afterPanel.addEventListener("pointercancel", onUp);
+    })();
+
+    /* ========== Photos ========== */
+    const PHOTOS = [
+      { label: "1", bg: "linear-gradient(135deg,#7c8cf8,#f5a3ae)" },
+      { label: "2", bg: "linear-gradient(135deg,#12b886,#4dabf7)" },
+      { label: "3", bg: "linear-gradient(135deg,#9f7b55,#ead7bd)" }
+    ];
+
+    /* BEFORE photo viewer: threshold hard cut, damped follow */
+    const beforeViewer = document.getElementById("before-viewer");
+    const beforeStage = document.getElementById("before-viewer-stage");
+    const beforePhotoArt = document.getElementById("before-photo-art");
+    const beforeMeta = document.getElementById("before-viewer-meta");
+    let beforeIndex = 0;
+    let bDrag = null;
+
+    function paintBeforePhoto() {
+      const p = PHOTOS[beforeIndex];
+      beforePhotoArt.textContent = p.label;
+      beforePhotoArt.style.background = p.bg;
+      beforeMeta.textContent = `${beforeIndex + 1} / 3 · 阈值硬切`;
+    }
+
+    function openBeforeViewer(i) {
+      beforeIndex = i;
+      paintBeforePhoto();
+      beforeViewer.classList.add("open");
+      beforeStage.style.transform = "translate(0px, 0px)";
+      beforeStage.style.opacity = "1";
+    }
+    function closeBeforeViewer() {
+      beforeViewer.classList.remove("open");
+      bDrag = null;
+      beforeStage.style.transform = "translate(0px, 0px)";
+      beforeStage.style.opacity = "1";
+    }
+
+    document.querySelectorAll("[data-before-photo]").forEach((el) => {
+      el.addEventListener("click", () => openBeforeViewer(Number(el.dataset.beforePhoto)));
+    });
+    document.getElementById("before-viewer-close").addEventListener("click", closeBeforeViewer);
+
+    beforeStage.addEventListener("pointerdown", (e) => {
+      bDrag = { x: e.clientX, y: e.clientY, mode: "pending", dx: 0, dy: 0 };
+    });
+    beforeStage.addEventListener("pointermove", (e) => {
+      if (!bDrag) return;
+      const dx = e.clientX - bDrag.x;
+      const dy = e.clientY - bDrag.y;
+      if (bDrag.mode === "pending") {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+        bDrag.mode = Math.abs(dx) > Math.abs(dy) * 1.2 ? "horizontal" : "vertical";
+      }
+      bDrag.dx = dx;
+      bDrag.dy = dy;
+      // current app: horizontal follow damped 0.28
+      if (bDrag.mode === "horizontal") {
+        beforeStage.style.transform = `translate(${dx * 0.28}px, 0px)`;
+        beforeStage.style.opacity = String(Math.max(0.35, 1 - Math.abs(dx) * 0.45 / 260));
+      } else {
+        beforeStage.style.transform = `translate(0px, ${dy}px)`;
+        beforeStage.style.opacity = String(Math.max(0.35, 1 - Math.abs(dy) / 260));
+      }
+    });
+    beforeStage.addEventListener("pointerup", () => {
+      if (!bDrag) return;
+      if (bDrag.mode === "horizontal" && Math.abs(bDrag.dx) > 72) {
+        if (bDrag.dx < 0) beforeIndex = (beforeIndex + 1) % 3;
+        else beforeIndex = (beforeIndex + 2) % 3;
+        paintBeforePhoto();
+      } else if (bDrag.mode === "vertical" && Math.abs(bDrag.dy) > 88) {
+        closeBeforeViewer();
+        bDrag = null;
+        return;
+      }
+      // hard snap back, no spring
+      beforeStage.style.transform = "translate(0px, 0px)";
+      beforeStage.style.opacity = "1";
+      bDrag = null;
+    });
+    beforeStage.addEventListener("pointercancel", () => {
+      beforeStage.style.transform = "translate(0px, 0px)";
+      beforeStage.style.opacity = "1";
+      bDrag = null;
+    });
+
+    /* AFTER photo viewer: 1:1, velocity project, spring */
+    const afterViewer = document.getElementById("after-viewer");
+    const afterStage = document.getElementById("after-viewer-stage");
+    const afterPhotoArt = document.getElementById("after-photo-art");
+    const afterMeta = document.getElementById("after-viewer-meta");
+    let afterIndex = 0;
+    let aDrag = null;
+    let aAnim = null;
+    let stageX = 0;
+    let stageY = 0;
+
+    function paintAfterPhoto() {
+      const p = PHOTOS[afterIndex];
+      afterPhotoArt.textContent = p.label;
+      afterPhotoArt.style.background = p.bg;
+      afterMeta.textContent = `${afterIndex + 1} / 3 · 速度投影`;
+    }
+
+    function setStage(x, y, opacity = 1) {
+      stageX = x;
+      stageY = y;
+      afterStage.style.transform = `translate(${x}px, ${y}px)`;
+      afterStage.style.opacity = String(opacity);
+    }
+
+    function openAfterViewer(i) {
+      afterIndex = i;
+      paintAfterPhoto();
+      afterViewer.classList.add("open");
+      if (aAnim) aAnim.stop();
+      setStage(0, 0, 1);
+    }
+
+    function closeAfterViewer(instant = false) {
+      if (aAnim) aAnim.stop();
+      if (instant || !afterViewer.classList.contains("open")) {
+        afterViewer.classList.remove("open");
+        setStage(0, 0, 1);
+        aAnim = null;
+        return;
+      }
+      // spring dismiss downward if not already
+      aAnim = animateSpring({
+        from: stageY,
+        to: 520,
+        velocity: 0,
+        spring: SPRING_DEFAULT,
+        onUpdate: (y) => setStage(stageX * 0.4, y, Math.max(0, 1 - y / 420)),
+        onComplete: () => {
+          afterViewer.classList.remove("open");
+          setStage(0, 0, 1);
+          aAnim = null;
+        }
+      });
+    }
+
+    document.querySelectorAll("[data-after-photo]").forEach((el) => {
+      el.addEventListener("click", () => openAfterViewer(Number(el.dataset.afterPhoto)));
+    });
+    document.getElementById("after-viewer-close").addEventListener("click", () => closeAfterViewer(true));
+
+    (function bindAfterViewer() {
+      let samples = [];
+      afterStage.addEventListener("pointerdown", (e) => {
+        if (aAnim) {
+          aAnim.stop();
+          aAnim = null;
+        }
+        aDrag = { x: e.clientX, y: e.clientY, mode: "pending", ox: stageX, oy: stageY };
+        samples = [{ t: performance.now(), x: e.clientX, y: e.clientY }];
+        afterStage.setPointerCapture?.(e.pointerId);
+      });
+      afterStage.addEventListener("pointermove", (e) => {
+        if (!aDrag) return;
+        const dx = e.clientX - aDrag.x;
+        const dy = e.clientY - aDrag.y;
+        if (aDrag.mode === "pending") {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+          aDrag.mode = Math.abs(dx) > Math.abs(dy) * 1.15 ? "horizontal" : "vertical";
+        }
+        samples.push({ t: performance.now(), x: e.clientX, y: e.clientY });
+        if (samples.length > 6) samples.shift();
+
+        if (aDrag.mode === "horizontal") {
+          // 1:1 tracking
+          setStage(aDrag.ox + dx, 0, Math.max(0.45, 1 - Math.abs(dx) / 480));
+        } else {
+          let y = aDrag.oy + dy;
+          if (y < 0) y = -rubberband(-y, 320, 0.45);
+          setStage(0, y, Math.max(0.35, 1 - Math.max(0, y) / 360));
+        }
+      });
+
+      function sampleVel(axis) {
+        if (samples.length < 2) return 0;
+        const a = samples[0];
+        const b = samples[samples.length - 1];
+        const dt = (b.t - a.t) / 1000;
+        if (dt <= 0) return 0;
+        return axis === "x" ? (b.x - a.x) / dt : (b.y - a.y) / dt;
+      }
+
+      function onUp() {
+        if (!aDrag) return;
+        const mode = aDrag.mode;
+        aDrag = null;
+        if (mode === "horizontal") {
+          const vx = sampleVel("x");
+          const projected = stageX + project(vx, 0.994);
+          const width = afterViewer.clientWidth || 300;
+          let dir = 0;
+          if (projected < -width * 0.22 || vx < -700) dir = 1; // next
+          else if (projected > width * 0.22 || vx > 700) dir = -1; // prev
+          if (dir !== 0) {
+            const target = dir > 0 ? -width : width;
+            aAnim = animateSpring({
+              from: stageX,
+              to: target,
+              velocity: vx,
+              spring: SPRING_BOUNCY,
+              onUpdate: (x) => setStage(x, 0, Math.max(0.2, 1 - Math.abs(x) / width)),
+              onComplete: () => {
+                afterIndex = (afterIndex + dir + 3) % 3;
+                paintAfterPhoto();
+                // enter from opposite side
+                setStage(dir > 0 ? width * 0.35 : -width * 0.35, 0, 1);
+                aAnim = animateSpring({
+                  from: stageX,
+                  to: 0,
+                  velocity: 0,
+                  spring: SPRING_DEFAULT,
+                  onUpdate: (x) => setStage(x, 0, 1),
+                  onComplete: () => { aAnim = null; }
+                });
+              }
+            });
+          } else {
+            aAnim = animateSpring({
+              from: stageX,
+              to: 0,
+              velocity: vx,
+              spring: SPRING_DEFAULT,
+              onUpdate: (x) => setStage(x, 0, Math.max(0.5, 1 - Math.abs(x) / 500)),
+              onComplete: () => { setStage(0, 0, 1); aAnim = null; }
+            });
+          }
+        } else if (mode === "vertical") {
+          const vy = sampleVel("y");
+          const projected = stageY + project(vy, 0.995);
+          const shouldClose = projected > 120 || vy > 900;
+          if (shouldClose) {
+            aAnim = animateSpring({
+              from: stageY,
+              to: 560,
+              velocity: Math.max(vy, 0),
+              spring: SPRING_BOUNCY,
+              onUpdate: (y) => setStage(0, y, Math.max(0, 1 - y / 420)),
+              onComplete: () => {
+                afterViewer.classList.remove("open");
+                setStage(0, 0, 1);
+                aAnim = null;
+              }
+            });
+          } else {
+            aAnim = animateSpring({
+              from: stageY,
+              to: 0,
+              velocity: vy,
+              spring: SPRING_DEFAULT,
+              onUpdate: (y) => setStage(0, y, Math.max(0.4, 1 - Math.abs(y) / 400)),
+              onComplete: () => { setStage(0, 0, 1); aAnim = null; }
+            });
+          }
+        } else {
+          setStage(0, 0, 1);
+        }
+      }
+
+      afterStage.addEventListener("pointerup", onUp);
+      afterStage.addEventListener("pointercancel", onUp);
+    })();
+
+    /* ========== FAB ========== */
+    const fabActions = [
+      { icon: "✎", title: "记一件事", desc: "快速记录" },
+      { icon: "▣", title: "带照片记录", desc: "边拍边写" },
+      { icon: "⌖", title: "识别地点", desc: "粘贴分享文本" }
+    ];
+
+    function renderFabMenu(container, animated) {
+      container.innerHTML = "";
+      fabActions.forEach((a, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "fab-menu-item" + (animated ? " pressable" : "");
+        btn.innerHTML = `<span class="mi">${a.icon}</span><span><strong>${a.title}</strong><small>${a.desc}</small></span>`;
+        if (animated) {
+          btn.style.opacity = "0";
+          btn.style.transform = "translateY(12px) scale(0.92)";
+        }
+        btn.addEventListener("click", () => {
+          if (container.id === "before-fab-menu") {
+            closeBeforeFab();
+            showToast(document.getElementById("before-toast"), `已选择：${a.title}`);
+          } else {
+            closeAfterFab();
+            showToast(document.getElementById("after-toast"), `已选择：${a.title}`);
+          }
+        });
+        container.appendChild(btn);
+        if (animated) {
+          // staggered spring-ish via CSS-like rAF spring on each
+          const delay = i * 40;
+          setTimeout(() => {
+            animateSpring({
+              from: 0,
+              to: 1,
+              spring: SPRING_BOUNCY,
+              onUpdate: (t) => {
+                btn.style.opacity = String(t);
+                btn.style.transform = `translateY(${(1 - t) * 12}px) scale(${0.92 + 0.08 * t})`;
+              }
+            });
+          }, delay);
+        }
+      });
+    }
+
+    // Before FAB: instant
+    const beforeFab = document.getElementById("before-fab");
+    const beforeFabMenu = document.getElementById("before-fab-menu");
+    const beforeFabBackdrop = document.getElementById("before-fab-backdrop");
+    let beforeFabOpen = false;
+
+    function openBeforeFab() {
+      beforeFabOpen = true;
+      beforeFab.textContent = "×";
+      beforeFabBackdrop.hidden = false;
+      beforeFabMenu.hidden = false;
+      renderFabMenu(beforeFabMenu, false);
+    }
+    function closeBeforeFab() {
+      beforeFabOpen = false;
+      beforeFab.textContent = "+";
+      beforeFabBackdrop.hidden = true;
+      beforeFabMenu.hidden = true;
+      beforeFabMenu.innerHTML = "";
+    }
+    beforeFab.addEventListener("click", () => (beforeFabOpen ? closeBeforeFab() : openBeforeFab()));
+    beforeFabBackdrop.addEventListener("click", closeBeforeFab);
+
+    // After FAB: spring stagger + interruptible close
+    const afterFab = document.getElementById("after-fab");
+    const afterFabMenu = document.getElementById("after-fab-menu");
+    const afterFabBackdrop = document.getElementById("after-fab-backdrop");
+    let afterFabOpen = false;
+    let afterFabAnims = [];
+
+    function openAfterFab() {
+      afterFabOpen = true;
+      afterFab.textContent = "×";
+      afterFabBackdrop.hidden = false;
+      afterFabBackdrop.style.opacity = "0";
+      afterFabMenu.hidden = false;
+      renderFabMenu(afterFabMenu, true);
+      animateSpring({
+        from: 0,
+        to: 1,
+        spring: SPRING_DEFAULT,
+        onUpdate: (t) => { afterFabBackdrop.style.opacity = String(t); }
+      });
+    }
+
+    function closeAfterFab(instant = false) {
+      afterFabOpen = false;
+      afterFab.textContent = "+";
+      const items = [...afterFabMenu.querySelectorAll(".fab-menu-item")];
+      if (instant || !items.length) {
+        afterFabBackdrop.hidden = true;
+        afterFabMenu.hidden = true;
+        afterFabMenu.innerHTML = "";
+        return;
+      }
+      items.forEach((btn, i) => {
+        setTimeout(() => {
+          animateSpring({
+            from: 1,
+            to: 0,
+            spring: SPRING_DEFAULT,
+            onUpdate: (t) => {
+              btn.style.opacity = String(t);
+              btn.style.transform = `translateY(${(1 - t) * 10}px) scale(${0.94 + 0.06 * t})`;
+            },
+            onComplete: () => {
+              if (i === items.length - 1) {
+                afterFabBackdrop.hidden = true;
+                afterFabMenu.hidden = true;
+                afterFabMenu.innerHTML = "";
+              }
+            }
+          });
+        }, (items.length - 1 - i) * 30);
+      });
+      animateSpring({
+        from: 1,
+        to: 0,
+        spring: SPRING_DEFAULT,
+        onUpdate: (t) => { afterFabBackdrop.style.opacity = String(t); }
+      });
+    }
+
+    afterFab.addEventListener("click", () => (afterFabOpen ? closeAfterFab() : openAfterFab()));
+    afterFabBackdrop.addEventListener("click", () => closeAfterFab());
+  </script>
+</body>
+</html>

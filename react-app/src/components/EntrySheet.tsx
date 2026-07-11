@@ -15,6 +15,7 @@ import { useConfirm } from "../context/ConfirmContext";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
 import PlaceMergeWorkbench from "./PlaceMergeWorkbench";
+import SheetPrimitive from "./motion/SheetPrimitive";
 import { PersonFields } from "./EntrySheet/PersonFields";
 import { PlaceFields } from "./EntrySheet/PlaceFields";
 import { MemoryFields } from "./EntrySheet/MemoryFields";
@@ -80,6 +81,7 @@ export default function EntrySheet({
   const [availableDraft, setAvailableDraft] = useState<EntryFormDraft | null>(null);
   const [restoredDraftValues, setRestoredDraftValues] = useState<DraftFieldMap | undefined>();
   const [draftRestoreKey, setDraftRestoreKey] = useState(0);
+  const [formDirty, setFormDirty] = useState(false);
 
   const editingItem = type ? findEditingItem(type, itemId, state) : undefined;
   const entrySessionKey = type
@@ -216,9 +218,11 @@ export default function EntrySheet({
   function captureInitialFingerprint(photoCount: number) {
     if (draftRestoredRef.current) return;
     initialFormFingerprintRef.current = "";
+    setFormDirty(false);
     window.requestAnimationFrame(() => {
       if (draftRestoredRef.current) return;
       initialFormFingerprintRef.current = buildFormFingerprint(formRef.current, photoCount);
+      setFormDirty(false);
     });
   }
 
@@ -250,7 +254,9 @@ export default function EntrySheet({
     if (!draftKey || !formRef.current) return;
     if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
     draftTimerRef.current = window.setTimeout(() => {
-      if (!hasUnsavedChanges(formRef.current, initialFormFingerprintRef.current, photos.length)) return;
+      const dirty = hasUnsavedChanges(formRef.current, initialFormFingerprintRef.current, photos.length);
+      setFormDirty(dirty);
+      if (!dirty) return;
       saveEntryDraft(draftKey, formRef.current);
     }, 350);
   }
@@ -261,6 +267,7 @@ export default function EntrySheet({
     setRestoredDraftValues(buildDraftFieldMap(availableDraft.fields));
     setDraftRestoreKey((current) => current + 1);
     setAvailableDraft(null);
+    setFormDirty(true);
     window.setTimeout(() => {
       saveEntryDraft(draftKey, formRef.current);
     }, 0);
@@ -272,16 +279,19 @@ export default function EntrySheet({
   }
 
   return (
-    <div className="sheet">
-      <div className="sheet-backdrop" onClick={() => void requestClose()} />
-      <section className="sheet-panel">
-        <div className="sheet-handle" />
+    <SheetPrimitive
+      open
+      onDismissRequest={() => void requestClose()}
+      blockDismiss={formDirty || Boolean(mergePreview)}
+      ariaLabel={memoryTitleOverride || (itemId ? current.editTitle : current.addTitle)}
+    >
+        <div className="sheet-handle" data-sheet-drag-handle />
         <div className="sheet-header">
           <div>
             <p className="date-label">{memoryKickerOverride || current.kicker}</p>
             <h2>{memoryTitleOverride || (itemId ? current.editTitle : current.addTitle)}</h2>
           </div>
-          <button className="sheet-close" aria-label="关闭" onClick={() => void requestClose()}>
+          <button className="sheet-close pressable" aria-label="关闭" onClick={() => void requestClose()}>
             ×
           </button>
         </div>
@@ -344,7 +354,12 @@ export default function EntrySheet({
               memoryKindOverride={memoryKindOverride}
               mode={memoryMode}
               photos={photos}
-              onPhotosChange={setPhotos}
+              onPhotosChange={(next) => {
+                setPhotos(next);
+                window.setTimeout(() => {
+                  setFormDirty(hasUnsavedChanges(formRef.current, initialFormFingerprintRef.current, next.length));
+                }, 0);
+              }}
               isSubmitting={isSubmitting}
               draftValues={restoredDraftValues}
               onCreatePerson={async (name) => {
@@ -367,10 +382,10 @@ export default function EntrySheet({
           )}
 
           <div className="submit-row">
-            <button type="button" className="ghost-btn" onClick={() => void requestClose()}>
+            <button type="button" className="ghost-btn pressable" onClick={() => void requestClose()}>
               取消
             </button>
-            <button type="submit" className="primary-btn" disabled={isSubmitting}>
+            <button type="submit" className="primary-btn pressable" disabled={isSubmitting}>
               {isSubmitting ? `${submitText}中…` : submitText}
             </button>
           </div>
@@ -429,8 +444,7 @@ export default function EntrySheet({
             }}
           />
         )}
-      </section>
-    </div>
+    </SheetPrimitive>
   );
 }
 

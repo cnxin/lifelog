@@ -20,7 +20,7 @@ export default function BottomNav() {
             key={item.to}
             to={item.to}
             end={item.to === "/"}
-            className={`nav-item ${active ? "active" : ""}`}
+            className={`nav-item pressable ${active ? "active" : ""}`}
           >
             <Icon />
             <span>{item.label}</span>

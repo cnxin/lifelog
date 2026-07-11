@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import type { Person } from "../types";
 import { parseGroups } from "../utils/text";
 import { PreferenceGroupEditor } from "./EntrySheet/PersonFields";
+import SheetPrimitive from "./motion/SheetPrimitive";
 
 export type PersonPreferenceMode = "preferences" | "dislikes";
 
@@ -39,16 +40,14 @@ export default function PersonPreferenceSheet({ person, mode, onClose, onSave }:
   }
 
   return (
-    <div className="sheet person-preference-sheet">
-      <button className="sheet-backdrop" type="button" aria-label={`关闭${title}编辑`} onClick={onClose} />
-      <section className="sheet-panel">
-        <div className="sheet-handle" />
+    <SheetPrimitive open onDismissRequest={onClose} className="person-preference-sheet" ariaLabel={title}>
+        <div className="sheet-handle" data-sheet-drag-handle />
         <div className="sheet-header">
           <div>
             <h2>{title}</h2>
             <p>{person.name} · 标准标签编辑</p>
           </div>
-          <button className="sheet-close" aria-label="关闭" onClick={onClose}>
+          <button className="sheet-close pressable" aria-label="关闭" onClick={onClose} type="button">
             <X size={18} />
           </button>
         </div>
@@ -82,14 +81,13 @@ export default function PersonPreferenceSheet({ person, mode, onClose, onSave }:
           )}
         </form>
         <div className="submit-row">
-          <button className="ghost-btn" type="button" onClick={onClose}>
+          <button className="ghost-btn pressable" type="button" onClick={onClose}>
             取消
           </button>
-          <button className="primary-btn" type="button" onClick={() => void handleSave()} disabled={isSaving}>
+          <button className="primary-btn pressable" type="button" onClick={() => void handleSave()} disabled={isSaving}>
             {isSaving ? "保存中…" : "保存"}
           </button>
         </div>
-      </section>
-    </div>
+    </SheetPrimitive>
   );
 }
