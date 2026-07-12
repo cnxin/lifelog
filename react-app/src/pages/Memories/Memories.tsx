@@ -7,6 +7,7 @@ import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import ListViewModeToggle from "../../components/ListViewModeToggle";
 import MemoryCard from "../../components/MemoryCard";
+import EmptyState from "../../components/EmptyState";
 import PageSegmentNav from "../../components/PageSegmentNav";
 import SearchBar from "../../components/SearchBar";
 import SelectPicker from "../../components/SelectPicker";
@@ -468,6 +469,7 @@ export default function Memories() {
                         showPhotoCount
                         collapseExtras
                         dense={denseList}
+                        showThumb={!denseList}
                         syncMeta={getNotionRecordSyncMeta({
                           enabled: Boolean(notionSettings.enabled && notionSettings.memoriesDatabaseId),
                           entityType: "memory",
@@ -505,19 +507,19 @@ export default function Memories() {
           })}
           {!memories.length &&
             (state.memories.length === 0 ? (
-              <GlassCard className="empty empty-cta">
-                <p>还没有记录</p>
-                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
-                  <Plus size={16} /> 记录第一条
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<Heart />}
+                title="还没有记录"
+                description="先写今天的一件小事。人物、地点和照片之后再补也行。"
+                primaryAction={{ label: "记一件事", onClick: () => setCreatingNew(true) }}
+              />
             ) : (
-              <GlassCard className="empty empty-cta">
-                <p>没有找到匹配记录</p>
-                <button className="primary-btn" onClick={clearFilters}>
-                  <RotateCcw size={16} /> 清除筛选
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<RotateCcw />}
+                title="没有找到匹配记录"
+                description="试试放宽筛选，或换个人名、地点、心情关键词。"
+                primaryAction={{ label: "清除筛选", onClick: clearFilters, primary: false }}
+              />
             ))}
         </div>
       </section>

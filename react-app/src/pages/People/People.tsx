@@ -2,6 +2,7 @@ import { ArrowDownUp, CheckSquare, Download, MapPin, Plus, RotateCcw, Square, St
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BatchActionToolbar from "../../components/BatchActionToolbar";
+import EmptyState from "../../components/EmptyState";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -414,19 +415,19 @@ export default function People() {
           })}
           {!peopleRows.length &&
             (state.people.length === 0 ? (
-              <GlassCard className="empty empty-cta">
-                <p>还没有人物记录</p>
-                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
-                  <Plus size={16} /> 新增第一个人物
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<Users />}
+                title="还没有人物"
+                description="先留下一个重要的人，生日和相处细节以后慢慢补。"
+                primaryAction={{ label: "记一个人", onClick: () => setCreatingNew(true) }}
+              />
             ) : (
-              <GlassCard className="empty empty-cta">
-                <p>没有找到匹配的人物</p>
-                <button className="primary-btn" onClick={clearSearch}>
-                  <RotateCcw size={16} /> 清除搜索
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<RotateCcw />}
+                title="没有找到匹配的人物"
+                description="换个名字、关系或备注关键词试试。"
+                primaryAction={{ label: "清除搜索", onClick: clearSearch, primary: false }}
+              />
             ))}
         </div>
       </section>

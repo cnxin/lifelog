@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-07-11",
+  date: "2026-07-12",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -15,6 +15,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 };
 
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.129",
+    date: "2026-07-12",
+    title: "首页减噪与列表视觉优化",
+    highlights: [
+      "首页去掉页内双标题和默认统计四宫格，增加搜索入口与「今天发生了什么…」快捷记录条；新用户展示欢迎引导。",
+      "补全任务仅对新用户展示且最多两类；最近看看默认折叠，首页更像记录本而不是仪表盘。",
+      "回忆列表详细模式使用柔和玻璃风缩略图：有图显示照片，无图显示浅色 monogram。",
+      "人物、地点、回忆空列表改用统一 EmptyState，空状态与无匹配结果都有清晰下一步。"
+    ]
+  },
   {
     version: "0.1.0-test.128",
     date: "2026-07-11",

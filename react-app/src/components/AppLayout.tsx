@@ -193,8 +193,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     window.addEventListener("lifelog:android-share-text", handleAndroidShare);
     return () => window.removeEventListener("lifelog:android-share-text", handleAndroidShare);
   }, [notify]);
-  useReminderScheduling();
-  useStatusBar(settings.themeStyle);
+  useEffect(() => {
+    function handleOpenSearch() {
+      setSearchOpen(true);
+    }
+    window.addEventListener("lifelog:open-global-search", handleOpenSearch);
+    return () => window.removeEventListener("lifelog:open-global-search", handleOpenSearch);
+  }, []);
 
   function openSheet(type: EntryType, mode: SheetMode = "full", options: { personIds?: string[]; placeIds?: string[]; date?: string; itemId?: string } = {}) {
     setInitialPlaceDraft(undefined);

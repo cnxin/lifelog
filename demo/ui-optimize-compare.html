@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LifeLog · 界面优化对比 Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #7c8cf8;
+      --secondary: #f5a3ae;
+      --bg: #fafbff;
+      --card: #ffffff;
+      --text: #20263a;
+      --sub: #737b91;
+      --line: rgba(124, 140, 248, 0.12);
+      --soft: rgba(124, 140, 248, 0.09);
+      --shadow: 0 10px 28px rgba(124, 140, 248, 0.1);
+      --phone-w: 340px;
+      --phone-h: 720px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      padding: 28px 16px 48px;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(124, 140, 248, 0.12), transparent 28%),
+        radial-gradient(circle at 90% 88%, rgba(245, 163, 174, 0.12), transparent 30%),
+        #eef1fb;
+      color: var(--text);
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-head { max-width: 1100px; margin: 0 auto 18px; text-align: center; }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(124, 140, 248, 0.12);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .page-head h1 {
+      margin-top: 12px;
+      font-family: Outfit, Inter, sans-serif;
+      font-size: clamp(26px, 4vw, 38px);
+      letter-spacing: -0.03em;
+    }
+
+    .page-head p {
+      margin: 10px auto 0;
+      max-width: 640px;
+      color: var(--sub);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tabs button {
+      border: 1px solid rgba(124, 140, 248, 0.16);
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--sub);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: transform 100ms ease-out, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .tabs button:active { transform: scale(0.97); }
+
+    .tabs button.active {
+      color: #fff;
+      background: linear-gradient(135deg, #7c8cf8, #9aa6ff);
+      border-color: transparent;
+      box-shadow: 0 10px 22px rgba(124, 140, 248, 0.28);
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      max-width: 900px;
+      margin: 26px auto 0;
+      justify-items: center;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .compare { grid-template-columns: 1fr; gap: 34px; }
+    }
+
+    .col-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge.before { background: rgba(185, 64, 64, 0.1); color: #b94040; }
+    .badge.after { background: rgba(18, 184, 134, 0.12); color: #0f9f74; }
+
+    .hint {
+      margin-top: 10px;
+      max-width: var(--phone-w);
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .phone {
+      width: var(--phone-w);
+      height: var(--phone-h);
+      border-radius: 36px;
+      padding: 12px;
+      background: linear-gradient(160deg, #2b3148, #1a1f33 60%, #121622);
+      box-shadow: 0 30px 60px rgba(32, 38, 58, 0.28), inset 0 0 0 1px rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(124, 140, 248, 0.14), transparent 34%),
+        radial-gradient(circle at 88% 92%, rgba(245, 163, 174, 0.12), transparent 36%),
+        var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* header — keep original transparent greeting, no white sticky bar */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 14px 10px;
+      background: transparent;
+    }
+
+    .header h2 {
+      font-family: Outfit, Inter, sans-serif;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .header small {
+      display: block;
+      margin-top: 3px;
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    .icon-btn, .avatar {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.86);
+      box-shadow: var(--shadow);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .avatar {
+      background: linear-gradient(135deg, rgba(124,140,248,0.18), rgba(245,163,174,0.22));
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 0 12px 92px;
+      scrollbar-width: none;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    .scene { display: none; }
+    .scene.active { display: block; }
+
+    .card {
+      border: 1px solid rgba(124, 140, 248, 0.1);
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 8px 20px rgba(124, 140, 248, 0.06);
+    }
+
+    .kicker {
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .card strong { display: block; margin-top: 3px; font-size: 14px; }
+    .card p, .meta { margin-top: 3px; color: var(--sub); font-size: 12px; line-height: 1.4; }
+
+    .section-h {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 14px 2px 8px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .section-h span { color: var(--primary); font-size: 12px; font-weight: 700; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .metric {
+      border-radius: 14px;
+      padding: 10px 6px;
+      text-align: center;
+      background: rgba(124,140,248,0.08);
+    }
+    .metric b { display: block; font-size: 16px; }
+    .metric small { color: var(--sub); font-size: 10px; font-weight: 700; }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(124,140,248,0.12);
+      color: var(--primary);
+      font-size: 15px;
+      flex: 0 0 auto;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      background: rgba(124,140,248,0.12);
+      color: var(--primary);
+    }
+    .pill.plan { background: rgba(245,163,174,0.18); color: #c46b78; }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.primary {
+      color: #fff;
+      background: linear-gradient(135deg, #7c8cf8, #9aa6ff);
+      box-shadow: 0 10px 18px rgba(124,140,248,0.24);
+    }
+    .btn.ghost {
+      color: var(--text);
+      background: rgba(124,140,248,0.1);
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .actions.one { grid-template-columns: 1fr; }
+
+    .search-pill {
+      width: 100%;
+      border: 1px solid rgba(124,140,248,0.12);
+      border-radius: 16px;
+      padding: 11px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--sub);
+      background: rgba(255,255,255,0.78);
+      box-shadow: 0 6px 16px rgba(124,140,248,0.06);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .composer {
+      width: 100%;
+      border: 1px dashed rgba(124,140,248,0.28);
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(124,140,248,0.08), rgba(245,163,174,0.08));
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+    }
+    .composer .dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #7c8cf8, #f5a3ae);
+      font-size: 18px;
+      flex: 0 0 auto;
+    }
+
+    .welcome {
+      padding: 18px 14px 12px;
+      text-align: left;
+    }
+    .welcome h3 {
+      font-family: Outfit, Inter, sans-serif;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .welcome p { margin-top: 8px; color: var(--sub); font-size: 13px; line-height: 1.5; }
+
+    .empty-box {
+      border-radius: 22px;
+      padding: 28px 18px;
+      text-align: center;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(124,140,248,0.1);
+      box-shadow: var(--shadow);
+    }
+    .empty-box .emoji {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 12px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(124,140,248,0.16), rgba(245,163,174,0.18));
+      font-size: 26px;
+    }
+    .empty-box h4 { font-size: 17px; margin-bottom: 6px; }
+    .empty-box p { color: var(--sub); font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+
+    .empty-plain {
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 14px;
+    }
+
+    .thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      flex: 0 0 auto;
+      overflow: hidden;
+      border: 1px solid rgba(124, 140, 248, 0.1);
+      box-shadow: 0 5px 13px rgba(124, 140, 248, 0.07);
+      background: rgba(255, 255, 255, 0.62);
+    }
+    .thumb .art {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      font-family: Outfit, Inter, sans-serif;
+      font-weight: 650;
+      font-size: 13px;
+      letter-spacing: -0.02em;
+    }
+    .thumb .art.memory {
+      background:
+        linear-gradient(145deg, rgba(124, 140, 248, 0.15), rgba(245, 163, 174, 0.13) 58%, rgba(255, 255, 255, 0.48));
+      color: rgba(108, 118, 186, 0.88);
+    }
+    .thumb .art.plan {
+      background:
+        linear-gradient(145deg, rgba(245, 163, 174, 0.18), rgba(255, 214, 165, 0.15) 60%, rgba(255, 255, 255, 0.5));
+      color: rgba(190, 126, 136, 0.9);
+    }
+    .thumb .art.place {
+      background:
+        linear-gradient(145deg, rgba(18, 184, 134, 0.11), rgba(77, 171, 247, 0.1) 55%, rgba(255, 255, 255, 0.5));
+      color: rgba(72, 152, 134, 0.9);
+    }
+    .thumb .art.neutral {
+      background:
+        linear-gradient(145deg, rgba(159, 123, 85, 0.11), rgba(234, 215, 189, 0.26) 60%, rgba(255, 255, 255, 0.52));
+      color: rgba(150, 126, 100, 0.9);
+    }
+
+    .mem-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .mem-title > span {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .nav {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: 0 10px 28px rgba(32,38,58,0.1);
+      z-index: 6;
+    }
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: var(--sub);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 0;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+    }
+    .nav button.active { color: var(--primary); background: rgba(124,140,248,0.1); }
+    .nav .ni { font-size: 15px; }
+
+    .fab {
+      position: absolute;
+      right: 18px;
+      bottom: 78px;
+      width: 54px;
+      height: 54px;
+      border: 0;
+      border-radius: 20px;
+      color: #fff;
+      background: linear-gradient(135deg, #7c8cf8, #a0abff);
+      box-shadow: 0 14px 28px rgba(124,140,248,0.36);
+      font-size: 28px;
+      z-index: 7;
+      display: grid;
+      place-items: center;
+    }
+
+    .legend {
+      max-width: 900px;
+      margin: 28px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 860px) { .legend { grid-template-columns: 1fr; } }
+
+    .legend .item {
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(124,140,248,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .legend h4 { font-size: 13px; margin-bottom: 4px; }
+    .legend p { color: var(--sub); font-size: 12px; line-height: 1.5; }
+
+    .footer-note {
+      max-width: 900px;
+      margin: 16px auto 0;
+      text-align: center;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .queue-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .queue-summary .grow { min-width: 0; flex: 1; }
+    .queue-summary em {
+      color: var(--primary);
+      font-style: normal;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .soft-line {
+      margin: 8px 2px 4px;
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header className="page-head" class="page-head">
+    <div class="eyebrow">LifeLog · UI 优化对比 · 基于 test.128</div>
+    <h1>记录本，不是仪表盘</h1>
+    <p>
+      左侧接近当前实现；右侧按 <code>docs/UI_OPTIMIZATION_PLAN_v128.md</code> 的 P0/P1 方向：
+      首页减噪、新用户引导、搜索 pill、空状态、回忆缩略图。
+    </p>
+    <div class="tabs" id="tabs">
+      <button class="active" data-scene="home-full">1. 首页（有数据）</button>
+      <button data-scene="home-new">2. 首页（新用户）</button>
+      <button data-scene="empty">3. 空状态</button>
+      <button data-scene="list">4. 回忆列表</button>
+    </div>
+  </header>
+
+  <div class="compare">
+    <!-- BEFORE -->
+    <section>
+      <div class="col-label"><span class="badge before">Before</span> 当前倾向</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>9:41</span><span>LifeLog</span></div>
+          <div class="header">
+            <div>
+              <h2>下午好</h2>
+              <small>从今天的一件小事开始</small>
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" type="button">⌕</button>
+              <button class="avatar" type="button">宝</button>
+            </div>
+          </div>
+
+          <div class="content">
+            <!-- home full -->
+            <div class="scene active" data-scene="home-full">
+              <div style="padding: 4px 2px 8px">
+                <h3 style="font-family:Outfit,Inter,sans-serif;font-size:22px;letter-spacing:-0.03em">今天的 LifeLog</h3>
+                <p class="meta">先记一件小事，需要时再补人物、地点和照片。</p>
+              </div>
+              <div class="card">
+                <div class="metrics">
+                  <div class="metric"><b>12</b><small>人物</small></div>
+                  <div class="metric"><b>28</b><small>地点</small></div>
+                  <div class="metric"><b>64</b><small>回忆</small></div>
+                  <div class="metric"><b>5</b><small>本月</small></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="queue-summary">
+                  <div class="ico">✦</div>
+                  <div class="grow">
+                    <strong>今天还有 3 个待处理</strong>
+                    <p>给小林发生日祝福</p>
+                  </div>
+                  <em>展开</em>
+                </div>
+              </div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">💡</div>
+                  <div>
+                    <strong>已经 16 天没记录和阿哲的事了</strong>
+                    <p>点一下补一句近况</p>
+                  </div>
+                </div>
+              </div>
+              <div class="section-h"><div>历年今日</div><span>时间线</span></div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">↺</div>
+                  <div>
+                    <strong>第一次去西湖</strong>
+                    <p>2 年前 · 和小林 · 杭州</p>
+                  </div>
+                </div>
+              </div>
+              <div class="section-h"><div>本月安排</div><span>查看</span></div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">📅</div>
+                  <div>
+                    <strong>小林生日准备</strong>
+                    <p>还剩 1 天 · 待办 2/4</p>
+                  </div>
+                </div>
+              </div>
+              <div class="section-h"><div>还可以完善</div></div>
+              <div class="card"><strong>补充生日 · 4 人</strong><p>补完会出现在首页与日历</p></div>
+              <div class="card"><strong>补充喜好 · 6 人</strong><p>颜色、食物、禁忌线索</p></div>
+              <div class="section-h"><div>最近看看</div><span>展开</span></div>
+              <div class="card"><strong>收藏 3 人 · 常去 3 处 · 最近 3 条</strong><p>点开看汇总</p></div>
+            </div>
+
+            <!-- home new -->
+            <div class="scene" data-scene="home-new">
+              <div style="padding: 4px 2px 8px">
+                <h3 style="font-family:Outfit,Inter,sans-serif;font-size:22px">今天的 LifeLog</h3>
+                <p class="meta">先记一件小事…</p>
+              </div>
+              <div class="card">
+                <div class="metrics">
+                  <div class="metric"><b>0</b><small>人物</small></div>
+                  <div class="metric"><b>0</b><small>地点</small></div>
+                  <div class="metric"><b>0</b><small>回忆</small></div>
+                  <div class="metric"><b>0</b><small>本月</small></div>
+                </div>
+              </div>
+              <div class="section-h"><div>还可以完善</div></div>
+              <div class="card"><strong>补充生日</strong><p>还没有人物数据</p></div>
+              <div class="card"><strong>补充高德入口</strong><p>还没有地点数据</p></div>
+              <div class="empty-plain">最近看看是空的</div>
+            </div>
+
+            <!-- empty -->
+            <div class="scene" data-scene="empty">
+              <div class="section-h"><div>记录</div></div>
+              <div class="empty-plain">还没有记录</div>
+            </div>
+
+            <!-- list -->
+            <div class="scene" data-scene="list">
+              <div class="section-h"><div>记录</div><span>筛选</span></div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">♥</div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>西湖春日散步</span>
+                      <span class="pill">回忆</span>
+                    </div>
+                    <p>和小林 · 杭州西湖</p>
+                    <p>📷 3</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">♥</div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>下周六聚餐</span>
+                      <span class="pill plan">计划</span>
+                    </div>
+                    <p>阿哲 · 未选地点</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">♥</div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>搬家日杂记</span>
+                      <span class="pill">回忆</span>
+                    </div>
+                    <p>自己 · 📷 1</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fab" type="button">+</button>
+          <nav class="nav">
+            <button class="active" type="button"><span class="ni">⌂</span>首页</button>
+            <button type="button"><span class="ni">▤</span>档案</button>
+            <button type="button"><span class="ni">♥</span>记录</button>
+          </nav>
+        </div>
+      </div>
+      <p class="hint" id="before-hint">模块多、双标题、统计占首屏</p>
+    </section>
+
+    <!-- AFTER -->
+    <section>
+      <div class="col-label"><span class="badge after">After</span> 优化方向</div>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>9:41</span><span>LifeLog</span></div>
+          <div class="header">
+            <div>
+              <h2>下午好</h2>
+              <small>从今天的一件小事开始</small>
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn" type="button">⌕</button>
+              <button class="avatar" type="button">宝</button>
+            </div>
+          </div>
+
+          <div class="content">
+            <!-- home full -->
+            <div class="scene active" data-scene="home-full">
+              <button class="search-pill" type="button">⌕  搜索人物、地点、回忆</button>
+
+              <div class="card">
+                <div class="queue-summary">
+                  <div class="ico">✦</div>
+                  <div class="grow">
+                    <strong>今天 3 件待处理</strong>
+                    <p>下一项：给小林发生日祝福</p>
+                  </div>
+                  <em>展开</em>
+                </div>
+              </div>
+
+              <button class="composer" type="button">
+                <span class="dot">✎</span>
+                <span>今天发生了什么…</span>
+              </button>
+
+              <div class="section-h"><div>历年今日</div><span>回看</span></div>
+              <div class="card">
+                <div class="row">
+                  <div class="thumb"><div class="art memory">湖</div></div>
+                  <div style="min-width:0;flex:1">
+                    <strong>第一次去西湖</strong>
+                    <p>2 年前 · 和小林</p>
+                    <div class="actions" style="margin-top:8px">
+                      <button class="btn ghost" type="button">回看</button>
+                      <button class="btn primary" type="button">今天再记</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="soft-line">本月已记 5 条 · 下一件安排在明天</p>
+
+              <div class="section-h"><div>最近</div><span>全部</span></div>
+              <div class="card">
+                <div class="row">
+                  <div class="thumb"><div class="art place">面</div></div>
+                  <div>
+                    <strong>公司附近的面馆</strong>
+                    <p>昨天 · 自己</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="row">
+                  <div class="ico">♥</div>
+                  <div>
+                    <strong>和阿哲通了电话</strong>
+                    <p>3 天前</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- home new -->
+            <div class="scene" data-scene="home-new">
+              <div class="welcome">
+                <h3>从一句小事<br/>开始你的 LifeLog</h3>
+                <p>不用一次写完。先留下今天，人物和地点以后再补。</p>
+              </div>
+              <div class="actions one" style="margin-bottom:10px">
+                <button class="btn primary" type="button">写下今天第一件事</button>
+              </div>
+              <div class="actions">
+                <button class="btn ghost" type="button">先记一个人</button>
+                <button class="btn ghost" type="button">先记一个地方</button>
+              </div>
+              <div class="card" style="margin-top:14px">
+                <div class="kicker">可选</div>
+                <strong>也可以先导入一条分享</strong>
+                <p>朋友发来的地点或回忆链接</p>
+              </div>
+            </div>
+
+            <!-- empty -->
+            <div class="scene" data-scene="empty">
+              <div class="empty-box" style="margin-top:24px">
+                <div class="emoji">✎</div>
+                <h4>还没有记录</h4>
+                <p>先写今天的一件小事。<br/>人物、地点和照片之后再补也行。</p>
+                <div class="actions one">
+                  <button class="btn primary" type="button">记一件事</button>
+                </div>
+                <div class="actions" style="margin-top:8px">
+                  <button class="btn ghost" type="button">记一个人</button>
+                  <button class="btn ghost" type="button">记一个地方</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- list -->
+            <div class="scene" data-scene="list">
+              <button class="search-pill" type="button">⌕  在记录里搜索</button>
+              <div class="section-h"><div>记录</div><span>详细</span></div>
+
+              <div class="card">
+                <div class="row">
+                  <div class="thumb"><div class="art memory">春</div></div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>西湖春日散步</span>
+                      <span class="pill">回忆</span>
+                    </div>
+                    <p>和小林 · 杭州西湖 · 3 图</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="row">
+                  <div class="thumb"><div class="art plan">计</div></div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>下周六聚餐</span>
+                      <span class="pill plan">计划</span>
+                    </div>
+                    <p>阿哲 · 未选地点</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="row">
+                  <div class="thumb"><div class="art neutral">家</div></div>
+                  <div style="min-width:0;flex:1">
+                    <div class="mem-title">
+                      <span>搬家日杂记</span>
+                      <span class="pill">回忆</span>
+                    </div>
+                    <p>自己 · 1 图</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="fab" type="button">+</button>
+          <nav class="nav">
+            <button class="active" type="button"><span class="ni">⌂</span>首页</button>
+            <button type="button"><span class="ni">▤</span>档案</button>
+            <button type="button"><span class="ni">♥</span>记录</button>
+          </nav>
+        </div>
+      </div>
+      <p class="hint" id="after-hint">保留原版问候顶栏；下方减噪 + 搜索 pill + 快捷记录</p>
+    </section>
+  </div>
+
+  <div class="legend">
+    <div class="item">
+      <h4>首页减噪</h4>
+      <p>问候顶栏保持原版透明样式；去掉页内双标题与默认统计四宫格；待办收成一行。</p>
+    </div>
+    <div class="item">
+      <h4>新用户焦点</h4>
+      <p>0 数据时只有欢迎句 + 主 CTA，不再展示四个 0。</p>
+    </div>
+    <div class="item">
+      <h4>列表可扫读</h4>
+      <p>缩略图用低饱和紫粉/薄荷渐变与细描边，贴合毛玻璃卡片，而不是高对比色块。</p>
+    </div>
+  </div>
+  <p class="footer-note">文件：demo/ui-optimize-compare.html · 方案：docs/UI_OPTIMIZATION_PLAN_v128.md · 纯静态可直接打开</p>
+
+  <script>
+    const hints = {
+      "home-full": [
+        "模块多、双标题、统计占首屏",
+        "保留原版问候顶栏；下方减噪 + 搜索 pill + 快捷记录"
+      ],
+      "home-new": [
+        "新用户也看到四个 0 和补全任务",
+        "欢迎句 + 主 CTA，像一本空白日记的第一页"
+      ],
+      empty: [
+        "纯文字 empty，没有下一步",
+        "图标 + 人话 + 主操作，降低空白焦虑"
+      ],
+      list: [
+        "卡片同质，有图也只显示计数",
+        "柔和缩略图贴合玻璃卡片风格，计划/回忆仍可区分"
+      ]
+    };
+
+    const tabs = document.getElementById("tabs");
+    tabs.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-scene]");
+      if (!btn) return;
+      const scene = btn.dataset.scene;
+      tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      document.querySelectorAll(".scene").forEach((s) => {
+        s.classList.toggle("active", s.dataset.scene === scene);
+      });
+      document.getElementById("before-hint").textContent = hints[scene][0];
+      document.getElementById("after-hint").textContent = hints[scene][1];
+    });
+  </script>
+</body>
+</html>

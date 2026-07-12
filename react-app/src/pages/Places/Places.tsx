@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BatchActionToolbar from "../../components/BatchActionToolbar";
+import EmptyState from "../../components/EmptyState";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
@@ -1018,19 +1019,19 @@ export default function Places() {
           })}
           {!places.length &&
             (state.places.length === 0 ? (
-              <GlassCard className="empty empty-cta">
-                <p>还没有地点记录</p>
-                <button className="primary-btn" onClick={() => setCreatingNew(true)}>
-                  <Plus size={16} /> 新增第一个地点
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<MapPin />}
+                title="还没有地点"
+                description="想再去的餐厅、景点或常去的地方，先记下来。"
+                primaryAction={{ label: "记一个地方", onClick: () => setCreatingNew(true) }}
+              />
             ) : (
-              <GlassCard className="empty empty-cta">
-                <p>没有找到匹配的地点</p>
-                <button className="primary-btn" onClick={clearFilters}>
-                  <RotateCcw size={16} /> 清除筛选
-                </button>
-              </GlassCard>
+              <EmptyState
+                icon={<RotateCcw />}
+                title="没有找到匹配的地点"
+                description="试试放宽筛选，或换个城市、分类、关键词。"
+                primaryAction={{ label: "清除筛选", onClick: clearFilters, primary: false }}
+              />
             ))}
         </div>
       </section>

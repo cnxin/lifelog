@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import GlassCard from "./GlassCard";
 import MemoryTags from "./MemoryTags";
+import MemoryThumb from "./MemoryThumb";
 import NotionSyncBadge from "./NotionSyncBadge";
 import type { MemoryDisplayContext, MemoryEvent } from "../types";
 import { formatMonthDay } from "../utils/date";
@@ -28,6 +29,8 @@ interface MemoryCardProps {
   collapseExtras?: boolean;
   dense?: boolean;
   selectionControl?: ReactNode;
+  /** Soft glass-style thumb in detailed (non-dense) list mode */
+  showThumb?: boolean;
 }
 
 export default function MemoryCard({
@@ -42,7 +45,8 @@ export default function MemoryCard({
   syncMeta,
   collapseExtras = false,
   dense = false,
-  selectionControl
+  selectionControl,
+  showThumb = false
 }: MemoryCardProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
   const displayTitle = getMemoryDisplayTitle(memory, ctx);
@@ -52,12 +56,13 @@ export default function MemoryCard({
   const kindLabel = getMemoryKindLabel(memory);
   const hasTags = Boolean(memory.mood?.trim() || (memory.tags || []).length);
   const hasCollapsedExtras = !dense && collapseExtras && (showContentLine || hasTags || (showPhotoCount && photoCount > 0));
+  const useSoftThumb = showThumb && !dense;
 
   return (
-    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${extrasOpen ? "extras-open" : ""} ${className}`}>
+    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${useSoftThumb ? "has-thumb" : ""} ${extrasOpen ? "extras-open" : ""} ${className}`}>
       {selectionControl}
       <button className="place-tap" onClick={onOpen} type="button">
-        <div className="memory-badge">{icon || <Heart />}</div>
+        {useSoftThumb ? <MemoryThumb memory={memory} enabled /> : <div className="memory-badge">{icon || <Heart />}</div>}
       </button>
       <div className="memory-info" onClick={onOpen}>
         <div className="memory-title">

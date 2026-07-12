@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle2, ChevronDown, Clock, Gift, Heart, History, MapPin, Sparkles, Star, Users } from "lucide-react";
+import { Calendar, CheckCircle2, ChevronDown, Clock, Gift, Heart, History, MapPin, PenLine, Search, Sparkles, Star, Users } from "lucide-react";
 import { MouseEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import EntrySheet from "../../components/EntrySheet";
@@ -179,30 +179,44 @@ export default function Home() {
 
   return (
     <div className="home-layout-flow">
-      <section className="section home-hero-section">
-        <div className="home-hero-copy">
-          <h1>今天的 LifeLog</h1>
-          <p>先记一件小事，需要时再补人物、地点和照片。</p>
-        </div>
-        <GlassCard className="insight-card home-overview-card">
-          <div className="metric">
-            <strong>{state.people.length}</strong>
-            <span>人物</span>
-          </div>
-          <div className="metric">
-            <strong>{state.places.length}</strong>
-            <span>地点</span>
-          </div>
-          <div className="metric">
-            <strong>{actualMemories.length}</strong>
-            <span>回忆</span>
-          </div>
-          <div className="metric metric-wide">
-            <strong>{monthlyMemoryCount}</strong>
-            <span>本月新增回忆</span>
-          </div>
-        </GlassCard>
+      <section className="section home-top-tools">
+        <button
+          className="home-search-pill pressable"
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("lifelog:open-global-search"))}
+        >
+          <Search />
+          搜索人物、地点、回忆
+        </button>
+        <button className="home-composer pressable" type="button" onClick={() => openQuickMemory()}>
+          <span className="home-composer-dot">
+            <PenLine />
+          </span>
+          今天发生了什么…
+        </button>
       </section>
+
+      {isNewUser && totalRecords === 0 && (
+        <section className="section" style={{ order: 0 }}>
+          <div className="home-welcome-card">
+            <h2>从一句小事开始你的 LifeLog</h2>
+            <p>不用一次写完。先留下今天，人物和地点以后再补。</p>
+            <div className="home-welcome-actions">
+              <button className="primary-btn pressable" type="button" onClick={() => openQuickMemory()}>
+                写下今天第一件事
+              </button>
+              <div className="home-welcome-secondary">
+                <button className="ghost-btn pressable" type="button" onClick={() => setEntrySheetType("person")}>
+                  先记一个人
+                </button>
+                <button className="ghost-btn pressable" type="button" onClick={() => setEntrySheetType("place")}>
+                  先记一个地方
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {todayActions.length > 0 && (
         <section className="section" style={{ order: homeLayout.getSectionOrder("todayQueue") }}>
@@ -385,7 +399,7 @@ export default function Home() {
         </section>
       )}
 
-      {tasks.length > 0 && (
+      {tasks.length > 0 && isNewUser && (
         <section className="section" style={{ order: homeLayout.getSectionOrder("taskQueue") }}>
           <GlassCard className={`today-queue-card profile-queue-card ${taskQueueOpen ? "open" : ""}`}>
             <button className="today-queue-summary" type="button" onClick={() => setTaskQueueOpen((open) => !open)}>
@@ -393,7 +407,7 @@ export default function Home() {
                 <Sparkles />
               </span>
               <span className="today-queue-copy">
-                <strong>有 {tasks.length} 类资料可以顺手补</strong>
+                <strong>有 {Math.min(tasks.length, 2)} 类资料可以顺手补</strong>
                 <small>{tasks[0].title} · {tasks[0].count} 项</small>
               </span>
               <span className="today-queue-toggle">
@@ -403,7 +417,7 @@ export default function Home() {
             </button>
             {taskQueueOpen && (
               <div className="task-grid compact">
-                {tasks.slice(0, 4).map((task) => (
+                {tasks.slice(0, 2).map((task) => (
                   <button className="task-card" key={task.id} onClick={() => navigate(task.path)}>
                     <div className="task-icon">{task.icon}</div>
                     <div>
@@ -418,6 +432,13 @@ export default function Home() {
             )}
           </GlassCard>
         </section>
+      )}
+
+      {(monthlyMemoryCount > 0 || hasMonthlySchedule) && !isNewUser && (
+        <p className="home-monthly-note" style={{ order: homeLayout.getSectionOrder("monthlySchedule") }}>
+          本月已记 {monthlyMemoryCount} 条
+          {hasMonthlySchedule ? " · 下面是近期安排" : ""}
+        </p>
       )}
 
       {hasHomeLibrary && (

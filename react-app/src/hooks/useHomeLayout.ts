@@ -45,9 +45,9 @@ export function useHomeLayout({
     });
 
     return {
-      defaultTodayQueueOpen: todayActionCount > 0,
+      defaultTodayQueueOpen: todayActionCount > 0 && todayActionCount <= 2,
       defaultTaskQueueOpen: isNewUser && taskCount > 0,
-      defaultHomeLibraryOpen: totalRecords > 30 && hasHomeLibrary,
+      defaultHomeLibraryOpen: false,
       getSectionOrder: (id: HomeSectionId) => priority.get(id) || 99
     };
   }, [hasHomeLibrary, monthlyScheduleCount, onThisDayCount, smartPromptCount, taskCount, todayActionCount, totalRecords]);
