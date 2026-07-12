@@ -236,12 +236,179 @@
   display: none;
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .home-search-pill,
-  .home-composer,
-  .empty-state,
-  .memory-thumb {
-    backdrop-filter: none;
-    background: var(--card-solid, #fff);
+/* Avatar monogram auto-fit (scheme A: keep up to 4 chars, scale down) */
+.avatar-face,
+.person-photo.avatar-face,
+.fav-avatar.avatar-face,
+.profile-photo.avatar-face {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+  padding: 0 3px;
+}
+
+.avatar-face-label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+  line-height: 1;
+  font-weight: inherit;
+  /* scale by glyph count: 1→1, 2→0.92, 3→0.78, 4→0.64 of container font-size */
+  font-size: calc(1em * (1.08 - (var(--avatar-chars, 1) - 1) * 0.14));
+  letter-spacing: calc((var(--avatar-chars, 1) - 1) * -0.04em);
+}
+
+.person-photo.avatar-face {
+  font-size: 22px;
+}
+
+.dense-person-card .person-photo.avatar-face {
+  font-size: 17px;
+}
+
+.fav-avatar.avatar-face {
+  font-size: 20px;
+}
+
+.profile-photo.avatar-face {
+  font-size: 30px;
+}
+
+.memory-detail-profile-card .profile-photo.avatar-face {
+  font-size: 24px;
+}
+
+/* Cold-start / route skeleton */
+.app-loading.app-loading-skeleton {
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 8px 0 24px;
+}
+
+.app-loading-caption,
+.page-route-loading {
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.app-loading-caption {
+  margin: 4px 2px 0;
+  text-align: center;
+}
+
+.page-route-loading {
+  padding: 4px 0 24px;
+}
+
+.list-skeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.list-skeleton-home,
+.list-skeleton-card-list,
+.list-skeleton-detail {
+  width: 100%;
+}
+
+.list-skeleton-pill,
+.list-skeleton-composer,
+.list-skeleton-card,
+.list-skeleton-hero,
+.list-skeleton-avatar,
+.list-skeleton-line {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--card-solid, #fff) 72%, transparent) 0%,
+      color-mix(in srgb, var(--primary) 10%, transparent) 45%,
+      color-mix(in srgb, var(--card-solid, #fff) 72%, transparent) 100%
+    );
+  background-size: 200% 100%;
+  animation: list-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.list-skeleton-pill {
+  height: 44px;
+  border-radius: 16px;
+}
+
+.list-skeleton-composer {
+  height: 58px;
+  border-radius: 18px;
+  margin-bottom: 4px;
+}
+
+.list-skeleton-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.list-skeleton-hero {
+  height: 148px;
+  border-radius: 20px;
+}
+
+.list-skeleton-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.list-skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: block;
+}
+
+.list-skeleton-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.list-skeleton-line {
+  display: block;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.list-skeleton-line.w-35 { width: 35%; }
+.list-skeleton-line.w-40 { width: 40%; }
+.list-skeleton-line.w-50 { width: 50%; }
+.list-skeleton-line.w-55 { width: 55%; }
+.list-skeleton-line.w-60 { width: 60%; }
+.list-skeleton-line.w-70 { width: 70%; }
+.list-skeleton-line.w-75 { width: 75%; }
+.list-skeleton-line.w-80 { width: 80%; }
+.list-skeleton-line.w-85 { width: 85%; }
+.list-skeleton-line.w-90 { width: 90%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .list-skeleton-pill,
+  .list-skeleton-composer,
+  .list-skeleton-card,
+  .list-skeleton-hero,
+  .list-skeleton-avatar,
+  .list-skeleton-line {
+    animation: none;
   }
+}
+
+@keyframes list-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }

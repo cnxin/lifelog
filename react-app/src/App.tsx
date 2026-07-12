@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
+import ListSkeleton from "./components/ListSkeleton";
 
 // 懒加载所有页面 - 按访问频率分组
 // 高频页面（首页、列表）
@@ -23,9 +24,11 @@ const ShareImport = lazy(() => import("./pages/ShareImport/ShareImport"));
 const Stats = lazy(() => import("./pages/Stats/Stats"));
 
 function PageLoading() {
+  const { pathname } = useLocation();
+  const variant = pathname === "/" ? "home" : pathname.split("/").filter(Boolean).length > 1 ? "detail" : "card";
   return (
-    <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-sub)" }}>
-      加载中...
+    <div className="page-route-loading">
+      <ListSkeleton variant={variant} rows={variant === "home" ? 3 : 4} />
     </div>
   );
 }

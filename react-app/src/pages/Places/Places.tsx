@@ -34,6 +34,7 @@ import {
   getPlaceMallName,
   isMallRecord,
 } from "../../utils/placeMeta";
+import { WindowedList } from "../../hooks/useWindowedList";
 
 type PlaceSortMode = "smart" | "recent" | "rating" | "name";
 interface PlaceFilterState {
@@ -885,13 +886,17 @@ export default function Places() {
             )}
           </>
         )}
-        <div className="list">
-          {storePlaceRows.map(({ place, visitStats }) => {
+        <WindowedList
+          className="list"
+          items={storePlaceRows}
+          estimateSize={denseList ? 96 : 124}
+          getKey={({ place }) => place.id}
+          renderItem={({ place, visitStats }) => {
             const selected = selectedSharePlaceIds.includes(place.id);
             const expanded = defaultPlaceCardExpanded || expandedPlaceId === place.id;
             const hasExtraDetail = Boolean(place.address || place.desc || place.tags.length || visitStats.topPeople.length);
             return (
-              <GlassCard className={`place-card ${denseList ? "compact-place-card dense-place-card" : ""} ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`} key={place.id}>
+              <GlassCard className={`place-card ${denseList ? "compact-place-card dense-place-card" : ""} ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`}>
                 {batchShareMode && (
                   <button
                     className="place-share-select"
@@ -1016,8 +1021,9 @@ export default function Places() {
                 </div>
               </GlassCard>
             );
-          })}
-          {!places.length &&
+          }}
+        />
+          {!storePlaceRows.length &&
             (state.places.length === 0 ? (
               <EmptyState
                 icon={<MapPin />}
@@ -1033,7 +1039,6 @@ export default function Places() {
                 primaryAction={{ label: "清除筛选", onClick: clearFilters, primary: false }}
               />
             ))}
-        </div>
       </section>
       <EntrySheet
         type={editingId ? "place" : null}

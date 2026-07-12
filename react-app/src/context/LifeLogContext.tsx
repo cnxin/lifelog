@@ -98,77 +98,22 @@ import {
   type PlaceShareOptions
 } from "../utils/lifelogShare";
 import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
-import { saveBackupFile, type BackupExportTarget } from "../utils/backupExport";
-import { syncLifeLogToNotion, type NotionSyncSummary, type NotionSyncTarget } from "../utils/notionSync";
+import { saveBackupFile } from "../utils/backupExport";
+import { syncLifeLogToNotion, type NotionSyncTarget } from "../utils/notionSync";
 
-type DeletedEntrySnapshot =
-  | { type: "person"; person: Person; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
-  | { type: "place"; place: Place; affectedMemories: MemoryEvent[]; affectedPlans: AnniversaryPlan[] }
-  | { type: "memory"; memory: MemoryEvent; photos: Photo[] };
-
-type BackupExportResult = BackupExportTarget;
-type BackupImportOptions = { safeMode?: boolean };
-type PersonBulkPatch = { favorite?: boolean };
-type PersonBulkSnapshot = Pick<Person, "id" | "favorite">;
-type MemoryBulkPatch = { appendTags?: string[] };
-type MemoryBulkSnapshot = Pick<MemoryEvent, "id" | "tags">;
-type PlaceBulkPatch = Partial<Pick<Place, "category" | "mall" | "area" | "favorite">> & { appendTags?: string[] };
-type PlaceBulkSnapshot = Pick<Place, "id" | "category" | "mall" | "area" | "tags" | "favorite">;
-
-interface LifeLogContextValue {
-  state: LifeLogState;
-  settings: AppSettings;
-  reminderSettings: ReminderSettings;
-  notionSettings: NotionSettings;
-  notionPageMappings: NotionPageMapping[];
-  notionSyncHistory: NotionSyncHistoryEntry[];
-  notionSyncQueue: NotionSyncQueueItem[];
-  isLoading: boolean;
-  savePerson: (formData: FormData, id?: string) => Promise<string>;
-  updatePersonProfile: (id: string, patch: Pick<Person, "preferences" | "dislikes">) => Promise<void>;
-  updatePeopleBulk: (personIds: string[], patch: PersonBulkPatch) => Promise<{ count: number; before: PersonBulkSnapshot[] }>;
-  restorePeopleBulk: (snapshots: PersonBulkSnapshot[]) => Promise<number>;
-  togglePersonFavorite: (id: string) => Promise<void>;
-  saveAnniversaryPlan: (plan: AnniversaryPlan) => Promise<string>;
-  deleteAnniversaryPlan: (id: string) => Promise<void>;
-  inspectPlaceSave: (formData: FormData, id?: string) => PlaceSaveInspection;
-  savePlace: (formData: FormData, id?: string, options?: PlaceSaveOptions) => Promise<string>;
-  updatePlacesBulk: (placeIds: string[], patch: PlaceBulkPatch) => Promise<{ count: number; before: PlaceBulkSnapshot[] }>;
-  restorePlacesBulk: (snapshots: PlaceBulkSnapshot[]) => Promise<number>;
-  togglePlaceFavorite: (id: string) => Promise<void>;
-  saveMemory: (formData: FormData, id?: string, photos?: Photo[]) => Promise<string>;
-  updateMemoriesBulk: (memoryIds: string[], patch: MemoryBulkPatch) => Promise<{ count: number; before: MemoryBulkSnapshot[] }>;
-  restoreMemoriesBulk: (snapshots: MemoryBulkSnapshot[]) => Promise<number>;
-  deleteEntry: (type: EntryType, id: string) => Promise<void>;
-  restoreDeletedEntry: (snapshot: DeletedEntrySnapshot) => Promise<void>;
-  getDeleteSnapshot: (type: EntryType, id: string) => Promise<DeletedEntrySnapshot | null>;
-  importData: (file: File, options?: BackupImportOptions) => Promise<string[]>;
-  getPersonName: (id: string) => string;
-  getPlaceName: (id: string) => string;
-  duplicatePlaceGroups: PlaceDuplicateGroup[];
-  placeMergeHistory: PlaceMergeHistoryEntry[];
-  latestPlaceMerge: PlaceMergeHistoryEntry | null;
-  mergePlacePreview: (preview: PlaceMergePreview) => Promise<string>;
-  mergeDuplicatePlaces: (group: PlaceDuplicateGroup) => Promise<void>;
-  mergeAllDuplicatePlaces: () => Promise<number>;
-  undoLatestPlaceMerge: () => Promise<boolean>;
-  updateSettings: (patch: Partial<AppSettings>) => Promise<void>;
-  updateReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
-  updateNotionSettings: (patch: Partial<NotionSettings>) => Promise<void>;
-  syncNotionAll: (settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
-  syncNotionTargets: (targets: NotionSyncTarget[], options?: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings; stateOverride?: LifeLogState }) => Promise<NotionSyncSummary>;
-  retryFailedNotionItems: (items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
-  retryNotionQueueItems: (ids?: string[]) => Promise<NotionSyncSummary | null>;
-  exportData: () => Promise<BackupExportResult>;
-  buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
-  buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
-  exportMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<BackupExportResult>;
-  exportPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<BackupExportResult>;
-  importShareData: (payload: LifeLogSharePayload) => Promise<LifeLogShareImportResult>;
-  undoShareImport: (result: LifeLogShareImportResult) => Promise<void>;
-  resetDemo: () => Promise<void>;
-  loadMemoryPhotos: (memoryId: string, photoIds?: string[]) => Promise<Photo[]>;
-}
+import type { DeletedEntrySnapshot, BackupExportResult, BackupImportOptions, PersonBulkPatch, PersonBulkSnapshot, MemoryBulkPatch, MemoryBulkSnapshot, PlaceBulkPatch, PlaceBulkSnapshot, LifeLogContextValue } from "./lifeLogContextTypes";
+import {
+  buildNotionQueueItemId,
+  buildNotionSyncHistoryEntry,
+  canAutoSyncNotionTarget,
+  formatNotionTargetLabel,
+  mergeById,
+  mergeNotionQueueItems,
+  restoreMemoryList,
+  restorePlanList,
+  uniqueNotionTargets,
+  upsertById
+} from "./lifeLogContextHelpers";
 
 const emptyState: LifeLogState = {
   people: [],
@@ -196,31 +141,52 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const LOAD_TIMEOUT_MS = 8000;
 
-    loadLifeLogState()
-      .then(async (nextState) => {
-        const nextSettings = await loadAppSettings();
-        const nextReminderSettings = await loadReminderSettings();
-        const nextNotionSettings = await loadNotionSettings();
-        const nextNotionPageMappings = await loadNotionPageMappings();
-        const nextNotionSyncHistory = await loadNotionSyncHistory();
-        const nextNotionSyncQueue = await loadNotionSyncQueue();
-        const mergeHistory = await loadPlaceMergeHistory();
-        if (active) setState(nextState);
-        if (active) setSettings(nextSettings);
-        if (active) setReminderSettings(nextReminderSettings);
-        if (active) setNotionSettings(nextNotionSettings);
-        if (active) setNotionPageMappings(nextNotionPageMappings);
-        if (active) setNotionSyncHistory(nextNotionSyncHistory);
-        if (active) {
-          notionSyncQueueRef.current = nextNotionSyncQueue;
-          setNotionSyncQueue(nextNotionSyncQueue);
-        }
-        if (active) setPlaceMergeHistory(mergeHistory);
-      })
-      .finally(() => {
+    async function bootstrap() {
+      try {
+        const nextState = await withTimeout(loadLifeLogState(), LOAD_TIMEOUT_MS, "loadLifeLogState");
+        const [
+          nextSettings,
+          nextReminderSettings,
+          nextNotionSettings,
+          nextNotionPageMappings,
+          nextNotionSyncHistory,
+          nextNotionSyncQueue,
+          mergeHistory
+        ] = await withTimeout(
+          Promise.all([
+            loadAppSettings(),
+            loadReminderSettings(),
+            loadNotionSettings(),
+            loadNotionPageMappings(),
+            loadNotionSyncHistory(),
+            loadNotionSyncQueue(),
+            loadPlaceMergeHistory()
+          ]),
+          LOAD_TIMEOUT_MS,
+          "loadLocalSettings"
+        );
+
+        if (!active) return;
+        setState(nextState);
+        setSettings(nextSettings);
+        setReminderSettings(nextReminderSettings);
+        setNotionSettings(nextNotionSettings);
+        setNotionPageMappings(nextNotionPageMappings);
+        setNotionSyncHistory(nextNotionSyncHistory);
+        notionSyncQueueRef.current = nextNotionSyncQueue;
+        setNotionSyncQueue(nextNotionSyncQueue);
+        setPlaceMergeHistory(mergeHistory);
+      } catch (error) {
+        console.error("LifeLog bootstrap failed", error);
+        // Keep empty local defaults so the UI can still open offline / after DB glitches.
+      } finally {
         if (active) setIsLoading(false);
-      });
+      }
+    }
+
+    void bootstrap();
 
     return () => {
       active = false;
@@ -1329,119 +1295,20 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
   return <LifeLogContext.Provider value={value}>{children}</LifeLogContext.Provider>;
 }
 
-function mergeById<T extends { id: string }>(current: T[], incoming: T[]) {
-  if (!incoming.length) return current;
-  const incomingById = new Map(incoming.map((item) => [item.id, item]));
-  const merged = current.map((item) => incomingById.get(item.id) || item);
-  const missing = incoming.filter((item) => !current.some((currentItem) => currentItem.id === item.id));
-  return [...merged, ...missing];
-}
-
-function uniqueNotionTargets(targets: NotionSyncTarget[]) {
-  const seen = new Set<string>();
-  return targets.filter((target) => {
-    const key = `${target.entityType}:${target.entityId}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function buildNotionQueueItemId(target: Pick<NotionSyncTarget, "entityType" | "entityId">) {
-  return `${target.entityType}:${target.entityId}`;
-}
-
-function compareNotionQueueItems(left: NotionSyncQueueItem, right: NotionSyncQueueItem) {
-  const statusRank = (item: NotionSyncQueueItem) => item.status === "failed" ? 0 : item.status === "pending" ? 1 : 2;
-  return statusRank(left) - statusRank(right) || left.updatedAt.localeCompare(right.updatedAt);
-}
-
-function mergeNotionQueueItems(current: NotionSyncQueueItem[], incoming: NotionSyncQueueItem[]) {
-  if (!incoming.length) return current;
-  const incomingById = new Map(incoming.map((item) => [item.id, item]));
-  const merged = current.map((item) => incomingById.get(item.id) || item);
-  const missing = incoming.filter((item) => !current.some((currentItem) => currentItem.id === item.id));
-  return [...merged, ...missing].sort(compareNotionQueueItems);
-}
-
-function formatNotionTargetLabel(target: NotionSyncTarget, state: LifeLogState) {
-  if (target.entityType === "person") {
-    const person = state.people.find((item) => item.id === target.entityId);
-    return `人物：${person?.name || "未命名"}`;
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
-  if (target.entityType === "place") {
-    const place = state.places.find((item) => item.id === target.entityId);
-    return `地点：${place ? buildPlaceDisplayName(place) : "未命名"}`;
-  }
-  if (target.entityType === "memory") {
-    const memory = state.memories.find((item) => item.id === target.entityId);
-    return `回忆：${memory?.title || memory?.date || "未命名"}`;
-  }
-  const plan = state.anniversaryPlans.find((item) => item.id === target.entityId);
-  return `安排：${plan?.title || plan?.anniversaryTitle || "未命名"}`;
-}
-
-function upsertById<T extends { id: string }>(items: T[], next: T) {
-  return items.some((item) => item.id === next.id)
-    ? items.map((item) => (item.id === next.id ? next : item))
-    : [...items, next];
-}
-
-function canAutoSyncNotionTarget(settings: NotionSettings, entityType: NotionSyncTarget["entityType"]) {
-  if (!settings.enabled || !settings.token.trim()) return false;
-  if (entityType === "person") return Boolean(settings.peopleDatabaseId);
-  if (entityType === "place") return Boolean(settings.placesDatabaseId);
-  if (entityType === "memory") return Boolean(settings.memoriesDatabaseId);
-  return Boolean(settings.plansDatabaseId);
-}
-
-function buildNotionSyncHistoryEntry({
-  result,
-  startedAt,
-  finishedAt,
-  trigger,
-  targetLabel
-}: {
-  result: NotionSyncSummary;
-  startedAt: string;
-  finishedAt: string;
-  trigger: NotionSyncTrigger;
-  targetLabel?: string;
-}): NotionSyncHistoryEntry {
-  return {
-    id: uid("notion-sync"),
-    startedAt,
-    finishedAt,
-    trigger,
-    status: result.failed ? (result.synced || result.skipped ? "partial" : "failed") : "success",
-    targetLabel,
-    total: result.total,
-    synced: result.synced,
-    created: result.created,
-    updated: result.updated,
-    skipped: result.skipped,
-    failed: result.failed,
-    byType: result.byType,
-    messages: result.messages.slice(0, 8),
-    failedItems: result.failedItems.slice(0, 20)
-  };
-}
-
-function restoreMemoryList(current: MemoryEvent[], snapshots: MemoryEvent[]) {
-  if (!snapshots.length) return current;
-  const snapshotIds = new Set(snapshots.map((memory) => memory.id));
-  const snapshotById = new Map(snapshots.map((memory) => [memory.id, memory]));
-  const restored = current.map((memory) => snapshotById.get(memory.id) || memory);
-  const missing = snapshots.filter((memory) => !current.some((item) => item.id === memory.id));
-  return [...restored.filter((memory) => !snapshotIds.has(memory.id) || snapshotById.has(memory.id)), ...missing];
-}
-
-function restorePlanList(current: AnniversaryPlan[], snapshots: AnniversaryPlan[]) {
-  if (!snapshots.length) return current;
-  const snapshotById = new Map(snapshots.map((plan) => [plan.id, plan]));
-  const restored = current.map((plan) => snapshotById.get(plan.id) || plan);
-  const missing = snapshots.filter((plan) => !current.some((item) => item.id === plan.id));
-  return [...restored, ...missing];
 }
 
 export function useLifeLog() {

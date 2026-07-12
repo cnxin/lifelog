@@ -12,6 +12,14 @@
   gap: 12px;
 }
 
+.windowed-list-item {
+  min-width: 0;
+}
+
+.windowed-list .windowed-list-window {
+  gap: 12px;
+}
+
 .place-card,
 .person-card,
 .memory-card {
@@ -119,8 +127,14 @@
   place-items: center;
   color: white;
   background: linear-gradient(135deg, #35c7d0, var(--primary));
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: -0.04em;
+  overflow: hidden;
+  padding: 0 2px;
+  text-align: center;
 }
 
 .memory-badge {
@@ -242,7 +256,8 @@
 }
 
 .dense-person-card .person-photo {
-  font-size: 16px;
+  font-size: 13px;
+  letter-spacing: -0.06em;
 }
 
 .dense-place-card .place-img svg {
@@ -1545,8 +1560,14 @@ button.person-pref-line {
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow: 0 10px 22px color-mix(in srgb, var(--primary) 20%, transparent);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+  overflow: hidden;
+  padding: 0 4px;
+  text-align: center;
 }
 
 .profile-main {

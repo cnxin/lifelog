@@ -8,6 +8,7 @@ import EntrySheet from "./EntrySheet";
 import FloatingActionButton, { type FloatingAction } from "./FloatingActionButton";
 import GlobalSearchPanel from "./GlobalSearchPanel";
 import Header from "./Header";
+import ListSkeleton from "./ListSkeleton";
 import NetworkBanner from "./NetworkBanner";
 import ShortcutHelpPanel from "./ShortcutHelpPanel";
 import { Camera, CalendarPlus, ClipboardPaste, MapPinPlus, PenLine, UserPlus } from "lucide-react";
@@ -275,9 +276,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       />
       <main className="main-content">
         {isLoading ? (
-          <div className="app-loading" role="status" aria-live="polite">
-            <div className="app-loading-spinner" />
-            <p>正在加载本地数据…</p>
+          <div className="app-loading app-loading-skeleton" role="status" aria-live="polite">
+            <ListSkeleton
+              variant={location.pathname === "/" ? "home" : location.pathname.split("/").length > 2 ? "detail" : "card"}
+              rows={location.pathname === "/" ? 3 : 4}
+            />
+            <p className="app-loading-caption">正在加载本地数据…</p>
           </div>
         ) : (
           children

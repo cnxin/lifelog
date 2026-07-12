@@ -18,7 +18,7 @@ import { groupMemoriesByMonth, getTopRelatedItems } from "../../utils/detailHelp
 import { isMemoryPlan } from "../../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { buildRelationshipHealth } from "../../utils/relationshipHealth";
-import { initials } from "../../utils/text";
+import AvatarFace from "../../components/AvatarFace";
 import { useEffect, useRef, useState } from "react";
 
 interface PlanningTarget {
@@ -194,7 +194,7 @@ export default function PersonDetail() {
             </strong>
           </div>
           <div className="detail-profile-body">
-            <div className="profile-photo">{initials(person.name)}</div>
+            <AvatarFace name={person.name} className="profile-photo" />
             <div className="profile-main">
               <div className="profile-title">
                 <h2>

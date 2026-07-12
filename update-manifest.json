@@ -1,11 +1,11 @@
 {
-  "version": "0.1.0-test.129",
-  "releaseUrl": "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.129",
-  "apkUrl": "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.129/lifelog-v0.1.0-test.129.apk",
-  "mirrorApkUrl": "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.129.apk",
-  "apkName": "lifelog-v0.1.0-test.129.apk",
-  "apkSize": 4104610,
-  "apkSha256": "1ebc89337075b2e2d9315029606c94cbfcece94e03fc9b7a47ec95ed12f4e437",
-  "publishedAt": "2026-07-12T14:32:19Z",
-  "body": "- 首页去掉页内双标题与默认统计四宫格，增加搜索入口与「今天发生了什么…」快捷记录条；新用户展示欢迎 CTA。\n- 补全任务仅对新用户展示，且最多 2 类；最近看看默认折叠。\n- 回忆列表详细模式使用柔和玻璃风缩略图（有图显示照片，无图显示浅色 monogram）。\n- 人物 / 地点 / 回忆空列表改用统一 EmptyState 引导。"
+    "version":  "0.1.0-test.130",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.130",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.130/lifelog-v0.1.0-test.130.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.130.apk",
+    "apkName":  "lifelog-v0.1.0-test.130.apk",
+    "apkSize":  4108085,
+    "apkSha256":  "c7b0f30f3690fbbd398556544e73bbc1e2106234bdf21e57608103c315d48589",
+    "publishedAt":  "2026-07-12T16:16:35Z",
+    "body":  "- 首页拆为 `Home.tsx` + `homeHelpers.tsx`，降低单文件改动成本。\n- 页面样式巨石 `07-pages.css` 按域拆到 `styles/pages/07a`–`07f`，入口保持原 import 顺序。\n- `LifeLogContext` 抽出类型定义与 Notion/合并辅助函数，Provider 主体更聚焦读写流程。\n- 钉死 `lucide-react@1.14.0`，避免 `latest` 导致发版不可复现。\n- 本地数据启动增加 8 秒超时兜底；字体改为非阻塞加载，避免冷启动卡死。"
 }

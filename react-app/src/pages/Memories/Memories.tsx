@@ -24,6 +24,7 @@ import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { groupMemoriesByMonth } from "../../utils/detailHelpers";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
 import { toCalendarDateKey } from "../../utils/calendarItems";
+import { WindowedList } from "../../hooks/useWindowedList";
 
 export default function Memories() {
   const {
@@ -450,12 +451,16 @@ export default function Memories() {
                   <span>{group.memories.length} 条</span>
                 </div>
                 <div className="list">
-                  {group.memories.map((memory) => {
+                  <WindowedList
+                    items={group.memories}
+                    estimateSize={denseList ? 88 : 112}
+                    threshold={48}
+                    getKey={(memory) => memory.id}
+                    renderItem={(memory) => {
                     const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
                     const selected = selectedMemoryIds.includes(memory.id);
                     return (
                       <MemoryCard
-                        key={memory.id}
                         memory={memory}
                         ctx={ctx}
                         className={`${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`}
@@ -500,7 +505,8 @@ export default function Memories() {
                         }
                       />
                     );
-                  })}
+                    }}
+                  />
                 </div>
               </div>
             );

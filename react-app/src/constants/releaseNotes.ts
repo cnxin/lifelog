@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-07-12",
+  date: "2026-07-13",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -15,6 +15,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 };
 
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.130",
+    date: "2026-07-13",
+    title: "工程可维护性、暗色主题与冷启动体验",
+    highlights: [
+      "首页与页面样式拆分、Context 类型/辅助抽离，降低后续改动成本；钉死 lucide-react 版本保证发版可复现。",
+      "冷启动与路由懒加载改用卡片骨架屏，本地数据加载增加超时兜底，避免一直卡在加载态。",
+      "顶栏改为 sticky 浮层材质，暗色模式为 classic / cream / mint / mist 补齐独立 token。",
+      "人物、地点、回忆列表在条目较多时启用窗口渲染，长列表滚动更稳。"
+    ]
+  },
   {
     version: "0.1.0-test.129",
     date: "2026-07-12",

@@ -4,6 +4,27 @@
 
 - 暂无未发布变更。
 
+## v0.1.0-test.130 (2026-07-13)
+
+### 工程
+
+- 首页拆为 `Home.tsx` + `homeHelpers.tsx`，降低单文件改动成本。
+- 页面样式巨石 `07-pages.css` 按域拆到 `styles/pages/07a`–`07f`，入口保持原 import 顺序。
+- `LifeLogContext` 抽出类型定义与 Notion/合并辅助函数，Provider 主体更聚焦读写流程。
+- 钉死 `lucide-react@1.14.0`，避免 `latest` 导致发版不可复现。
+- 本地数据启动增加 8 秒超时兜底；字体改为非阻塞加载，避免冷启动卡死。
+
+### 界面
+
+- 冷启动与路由懒加载改用卡片骨架屏，替代纯 spinner /「加载中…」文案。
+- 顶栏改为 sticky 浮层材质（blur + 渐隐底边），并跟随 `prefers-reduced-transparency` 与 cream/mint/mist 主题降级。
+- 暗色模式为 classic / cream / mint / mist 补齐独立 token，修正副文案与卡片对比。
+- 人物 / 地点 / 回忆列表在条目较多时启用窗口渲染，降低长列表 DOM 压力。
+
+### 验证
+
+- 通过 TypeScript 构建、核心回归测试与生产 Web 构建。
+
 ## v0.1.0-test.129 (2026-07-12)
 
 ### 界面

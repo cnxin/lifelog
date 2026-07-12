@@ -20,7 +20,8 @@ import type { LifeLogState, Person } from "../../types";
 import { anniversaryRelativeLabel, anniversaryYearLabel, buildBirthdayInfo, getWesternZodiacSign } from "../../utils/date";
 import { buildRelationshipHealth, type RelationshipHealth } from "../../utils/relationshipHealth";
 import { getNotionRecordSyncMeta } from "../../utils/notionStatus";
-import { initials } from "../../utils/text";
+import AvatarFace from "../../components/AvatarFace";
+import { WindowedList } from "../../hooks/useWindowedList";
 import { saveReadableFile } from "../../utils/backupExport";
 import { buildReadableMarkdownForSelection } from "../../utils/readableExport";
 
@@ -302,13 +303,17 @@ export default function People() {
             ]}
           />
         )}
-        <div className="list">
-          {peopleRows.map(({ person, health }) => {
+        <WindowedList
+          className="list"
+          items={peopleRows}
+          estimateSize={denseList ? 92 : 118}
+          getKey={({ person }) => person.id}
+          renderItem={({ person, health }) => {
             const anniversary = person.anniversaries[0];
             const birthdayInfo = buildBirthdayInfo(person.birthday);
             const selected = selectedPersonIds.includes(person.id);
             return (
-              <GlassCard className={`person-card ${denseList ? "dense-person-card" : ""} ${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`} key={person.id}>
+              <GlassCard className={`person-card ${denseList ? "dense-person-card" : ""} ${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`}>
                 {batchMode && (
                   <button
                     className="person-select-toggle"
@@ -333,7 +338,7 @@ export default function People() {
                     navigate(`/people/${person.id}`);
                   }}
                 >
-                  <div className="person-photo">{initials(person.name)}</div>
+                  <AvatarFace name={person.name} className="person-photo" />
                 </button>
                 <div
                   className="person-info"
@@ -412,24 +417,24 @@ export default function People() {
                 </div>
               </GlassCard>
             );
-          })}
-          {!peopleRows.length &&
-            (state.people.length === 0 ? (
-              <EmptyState
-                icon={<Users />}
-                title="还没有人物"
-                description="先留下一个重要的人，生日和相处细节以后慢慢补。"
-                primaryAction={{ label: "记一个人", onClick: () => setCreatingNew(true) }}
-              />
-            ) : (
-              <EmptyState
-                icon={<RotateCcw />}
-                title="没有找到匹配的人物"
-                description="换个名字、关系或备注关键词试试。"
-                primaryAction={{ label: "清除搜索", onClick: clearSearch, primary: false }}
-              />
-            ))}
-        </div>
+          }}
+        />
+        {!peopleRows.length &&
+          (state.people.length === 0 ? (
+            <EmptyState
+              icon={<Users />}
+              title="还没有人物"
+              description="先留下一个重要的人，生日和相处细节以后慢慢补。"
+              primaryAction={{ label: "记一个人", onClick: () => setCreatingNew(true) }}
+            />
+          ) : (
+            <EmptyState
+              icon={<RotateCcw />}
+              title="没有找到匹配的人物"
+              description="换个名字、关系或备注关键词试试。"
+              primaryAction={{ label: "清除搜索", onClick: clearSearch, primary: false }}
+            />
+          ))}
       </section>
       <EntrySheet type={editingId ? "person" : null} itemId={editingId} onClose={() => setEditingId(undefined)} />
       <EntrySheet type={creatingNew ? "person" : null} onClose={() => setCreatingNew(false)} />

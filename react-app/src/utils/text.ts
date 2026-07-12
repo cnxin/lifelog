@@ -1,11 +1,16 @@
 import type { PreferenceGroup } from "../types";
 
+/**
+ * Avatar monogram text. Chinese keeps up to 4 glyphs (auto-fit by CSS);
+ * longer Chinese names use first+last. Latin uses initials.
+ */
 export function initials(name: string) {
   const trimmed = name.trim();
   if (!trimmed) return "?";
 
-  if (/^[\u4e00-\u9fff]+$/.test(trimmed)) {
-    return trimmed.length <= 3 ? trimmed : `${trimmed[0]}${trimmed[trimmed.length - 1]}`;
+  if (/^[一-鿿]+$/.test(trimmed)) {
+    if (trimmed.length <= 4) return trimmed;
+    return `${trimmed[0]}${trimmed[trimmed.length - 1]}`;
   }
 
   const words = trimmed.split(/\s+/).filter(Boolean);
@@ -18,6 +23,11 @@ export function initials(name: string) {
   }
 
   return trimmed.slice(0, 2).toUpperCase();
+}
+
+/** Glyph count for auto-fit sizing on avatar faces. */
+export function initialsLength(label: string) {
+  return Array.from(label || "").length || 1;
 }
 
 export function splitList(value: FormDataEntryValue | null) {
