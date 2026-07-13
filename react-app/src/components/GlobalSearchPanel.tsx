@@ -27,6 +27,18 @@ interface SearchResult {
   searchText: string;
   keywords: SearchKeyword[];
   scoreBase: number;
+  date?: string;
+  personIds?: string[];
+  personNames?: string[];
+}
+
+interface ParsedSearchQuery {
+  raw: string;
+  tokens: string[];
+  mentionNames: string[];
+  exactDates: string[];
+  yearMonths: string[];
+  hasSemanticFilter: boolean;
 }
 
 const RECENT_SEARCH_LIMIT = 8;
@@ -93,7 +105,8 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         path: `/people/${person.id}`,
         searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
         keywords,
-        scoreBase: person.favorite ? 14 : 10
+        scoreBase: person.favorite ? 14 : 10,
+        personNames: [person.name, person.nickname].filter(Boolean).map(String)
       };
     });
 
@@ -160,14 +173,17 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
         path: `/memories/${memory.id}`,
         searchText: normalizeSearchText(keywords.map((item) => item.value).join(" ")),
         keywords,
-        scoreBase: 11
+        scoreBase: 11,
+        date: memory.date,
+        personIds: memory.personIds || [],
+        personNames: ctx.personNames || []
       };
     });
 
     return [...memoryResults, ...peopleResults, ...placeResults];
   }, [getPersonName, getPlaceName, state.memories, state.people, state.places]);
 
-  const queryTokens = useMemo(() => normalizeSearchText(query).split(" ").filter(Boolean), [query]);
+  const parsedQuery = useMemo(() => parseSearchQuery(query), [query]);
   const overview = useMemo(
     () => ({
       memories: state.memories.length,
@@ -178,14 +194,47 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   );
   const suggestions = useMemo(() => buildSearchSuggestions(state, getPersonName, getPlaceName), [getPersonName, getPlaceName, state.memories, state.people, state.places]);
   const results = useMemo(() => {
-    if (!queryTokens.length) return [];
+    if (!parsedQuery.tokens.length && !parsedQuery.hasSemanticFilter) return [];
     return index
-      .map((item) => ({ item, score: scoreSearchResult(item, queryTokens) }))
+      .map((item) => ({ item, score: scoreSearchResult(item, parsedQuery) }))
       .filter((entry) => entry.score > 0)
-      .sort((left, right) => right.score - left.score || right.item.scoreBase - left.item.scoreBase || left.item.title.localeCompare(right.item.title, "zh-CN"))
-      .slice(0, 24)
+      .sort((left, right) => {
+        const kindRank = kindPriority(left.item.kind, parsedQuery) - kindPriority(right.item.kind, parsedQuery);
+        return (
+          kindRank ||
+          right.score - left.score ||
+          right.item.scoreBase - left.item.scoreBase ||
+          left.item.title.localeCompare(right.item.title, "zh-CN")
+        );
+      })
+      .slice(0, 36)
       .map((entry) => entry.item);
-  }, [index, queryTokens]);
+  }, [index, parsedQuery]);
+
+  const sectionedResults = useMemo(() => {
+    const people = results.filter((item) => item.kind === "person");
+    const places = results.filter((item) => item.kind === "place");
+    const memories = results.filter((item) => item.kind === "memory");
+    if (parsedQuery.mentionNames.length) {
+      return [
+        { key: "person", label: "人物", items: people },
+        { key: "memory", label: "相关记录", items: memories },
+        { key: "place", label: "地点", items: places }
+      ].filter((section) => section.items.length);
+    }
+    if (parsedQuery.exactDates.length || parsedQuery.yearMonths.length) {
+      return [
+        { key: "memory", label: "记录", items: memories },
+        { key: "person", label: "人物", items: people },
+        { key: "place", label: "地点", items: places }
+      ].filter((section) => section.items.length);
+    }
+    return [
+      { key: "memory", label: "记录", items: memories },
+      { key: "person", label: "人物", items: people },
+      { key: "place", label: "地点", items: places }
+    ].filter((section) => section.items.length);
+  }, [parsedQuery.exactDates.length, parsedQuery.mentionNames.length, parsedQuery.yearMonths.length, results]);
 
   useEffect(() => {
     setSelectedIndex(results.length ? 0 : -1);
@@ -267,7 +316,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
           </button>
         </div>
 
-        {!queryTokens.length ? (
+        {!parsedQuery.tokens.length && !parsedQuery.hasSemanticFilter ? (
           <div className="global-search-empty">
             <div className="global-search-empty-card glass-card">
               <strong>想找什么都可以直接搜</strong>
@@ -344,36 +393,58 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
           </div>
         ) : results.length ? (
           <div className="global-search-results">
-            <div className="global-search-count">找到 {results.length} 条相关结果</div>
-            {results.map((result, index) => (
-              <button
-                key={`${result.kind}-${result.id}`}
-                className={`global-search-result glass-card ${index === selectedIndex ? "active" : ""}`}
-                type="button"
-                onClick={() => openPath(result.path)}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <span className={`global-search-icon ${result.kind}`}>
-                  {result.kind === "person" && <User />}
-                  {result.kind === "place" && <MapPin />}
-                  {result.kind === "memory" && <Heart />}
-                </span>
-                <span className="global-search-result-main">
-                  <strong>{result.title}</strong>
-                  <small>{result.subtitle}</small>
-                  <small className="global-search-match">{buildMatchHint(result, queryTokens)}</small>
-                </span>
-                <span className="global-search-result-meta">
-                  <em>{result.kindLabel || kindLabel(result.kind)}</em>
-                  <small>{result.meta}</small>
-                </span>
-              </button>
+            <div className="global-search-count">
+              找到 {results.length} 条相关结果
+              {parsedQuery.mentionNames.length ? ` · @${parsedQuery.mentionNames.join("、")}` : ""}
+              {parsedQuery.exactDates[0]
+                ? ` · ${parsedQuery.exactDates[0]}`
+                : parsedQuery.yearMonths[0]
+                  ? ` · ${parsedQuery.yearMonths[0]}`
+                  : ""}
+            </div>
+            {sectionedResults.map((section) => (
+              <div className="global-search-section-block" key={section.key}>
+                <div className="global-search-section-label">{section.label}</div>
+                {section.items.map((result) => {
+                  const index = results.findIndex((item) => item.kind === result.kind && item.id === result.id);
+                  return (
+                    <button
+                      key={`${result.kind}-${result.id}`}
+                      className={`global-search-result glass-card ${index === selectedIndex ? "active" : ""}`}
+                      type="button"
+                      onClick={() => openPath(result.path)}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                    >
+                      <span className={`global-search-icon ${result.kind}`}>
+                        {result.kind === "person" && <User />}
+                        {result.kind === "place" && <MapPin />}
+                        {result.kind === "memory" && <Heart />}
+                      </span>
+                      <span className="global-search-result-main">
+                        <strong>{result.title}</strong>
+                        <small>{result.subtitle}</small>
+                        <small className="global-search-match">{buildMatchHint(result, parsedQuery)}</small>
+                      </span>
+                      <span className="global-search-result-meta">
+                        <em>{result.kindLabel || kindLabel(result.kind)}</em>
+                        <small>{result.meta}</small>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             ))}
           </div>
         ) : (
           <div className="global-search-no-result glass-card">
             <strong>没有匹配结果</strong>
-            <span>换个关键词试试，例如姓名、地点、标签或记录里的关键词。</span>
+            <span>
+              {parsedQuery.mentionNames.length
+                ? "没有找到该人物或相关记录，试试完整姓名，或去掉 @ 做全文搜索。"
+                : parsedQuery.exactDates.length || parsedQuery.yearMonths.length
+                  ? "这个日期附近没有记录，换一天或改成年月再试。"
+                  : "换个关键词试试，例如姓名、地点、标签，或用 @人名 / 2024-05-01。"}
+            </span>
           </div>
         )}
       </section>
@@ -381,11 +452,68 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   );
 }
 
-function scoreSearchResult(result: SearchResult, tokens: string[]) {
+function parseSearchQuery(raw: string): ParsedSearchQuery {
+  const source = raw.trim();
+  if (!source) {
+    return { raw: "", tokens: [], mentionNames: [], exactDates: [], yearMonths: [], hasSemanticFilter: false };
+  }
+
+  const mentionNames: string[] = [];
+  const mentionRegex = /@([一-鿿A-Za-z0-9_·]{1,24})/g;
+  let mentionMatch: RegExpExecArray | null;
+  while ((mentionMatch = mentionRegex.exec(source))) {
+    const name = mentionMatch[1].trim();
+    if (name) mentionNames.push(name);
+  }
+
+  const exactDates = Array.from(new Set(source.match(/\b\d{4}-\d{2}-\d{2}\b/g) || []));
+  const yearMonths = Array.from(
+    new Set((source.match(/\b\d{4}-\d{2}\b/g) || []).filter((item) => !exactDates.some((date) => date.startsWith(item))))
+  );
+
+  let residual = source;
+  for (const name of mentionNames) residual = residual.replace(new RegExp(`@${escapeRegExp(name)}`, "g"), " ");
+  for (const date of exactDates) residual = residual.replace(date, " ");
+  for (const month of yearMonths) residual = residual.replace(month, " ");
+  residual = residual.replace(/@/g, " ");
+
+  const tokens = normalizeSearchText(residual).split(" ").filter(Boolean);
+  return {
+    raw: source,
+    tokens,
+    mentionNames: uniquePreserve(mentionNames),
+    exactDates,
+    yearMonths,
+    hasSemanticFilter: Boolean(mentionNames.length || exactDates.length || yearMonths.length)
+  };
+}
+
+function scoreSearchResult(result: SearchResult, query: ParsedSearchQuery) {
+  if (query.mentionNames.length) {
+    const ok = query.mentionNames.some((name) => matchesMention(result, name));
+    if (!ok) return 0;
+  }
+
+  if (query.exactDates.length) {
+    if (result.kind !== "memory" || !result.date) return 0;
+    if (!query.exactDates.includes(result.date)) return 0;
+  } else if (query.yearMonths.length) {
+    if (result.kind !== "memory" || !result.date) return 0;
+    if (!query.yearMonths.some((month) => result.date!.startsWith(month))) return 0;
+  }
+
+  const tokens = query.tokens;
+  if (!tokens.length) {
+    let score = result.scoreBase + 20;
+    if (query.mentionNames.length && result.kind === "person") score += 40;
+    if (query.mentionNames.length && result.kind === "memory") score += 24;
+    if (query.exactDates.length || query.yearMonths.length) score += 30;
+    return score;
+  }
+
   let score = 0;
   const title = normalizeSearchText(result.title);
   const subtitle = normalizeSearchText(result.subtitle);
-
   for (const token of tokens) {
     if (!result.searchText.includes(token)) return 0;
     if (title === token) score += 42;
@@ -395,10 +523,55 @@ function scoreSearchResult(result: SearchResult, tokens: string[]) {
     else score += 6;
   }
 
+  if (query.mentionNames.length && result.kind === "person") score += 36;
+  if (query.mentionNames.length && result.kind === "memory") score += 18;
+  if (query.exactDates.length && result.kind === "memory") score += 28;
+  if (query.yearMonths.length && result.kind === "memory") score += 20;
+
   return score + result.scoreBase;
 }
 
-function buildMatchHint(result: SearchResult, tokens: string[]) {
+function matchesMention(result: SearchResult, mention: string) {
+  const target = normalizeSearchText(mention);
+  if (!target) return false;
+  const names = (result.personNames || []).map((name) => normalizeSearchText(name)).filter(Boolean);
+  if (result.kind === "person" || result.kind === "memory") {
+    return names.some((name) => name === target || name.includes(target) || target.includes(name));
+  }
+  return false;
+}
+
+function kindPriority(kind: SearchKind, query: ParsedSearchQuery) {
+  if (query.mentionNames.length) {
+    if (kind === "person") return 0;
+    if (kind === "memory") return 1;
+    return 2;
+  }
+  if (query.exactDates.length || query.yearMonths.length) {
+    if (kind === "memory") return 0;
+    if (kind === "person") return 1;
+    return 2;
+  }
+  if (kind === "memory") return 0;
+  if (kind === "person") return 1;
+  return 2;
+}
+
+function buildMatchHint(result: SearchResult, query: ParsedSearchQuery) {
+  if (query.mentionNames.length && result.kind === "person") {
+    return `人物命中：@${query.mentionNames[0]}`;
+  }
+  if (query.mentionNames.length && result.kind === "memory") {
+    return `与 @${query.mentionNames[0]} 相关`;
+  }
+  if (query.exactDates.length && result.date) {
+    return `日期命中：${result.date}`;
+  }
+  if (query.yearMonths.length && result.date) {
+    return `月份命中：${result.date.slice(0, 7)}`;
+  }
+
+  const tokens = query.tokens;
   const exactFields = new Set<SearchField>();
   const matchedKeywords: SearchKeyword[] = [];
 
@@ -494,13 +667,29 @@ function uniqueSearchTerms(values: string[]) {
   return result;
 }
 
+function uniquePreserve(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const key = normalizeSearchText(value);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+  return result;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function keyword(field: SearchField, value?: string | null): SearchKeyword | null {
   const text = String(value || "").trim();
   return text ? { field, value: text } : null;
 }
 
-function isSearchKeyword(value: SearchKeyword | null | undefined | false | ""): value is SearchKeyword {
-  return Boolean(value && value.value);
+function isSearchKeyword(value: SearchKeyword | null): value is SearchKeyword {
+  return Boolean(value);
 }
 
 function safeArray<T>(value: T[] | undefined | null): T[] {

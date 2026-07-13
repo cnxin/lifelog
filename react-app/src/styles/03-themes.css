@@ -2528,3 +2528,18 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   font-size: 12px;
   line-height: 1.45;
 }
+
+
+.global-search-section-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.global-search-section-label {
+  margin: 2px 4px 0;
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}

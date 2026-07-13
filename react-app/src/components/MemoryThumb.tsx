@@ -13,6 +13,7 @@ export default function MemoryThumb({
 }) {
   const { loadMemoryPhotos } = useLifeLog();
   const [url, setUrl] = useState<string>("");
+  const [missingBlob, setMissingBlob] = useState(false);
   const plan = isMemoryPlan(memory);
   const label = (memory.title || memory.content || (plan ? "计" : "记")).trim().slice(0, 1) || (plan ? "计" : "记");
   const photoIds = memory.photos || [];
@@ -20,20 +21,30 @@ export default function MemoryThumb({
   useEffect(() => {
     if (!enabled || !photoIds.length) {
       setUrl("");
+      setMissingBlob(false);
       return;
     }
     let active = true;
     let objectUrl = "";
+    setMissingBlob(false);
     loadMemoryPhotos(memory.id, photoIds.slice(0, 1))
       .then((photos: Photo[]) => {
         if (!active) return;
         const blob = photos[0]?.thumbnailBlob || photos[0]?.originalBlob;
-        if (!blob) return;
+        if (!blob) {
+          setMissingBlob(true);
+          setUrl("");
+          return;
+        }
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
+        setMissingBlob(false);
       })
       .catch(() => {
-        if (active) setUrl("");
+        if (active) {
+          setUrl("");
+          setMissingBlob(true);
+        }
       });
     return () => {
       active = false;
@@ -44,11 +55,13 @@ export default function MemoryThumb({
   if (!enabled) return null;
 
   return (
-    <div className={`memory-thumb ${plan ? "plan" : "memory"}`}>
+    <div className={`memory-thumb ${plan ? "plan" : "memory"} ${missingBlob ? "photo-missing" : ""}`} title={missingBlob ? "照片文件不在当前设备" : undefined}>
       {url ? (
         <img src={url} alt="" draggable={false} />
       ) : (
-        <span className={`memory-thumb-fallback ${plan ? "plan" : "memory"}`}>{label}</span>
+        <span className={`memory-thumb-fallback ${plan ? "plan" : "memory"} ${missingBlob ? "missing" : ""}`}>
+          {missingBlob ? "缺" : label}
+        </span>
       )}
     </div>
   );

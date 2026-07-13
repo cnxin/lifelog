@@ -1,0 +1,1264 @@
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import { APP_VERSION } from "../constants/version";
+import {
+  clearPlaceMergeHistory,
+  deleteMemoryRecord,
+  deletePersonRecord,
+  deletePlaceRecord,
+  loadAllPhotos,
+  loadLifeLogState,
+  loadPlaceMergeHistory,
+  loadPhotosByIds,
+  loadPhotosByMemoryId,
+  replaceAllBackupData,
+  replaceAllData,
+  resetDatabase,
+  runPlaceMergeTransaction,
+  deleteAnniversaryPlanRecord,
+  deletePhotoRecords,
+  saveAnniversaryPlanRecord,
+  saveAppSettings,
+  savePlaceMergeHistoryEntry,
+  saveMemoryRecord,
+  savePersonRecord,
+  savePlaceRecord,
+  savePlaceRecords,
+  savePhotoRecords,
+  saveReminderSettings,
+  saveNotionSettings,
+  saveNotionPageMappings,
+  saveNotionSyncHistoryEntry,
+  saveNotionSyncQueueItems,
+  deleteNotionSyncQueueItems,
+  deletePhotosByMemoryId
+} from "../db/database";
+import type {
+  AnniversaryPlan,
+  AppSettings,
+  EntryType,
+  LifeLogState,
+  MemoryEvent,
+  NotionPageMapping,
+  NotionSettings,
+  NotionSyncFailedItem,
+  NotionSyncHistoryEntry,
+  NotionSyncQueueItem,
+  NotionSyncTrigger,
+  Person,
+  Photo,
+  Place,
+  PlaceDuplicateGroup,
+  PlaceMergeHistoryEntry,
+  PlaceMergePreview,
+  PlaceSaveInspection,
+  PlaceSaveOptions,
+  ReminderSettings
+} from "../types";
+import { defaultAppSettings, defaultNotionSettings, defaultReminderSettings } from "../types";
+import { buildPlaceDisplayName } from "../utils/placeMeta";
+import {
+  buildGroupMergePreview,
+  findPlaceDuplicateGroups,
+  inspectPlaceDuplicate,
+  mergePlaceRecords
+} from "../utils/placeDedup";
+import { parseGroups } from "../utils/text";
+import {
+  buildDate,
+  buildMemoryFromFormData,
+  buildPlaceFromFormData,
+  buildPlaceMergeHistoryEntry,
+  isRecord,
+  mergeBirthdayAnniversary,
+  parseAnniversaries,
+  resolvePlaceMerge,
+  uid
+} from "../utils/lifelogHelpers";
+import {
+  normalizeBackupPayload,
+  serializeBackupPhoto,
+  MAX_BACKUP_FILE_BYTES,
+  type BackupExportOptions,
+  type FullBackupPayload
+} from "../utils/lifelogBackup";
+import {
+  buildMemorySharePayload,
+  buildPlacesSharePayload,
+  buildShareFileName,
+  buildShareImportPlan,
+  type LifeLogShareImportResult,
+  type LifeLogSharePayload,
+  type MemoryShareOptions,
+  type PlaceShareOptions
+} from "../utils/lifelogShare";
+import { getMemoryPlaceIds, removeMemoryPlaceId } from "../utils/memoryPlaces";
+import { saveBackupFile } from "../utils/backupExport";
+import { syncLifeLogToNotion, type NotionSyncTarget } from "../utils/notionSync";
+import type {
+  DeletedEntrySnapshot,
+  BackupExportResult,
+  BackupImportOptions,
+  PersonBulkPatch,
+  PersonBulkSnapshot,
+  MemoryBulkPatch,
+  MemoryBulkSnapshot,
+  PlaceBulkPatch,
+  PlaceBulkSnapshot,
+  LifeLogContextValue
+} from "./lifeLogContextTypes";
+import {
+  buildNotionQueueItemId,
+  buildNotionSyncHistoryEntry,
+  canAutoSyncNotionTarget,
+  formatNotionTargetLabel,
+  mergeById,
+  mergeNotionQueueItems,
+  restoreMemoryList,
+  restorePlanList,
+  uniqueNotionTargets,
+  upsertById
+} from "./lifeLogContextHelpers";
+
+export interface LifeLogActionDeps {
+  state: LifeLogState;
+  settings: AppSettings;
+  reminderSettings: ReminderSettings;
+  notionSettings: NotionSettings;
+  notionPageMappings: NotionPageMapping[];
+  notionSyncHistory: NotionSyncHistoryEntry[];
+  notionSyncQueue: NotionSyncQueueItem[];
+  isLoading: boolean;
+  placeMergeHistory: PlaceMergeHistoryEntry[];
+  duplicatePlaceGroups: PlaceDuplicateGroup[];
+  setState: Dispatch<SetStateAction<LifeLogState>>;
+  setSettings: Dispatch<SetStateAction<AppSettings>>;
+  setReminderSettings: Dispatch<SetStateAction<ReminderSettings>>;
+  setNotionSettings: Dispatch<SetStateAction<NotionSettings>>;
+  setNotionPageMappings: Dispatch<SetStateAction<NotionPageMapping[]>>;
+  setNotionSyncHistory: Dispatch<SetStateAction<NotionSyncHistoryEntry[]>>;
+  setNotionSyncQueue: Dispatch<SetStateAction<NotionSyncQueueItem[]>>;
+  setPlaceMergeHistory: Dispatch<SetStateAction<PlaceMergeHistoryEntry[]>>;
+  favoritePendingRef: MutableRefObject<{ people: Set<string>; places: Set<string> }>;
+  notionQueueTimerRef: MutableRefObject<number | null>;
+  notionQueueRunningRef: MutableRefObject<boolean>;
+  notionSyncQueueRef: MutableRefObject<NotionSyncQueueItem[]>;
+}
+
+export function createLifeLogContextValue(deps: LifeLogActionDeps): LifeLogContextValue {
+  const {
+    state,
+    settings,
+    reminderSettings,
+    notionSettings,
+    notionPageMappings,
+    notionSyncHistory,
+    notionSyncQueue,
+    isLoading,
+    placeMergeHistory,
+    duplicatePlaceGroups,
+    setState,
+    setSettings,
+    setReminderSettings,
+    setNotionSettings,
+    setNotionPageMappings,
+    setNotionSyncHistory,
+    setNotionSyncQueue,
+    setPlaceMergeHistory,
+    favoritePendingRef,
+    notionQueueTimerRef,
+    notionQueueRunningRef,
+    notionSyncQueueRef
+  } = deps;
+
+function syncSavedNotionTargets(targets: NotionSyncTarget[], nextState: LifeLogState, targetLabel: string) {
+  const autoTargets = uniqueNotionTargets(
+    targets.filter((target) => canAutoSyncNotionTarget(notionSettings, target.entityType))
+  );
+  if (!autoTargets.length) return;
+  void enqueueNotionSyncTargets(autoTargets, nextState, targetLabel);
+}
+
+function syncSavedNotionTarget(target: NotionSyncTarget, nextState: LifeLogState, targetLabel: string) {
+  syncSavedNotionTargets([target], nextState, targetLabel);
+}
+
+async function savePerson(formData: FormData, id?: string) {
+  const existing = state.people.find((person) => person.id === id);
+  const birthday = buildDate(
+    formData.get("birthdayYear"),
+    formData.get("birthdayMonth"),
+    formData.get("birthdayDay")
+  );
+  const anniversaries = mergeBirthdayAnniversary(
+    birthday,
+    parseAnniversaries(formData.get("anniversaries"))
+  );
+
+  const person: Person = {
+    id: existing?.id || uid("p"),
+    name: String(formData.get("name") || "未命名"),
+    nickname: String(formData.get("nickname") || ""),
+    relationship: String(formData.get("relationship") || settings.defaultRelationship),
+    birthday,
+    birthdayIsLunar: false,
+    favorite: formData.get("favorite") === "true",
+    preferences: parseGroups(formData.get("preferences")),
+    dislikes: parseGroups(formData.get("dislikes")),
+    anniversaries,
+    notes: String(formData.get("notes") || "")
+  };
+
+  await savePersonRecord(person);
+  const nextState: LifeLogState = {
+    ...state,
+    people: upsertById(state.people, person)
+  };
+  setState((current) => ({
+    ...current,
+    people: upsertById(current.people, person)
+  }));
+  syncSavedNotionTarget({ entityType: "person", entityId: person.id }, nextState, `保存人物：${person.name || "未命名"}`);
+
+  return person.id;
+}
+
+async function togglePersonFavorite(id: string) {
+  if (favoritePendingRef.current.people.has(id)) return;
+  const person = state.people.find((item) => item.id === id);
+  if (!person) return;
+  const next: Person = { ...person, favorite: !person.favorite };
+  const nextState: LifeLogState = {
+    ...state,
+    people: upsertById(state.people, next)
+  };
+  favoritePendingRef.current.people.add(id);
+  setState((current) => ({
+    ...current,
+    people: upsertById(current.people, next)
+  }));
+  try {
+    await savePersonRecord(next);
+    syncSavedNotionTarget({ entityType: "person", entityId: next.id }, nextState, `更新人物：${next.name || "未命名"}`);
+  } finally {
+    favoritePendingRef.current.people.delete(id);
+  }
+}
+
+async function updatePersonProfile(id: string, patch: Pick<Person, "preferences" | "dislikes">) {
+  const person = state.people.find((item) => item.id === id);
+  if (!person) throw new Error("没有找到这个人物。");
+  const next: Person = {
+    ...person,
+    preferences: patch.preferences,
+    dislikes: patch.dislikes
+  };
+  await savePersonRecord(next);
+  const nextState: LifeLogState = {
+    ...state,
+    people: upsertById(state.people, next)
+  };
+  setState((current) => ({
+    ...current,
+    people: upsertById(current.people, next)
+  }));
+  syncSavedNotionTarget({ entityType: "person", entityId: next.id }, nextState, `更新人物：${next.name || "未命名"}`);
+}
+
+async function updatePeopleBulk(personIds: string[], patch: PersonBulkPatch) {
+  const targetIds = new Set(personIds);
+  if (!targetIds.size || typeof patch.favorite !== "boolean") return { count: 0, before: [] };
+  const before = state.people
+    .filter((person) => targetIds.has(person.id))
+    .map((person) => ({
+      id: person.id,
+      favorite: person.favorite
+    }));
+  const changedPeople = state.people
+    .filter((person) => targetIds.has(person.id) && person.favorite !== patch.favorite)
+    .map((person) => ({
+      ...person,
+      favorite: patch.favorite!
+    }));
+  if (!changedPeople.length) return { count: 0, before: [] };
+
+  await Promise.all(changedPeople.map(savePersonRecord));
+  const nextState: LifeLogState = {
+    ...state,
+    people: state.people.map((person) => changedPeople.find((item) => item.id === person.id) || person)
+  };
+  setState((current) => ({
+    ...current,
+    people: current.people.map((person) => changedPeople.find((item) => item.id === person.id) || person)
+  }));
+  syncSavedNotionTargets(
+    changedPeople.map((person) => ({ entityType: "person", entityId: person.id })),
+    nextState,
+    `批量更新人物：${changedPeople.length} 条`
+  );
+  return { count: changedPeople.length, before };
+}
+
+async function restorePeopleBulk(snapshots: PersonBulkSnapshot[]) {
+  if (!snapshots.length) return 0;
+  const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+  const restoredPeople = state.people
+    .filter((person) => snapshotById.has(person.id))
+    .map((person) => ({
+      ...person,
+      favorite: snapshotById.get(person.id)!.favorite
+    }));
+  if (!restoredPeople.length) return 0;
+
+  await Promise.all(restoredPeople.map(savePersonRecord));
+  setState((current) => ({
+    ...current,
+    people: current.people.map((person) => restoredPeople.find((item) => item.id === person.id) || person)
+  }));
+  return restoredPeople.length;
+}
+
+async function togglePlaceFavorite(id: string) {
+  if (favoritePendingRef.current.places.has(id)) return;
+  const place = state.places.find((item) => item.id === id);
+  if (!place) return;
+  const next: Place = { ...place, favorite: !place.favorite };
+  const nextState: LifeLogState = {
+    ...state,
+    places: upsertById(state.places, next)
+  };
+  favoritePendingRef.current.places.add(id);
+  setState((current) => ({
+    ...current,
+    places: upsertById(current.places, next)
+  }));
+  try {
+    await savePlaceRecord(next);
+    syncSavedNotionTarget({ entityType: "place", entityId: next.id }, nextState, `更新地点：${buildPlaceDisplayName(next)}`);
+  } finally {
+    favoritePendingRef.current.places.delete(id);
+  }
+}
+
+function inspectPlaceSave(formData: FormData, id?: string): PlaceSaveInspection {
+  const existing = state.places.find((place) => place.id === id);
+  const draft = buildPlaceFromFormData(formData, existing?.id, settings);
+  if (existing) {
+    return {
+      resolution: "save",
+      draft
+    };
+  }
+
+  const preview = inspectPlaceDuplicate(draft, state.places);
+  if (!preview) {
+    return {
+      resolution: "save",
+      draft
+    };
+  }
+
+  return {
+    resolution: preview.strength === "strong" ? "auto-merge" : "confirm-merge",
+    draft,
+    preview
+  };
+}
+
+async function savePlace(formData: FormData, id?: string, options?: PlaceSaveOptions) {
+  const existing = state.places.find((place) => place.id === id);
+  const inspection =
+    !existing && !options?.skipDuplicateCheck && !options?.mergeTargetId ? inspectPlaceSave(formData, id) : null;
+  const place = inspection?.draft || buildPlaceFromFormData(formData, existing?.id, settings);
+
+  if (inspection?.resolution === "auto-merge" && inspection.preview) {
+    return mergePlacePreview(inspection.preview);
+  }
+
+  if (!existing && options?.mergeTargetId) {
+    const target = state.places.find((item) => item.id === options.mergeTargetId);
+    if (target) {
+      const preview: PlaceMergePreview = options.mergePreviewOverride || {
+        signature: `manual|${target.id}|${place.id}`,
+        reason: "手动确认合并",
+        strength: "weak",
+        canonical: target,
+        sources: [place],
+        details: ["已手动确认保留并合并这两条地点记录。"],
+        merged: mergePlaceRecords(target, place)
+      };
+      return mergePlacePreview(preview);
+    }
+  }
+
+  await savePlaceRecord(place);
+  const nextState: LifeLogState = {
+    ...state,
+    places: upsertById(state.places, place)
+  };
+  setState((current) => ({
+    ...current,
+    places: upsertById(current.places, place)
+  }));
+  syncSavedNotionTarget({ entityType: "place", entityId: place.id }, nextState, `保存地点：${buildPlaceDisplayName(place)}`);
+
+  return place.id;
+}
+
+async function updatePlacesBulk(placeIds: string[], patch: PlaceBulkPatch) {
+  const targetIds = new Set(placeIds);
+  if (!targetIds.size) return { count: 0, before: [] };
+
+  const category = patch.category?.trim();
+  const mall = patch.mall?.trim();
+  const area = patch.area?.trim();
+  const appendTags = Array.from(new Set((patch.appendTags || []).map((tag) => tag.trim()).filter(Boolean)));
+  const shouldUpdateFavorite = typeof patch.favorite === "boolean";
+  if (!category && !mall && !area && !appendTags.length && !shouldUpdateFavorite) return { count: 0, before: [] };
+  const before = state.places
+    .filter((place) => targetIds.has(place.id))
+    .map((place) => ({
+      id: place.id,
+      category: place.category,
+      mall: place.mall,
+      area: place.area,
+      tags: [...place.tags],
+      favorite: place.favorite
+    }));
+
+  const nextPlaces = state.places.map((place) => {
+    if (!targetIds.has(place.id)) return place;
+    return {
+      ...place,
+      category: category || place.category,
+      mall: mall || place.mall,
+      area: area || place.area,
+      tags: appendTags.length ? Array.from(new Set([...place.tags, ...appendTags])) : place.tags,
+      favorite: shouldUpdateFavorite ? patch.favorite! : place.favorite
+    };
+  });
+  const changedPlaces = nextPlaces.filter((place) => targetIds.has(place.id));
+  if (!changedPlaces.length) return { count: 0, before: [] };
+
+  await savePlaceRecords(changedPlaces);
+  const nextState: LifeLogState = {
+    ...state,
+    places: state.places.map((place) => nextPlaces.find((item) => item.id === place.id) || place)
+  };
+  setState((current) => ({
+    ...current,
+    places: current.places.map((place) => nextPlaces.find((item) => item.id === place.id) || place)
+  }));
+  syncSavedNotionTargets(
+    changedPlaces.map((place) => ({ entityType: "place", entityId: place.id })),
+    nextState,
+    `批量更新地点：${changedPlaces.length} 条`
+  );
+  return { count: changedPlaces.length, before };
+}
+
+async function restorePlacesBulk(snapshots: PlaceBulkSnapshot[]) {
+  if (!snapshots.length) return 0;
+  const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+  const restoredPlaces = state.places
+    .filter((place) => snapshotById.has(place.id))
+    .map((place) => {
+      const snapshot = snapshotById.get(place.id)!;
+      return {
+        ...place,
+        category: snapshot.category,
+        mall: snapshot.mall,
+        area: snapshot.area,
+        tags: [...snapshot.tags],
+        favorite: snapshot.favorite
+      };
+    });
+  if (!restoredPlaces.length) return 0;
+
+  await savePlaceRecords(restoredPlaces);
+  setState((current) => ({
+    ...current,
+    places: current.places.map((place) => restoredPlaces.find((item) => item.id === place.id) || place)
+  }));
+  return restoredPlaces.length;
+}
+
+async function saveMemory(formData: FormData, id?: string, photos?: Photo[]) {
+  const existing = state.memories.find((memory) => memory.id === id);
+  const memory = buildMemoryFromFormData({
+    formData,
+    existing,
+    people: state.people,
+    places: state.places,
+    settings,
+    photoIds: photos ? photos.map((p) => p.id) : undefined
+  });
+  const memoryId = memory.id;
+
+  await saveMemoryRecord(memory);
+
+  if (photos) {
+    await deletePhotosByMemoryId(memoryId);
+    if (photos.length > 0) {
+      await savePhotoRecords(photos);
+    }
+  }
+
+  setState((current) => ({
+    ...current,
+    memories: existing
+      ? current.memories.map((item) => (item.id === existing.id ? memory : item))
+      : [...current.memories, memory]
+  }));
+  const nextState: LifeLogState = {
+    ...state,
+    memories: upsertById(state.memories, memory)
+  };
+  syncSavedNotionTarget({ entityType: "memory", entityId: memory.id }, nextState, `保存记录：${memory.title || "未命名"}`);
+
+  return memory.id;
+}
+
+async function updateMemoriesBulk(memoryIds: string[], patch: MemoryBulkPatch) {
+  const targetIds = new Set(memoryIds);
+  const appendTags = Array.from(new Set((patch.appendTags || []).map((tag) => tag.trim()).filter(Boolean)));
+  if (!targetIds.size || !appendTags.length) return { count: 0, before: [] };
+  const before = state.memories
+    .filter((memory) => targetIds.has(memory.id))
+    .map((memory) => ({
+      id: memory.id,
+      tags: [...memory.tags]
+    }));
+  const changedMemories = state.memories
+    .filter((memory) => targetIds.has(memory.id))
+    .map((memory) => ({
+      ...memory,
+      tags: Array.from(new Set([...memory.tags, ...appendTags]))
+    }))
+    .filter((memory) => {
+      const original = state.memories.find((item) => item.id === memory.id);
+      return original ? original.tags.join("|") !== memory.tags.join("|") : true;
+    });
+  if (!changedMemories.length) return { count: 0, before: [] };
+
+  await Promise.all(changedMemories.map(saveMemoryRecord));
+  const nextState: LifeLogState = {
+    ...state,
+    memories: state.memories.map((memory) => changedMemories.find((item) => item.id === memory.id) || memory)
+  };
+  setState((current) => ({
+    ...current,
+    memories: current.memories.map((memory) => changedMemories.find((item) => item.id === memory.id) || memory)
+  }));
+  syncSavedNotionTargets(
+    changedMemories.map((memory) => ({ entityType: "memory", entityId: memory.id })),
+    nextState,
+    `批量更新记录：${changedMemories.length} 条`
+  );
+  return { count: changedMemories.length, before };
+}
+
+async function restoreMemoriesBulk(snapshots: MemoryBulkSnapshot[]) {
+  if (!snapshots.length) return 0;
+  const snapshotById = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]));
+  const restoredMemories = state.memories
+    .filter((memory) => snapshotById.has(memory.id))
+    .map((memory) => ({
+      ...memory,
+      tags: [...snapshotById.get(memory.id)!.tags]
+    }));
+  if (!restoredMemories.length) return 0;
+
+  await Promise.all(restoredMemories.map(saveMemoryRecord));
+  setState((current) => ({
+    ...current,
+    memories: current.memories.map((memory) => restoredMemories.find((item) => item.id === memory.id) || memory)
+  }));
+  return restoredMemories.length;
+}
+
+async function deleteEntry(type: EntryType, id: string) {
+  if (type === "person") {
+    await deletePersonRecord(id);
+    setState((current) => ({
+      ...current,
+      people: current.people.filter((person) => person.id !== id),
+      anniversaryPlans: current.anniversaryPlans.filter((plan) => plan.personId !== id),
+      memories: current.memories.map((memory) => ({
+        ...memory,
+        personIds: (memory.personIds || []).filter((personId) => personId !== id)
+      }))
+    }));
+    return;
+  }
+
+  if (type === "place") {
+    await deletePlaceRecord(id);
+    setState((current) => ({
+      ...current,
+      places: current.places.filter((place) => place.id !== id),
+      anniversaryPlans: current.anniversaryPlans.map((plan) => ({
+        ...plan,
+        placeIds: (plan.placeIds || []).filter((placeId) => placeId !== id)
+      })),
+      memories: current.memories.map((memory) => removeMemoryPlaceId(memory, id))
+    }));
+    return;
+  }
+
+  await deleteMemoryRecord(id);
+  setState((current) => ({
+    ...current,
+    memories: current.memories.filter((memory) => memory.id !== id),
+    anniversaryPlans: current.anniversaryPlans.map((plan) => (plan.memoryId === id ? { ...plan, memoryId: undefined } : plan))
+  }));
+}
+
+async function saveAnniversaryPlan(plan: AnniversaryPlan) {
+  await saveAnniversaryPlanRecord(plan);
+  const nextState: LifeLogState = {
+    ...state,
+    anniversaryPlans: upsertById(state.anniversaryPlans, plan)
+  };
+  setState((current) => ({
+    ...current,
+    anniversaryPlans: upsertById(current.anniversaryPlans, plan)
+  }));
+  syncSavedNotionTarget({ entityType: "anniversaryPlan", entityId: plan.id }, nextState, `保存安排：${plan.title || plan.anniversaryTitle || "未命名"}`);
+  return plan.id;
+}
+
+async function deleteAnniversaryPlan(id: string) {
+  await deleteAnniversaryPlanRecord(id);
+  setState((current) => ({
+    ...current,
+    anniversaryPlans: current.anniversaryPlans.filter((plan) => plan.id !== id)
+  }));
+}
+
+async function getDeleteSnapshot(type: EntryType, id: string): Promise<DeletedEntrySnapshot | null> {
+  if (type === "person") {
+    const person = state.people.find((item) => item.id === id);
+    if (!person) return null;
+    return {
+      type: "person",
+      person,
+      affectedMemories: state.memories.filter((memory) => (memory.personIds || []).includes(id)),
+      affectedPlans: state.anniversaryPlans.filter((plan) => plan.personId === id)
+    };
+  }
+
+  if (type === "place") {
+    const place = state.places.find((item) => item.id === id);
+    if (!place) return null;
+    return {
+      type: "place",
+      place,
+      affectedMemories: state.memories.filter((memory) => getMemoryPlaceIds(memory).includes(id)),
+      affectedPlans: state.anniversaryPlans.filter((plan) => (plan.placeIds || []).includes(id))
+    };
+  }
+
+  const memory = state.memories.find((item) => item.id === id);
+  if (!memory) return null;
+  return {
+    type: "memory",
+    memory,
+    photos: await loadMemoryPhotos(memory.id, memory.photos || [])
+  };
+}
+
+async function restoreDeletedEntry(snapshot: DeletedEntrySnapshot) {
+  if (snapshot.type === "person") {
+    await savePersonRecord(snapshot.person);
+    await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+    await Promise.all(snapshot.affectedPlans.map(saveAnniversaryPlanRecord));
+    setState((current) => ({
+      ...current,
+      people: current.people.some((person) => person.id === snapshot.person.id)
+        ? current.people.map((person) => (person.id === snapshot.person.id ? snapshot.person : person))
+        : [...current.people, snapshot.person],
+      anniversaryPlans: restorePlanList(current.anniversaryPlans, snapshot.affectedPlans),
+      memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
+    }));
+    return;
+  }
+
+  if (snapshot.type === "place") {
+    await savePlaceRecord(snapshot.place);
+    await Promise.all(snapshot.affectedMemories.map(saveMemoryRecord));
+    await Promise.all(snapshot.affectedPlans.map(saveAnniversaryPlanRecord));
+    setState((current) => ({
+      ...current,
+      places: current.places.some((place) => place.id === snapshot.place.id)
+        ? current.places.map((place) => (place.id === snapshot.place.id ? snapshot.place : place))
+        : [...current.places, snapshot.place],
+      anniversaryPlans: restorePlanList(current.anniversaryPlans, snapshot.affectedPlans),
+      memories: restoreMemoryList(current.memories, snapshot.affectedMemories)
+    }));
+    return;
+  }
+
+  await saveMemoryRecord(snapshot.memory);
+  if (snapshot.photos.length) await savePhotoRecords(snapshot.photos);
+  setState((current) => ({
+    ...current,
+    memories: current.memories.some((memory) => memory.id === snapshot.memory.id)
+      ? current.memories.map((memory) => (memory.id === snapshot.memory.id ? snapshot.memory : memory))
+      : [...current.memories, snapshot.memory]
+  }));
+}
+
+async function importData(file: File, options: BackupImportOptions = {}) {
+  if (file.size > MAX_BACKUP_FILE_BYTES) {
+    throw new Error("备份文件超过 128 MB 导入上限，请拆分后重试。");
+  }
+  const text = await file.text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("文件不是有效的 JSON 格式，请检查备份文件。");
+  }
+  if (!isRecord(parsed)) {
+    throw new Error("JSON 结构不正确，请使用 LifeLog 导出的备份文件。");
+  }
+
+  const backup = await normalizeBackupPayload(parsed, options);
+  const next = await replaceAllBackupData(backup);
+  setState(next);
+  setSettings(backup.settings);
+  setReminderSettings(backup.reminderSettings);
+  setPlaceMergeHistory(backup.placeMergeHistory);
+  return backup.warnings;
+}
+
+function getPersonName(id: string) {
+  return state.people.find((person) => person.id === id)?.name || "未关联人物";
+}
+
+function getPlaceName(id: string) {
+  const place = state.places.find((item) => item.id === id);
+  return place ? buildPlaceDisplayName(place) : "未关联地点";
+}
+
+async function mergeDuplicatePlaces(group: PlaceDuplicateGroup) {
+  const preview = buildGroupMergePreview(group, state.places);
+  if (!preview) return;
+  await mergePlacePreview(preview);
+}
+
+async function mergeAllDuplicatePlaces() {
+  const groups = findPlaceDuplicateGroups(state.places).filter((group) => group.strength === "strong");
+  let workingPlaces = [...state.places];
+  let workingMemories = [...state.memories];
+  let mergedCount = 0;
+  let mergedGroupCount = 0;
+  const mergedPlaceIds = new Set<string>();
+
+  for (const group of groups) {
+    const preview = buildGroupMergePreview(group, workingPlaces);
+    if (!preview) continue;
+
+    const { nextState, removedIds } = resolvePlaceMerge(
+      {
+        ...state,
+        places: workingPlaces,
+        memories: workingMemories
+      },
+      preview
+    );
+    if (!removedIds.length) continue;
+
+    workingPlaces = nextState.places;
+    workingMemories = nextState.memories;
+    mergedCount += removedIds.length;
+    mergedGroupCount += 1;
+    mergedPlaceIds.add(preview.canonical.id);
+    preview.sources.forEach((source) => mergedPlaceIds.add(source.id));
+  }
+
+  if (!mergedCount) return 0;
+
+  const keepIds = new Set(workingPlaces.map((place) => place.id));
+  const removedIds = state.places.map((place) => place.id).filter((id) => !keepIds.has(id));
+  const historyEntry = buildPlaceMergeHistoryEntry(
+    state,
+    {
+      ...state,
+      places: workingPlaces,
+      memories: workingMemories
+    },
+    removedIds,
+    {
+      reason: `批量合并强重复地点（${mergedGroupCount}组）`,
+      strength: "strong",
+      placeIds: Array.from(mergedPlaceIds).sort()
+    }
+  );
+  await runPlaceMergeTransaction(historyEntry.nextState, removedIds);
+  await savePlaceMergeHistoryEntry(historyEntry.entry);
+  const nextHistory = await loadPlaceMergeHistory();
+  setState(historyEntry.nextState);
+  setPlaceMergeHistory(nextHistory);
+  return mergedCount;
+}
+
+async function mergePlacePreview(preview: PlaceMergePreview) {
+  const { nextState, removedIds } = resolvePlaceMerge(state, preview);
+  const { entry } = buildPlaceMergeHistoryEntry(state, nextState, removedIds, {
+    reason: preview.reason,
+    strength: preview.strength,
+    placeIds: [preview.canonical.id, ...preview.sources.map((source) => source.id)]
+  });
+  await runPlaceMergeTransaction(nextState, removedIds);
+  await savePlaceMergeHistoryEntry(entry);
+  const nextHistory = await loadPlaceMergeHistory();
+  setState(nextState);
+  setPlaceMergeHistory(nextHistory);
+  return preview.canonical.id;
+}
+
+async function undoLatestPlaceMerge() {
+  const latestPlaceMerge = placeMergeHistory[0] || null;
+  if (!latestPlaceMerge) return false;
+  await replaceAllData(latestPlaceMerge.snapshot);
+  const remainingHistory = placeMergeHistory.slice(1);
+  await clearPlaceMergeHistory();
+  for (const entry of remainingHistory.slice().reverse()) {
+    await savePlaceMergeHistoryEntry(entry, 20);
+  }
+  setState(latestPlaceMerge.snapshot);
+  setPlaceMergeHistory(remainingHistory);
+  return true;
+}
+
+async function updateSettings(patch: Partial<AppSettings>) {
+  const next = {
+    ...settings,
+    ...Object.fromEntries(
+      Object.entries(patch).map(([key, value]) => [key, String(value || "").trim()])
+    ),
+  };
+  const normalized: AppSettings = {
+    defaultCity: next.defaultCity || defaultAppSettings.defaultCity,
+    defaultRelationship: next.defaultRelationship || defaultAppSettings.defaultRelationship,
+    defaultMood: next.defaultMood || defaultAppSettings.defaultMood,
+    themeStyle: ["classic", "cream", "mint", "mist"].includes(next.themeStyle)
+      ? next.themeStyle
+      : defaultAppSettings.themeStyle,
+    privacyMode: Boolean(next.privacyMode),
+    hidePhotoThumbnails: Boolean(next.hidePhotoThumbnails)
+  };
+  await saveAppSettings(normalized);
+  setSettings(normalized);
+}
+
+async function updateReminderSettings(patch: Partial<ReminderSettings>) {
+  const next = {
+    ...reminderSettings,
+    ...patch
+  };
+  await saveReminderSettings(next);
+  setReminderSettings(next);
+}
+
+async function updateNotionSettings(patch: Partial<NotionSettings>) {
+  const next: NotionSettings = {
+    ...notionSettings,
+    ...patch
+  };
+  await saveNotionSettings(next);
+  setNotionSettings({
+    ...defaultNotionSettings,
+    ...next,
+    enabled: Boolean(next.enabled && next.token.trim())
+  });
+}
+
+async function syncNotionAll(settingsOverride?: NotionSettings) {
+  return syncNotionTargets([], { trigger: "manual", targetLabel: "同步全部", settingsOverride });
+}
+
+async function enqueueNotionSyncTargets(targets: NotionSyncTarget[], nextState: LifeLogState, targetLabel: string) {
+  const now = new Date().toISOString();
+  const existingById = new Map(notionSyncQueueRef.current.map((item) => [item.id, item]));
+  const nextItems = targets.map((target) => {
+    const id = buildNotionQueueItemId(target);
+    const existing = existingById.get(id);
+    return {
+      id,
+      entityType: target.entityType,
+      entityId: target.entityId,
+      targetLabel: targets.length === 1 ? targetLabel : formatNotionTargetLabel(target, nextState),
+      status: "pending" as const,
+      attempts: existing?.attempts || 0,
+      queuedAt: existing?.queuedAt || now,
+      updatedAt: now,
+      lastAttemptAt: existing?.lastAttemptAt,
+      lastError: existing?.lastError
+    };
+  });
+  await saveNotionSyncQueueItems(nextItems);
+  const nextQueue = mergeNotionQueueItems(notionSyncQueueRef.current, nextItems);
+  notionSyncQueueRef.current = nextQueue;
+  setNotionSyncQueue(nextQueue);
+  scheduleNotionQueueFlush(
+    nextState,
+    nextQueue.filter((item) => item.status === "pending").map((item) => item.id),
+    900
+  );
+}
+
+async function syncNotionTargets(
+  targets: NotionSyncTarget[],
+  options: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings; stateOverride?: LifeLogState } = {}
+) {
+  const activeNotionSettings = options.settingsOverride || notionSettings;
+  const syncState = options.stateOverride || state;
+  const startedAt = new Date().toISOString();
+  const result = await syncLifeLogToNotion({
+    state: syncState,
+    settings: activeNotionSettings,
+    mappings: notionPageMappings,
+    options: targets.length ? { targets, connectionMode: "targeted" } : undefined
+  });
+  if (result.mappings.length) {
+    await saveNotionPageMappings(result.mappings);
+    setNotionPageMappings((current) => mergeById(current, result.mappings));
+  }
+  const shouldClearSuccessfulTargets = targets.length > 0 && !result.failed && result.total === targets.length;
+  const successfulTargetIds = shouldClearSuccessfulTargets
+    ? targets
+        .map(buildNotionQueueItemId)
+        .filter((id) => !result.failedItems.some((item) => buildNotionQueueItemId(item) === id))
+    : [];
+  if (successfulTargetIds.length) {
+    await deleteNotionSyncQueueItems(successfulTargetIds);
+    const nextQueue = notionSyncQueueRef.current.filter((item) => !successfulTargetIds.includes(item.id));
+    notionSyncQueueRef.current = nextQueue;
+    setNotionSyncQueue(nextQueue);
+  }
+  const syncedAt = new Date().toISOString();
+  const historyEntry = buildNotionSyncHistoryEntry({
+    result,
+    startedAt,
+    finishedAt: syncedAt,
+    trigger: options.trigger || "manual",
+    targetLabel: options.targetLabel
+  });
+  await saveNotionSyncHistoryEntry(historyEntry);
+  setNotionSyncHistory((current) => [historyEntry, ...current.filter((item) => item.id !== historyEntry.id)].slice(0, 20));
+  const nextSettings = {
+    ...activeNotionSettings,
+    workspaceName: result.workspaceName || activeNotionSettings.workspaceName,
+    workspaceBotName: result.workspaceBotName || activeNotionSettings.workspaceBotName,
+    lastFullSyncAt: syncedAt,
+    lastConnectionStatus: result.failed ? "failed" as const : "connected" as const,
+    lastConnectionMessage: result.failed
+      ? `Notion 同步完成，失败 ${result.failed} 条。`
+      : `Notion 同步完成，成功 ${result.synced} 条。`
+  };
+  await saveNotionSettings(nextSettings);
+  setNotionSettings(nextSettings);
+  return result;
+}
+
+async function flushNotionSyncQueue(options: { ids?: string[]; stateOverride?: LifeLogState; immediate?: boolean } = {}) {
+  if (notionQueueRunningRef.current) {
+    if (!options.immediate) scheduleNotionQueueFlush(options.stateOverride || state, options.ids, 1200);
+    return null;
+  }
+  const queueSnapshot = notionSyncQueueRef.current;
+  const sourceQueue = queueSnapshot.filter((item) => item.status === "pending" || item.status === "failed");
+  const idSet = options.ids?.length ? new Set(options.ids) : null;
+  const candidates = sourceQueue.filter((item) => !idSet || idSet.has(item.id));
+  const targets = uniqueNotionTargets(
+    candidates
+      .filter((item) => canAutoSyncNotionTarget(notionSettings, item.entityType))
+      .map((item) => ({ entityType: item.entityType, entityId: item.entityId }))
+  );
+  if (!targets.length) return null;
+
+  const now = new Date().toISOString();
+  const targetIds = new Set(targets.map(buildNotionQueueItemId));
+  const syncingItems = queueSnapshot
+    .filter((item) => targetIds.has(item.id))
+    .map((item) => ({
+      ...item,
+      status: "syncing" as const,
+      attempts: item.attempts + 1,
+      lastAttemptAt: now,
+      updatedAt: now
+  }));
+  await saveNotionSyncQueueItems(syncingItems);
+  const queueWithSyncing = mergeNotionQueueItems(notionSyncQueueRef.current, syncingItems);
+  notionSyncQueueRef.current = queueWithSyncing;
+  setNotionSyncQueue(queueWithSyncing);
+
+  notionQueueRunningRef.current = true;
+  try {
+    const syncState = options.stateOverride || state;
+    const result = await syncNotionTargets(targets, {
+      trigger: "single",
+      targetLabel: targets.length === 1 ? candidates[0]?.targetLabel || "自动同步" : `自动同步 ${targets.length} 条`,
+      stateOverride: syncState
+    });
+    const failedById = new Map(result.failedItems.map((item) => [buildNotionQueueItemId(item), item.message]));
+    const successIds = targets.map(buildNotionQueueItemId).filter((id) => !failedById.has(id));
+    if (successIds.length) {
+      await deleteNotionSyncQueueItems(successIds);
+    }
+    const failedItems = syncingItems
+      .filter((item) => failedById.has(item.id))
+      .map((item) => ({
+        ...item,
+        status: "failed" as const,
+        lastError: failedById.get(item.id) || "Notion 同步失败。",
+        updatedAt: new Date().toISOString()
+      }));
+    if (failedItems.length) {
+      await saveNotionSyncQueueItems(failedItems);
+    }
+    const nextQueue = mergeNotionQueueItems(
+      notionSyncQueueRef.current.filter((item) => !successIds.includes(item.id)),
+      failedItems
+    );
+    notionSyncQueueRef.current = nextQueue;
+    setNotionSyncQueue(nextQueue);
+    return result;
+  } finally {
+    notionQueueRunningRef.current = false;
+  }
+}
+
+function scheduleNotionQueueFlush(nextState: LifeLogState, ids?: string[], delayMs = 1000) {
+  if (notionQueueTimerRef.current) window.clearTimeout(notionQueueTimerRef.current);
+  notionQueueTimerRef.current = window.setTimeout(() => {
+    notionQueueTimerRef.current = null;
+    void flushNotionSyncQueue({ ids, stateOverride: nextState }).catch((error) => {
+      console.warn("Notion queue flush failed", error);
+    });
+  }, delayMs);
+}
+
+async function retryFailedNotionItems(items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) {
+  const targets = uniqueNotionTargets(items.map((item) => ({ entityType: item.entityType, entityId: item.entityId })));
+  return syncNotionTargets(targets, {
+    trigger: "retry",
+    targetLabel: `重试失败项 ${targets.length} 条`,
+    settingsOverride
+  });
+}
+
+async function retryNotionQueueItems(ids?: string[]) {
+  const retryIds = ids?.length
+    ? ids
+    : notionSyncQueueRef.current
+        .filter((item) => item.status === "pending" || item.status === "failed")
+        .map((item) => item.id);
+  return flushNotionSyncQueue({ ids: retryIds, immediate: true });
+}
+
+async function exportData(options: BackupExportOptions = {}): Promise<BackupExportResult> {
+  const photoMode = options.photoMode || "full";
+  const photos = photoMode === "none" ? [] : await loadAllPhotos();
+  const photoOwnerById = new Map<string, string>();
+  state.memories.forEach((memory) => {
+    (memory.photos || []).forEach((photoId) => {
+      if (!photoOwnerById.has(photoId)) photoOwnerById.set(photoId, memory.id);
+    });
+  });
+  const stateMemoryIds = new Set(state.memories.map((memory) => memory.id));
+  const normalizedPhotos = photos
+    .map((photo) => {
+      const memoryId = stateMemoryIds.has(photo.memoryId) ? photo.memoryId : photoOwnerById.get(photo.id);
+      return memoryId ? { ...photo, memoryId } : null;
+    })
+    .filter((photo): photo is Photo => Boolean(photo));
+  const validPhotoIds = new Set(normalizedPhotos.map((photo) => photo.id));
+  const exportState: LifeLogState = {
+    ...state,
+    memories: state.memories.map((memory) => ({
+      ...memory,
+      photos:
+        photoMode === "none"
+          ? []
+          : Array.from(
+              new Set([
+                ...(memory.photos || []).filter((photoId) => validPhotoIds.has(photoId)),
+                ...normalizedPhotos.filter((photo) => photo.memoryId === memory.id).map((photo) => photo.id)
+              ])
+            )
+    }))
+  };
+  const backupPhotos =
+    photoMode === "none"
+      ? []
+      : await Promise.all(normalizedPhotos.map((photo) => serializeBackupPhoto(photo, { photoMode })));
+  const fileName =
+    photoMode === "none"
+      ? `lifelog-backup-no-photos-${new Date().toISOString().slice(0, 10)}.json`
+      : photoMode === "thumbnails"
+        ? `lifelog-backup-thumbs-${new Date().toISOString().slice(0, 10)}.json`
+        : `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const payload: FullBackupPayload = {
+    schemaVersion: 3,
+    version: 3,
+    storage: "indexeddb",
+    exportedAt: new Date().toISOString(),
+    appVersion: APP_VERSION,
+    data: exportState,
+    settings,
+    reminderSettings,
+    placeMergeHistory,
+    photos: backupPhotos,
+    integrity: {
+      people: exportState.people.length,
+      places: exportState.places.length,
+      memories: exportState.memories.length,
+      anniversaryPlans: exportState.anniversaryPlans.length,
+      photos: backupPhotos.length
+    }
+  };
+  return saveBackupFile(fileName, JSON.stringify(payload, null, 2));
+}
+
+async function buildMemoryShare(memoryId: string, options: MemoryShareOptions): Promise<LifeLogSharePayload> {
+  const memory = state.memories.find((item) => item.id === memoryId);
+  if (!memory) throw new Error("没有找到要分享的记录。");
+  const photos = options.includePhotos ? await loadMemoryPhotos(memory.id, memory.photos || []) : [];
+  return buildMemorySharePayload({
+    state,
+    memoryId,
+    photos,
+    options,
+    appVersion: APP_VERSION
+  });
+}
+
+async function buildPlacesShare(placeIds: string[], options: PlaceShareOptions): Promise<LifeLogSharePayload> {
+  return buildPlacesSharePayload({
+    state,
+    placeIds,
+    options,
+    appVersion: APP_VERSION
+  });
+}
+
+async function exportMemoryShare(memoryId: string, options: MemoryShareOptions): Promise<BackupExportResult> {
+  const payload = await buildMemoryShare(memoryId, options);
+  return saveBackupFile(buildShareFileName(payload), JSON.stringify(payload, null, 2));
+}
+
+async function exportPlacesShare(placeIds: string[], options: PlaceShareOptions): Promise<BackupExportResult> {
+  const payload = await buildPlacesShare(placeIds, options);
+  return saveBackupFile(buildShareFileName(payload), JSON.stringify(payload, null, 2));
+}
+
+async function importShareData(payload: LifeLogSharePayload): Promise<LifeLogShareImportResult> {
+  const plan = await buildShareImportPlan(payload, state);
+  if (plan.people.length) await Promise.all(plan.people.map(savePersonRecord));
+  if (plan.places.length) await savePlaceRecords(plan.places);
+  if (plan.memories.length) await Promise.all(plan.memories.map(saveMemoryRecord));
+  if (plan.photos.length) await savePhotoRecords(plan.photos);
+
+  setState((current) => ({
+    ...current,
+    people: mergeById(current.people, plan.people),
+    places: mergeById(current.places, plan.places),
+    memories: mergeById(current.memories, plan.memories)
+  }));
+
+  return plan.result;
+}
+
+async function undoShareImport(result: LifeLogShareImportResult) {
+  const memoryIds = result.createdMemoryIds || [];
+  const personIds = result.createdPersonIds || [];
+  const placeIds = result.createdPlaceIds || [];
+  const photoIds = result.createdPhotoIds || [];
+
+  if (memoryIds.length) await Promise.all(memoryIds.map(deleteMemoryRecord));
+  if (photoIds.length) await deletePhotoRecords(photoIds);
+  if (personIds.length) await Promise.all(personIds.map(deletePersonRecord));
+  if (placeIds.length) await Promise.all(placeIds.map(deletePlaceRecord));
+
+  setState((current) => ({
+    ...current,
+    people: current.people.filter((person) => !personIds.includes(person.id)),
+    places: current.places.filter((place) => !placeIds.includes(place.id)),
+    memories: current.memories.filter((memory) => !memoryIds.includes(memory.id))
+  }));
+}
+
+async function resetDemo() {
+  await resetDatabase();
+  await clearPlaceMergeHistory();
+  const next = await loadLifeLogState();
+  setState(next);
+  setPlaceMergeHistory([]);
+}
+
+const latestPlaceMerge = placeMergeHistory[0] || null;
+
+async function loadMemoryPhotos(memoryId: string, photoIds: string[] = []): Promise<Photo[]> {
+  const photos = await loadPhotosByMemoryId(memoryId);
+  return photos.length ? photos : loadPhotosByIds(photoIds);
+}
+
+return {
+  state,
+  settings,
+  reminderSettings,
+  notionSettings,
+  notionPageMappings,
+  notionSyncHistory,
+  notionSyncQueue,
+  isLoading,
+  savePerson,
+  updatePersonProfile,
+  updatePeopleBulk,
+  restorePeopleBulk,
+  togglePersonFavorite,
+  saveAnniversaryPlan,
+  deleteAnniversaryPlan,
+  inspectPlaceSave,
+  savePlace,
+  updatePlacesBulk,
+  restorePlacesBulk,
+  togglePlaceFavorite,
+  saveMemory,
+  updateMemoriesBulk,
+  restoreMemoriesBulk,
+  deleteEntry,
+  restoreDeletedEntry,
+  getDeleteSnapshot,
+  importData,
+  getPersonName,
+  getPlaceName,
+  duplicatePlaceGroups,
+  placeMergeHistory,
+  latestPlaceMerge,
+  mergePlacePreview,
+  mergeDuplicatePlaces,
+  mergeAllDuplicatePlaces,
+  undoLatestPlaceMerge,
+  updateSettings,
+  updateReminderSettings,
+  updateNotionSettings,
+  syncNotionAll,
+  syncNotionTargets,
+  retryFailedNotionItems,
+  retryNotionQueueItems,
+  exportData,
+  buildMemoryShare,
+  buildPlacesShare,
+  exportMemoryShare,
+  exportPlacesShare,
+  importShareData,
+  undoShareImport,
+  resetDemo,
+  loadMemoryPhotos
+};
+
+}

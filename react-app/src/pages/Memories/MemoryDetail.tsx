@@ -157,7 +157,7 @@ export default function MemoryDetail() {
   return (
     <>
       <section className={`section detail-hero-section memory-detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className="profile-card detail-profile-card memory-detail-profile-card">
+        <GlassCard className={`profile-card detail-profile-card memory-detail-profile-card ${isMemoryPlan(memory) ? "is-plan" : "is-memory"}`}>
           <div className="detail-profile-nav">
             <button className="back-button" type="button" onClick={() => navigate("/memories")}>
               <ArrowLeft /> 返回记录
@@ -167,15 +167,17 @@ export default function MemoryDetail() {
             </strong>
           </div>
           <div className="detail-profile-body">
-            <div className="profile-photo">
-              <Heart />
+            <div className={`profile-photo ${isMemoryPlan(memory) ? "plan" : "memory"}`}>
+              {isMemoryPlan(memory) ? <Calendar /> : <Heart />}
             </div>
             <div className="profile-main">
               <div className="profile-title">
                 <h2>{memoryTitle}</h2>
               </div>
-              <p>
-                {getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood}
+              <p className="memory-detail-kicker">
+                <em className={`memory-kind-pill ${isMemoryPlan(memory) ? "plan" : "memory"}`}>{getMemoryKindLabel(memory)}</em>
+                <span>{formatMonthDay(memory.date)}</span>
+                {memory.mood ? <span>{memory.mood}</span> : null}
               </p>
               <button className="category-pill active" onClick={() => setEditing(true)}>
                 {copy.editLabel}
@@ -186,22 +188,47 @@ export default function MemoryDetail() {
       </section>
 
       <section className="section">
-        <GlassCard className="memory-reader-card">
+        <GlassCard className={`memory-reader-card ${isMemoryPlan(memory) ? "is-plan" : "is-memory"}`}>
           <div className="memory-reader-head">
             <div>
-              <span>正文</span>
-              <small>{getMemoryKindLabel(memory)} · {formatMonthDay(memory.date)} · {memory.mood || "日常"}</small>
+              <span>{isMemoryPlan(memory) ? "计划" : "正文"}</span>
+              <small>
+                <em className={`memory-kind-pill ${isMemoryPlan(memory) ? "plan" : "memory"}`}>{getMemoryKindLabel(memory)}</em>
+                {" · "}
+                {formatMonthDay(memory.date)}
+                {memory.mood ? ` · ${memory.mood}` : ""}
+              </small>
             </div>
           </div>
+
+          {(personIds.length > 0 || places.length > 0) && (
+            <div className="memory-reader-chips" aria-label="关联人物与地点">
+              {personIds.map((personId) => (
+                <button className="tap-chip" type="button" key={`p-${personId}`} onClick={() => navigate(`/people/${personId}`)}>
+                  <Users size={14} />
+                  {getPersonName(personId)}
+                </button>
+              ))}
+              {places.map((place) => (
+                <button className="tap-chip" type="button" key={`place-${place.id}`} onClick={() => navigate(`/places/${place.id}`)}>
+                  <MapPin size={14} />
+                  {getPlaceName(place.id)}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className={`memory-reader-body ${memory.content.trim() ? "" : "empty"}`}>
             {memory.content.trim() || copy.emptyBody}
           </div>
           <MemoryTags mood={memory.mood} tags={tags} />
-          <div className="memory-reader-facts">
-            {storyFacts.map((fact) => (
-              <span key={fact}>{fact}</span>
-            ))}
-          </div>
+          {storyFacts.length > 0 && (
+            <div className="memory-reader-facts">
+              {storyFacts.map((fact) => (
+                <span key={fact}>{fact}</span>
+              ))}
+            </div>
+          )}
           <div className="memory-reader-actions sticky-reader-actions compact">
             <button type="button" onClick={() => setEditing(true)}>
               <PenLine /> {memory.content.trim() ? copy.detailAction : copy.emptyAction}
@@ -211,38 +238,46 @@ export default function MemoryDetail() {
             </button>
           </div>
           <button className={`memory-more-toggle ${moreInfoOpen ? "open" : ""}`} type="button" onClick={() => setMoreInfoOpen((open) => !open)}>
-            <span>人物、地点和同步</span>
+            <span>更多信息与同步</span>
             <em>{moreInfoOpen ? "收起" : buildMemoryMoreSummary(personIds.length, placeIds.length)}</em>
             <ChevronDown />
           </button>
           {moreInfoOpen && (
             <div className="memory-more-panel">
-              <div className="memory-related-object-group">
-                <strong>人物</strong>
-                <div className="tap-chip-row">
-                  {personIds.map((personId) => (
-                    <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
-                      {getPersonName(personId)}
-                    </button>
-                  ))}
-                  {!personIds.length && <span className="memory-related-empty">未关联人物</span>}
+              {!personIds.length && !places.length ? (
+                <div className="memory-related-object-group">
+                  <strong>关联</strong>
+                  <span className="memory-related-empty">还没有人物或地点，可在编辑里补充。</span>
                 </div>
-              </div>
-              <div className="memory-related-object-group">
-                <strong>地点</strong>
-                {places.length ? (
-                  <div className="memory-related-place-list compact">
-                    {places.map((place) => (
-                      <button className="memory-place-row detail-button" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
-                        <strong className="truncate-text">{getPlaceName(place.id)}</strong>
-                        <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="memory-related-empty">未关联地点</span>
-                )}
-              </div>
+              ) : (
+                <>
+                  {personIds.length > 0 && (
+                    <div className="memory-related-object-group">
+                      <strong>人物详情</strong>
+                      <div className="tap-chip-row">
+                        {personIds.map((personId) => (
+                          <button className="tap-chip" key={personId} onClick={() => navigate(`/people/${personId}`)}>
+                            {getPersonName(personId)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {places.length > 0 && (
+                    <div className="memory-related-object-group">
+                      <strong>地点详情</strong>
+                      <div className="memory-related-place-list compact">
+                        {places.map((place) => (
+                          <button className="memory-place-row detail-button" key={place.id} onClick={() => navigate(`/places/${place.id}`)}>
+                            <strong className="truncate-text">{getPlaceName(place.id)}</strong>
+                            <span className="truncate-lines-2">{formatPlaceAddressLine(place)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
               <div className="memory-more-actions">
                 {firstPersonId ? (
                   <button type="button" onClick={() => navigate(`/people/${firstPersonId}`)}>
@@ -344,7 +379,7 @@ export default function MemoryDetail() {
         </section>
       )}
 
-      {photos.length > 0 && (
+      {photos.length > 0 ? (
         <section className="section" id="memory-photos">
           <div className="section-header">
             <h2>
@@ -367,7 +402,29 @@ export default function MemoryDetail() {
             )}
           </GlassCard>
         </section>
-      )}
+      ) : photoIds.length > 0 ? (
+        <section className="section" id="memory-photos">
+          <div className="section-header">
+            <h2>
+              <ImageIcon /> 照片
+            </h2>
+          </div>
+          <GlassCard className="memory-photo-missing-card">
+            <strong>照片文件不在当前设备</strong>
+            <span>
+              这条记录引用了 {photoIds.length} 张照片，但本地没有对应图片。常见原因是导入了「无照片」或「仅缩略图」备份。
+            </span>
+            <div className="memory-photo-missing-actions">
+              <button type="button" onClick={() => navigate("/account")}>
+                去数据管理
+              </button>
+              <button type="button" className="ghost" onClick={() => setEditing(true)}>
+                重新添加照片
+              </button>
+            </div>
+          </GlassCard>
+        </section>
+      ) : null}
 
       {linkedPlans.length > 0 && (
         <section className="section">

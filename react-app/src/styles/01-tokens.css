@@ -196,6 +196,56 @@ html[data-theme-style="mist"] {
   }
 }
 
+/* Dark-mode contrast fixes for pills / badges / stats that used hard-coded light greens */
+@media (prefers-color-scheme: dark) {
+  .memory-kind-pill,
+  .memory-kind-pill.memory {
+    color: #7ddea8;
+    background: color-mix(in srgb, #3dd68c 18%, transparent);
+  }
+
+  .memory-kind-pill.plan {
+    color: var(--primary);
+    background: var(--soft-purple);
+  }
+
+  .memory-card-plan .memory-badge {
+    background: linear-gradient(135deg, #2fbf78, var(--primary));
+  }
+
+  .category-pill:not(.active),
+  .list-filter-chips span,
+  .global-search-chips button {
+    color: var(--text-main);
+    border-color: color-mix(in srgb, var(--line) 90%, transparent);
+  }
+
+  .notion-sync-badge,
+  .notion-sync-badge.synced {
+    color: #7ddea8;
+    background: color-mix(in srgb, #3dd68c 14%, transparent);
+  }
+
+  .notion-sync-badge.failed,
+  .mini-action.danger,
+  .data-action-card.danger strong {
+    color: var(--danger);
+  }
+
+  .stats-summary-card,
+  .stats-heatmap-card,
+  .year-review-highlights {
+    border-color: color-mix(in srgb, var(--line) 85%, transparent);
+  }
+
+  .stats-heatmap-card small,
+  .year-review-highlights small,
+  .backup-export-result span,
+  .backup-export-result p {
+    color: var(--text-sub);
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

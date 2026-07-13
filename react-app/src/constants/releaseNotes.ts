@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.132",
+    date: "2026-07-13",
+    title: "搜索语义、缺图引导与工程拆分",
+    highlights: [
+      "全局搜索支持 @人名过滤、日期/年月筛选与人物/地点/记录分区展示。",
+      "导入无照片或缩略图备份后，详情与列表会提示照片文件缺失并可引导补备份。",
+      "回忆详情关联 chip 前置、计划/回忆视觉区分；设置顶栏、时间线溢出与添加菜单手感修复。",
+      "Context 写操作工厂化、Notion 折叠面板组件化，长列表支持动态测高。"
+    ]
+  },
+  {
     version: "0.1.0-test.131",
     date: "2026-07-13",
     title: "备份体积选项、搜索隐私与体验打磨",

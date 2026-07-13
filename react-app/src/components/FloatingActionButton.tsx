@@ -37,7 +37,7 @@ export default function FloatingActionButton({ actions }: { actions: FloatingAct
     const reduced = prefersReducedMotion();
     items.forEach((item, index) => {
       item.style.opacity = "0";
-      item.style.transform = "translateY(12px) scale(0.92)";
+      item.style.transform = "translateY(16px) scale(0.9)";
       window.setTimeout(() => {
         if (closingRef.current) return;
         animateOrSnap(reduced, {
@@ -46,16 +46,16 @@ export default function FloatingActionButton({ actions }: { actions: FloatingAct
           spring: SPRING_BOUNCY,
           onUpdate: (t) => {
             item.style.opacity = String(t);
-            item.style.transform = `translateY(${(1 - t) * 12}px) scale(${0.92 + 0.08 * t})`;
+            item.style.transform = `translateY(${(1 - t) * 16}px) scale(${0.9 + 0.1 * t})`;
           }
         });
-      }, index * 40);
+      }, 30 + index * 48);
     });
   }, [visible, open, fluid, actions.length]);
 
   function runAction(action: FloatingAction) {
     closeMenu();
-    window.setTimeout(() => action.onClick(), fluid ? 40 : 0);
+    window.setTimeout(() => action.onClick(), fluid ? 90 : 40);
   }
 
   function openMenu() {
@@ -99,7 +99,7 @@ export default function FloatingActionButton({ actions }: { actions: FloatingAct
             }
           }
         });
-      }, (items.length - 1 - index) * 30);
+      }, (items.length - 1 - index) * 36);
     });
   }
 

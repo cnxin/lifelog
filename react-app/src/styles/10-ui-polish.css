@@ -412,3 +412,15 @@
   0% { background-position: 100% 0; }
   100% { background-position: -100% 0; }
 }
+
+
+.memory-thumb.photo-missing {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 28%, transparent);
+}
+
+.memory-thumb-fallback.missing {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text-main) 30%);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+}

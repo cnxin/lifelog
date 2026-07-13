@@ -23,6 +23,7 @@ import {
 import type { NotionSyncSummary, NotionSyncTarget, NotionSyncTypeSummary } from "../../utils/notionSync";
 
 import type { SetupStepId, NotionPanelKey, NotionSyncPreviewItem } from "./accountNotionSyncModel";
+import NotionFoldPanel from "./NotionFoldPanel";
 import {
   databaseFields,
   NOTION_INTEGRATIONS_URL,
@@ -396,37 +397,6 @@ export default function AccountNotionSync() {
     setOpenPanels((current) => ({ ...current, [panel]: !current[panel] }));
   }
 
-  function renderFoldPanel({
-    id,
-    title,
-    summary,
-    icon,
-    children,
-    tone = "default"
-  }: {
-    id: NotionPanelKey;
-    title: string;
-    summary: string;
-    icon: ReactNode;
-    children: ReactNode;
-    tone?: "default" | "success" | "warning" | "danger";
-  }) {
-    const open = openPanels[id];
-    return (
-      <section className={`notion-fold-panel ${tone} ${open ? "open" : ""}`}>
-        <button className="notion-fold-toggle" type="button" onClick={() => togglePanel(id)} aria-expanded={open}>
-          <span className="notion-fold-icon">{icon}</span>
-          <span className="notion-fold-title">
-            <strong>{title}</strong>
-            <small>{summary}</small>
-          </span>
-          <ChevronDown />
-        </button>
-        {open ? <div className="notion-fold-body">{children}</div> : null}
-      </section>
-    );
-  }
-
   async function handleClearToken() {
     const next = {
       ...draft,
@@ -451,6 +421,30 @@ export default function AccountNotionSync() {
       message: copied ? "Notion 诊断信息已复制" : "复制失败，请手动截图诊断信息",
       tone: copied ? "success" : "error"
     });
+  }
+
+
+  function foldPanel(props: {
+    id: NotionPanelKey;
+    title: string;
+    summary: string;
+    icon: ReactNode;
+    children: ReactNode;
+    tone?: "default" | "success" | "warning" | "danger";
+  }) {
+    return (
+      <NotionFoldPanel
+        id={props.id}
+        title={props.title}
+        summary={props.summary}
+        icon={props.icon}
+        tone={props.tone}
+        open={openPanels[props.id]}
+        onToggle={togglePanel}
+      >
+        {props.children}
+      </NotionFoldPanel>
+    );
   }
 
   return (
@@ -484,7 +478,7 @@ export default function AccountNotionSync() {
           <span>实验版在线同步。只需要 Token 和一个父页面 ID，LifeLog 会自动创建中文数据库，再把本地记录单向同步到 Notion。</span>
         </div>
 
-        {renderFoldPanel({
+        {foldPanel({
           id: "connection",
           title: "连接配置",
           summary: setupComplete ? "已连接，可按需展开修改" : `${setup.badge} · ${setup.title}`,
@@ -711,7 +705,7 @@ export default function AccountNotionSync() {
           )
         })}
 
-        {renderFoldPanel({
+        {foldPanel({
           id: "sync",
           title: "数据同步",
           summary: formatSyncPreviewSummary(syncPreview),
@@ -833,7 +827,7 @@ export default function AccountNotionSync() {
           )
         })}
 
-        {renderFoldPanel({
+        {foldPanel({
           id: "queue",
           title: "自动同步队列",
           summary: queuePanelSummary,
@@ -878,7 +872,7 @@ export default function AccountNotionSync() {
           )
         })}
 
-        {renderFoldPanel({
+        {foldPanel({
           id: "history",
           title: "同步历史",
           summary: notionSyncHistory.length ? `最近 ${Math.min(notionSyncHistory.length, 3)} 次` : "暂无同步历史",
@@ -912,7 +906,7 @@ export default function AccountNotionSync() {
           )
         })}
 
-        {renderFoldPanel({
+        {foldPanel({
           id: "advanced",
           title: "高级配置",
           summary: "手动数据库 ID、请求诊断和清空 Token",

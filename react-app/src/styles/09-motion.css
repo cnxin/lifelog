@@ -93,6 +93,12 @@
   .photo-viewer-container--fluid {
     will-change: auto;
   }
+
+  .fab-menu,
+  .fab-menu.fab-menu--fluid,
+  .fab-backdrop {
+    animation: none !important;
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {

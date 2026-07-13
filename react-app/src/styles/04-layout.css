@@ -312,6 +312,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 4px;
+  min-width: 0;
   font-size: 16px;
   font-weight: 600;
 }
@@ -320,6 +321,7 @@
 .person-name span:first-child,
 .memory-title span:first-child {
   min-width: 0;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -344,11 +346,82 @@
   font-weight: 900;
   line-height: 1.2;
   white-space: nowrap;
+  font-style: normal;
+}
+
+.memory-kind-pill.memory {
+  color: #168255;
+  background: color-mix(in srgb, #22a06b 14%, transparent);
 }
 
 .memory-kind-pill.plan {
   color: var(--primary);
   background: var(--soft-purple);
+}
+
+.memory-detail-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.memory-detail-kicker span {
+  color: var(--text-sub);
+}
+
+.memory-detail-profile-card.is-plan .profile-photo,
+.memory-detail-profile-card .profile-photo.plan {
+  color: #fff;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 88%, #fff), color-mix(in srgb, var(--secondary) 70%, var(--primary)));
+}
+
+.memory-detail-profile-card.is-memory .profile-photo,
+.memory-detail-profile-card .profile-photo.memory {
+  color: #fff;
+  background: linear-gradient(135deg, #22a06b, color-mix(in srgb, var(--primary) 55%, #22a06b));
+}
+
+.memory-reader-card.is-plan {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 58%),
+    var(--card-bg);
+}
+
+.memory-reader-card.is-memory {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #22a06b 12%, transparent), transparent 58%),
+    var(--card-bg);
+}
+
+.memory-reader-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.memory-reader-chips .tap-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+.memory-reader-chips .tap-chip svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.memory-reader-head small {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
 .place-desc,
@@ -571,6 +644,46 @@
 
 .memory-reader-body:not(.empty) {
   padding: 2px 0 4px;
+}
+
+.memory-photo-missing-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.memory-photo-missing-card strong {
+  font-size: 14px;
+}
+
+.memory-photo-missing-card span {
+  color: var(--text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.memory-photo-missing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.memory-photo-missing-actions button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.memory-photo-missing-actions button.ghost {
+  color: var(--primary);
+  background: var(--soft-purple);
 }
 
 .memory-reader-facts,
@@ -2663,4 +2776,17 @@ button.person-pref-line {
   to {
     transform: translateX(0);
   }
+}
+
+
+.place-title-actions {
+  max-width: 58%;
+  min-width: 0;
+}
+
+.memory-timeline-list,
+.timeline-list,
+.memory-timeline-month {
+  min-width: 0;
+  max-width: 100%;
 }
