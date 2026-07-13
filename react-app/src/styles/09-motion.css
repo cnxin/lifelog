@@ -81,6 +81,18 @@
   animation: none;
 }
 
+.fab-backdrop--fluid {
+  will-change: opacity;
+}
+
+.fab-menu,
+.fab-menu button,
+.fab-backdrop,
+.fab,
+.fab-main-icon {
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pressable:active,
   .pressable.is-pressed,
@@ -96,8 +108,13 @@
 
   .fab-menu,
   .fab-menu.fab-menu--fluid,
-  .fab-backdrop {
+  .fab-backdrop,
+  .fab-menu button,
+  .fab,
+  .fab-main-icon {
     animation: none !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
   }
 }
 

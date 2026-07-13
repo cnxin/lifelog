@@ -48,7 +48,7 @@ function entryTypeForPath(pathname: string): EntryType {
 }
 
 function isUtilityPage(pathname: string) {
-  return pathname === "/settings" || pathname === "/account" || pathname.startsWith("/share/import");
+  return pathname === "/settings" || pathname.startsWith("/share/import");
 }
 
 type SheetMode = "quick" | "full";

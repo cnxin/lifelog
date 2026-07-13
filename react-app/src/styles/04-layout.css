@@ -29,7 +29,9 @@
   gap: 14px;
   padding: 14px;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -95,6 +97,8 @@
   display: grid;
   gap: 8px;
   justify-items: center;
+  max-width: 42%;
+  min-width: 0;
 }
 
 .place-img,
@@ -300,7 +304,9 @@
 .person-info,
 .memory-info {
   min-width: 0;
-  flex: 1;
+  flex: 1 1 0;
+  max-width: 100%;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -310,9 +316,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 4px;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   font-size: 16px;
   font-weight: 600;
 }
@@ -321,7 +329,7 @@
 .person-name span:first-child,
 .memory-title span:first-child {
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2780,13 +2788,42 @@ button.person-pref-line {
 
 
 .place-title-actions {
-  max-width: 58%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 0 1 auto;
+  max-width: min(52%, 11.5rem);
   min-width: 0;
+  overflow: hidden;
 }
 
+.place-title-actions > * {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.place-title-actions .place-rating,
+.place-title-actions .memory-kind-pill {
+  flex: 0 0 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memory-info,
+.place-info,
+.person-info {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.list,
 .memory-timeline-list,
 .timeline-list,
-.memory-timeline-month {
+.memory-timeline-month,
+.windowed-list,
+.windowed-list-window,
+.windowed-list-item {
   min-width: 0;
   max-width: 100%;
 }

@@ -15,8 +15,8 @@ LifeLog 是一个本地优先的个人生活记录应用，用人物、地点、
 APK 校验信息：
 
 - 文件名：`lifelog-v0.1.0-test.132.apk`
-- 大小：`4113478` bytes
-- SHA256：`aa3c7c1a0f0f69a6f461a3b06bbc66ec51b4179d630f9ef42693f49afa7de76c`
+- 大小：`4118855` bytes
+- SHA256：`2a7a3d8a5208d583da1a643c83b0694660dd93d0f9488648cc48e2bb2f5024ba`
 
 App 内检查更新会优先读取 Gitee API 清单、jsDelivr CDN 清单和 GitHub latest Release，拿到可用结果后不再等待较慢来源；GitHub raw 清单仅作为兜底。Android 端会优先使用 Gitee raw 镜像下载到本地 `.apk` 后调用系统安装器，避免部分下载源把 APK 保存成 zip 的问题。
 

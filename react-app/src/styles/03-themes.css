@@ -374,6 +374,18 @@ html[data-theme-style="mint"] .date-calendar-grid button.active {
   fill: none;
 }
 
+/* 账号入口与搜索按钮同尺寸、同圆角，仅图标内容不同 */
+.header-account-button {
+  overflow: hidden;
+}
+
+.header-account-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
 .header-icon-button:active {
   transform: scale(0.96);
   box-shadow: var(--press-shadow);

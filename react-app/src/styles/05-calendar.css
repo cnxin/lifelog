@@ -451,9 +451,14 @@
 
 .fab-container {
   position: absolute;
-  right: 24px;
-  bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1rem, calc(100px + env(safe-area-inset-bottom, 0px)));
   z-index: 101;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.7rem;
+  pointer-events: none;
 }
 
 .fab-backdrop {
@@ -461,61 +466,90 @@
   inset: 0;
   z-index: 0;
   border: 0;
-  background: rgba(45, 52, 54, 0.2);
-  animation: fab-backdrop-in 0.22s ease;
+  background: rgb(45 52 54 / 0.16);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 130ms ease-out,
+    visibility 0s linear 210ms;
+}
+
+.fab-backdrop--fluid {
+  /* opacity driven by spring in JS */
+  transition: none;
 }
 
 .fab-menu {
-  position: absolute;
-  right: 0;
-  bottom: 68px;
+  position: relative;
+  right: auto;
+  bottom: auto;
   z-index: 1;
-  display: grid;
-  gap: 8px;
-  width: min(292px, calc(100vw - 48px));
-  max-width: min(292px, calc(100vw - 48px));
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 10px;
-  background: color-mix(in srgb, var(--card-solid) 94%, transparent);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  box-shadow: 0 18px 46px color-mix(in srgb, var(--primary) 16%, rgba(0, 0, 0, 0.18));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+  width: auto;
+  max-width: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   transform-origin: bottom right;
-  animation: fab-menu-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(0, 0.6rem, 0) scale(0.96);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 130ms ease-out,
+    transform 210ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 210ms;
+  will-change: transform, opacity;
 }
 
+/* Container itself doesn't animate — items spring in (Apple After FAB) */
 .fab-menu.fab-menu--fluid {
-  animation: fab-menu-in 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: none;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
 .fab-menu button {
-  width: 100%;
-  border: 0;
-  border-radius: 16px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
+  display: inline-flex;
   align-items: center;
-  padding: 10px;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-height: 2.75rem;
+  width: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.35rem 0;
   color: var(--text-main);
   background: transparent;
   text-align: left;
+  cursor: pointer;
+  opacity: 0;
+  transform: translate3d(0, 0.9rem, 0) scale(0.9);
+  will-change: transform, opacity;
   transition:
-    transform 0.16s ease,
-    background-color 0.16s ease,
-    filter 0.16s ease;
+    opacity 110ms ease-out,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0ms;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .fab-menu button:active {
-  transform: scale(0.98);
-  background: var(--soft-purple);
+  background: transparent;
+  filter: none;
+  transform: scale(0.96);
 }
 
 .fab-menu button.primary {
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 68%),
-    var(--soft-purple);
+  background: transparent;
 }
 
 .fab-menu button.primary .fab-menu-icon {
@@ -524,13 +558,17 @@
 }
 
 .fab-menu-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 14px;
   display: grid;
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
   place-items: center;
   color: var(--primary);
-  background: var(--soft-purple);
+  background: var(--card-solid, #fff);
+  box-shadow:
+    0 0.3rem 0.9rem rgb(0 0 0 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.22);
 }
 
 .fab-menu-icon svg {
@@ -544,45 +582,111 @@
   min-width: 0;
 }
 
+.fab-menu-label {
+  display: block;
+  max-width: min(13rem, calc(100vw - 6rem));
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 0.42rem 0.7rem;
+  background: var(--card-solid, #fff);
+  box-shadow:
+    0 0.25rem 0.8rem rgb(0 0 0 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
 .fab-menu strong {
-  margin-bottom: 2px;
-  font-size: 14px;
-  line-height: 1.25;
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fab-menu small {
+  overflow: hidden;
   color: var(--text-sub);
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fab {
   position: relative;
   z-index: 2;
+  display: grid;
+  place-items: center;
   width: 56px;
   height: 56px;
   border: 0;
   border-radius: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
   color: white;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 10px 20px rgba(91, 108, 255, 0.2);
+  box-shadow:
+    0 0.6rem 1.4rem color-mix(in srgb, var(--primary) 30%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+  cursor: pointer;
+  pointer-events: auto;
   transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    filter 0.16s ease;
+    transform 160ms cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    box-shadow 180ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.fab svg {
+.fab-main-icon {
+  display: grid;
+  place-items: center;
+  transition: transform 220ms cubic-bezier(0.16, 1.2, 0.3, 1);
+}
+
+.fab-main-icon svg {
   width: 24px;
   height: 24px;
   stroke-width: 2.4;
 }
 
-.fab.open {
-  filter: saturate(0.92) brightness(0.98);
+.fab-container.is-open .fab-backdrop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 150ms ease-out,
+    visibility 0s linear 0s;
+}
+
+.fab-container.is-open .fab-menu {
+  transform: translate3d(0, 0, 0) scale(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 150ms ease-out,
+    transform 260ms cubic-bezier(0.16, 1.18, 0.3, 1),
+    visibility 0s linear 0s;
+}
+
+.fab-container.is-open .fab-menu button {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: calc((var(--fab-total) - var(--fab-index) - 1) * 28ms);
+}
+
+.fab-container.is-open .fab-menu button:active {
+  transform: scale(0.96);
+}
+
+.fab-container.is-open .fab-main-icon {
+  transform: rotate(45deg);
+}
+
+.fab:active {
+  transform: scale(0.9);
+  box-shadow:
+    0 0.25rem 0.7rem color-mix(in srgb, var(--primary) 24%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.2);
 }
 
 .back-to-top-fab {
@@ -619,7 +723,7 @@
 
 @media (max-width: 380px) {
   .fab-container {
-    right: 18px;
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
   }
 
   .back-to-top-fab {

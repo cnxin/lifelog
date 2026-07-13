@@ -977,12 +977,14 @@
 
 @media (max-width: 360px) {
   .management-tab-row {
-    gap: 3px;
+    gap: 1px;
+    padding: 2px;
   }
 
   .management-tab-row button {
-    min-height: 40px;
+    min-height: 34px;
     gap: 3px;
+    padding: 7px 4px;
     font-size: 11px;
   }
 

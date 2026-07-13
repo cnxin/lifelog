@@ -22,16 +22,8 @@ export default function Header({ dateLabel, title, subtitle, onSearch }: HeaderP
         <button className="header-icon-button" type="button" aria-label="全局搜索" title="全局搜索 Ctrl/Cmd+K" onClick={onSearch}>
           <Search />
         </button>
-        <button className="avatar" aria-label="账号管理" onClick={() => navigate("/account")}>
-          <img
-            src="/ingot.png"
-            alt="金元宝"
-            style={{
-              width: '90%',
-              height: '90%',
-              objectFit: 'contain'
-            }}
-          />
+        <button className="header-icon-button header-account-button" type="button" aria-label="账号管理" onClick={() => navigate("/account")}>
+          <img src="/ingot.png" alt="" aria-hidden="true" className="header-account-icon" />
         </button>
       </div>
     </header>

@@ -4,8 +4,8 @@
     "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.132/lifelog-v0.1.0-test.132.apk",
     "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.132.apk",
     "apkName":  "lifelog-v0.1.0-test.132.apk",
-    "apkSize":  4113478,
-    "apkSha256":  "aa3c7c1a0f0f69a6f461a3b06bbc66ec51b4179d630f9ef42693f49afa7de76c",
-    "publishedAt":  "2026-07-13T04:42:28Z",
+    "apkSize":  4118855,
+    "apkSha256":  "2a7a3d8a5208d583da1a643c83b0694660dd93d0f9488648cc48e2bb2f5024ba",
+    "publishedAt":  "2026-07-13T16:45:58Z",
     "body":  "- `LifeLogContext` 写操作抽到 `createLifeLogContextValue`，Provider 仅保留加载与装配。"
 }
