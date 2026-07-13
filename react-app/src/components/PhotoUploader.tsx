@@ -2,7 +2,7 @@ import { Upload, X, Image as ImageIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Photo } from "../types";
-import { compressImage, validateImageFile, blobToObjectURL, SUPPORTED_IMAGE_ACCEPT, SUPPORTED_IMAGE_FORMAT_LABEL } from "../utils/imageCompression";
+import { compressImage, validateImageFile, blobToObjectURL, isHeicImageFile, SUPPORTED_IMAGE_ACCEPT, SUPPORTED_IMAGE_FORMAT_LABEL } from "../utils/imageCompression";
 import { useToast } from "../context/ToastContext";
 import { PhotoViewer } from "./PhotoViewer";
 import PhotoUploadQueue, { type PhotoUploadQueueItem } from "./PhotoUploadQueue";
@@ -85,7 +85,7 @@ export function PhotoUploader({
       const file = filesToProcess[i];
       const queueId = nextQueueItems[i]?.id;
       setUploadPercent(Math.round((i / filesToProcess.length) * 100));
-      const isHeic = isHeicFile(file);
+      const isHeic = isHeicImageFile(file);
       if (queueId) updateQueueItem(queueId, { status: "processing", message: isHeic ? "正在转换 HEIC 并压缩" : "正在压缩和生成缩略图" });
 
       // 验证文件
@@ -262,6 +262,9 @@ export function PhotoUploader({
             <span key={error}>{error}</span>
           ))}
           {errors.length > 3 && <small>还有 {errors.length - 3} 项未显示。</small>}
+          {failedUploads.some((item) => isHeicImageFile(item.file)) && (
+            <small>HEIC/HEIF 若持续失败，请在系统相册中另存为 JPG 后再试。</small>
+          )}
           {failedUploads.length > 0 && (
             <button type="button" onClick={() => void retryFailedUploads()} disabled={disabled || uploading}>
               重试未处理照片
@@ -285,10 +288,6 @@ export function PhotoUploader({
 function getUploadErrorMessage(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   return "处理失败，请重试";
-}
-
-function isHeicFile(file: File) {
-  return ["image/heic", "image/heif"].includes(file.type) || /\.(heic|heif)$/i.test(file.name);
 }
 
 interface PhotoPreviewProps {

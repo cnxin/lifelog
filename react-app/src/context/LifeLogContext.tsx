@@ -85,6 +85,7 @@ import {
   normalizeBackupPayload,
   serializeBackupPhoto,
   MAX_BACKUP_FILE_BYTES,
+  type BackupExportOptions,
   type FullBackupPayload
 } from "../utils/lifelogBackup";
 import {
@@ -1101,8 +1102,9 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
       return flushNotionSyncQueue({ ids: retryIds, immediate: true });
     }
 
-    async function exportData(): Promise<BackupExportResult> {
-      const photos = await loadAllPhotos();
+    async function exportData(options: BackupExportOptions = {}): Promise<BackupExportResult> {
+      const photoMode = options.photoMode || "full";
+      const photos = photoMode === "none" ? [] : await loadAllPhotos();
       const photoOwnerById = new Map<string, string>();
       state.memories.forEach((memory) => {
         (memory.photos || []).forEach((photoId) => {
@@ -1121,16 +1123,27 @@ export function LifeLogProvider({ children }: { children: ReactNode }) {
         ...state,
         memories: state.memories.map((memory) => ({
           ...memory,
-          photos: Array.from(
-            new Set([
-              ...(memory.photos || []).filter((photoId) => validPhotoIds.has(photoId)),
-              ...normalizedPhotos.filter((photo) => photo.memoryId === memory.id).map((photo) => photo.id)
-            ])
-          )
+          photos:
+            photoMode === "none"
+              ? []
+              : Array.from(
+                  new Set([
+                    ...(memory.photos || []).filter((photoId) => validPhotoIds.has(photoId)),
+                    ...normalizedPhotos.filter((photo) => photo.memoryId === memory.id).map((photo) => photo.id)
+                  ])
+                )
         }))
       };
-      const backupPhotos = await Promise.all(normalizedPhotos.map(serializeBackupPhoto));
-      const fileName = `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const backupPhotos =
+        photoMode === "none"
+          ? []
+          : await Promise.all(normalizedPhotos.map((photo) => serializeBackupPhoto(photo, { photoMode })));
+      const fileName =
+        photoMode === "none"
+          ? `lifelog-backup-no-photos-${new Date().toISOString().slice(0, 10)}.json`
+          : photoMode === "thumbnails"
+            ? `lifelog-backup-thumbs-${new Date().toISOString().slice(0, 10)}.json`
+            : `lifelog-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
       const payload: FullBackupPayload = {
         schemaVersion: 3,
         version: 3,

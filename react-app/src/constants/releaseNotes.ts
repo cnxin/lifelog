@@ -16,6 +16,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.131",
+    date: "2026-07-13",
+    title: "备份体积选项、搜索隐私与体验打磨",
+    highlights: [
+      "完整备份支持完整原图、仅缩略图或不含照片三种体积选项，导入预检会识别并提示。",
+      "全局搜索在隐私模式下不记录最近搜索，空态增加 @人名、日期等语法提示。",
+      "HEIC 转换增加超时与更清晰失败文案；回忆详情正文阅读与编辑/分享吸底优化。",
+      "Notion 同步页拆出模型层，降低后续改动成本。"
+    ]
+  },
+  {
     version: "0.1.0-test.130",
     date: "2026-07-13",
     title: "工程可维护性、暗色主题与冷启动体验",

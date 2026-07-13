@@ -210,11 +210,15 @@ async function normalizeImageFile(file: File) {
   if (!isHeicFile(file)) return file;
 
   try {
-    const converted = await heic2any({
-      blob: file,
-      toType: "image/jpeg",
-      quality: 0.9
-    });
+    const converted = await withTimeout(
+      heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.9
+      }),
+      20000,
+      "HEIC 转换超时，请改用较小的 JPG"
+    );
     const blob = Array.isArray(converted) ? converted[0] : converted;
     if (!blob) throw new Error("HEIC 转换失败");
     return new File([blob], replaceImageExtension(file.name, "jpg"), {
@@ -223,8 +227,27 @@ async function normalizeImageFile(file: File) {
     });
   } catch (error) {
     console.warn("HEIC/HEIF 转换失败:", error);
+    if (error instanceof Error && /超时/.test(error.message)) {
+      throw error;
+    }
     throw new Error("HEIC/HEIF 自动转换失败，请在相册中另存为 JPG 后再上传");
   }
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
 }
 
 function isHeicFile(file: File) {
@@ -238,10 +261,22 @@ function replaceImageExtension(fileName: string, extension: string) {
 
 function getImageProcessingErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
-  if (/heic|heif/i.test(message)) return message;
+  if (/heic|heif/i.test(message)) {
+    if (/转换失败|另存为 JPG/i.test(message)) return message;
+    return "HEIC/HEIF 转换失败，请在相册中另存为 JPG 后再上传";
+  }
+  if (/memory|quota|out of memory|allocation/i.test(message)) {
+    return "图片过大，设备内存不足。请先压缩或改用较小的 JPG";
+  }
   if (/load|decode|读取|格式/i.test(message)) return "无法读取这张图片，请换一张或先在相册中另存为 JPG";
   if (/canvas|support|支持/i.test(message)) return "当前设备不支持处理这张图片，请换一张较小的 JPG";
+  if (/timeout|超时/i.test(message)) return "图片处理超时，请换一张较小的图片后重试";
   return "图片处理失败，请换一张或先截图/压缩后再上传";
+}
+
+/** 是否 HEIC/HEIF，供上传队列展示转换状态 */
+export function isHeicImageFile(file: File) {
+  return isHeicFile(file);
 }
 
 /**

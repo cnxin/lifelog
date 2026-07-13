@@ -126,7 +126,7 @@ export async function buildMemorySharePayload({
   const people = buildSharedPeople(memory.personIds || [], state.people, options.peopleMode);
   const places = buildSharedMemoryPlaces(getMemoryPlaceIds(memory), state.places, options.placeMode);
   const sharedPhotos = options.includePhotos ? photos.filter((photo) => (memory.photos || []).includes(photo.id)) : [];
-  const photoRecords = await Promise.all(sharedPhotos.map(serializeBackupPhoto));
+  const photoRecords = await Promise.all(sharedPhotos.map((photo) => serializeBackupPhoto(photo)));
   const sharedMemory = sanitizeMemory(memory, options, people, places, photoRecords);
 
   return buildPayload({

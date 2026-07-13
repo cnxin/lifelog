@@ -556,14 +556,21 @@
 
 .memory-reader-body {
   color: var(--text-main);
-  font-size: 14px;
-  line-height: 1.72;
+  font-size: 15px;
+  line-height: 1.68;
+  letter-spacing: 0.01em;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .memory-reader-body.empty {
   color: var(--text-sub);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.memory-reader-body:not(.empty) {
+  padding: 2px 0 4px;
 }
 
 .memory-reader-facts,
@@ -589,6 +596,26 @@
 
 .memory-reader-actions.compact {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.memory-reader-actions.sticky-reader-actions {
+  position: sticky;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
+  padding: 8px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card-solid, #fff) 88%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .memory-reader-actions.sticky-reader-actions {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--card-solid, #fff);
+  }
 }
 
 .memory-reader-actions button {

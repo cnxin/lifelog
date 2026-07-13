@@ -21,6 +21,7 @@ import type {
   ReminderSettings
 } from "../types";
 import type { BackupExportTarget } from "../utils/backupExport";
+import type { BackupExportOptions } from "../utils/lifelogBackup";
 import type {
   LifeLogShareImportResult,
   LifeLogSharePayload,
@@ -87,7 +88,7 @@ export interface LifeLogContextValue {
   syncNotionTargets: (targets: NotionSyncTarget[], options?: { trigger?: NotionSyncTrigger; targetLabel?: string; settingsOverride?: NotionSettings; stateOverride?: LifeLogState }) => Promise<NotionSyncSummary>;
   retryFailedNotionItems: (items: NotionSyncFailedItem[], settingsOverride?: NotionSettings) => Promise<NotionSyncSummary>;
   retryNotionQueueItems: (ids?: string[]) => Promise<NotionSyncSummary | null>;
-  exportData: () => Promise<BackupExportResult>;
+  exportData: (options?: BackupExportOptions) => Promise<BackupExportResult>;
   buildMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<LifeLogSharePayload>;
   buildPlacesShare: (placeIds: string[], options: PlaceShareOptions) => Promise<LifeLogSharePayload>;
   exportMemoryShare: (memoryId: string, options: MemoryShareOptions) => Promise<BackupExportResult>;

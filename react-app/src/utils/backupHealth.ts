@@ -66,6 +66,10 @@ export interface BackupImportPreview {
   ignoredPhotos: number;
   missingPhotoRefs: number;
   extraPhotoRefs: number;
+  /** none | thumbnails | full | unknown */
+  photoMode: "none" | "thumbnails" | "full" | "unknown";
+  photoModeLabel: string;
+  photoModeHint: string;
   exportedAt: string;
   appVersion: string;
   issueCount: number;
@@ -166,6 +170,9 @@ export function buildBackupImportPreview(input: Record<string, unknown>, current
   };
   const issues = collectRawStateIssues(stateLike);
 
+  const photoMode = detectBackupPhotoMode(photos.map((item) => (isRecord(item) ? item : {})));
+  const photoModeMeta = describeBackupPhotoMode(photoMode);
+
   return {
     schemaVersion: String(input.schemaVersion || input.version || ""),
     people: people.length,
@@ -184,6 +191,9 @@ export function buildBackupImportPreview(input: Record<string, unknown>, current
     ignoredPhotos: photoReport.ignoredPhotos,
     missingPhotoRefs: photoReport.missingPhotoRefs,
     extraPhotoRefs: photoReport.extraPhotoRefs,
+    photoMode,
+    photoModeLabel: photoModeMeta.label,
+    photoModeHint: photoModeMeta.hint,
     exportedAt: String(input.exportedAt || ""),
     appVersion: String(input.appVersion || ""),
     issueCount: issues.length + photoReport.issues.length,
@@ -512,6 +522,51 @@ function collectIds(
 
 function countMemoryPhotoRefs(state: LifeLogState) {
   return state.memories.reduce((total, memory) => total + (memory.photos || []).length, 0);
+}
+
+function detectBackupPhotoMode(photos: Array<Record<string, unknown>>): BackupImportPreview["photoMode"] {
+  if (!photos.length) return "none";
+
+  let comparable = 0;
+  let sameAsThumb = 0;
+  for (const photo of photos) {
+    const original = typeof photo.originalDataUrl === "string" ? photo.originalDataUrl : "";
+    const thumb = typeof photo.thumbnailDataUrl === "string" ? photo.thumbnailDataUrl : "";
+    if (!original || !thumb) continue;
+    comparable += 1;
+    if (original === thumb) sameAsThumb += 1;
+  }
+
+  if (!comparable) return "unknown";
+  if (sameAsThumb === comparable) return "thumbnails";
+  if (sameAsThumb === 0) return "full";
+  // Mixed payloads are uncommon; treat majority same-as-thumb as thumbnails-style.
+  return sameAsThumb >= comparable / 2 ? "thumbnails" : "full";
+}
+
+function describeBackupPhotoMode(mode: BackupImportPreview["photoMode"]) {
+  if (mode === "none") {
+    return {
+      label: "无照片备份",
+      hint: "这份备份不含照片文件，导入后记录会保留，但相册图片不会恢复。"
+    };
+  }
+  if (mode === "thumbnails") {
+    return {
+      label: "缩略图备份",
+      hint: "这份备份主要是缩略图，导入后可预览，清晰度会低于原图完整备份。"
+    };
+  }
+  if (mode === "full") {
+    return {
+      label: "完整照片备份",
+      hint: "这份备份包含原图与缩略图，可按完整资料恢复。"
+    };
+  }
+  return {
+    label: "照片内容未识别",
+    hint: "未能判断照片是原图还是缩略图，导入后请抽查几张照片确认。"
+  };
 }
 
 function inspectBackupPhotoLinks(memories: Array<Record<string, unknown>>, photos: Array<Record<string, unknown>>) {

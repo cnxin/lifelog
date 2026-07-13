@@ -31,12 +31,20 @@ interface SearchResult {
 
 const RECENT_SEARCH_LIMIT = 8;
 
+const SEARCH_SYNTAX_HINTS = [
+  { label: "@人名", example: "@", desc: "快速锁定人物相关结果" },
+  { label: "日期", example: "2024-05-01", desc: "按完整日期查找记录" },
+  { label: "年月", example: "2024-05", desc: "按月份浏览回忆" },
+  { label: "标签", example: "旅行", desc: "按标签或心情关键词搜" }
+] as const;
+
 export default function GlobalSearchPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { state, getPersonName, getPlaceName } = useLifeLog();
+  const { state, settings, getPersonName, getPlaceName } = useLifeLog();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [recentSearches, setRecentSearches] = usePersistentState<string[]>("lifelog:recent-searches", [], isStringArray);
+  const privacyMode = Boolean(settings.privacyMode);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,6 +52,12 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
     const timer = window.setTimeout(() => inputRef.current?.focus(), 80);
     return () => window.clearTimeout(timer);
   }, [open]);
+
+  useEffect(() => {
+    if (privacyMode && recentSearches.length) {
+      setRecentSearches([]);
+    }
+  }, [privacyMode, recentSearches.length, setRecentSearches]);
 
   useEffect(() => {
     if (open) return;
@@ -215,6 +229,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   }
 
   function saveRecentSearch(value: string) {
+    if (privacyMode) return;
     const text = value.trim();
     if (!text) return;
     const normalized = normalizeSearchText(text);
@@ -238,7 +253,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
             <input
               ref={inputRef}
               value={query}
-              placeholder="搜索回忆、计划、人物、地点、标签"
+              placeholder="搜索回忆、计划、人物、地点、标签 · 可用 @人名 或 2024-05-01"
               onChange={(event) => setQuery(event.target.value)}
             />
             {query && (
@@ -272,7 +287,24 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
                 </span>
               </div>
             </div>
-            {recentSearches.length > 0 && (
+            <div className="global-search-section">
+              <div className="global-search-section-head">
+                <span>
+                  <Sparkles />
+                  搜索语法
+                </span>
+              </div>
+              <div className="global-search-chips global-search-syntax-chips">
+                {SEARCH_SYNTAX_HINTS.map((item) => (
+                  <button type="button" key={item.example} onClick={() => applyQuery(item.example)} title={item.desc}>
+                    <em>{item.label}</em>
+                    <span>{item.example}</span>
+                  </button>
+                ))}
+              </div>
+              {privacyMode ? <p className="global-search-privacy-note">隐私模式已开启，不会保存最近搜索。</p> : null}
+            </div>
+            {!privacyMode && recentSearches.length > 0 && (
               <div className="global-search-section">
                 <div className="global-search-section-head">
                   <span>
@@ -425,8 +457,15 @@ function buildSearchSuggestions(
   const values: string[] = [];
 
   for (const person of state.people) {
-    if (person.favorite || values.length < 3) values.push(person.name, person.nickname || "", person.relationship || "");
+    if (person.favorite || values.length < 3) {
+      values.push(person.name, person.nickname || "", person.relationship || "");
+      if (person.name.trim()) values.push(`@${person.name.trim()}`);
+    }
   }
+
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  values.push(monthKey);
 
   for (const place of state.places) {
     if (place.favorite || values.length < 7) values.push(buildPlaceDisplayName(place), place.category || "", place.mall || "");

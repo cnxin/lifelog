@@ -29,6 +29,13 @@ export interface BackupPhotoRecord {
   order: number;
 }
 
+/** full: 原图+缩略图；thumbnails: 仅缩略图（体积更小）；none: 不含照片二进制 */
+export type BackupPhotoMode = "full" | "thumbnails" | "none";
+
+export interface BackupExportOptions {
+  photoMode?: BackupPhotoMode;
+}
+
 export interface FullBackupPayload {
   schemaVersion: 3;
   version: 3;
@@ -62,16 +69,26 @@ export interface NormalizedBackupPayload {
   warnings: string[];
 }
 
-export async function serializeBackupPhoto(photo: Photo): Promise<BackupPhotoRecord> {
+export async function serializeBackupPhoto(
+  photo: Photo,
+  options: BackupExportOptions = {}
+): Promise<BackupPhotoRecord> {
+  const photoMode = options.photoMode || "full";
+  const thumbnailDataUrl = await blobToDataUrl(photo.thumbnailBlob);
+  const originalDataUrl =
+    photoMode === "thumbnails"
+      ? thumbnailDataUrl
+      : await blobToDataUrl(photo.originalBlob);
+
   return {
     id: photo.id,
     memoryId: photo.memoryId,
-    originalDataUrl: await blobToDataUrl(photo.originalBlob),
-    thumbnailDataUrl: await blobToDataUrl(photo.thumbnailBlob),
+    originalDataUrl,
+    thumbnailDataUrl,
     width: photo.width,
     height: photo.height,
-    fileSize: photo.fileSize,
-    mimeType: photo.mimeType,
+    fileSize: photoMode === "thumbnails" ? photo.thumbnailBlob.size : photo.fileSize,
+    mimeType: photoMode === "thumbnails" ? photo.thumbnailBlob.type || photo.mimeType : photo.mimeType,
     capturedAt: photo.capturedAt,
     uploadedAt: photo.uploadedAt,
     order: photo.order

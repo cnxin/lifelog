@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import DateInput from "../../components/DateInput";
+import EmptyState from "../../components/EmptyState";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
@@ -74,7 +75,13 @@ export default function MemoryDetail() {
   if (!memory) {
     return (
       <section className="section">
-        <GlassCard className="empty">没有找到这条记录</GlassCard>
+        <EmptyState
+          icon={<Heart />}
+          title="没有找到这条记录"
+          description="它可能已被删除，或链接已经失效。"
+          primaryAction={{ label: "返回记录列表", onClick: () => navigate("/memories") }}
+          secondaryAction={{ label: "回首页", onClick: () => navigate("/") }}
+        />
       </section>
     );
   }
@@ -195,7 +202,7 @@ export default function MemoryDetail() {
               <span key={fact}>{fact}</span>
             ))}
           </div>
-          <div className="memory-reader-actions compact">
+          <div className="memory-reader-actions sticky-reader-actions compact">
             <button type="button" onClick={() => setEditing(true)}>
               <PenLine /> {memory.content.trim() ? copy.detailAction : copy.emptyAction}
             </button>

@@ -12,6 +12,7 @@ import { isRecord } from "../../utils/lifelogHelpers";
 import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableExport";
 import { addShareHistoryEntry, clearShareHistory, formatShareHistoryCounts, loadShareHistory, updateShareHistoryEntry, type ShareHistoryEntry } from "../../utils/shareHistory";
 import { getShareImportViewTarget } from "../../utils/shareImportResult";
+import type { BackupPhotoMode } from "../../utils/lifelogBackup";
 
 export default function AccountDataManagement() {
   const { state, exportData, importData, importShareData, undoShareImport, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
@@ -21,6 +22,7 @@ export default function AccountDataManagement() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const importLockRef = useRef(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [backupPhotoMode, setBackupPhotoMode] = useState<BackupPhotoMode>("full");
   const [lastExport, setLastExport] = useState<BackupExportMeta | null>(null);
   const [lastBackupMeta, setLastBackupMeta] = useState<BackupExportMeta | null>(() => loadLastFullBackupMeta());
   const [lastImportPreview, setLastImportPreview] = useState<ImportPreviewCard | null>(null);
@@ -82,6 +84,7 @@ export default function AccountDataManagement() {
         `照片 ${preview.photos}${formatDelta(preview.photosDelta)}`
       ].join(" · ");
       const photoPreview = [
+        preview.photoModeLabel ? `照片模式：${preview.photoModeLabel}` : "",
         preview.repairedPhotos ? `${preview.repairedPhotos} 张照片将自动修复归属` : "",
         preview.extraPhotoRefs ? `${preview.extraPhotoRefs} 张照片将补回记录引用` : "",
         preview.missingPhotoRefs ? `${preview.missingPhotoRefs} 个照片引用缺少文件` : "",
@@ -101,15 +104,29 @@ export default function AccountDataManagement() {
         appVersion: preview.appVersion,
         issueCount: preview.issueCount,
         issues: preview.issues.slice(0, 4),
-        photoNotes: photoPreview ? [photoPreview] : ["照片检查未发现明显关联问题。"]
+        photoNotes: [
+          ...(preview.photoModeHint ? [preview.photoModeHint] : []),
+          ...(photoPreview ? [photoPreview] : ["照片检查未发现明显关联问题。"])
+        ]
       };
+      const modeLabel =
+        preview.photoMode === "none"
+          ? "无照片备份 · 覆盖恢复"
+          : preview.photoMode === "thumbnails"
+            ? "缩略图备份 · 覆盖恢复"
+            : "完整备份 · 覆盖恢复";
       setLastImportPreview({
         kind: "backup",
         title: file.name,
-        modeLabel: "完整备份 · 覆盖恢复",
+        modeLabel,
         effect,
         summary: countPreview,
-        warning: "导入后会覆盖当前本地资料、照片、设置和提醒。",
+        warning:
+          preview.photoMode === "none"
+            ? "导入后会覆盖当前本地资料，且不会恢复照片。"
+            : preview.photoMode === "thumbnails"
+              ? "导入后会覆盖当前本地资料；照片以缩略图为主，清晰度可能不足。"
+              : "导入后会覆盖当前本地资料、照片、设置和提醒。",
         exportedAt: preview.exportedAt,
         issueCount: preview.issueCount
       });
@@ -117,9 +134,12 @@ export default function AccountDataManagement() {
         `将导入：${countPreview}。`,
         preview.exportedAt ? `备份时间：${formatBackupDate(preview.exportedAt)}。` : "",
         preview.appVersion ? `备份版本：${preview.appVersion}${preview.schemaVersion ? ` · schema ${preview.schemaVersion}` : ""}。` : "",
+        preview.photoModeHint ? `照片模式：${preview.photoModeHint}` : "",
         photoPreview ? `照片检查：${photoPreview}。` : "照片检查：未发现明显照片关联问题。",
         preview.issueCount ? `预检发现 ${preview.issueCount} 个关联问题：${preview.issues.slice(0, 2).join("；")}。` : "预检未发现明显关联问题。",
-        `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份。`
+        preview.photoMode === "none"
+          ? `导入会覆盖当前本地资料（${dataSummary}），且不会带入照片。建议先导出一份当前完整备份。`
+          : `导入会覆盖当前本地资料、照片、设置和提醒（${dataSummary}）。建议先导出完整备份。`
       ].filter(Boolean).join("\n");
     } catch (error) {
       await confirm({
@@ -315,20 +335,28 @@ export default function AccountDataManagement() {
 
   async function handleExport() {
     try {
-      const result = await exportData();
+      const result = await exportData({ photoMode: backupPhotoMode });
       const nextBackupAt = new Date().toISOString();
       const nextMeta = buildBackupExportMeta(result, nextBackupAt, {
         people: state.people.length,
         places: state.places.length,
         memories: state.memories.length,
-        photoRefs: healthReport.photoRefs
+        photoRefs: backupPhotoMode === "none" ? 0 : healthReport.photoRefs
       });
       setLastExport(nextMeta);
       setLastBackupMeta(nextMeta);
       localStorage.setItem("lifelog:last-full-backup-at", nextBackupAt);
       saveLastFullBackupMeta(nextMeta);
       setLastFullBackupAt(nextBackupAt);
-      notify({ message: `完整备份已生成：${result.fileName}`, tone: "success" });
+      notify({
+        message:
+          backupPhotoMode === "none"
+            ? `无照片备份已生成：${result.fileName}`
+            : backupPhotoMode === "thumbnails"
+              ? `缩略图备份已生成：${result.fileName}`
+              : `完整备份已生成：${result.fileName}`,
+        tone: "success"
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       console.error("Backup export failed:", error);
@@ -568,10 +596,50 @@ export default function AccountDataManagement() {
               <Download />
             </div>
             <div>
-              <strong>导出完整备份</strong>
-              <span>保存资料、照片、设置和提醒</span>
+              <strong>
+                {backupPhotoMode === "none"
+                  ? "导出无照片备份"
+                  : backupPhotoMode === "thumbnails"
+                    ? "导出缩略图备份"
+                    : "导出完整备份"}
+              </strong>
+              <span>
+                {backupPhotoMode === "none"
+                  ? "只保存资料、设置和提醒，体积最小"
+                  : backupPhotoMode === "thumbnails"
+                    ? "保存资料与缩略图，体积更小"
+                    : "保存资料、原图、设置和提醒"}
+              </span>
             </div>
           </button>
+          <div className="data-action-card glass-card backup-photo-mode-card">
+            <div className="data-action-icon">
+              <ShieldCheck />
+            </div>
+            <div>
+              <strong>备份照片选项</strong>
+              <span>体积大时可先导出缩略图或无照片备份</span>
+              <div className="backup-photo-mode-row" role="group" aria-label="备份照片选项">
+                {(
+                  [
+                    { id: "full", label: "完整原图" },
+                    { id: "thumbnails", label: "仅缩略图" },
+                    { id: "none", label: "不含照片" }
+                  ] as const
+                ).map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={backupPhotoMode === option.id ? "active" : ""}
+                    aria-pressed={backupPhotoMode === option.id}
+                    onClick={() => setBackupPhotoMode(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           <button
             className="data-action-card glass-card"
             onClick={() => void handleReadableExport("markdown")}

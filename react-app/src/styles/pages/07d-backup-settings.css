@@ -196,6 +196,35 @@
   color: var(--danger);
 }
 
+.backup-photo-mode-card {
+  cursor: default;
+}
+
+.backup-photo-mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.backup-photo-mode-row button {
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--text-sub);
+  background: color-mix(in srgb, var(--card-solid, #fff) 82%, transparent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.backup-photo-mode-row button.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
 .backup-export-result {
   display: grid;
   gap: 5px;
