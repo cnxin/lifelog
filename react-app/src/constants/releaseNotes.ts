@@ -16,6 +16,16 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "0.1.0-test.133",
+    date: "2026-07-14",
+    title: "详情页与时间线视觉修复",
+    highlights: [
+      "人物、地点和回忆详情移除顶部卡片外层直角背景，仅保留内部圆角内容卡。",
+      "记录时间线补齐网格与虚拟列表宽度约束，超长回忆标题不会再撑出屏幕。",
+      "设置页标签和添加菜单继续采用无外层轨道、轻量错峰动画的交互样式。"
+    ]
+  },
+  {
     version: "0.1.0-test.132",
     date: "2026-07-13",
     title: "搜索语义、缺图引导与工程拆分",

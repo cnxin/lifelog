@@ -781,13 +781,38 @@
 
 .memory-timeline-list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .memory-timeline-month {
   scroll-margin-top: 18px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.memory-timeline-month > .list,
+.memory-timeline-month > .list > div,
+.memory-timeline-month .windowed-list,
+.memory-timeline-month .windowed-list-window,
+.memory-timeline-month .windowed-list-item,
+.memory-timeline-month .memory-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.memory-timeline-month > .list,
+.memory-timeline-month .windowed-list-window {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .memory-timeline-title {
@@ -795,15 +820,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
+  max-width: 100%;
   color: var(--text-sub);
 }
 
 .memory-timeline-title strong {
+  min-width: 0;
+  overflow: hidden;
   color: var(--text-main);
   font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .memory-timeline-title span {
+  flex: 0 0 auto;
   border-radius: 999px;
   padding: 3px 8px;
   color: var(--primary);

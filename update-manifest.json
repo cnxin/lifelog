@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.132",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.132",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.132/lifelog-v0.1.0-test.132.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.132.apk",
-    "apkName":  "lifelog-v0.1.0-test.132.apk",
-    "apkSize":  4118855,
-    "apkSha256":  "2a7a3d8a5208d583da1a643c83b0694660dd93d0f9488648cc48e2bb2f5024ba",
-    "publishedAt":  "2026-07-13T16:45:58Z",
-    "body":  "- `LifeLogContext` 写操作抽到 `createLifeLogContextValue`，Provider 仅保留加载与装配。"
+    "version":  "0.1.0-test.133",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.133",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.133/lifelog-v0.1.0-test.133.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.133.apk",
+    "apkName":  "lifelog-v0.1.0-test.133.apk",
+    "apkSize":  4119071,
+    "apkSha256":  "304ba10f5701df32b27b25f203a6be798573111afc357a505126ff7a53f1d821",
+    "publishedAt":  "2026-07-14T08:19:45Z",
+    "body":  "- 人物、地点和回忆详情的顶部卡片移除外层直角背景，仅保留内部圆角内容卡。\n- 记录时间线补齐网格与虚拟列表宽度约束；超长回忆标题会截断显示，不再撑出屏幕。\n- 设置页标签仅突出选中胶囊；添加菜单使用轻量 CSS 错峰动画并即时响应操作。"
 }

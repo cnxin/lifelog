@@ -1440,8 +1440,20 @@ button.person-pref-line {
   margin: 0 -2px 20px;
   padding: 0 2px 4px;
   overflow-anchor: none;
-  background:
-    linear-gradient(180deg, var(--bg-color) 0%, var(--bg-color) 48%, transparent 100%);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: 0;
+  overflow: visible;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.detail-hero-section::before,
+.detail-hero-section::after {
+  content: none;
+  display: none;
 }
 
 .back-button {
