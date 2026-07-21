@@ -1,5 +1,8 @@
 # LifeLog 后续优化计划
 
+> **现行主方案**：[`OPTIMIZATION_MASTER_PLAN.md`](./OPTIMIZATION_MASTER_PLAN.md)（2026-07-13 起）
+> 本文阶段 1–7 基础版多已完成，增量任务以主方案 Phase A–F 为准。
+
 目标：借鉴 FluxDO 的工程化、更新、反馈、性能和结构化能力，但只吸收适合 LifeLog 当前 Android 优先路线的部分。
 
 ## 阶段 1：更新中心增强

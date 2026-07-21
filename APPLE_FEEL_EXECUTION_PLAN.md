@@ -1,6 +1,7 @@
 # LifeLog Apple 流体交互 · 完整执行方案
 
-> 状态：**P0/P1 已落地，版本号已升至 0.1.0-test.128** — 待打 APK / 真机验收后发布  
+> **后续优化请转**：[`docs/OPTIMIZATION_MASTER_PLAN.md`](./docs/OPTIMIZATION_MASTER_PLAN.md)
+> 状态：**P0/P1 已落地（0.1.0-test.128+）** — 本文冻结为实施档案；回归用 [`docs/APPLE_FEEL_QA_CHECKLIST.md`](./docs/APPLE_FEEL_QA_CHECKLIST.md)
 > 创建：2026-07-11  
 > 基线版本：`0.1.0-test.128`  
 > 对照 Demo：`demo/apple-feel-compare.html`  

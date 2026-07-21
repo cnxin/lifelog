@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="40" x2="456" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7f8fc"/>
+      <stop offset="1" stop-color="#eef0f8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Clean white base -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Bold geometric lowercase "life" in gradient blue — same letterforms -->
+  <!-- Style: Plex-like with a distinctive Chevron/Bookmark accent replacing the "i" dot -->
+
+  <!-- Letter: l -->
+  <path d="M88,142 L88,338 Q88,362 112,362 L128,362"
+        fill="none" stroke="#5BA4E6" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Letter: i -->
+  <path d="M178,222 L178,362"
+        fill="none" stroke="#5BA4E6" stroke-width="42" stroke-linecap="round"/>
+
+  <!-- "i" dot: Plex-style chevron/bookmark pointing right — the distinctive accent -->
+  <!-- A small filled chevron ▶ in coral/peach as brand accent -->
+  <path d="M158,148 L198,168 L158,188 Z" fill="#F5A3AE"/>
+
+  <!-- Letter: f -->
+  <path d="M270,172 Q270,148 254,142 Q238,138 228,148 Q218,158 218,178 L218,362"
+        fill="none" stroke="#5BA4E6" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Crossbar -->
+  <path d="M186,228 L268,228"
+        fill="none" stroke="#5BA4E6" stroke-width="36" stroke-linecap="round"/>
+
+  <!-- Letter: e -->
+  <path d="M304,290 L382,290 Q396,290 396,272 Q396,240 360,224 Q324,210 304,236 Q284,262 296,302 Q310,342 348,348 Q372,348 392,328"
+        fill="none" stroke="#5BA4E6" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

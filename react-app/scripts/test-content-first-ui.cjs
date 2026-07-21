@@ -137,6 +137,17 @@ async function testSharePrivacyPresets(browser) {
     const page = await browser.newPage({ viewport });
     await page.goto(`${baseUrl}/memories`, { waitUntil: 'domcontentloaded', timeout: 180000 });
     await page.locator('.content-list--records .memory-card .place-tap').first().click();
+    const actionLayout = await page.locator('.memory-reader-actions').evaluate((element) => {
+      const actions = element.getBoundingClientRect();
+      const nextSection = element.nextElementSibling.getBoundingClientRect();
+      return {
+        position: getComputedStyle(element).position,
+        actionsBottom: Math.round(actions.bottom),
+        nextSectionTop: Math.round(nextSection.top)
+      };
+    });
+    assert.equal(actionLayout.position, 'static', 'memory actions stay in the reader card flow');
+    assert.ok(actionLayout.actionsBottom <= actionLayout.nextSectionTop, 'memory actions do not overlap the next section');
     await page.locator('.memory-reader-actions button').filter({ hasText: '分享' }).click();
     await page.locator('.local-share-privacy-presets').waitFor();
     const presets = page.locator('.local-share-privacy-presets button');

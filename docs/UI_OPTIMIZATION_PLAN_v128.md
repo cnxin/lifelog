@@ -1,6 +1,7 @@
 # LifeLog 界面优化方案（基于 0.1.0-test.128）
 
-> 状态：方案（未实施）  
+> **现行主方案**：[`OPTIMIZATION_MASTER_PLAN.md`](./OPTIMIZATION_MASTER_PLAN.md)
+> 状态：诊断归档（129–132 已吸收部分项；剩余并入主方案 Phase B）
 > 日期：2026-07-12  
 > 基线：`0.1.0-test.128` 已完成流体手感  
 > 设计定位：柔和、私人、温暖、轻量精致（见 `react-app/.impeccable.md`）  

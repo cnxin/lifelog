@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-07-21",
+  date: "2026-07-22",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -15,6 +15,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 };
 
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.135",
+    date: "2026-07-22",
+    title: "记录详情操作栏修复与发布基线收口",
+    highlights: [
+      "记录详情里的编辑与分享操作恢复到正文流中，不再悬浮遮挡后续内容。",
+      "新增生产构建性能基线，覆盖冷启动、500 条记录滚动与 100 图缩略图备份。",
+      "历史优化方案统一指向现行主计划，正式图标对照资产入库，本地探索产物不再污染提交。",
+      "更新受影响的开发依赖并恢复到 npm audit 0 漏洞。"
+    ]
+  },
   {
     version: "0.1.0-test.134",
     date: "2026-07-21",

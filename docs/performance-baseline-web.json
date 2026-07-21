@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-07-21T16:51:35.469Z",
+  "environment": {
+    "kind": "desktop-web-headless-chromium",
+    "appVersion": "0.1.0-test.135",
+    "platform": "win32",
+    "arch": "x64",
+    "node": "v24.13.0",
+    "playwright": "1.55.1",
+    "viewport": "390x844",
+    "productionBuild": true,
+    "note": "This desktop Web baseline does not replace Android device UAT."
+  },
+  "dataSet": {
+    "memories": 500,
+    "photos": 100,
+    "photoBytes": 1638400
+  },
+  "coldStart": {
+    "runs": [
+      1462.6,
+      1476,
+      1317.2,
+      1325.4,
+      1320.2
+    ],
+    "medianMs": 1325.4,
+    "p95Ms": 1462.6
+  },
+  "memoryList": {
+    "visibleMs": 1160.6,
+    "virtualized": true,
+    "renderedItems": 17,
+    "estimatedHeight": 49000,
+    "scroll": {
+      "durationMs": 1993.2,
+      "distancePx": 48771,
+      "reachedEnd": true,
+      "scrollRoot": "main-content",
+      "frameCount": 120,
+      "medianFrameMs": 16.6,
+      "p95FrameMs": 18.1,
+      "maxFrameMs": 18.7,
+      "framesOver50Ms": 0
+    }
+  },
+  "thumbnailBackup": {
+    "elapsedMs": 523.1,
+    "fileName": "lifelog-backup-thumbs-2026-07-21.json",
+    "sizeBytes": 4651476
+  }
+}

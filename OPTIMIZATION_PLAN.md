@@ -2,9 +2,10 @@
 
 > **状态：已废弃（2026-07-11）**  
 > **原因**：正文基于 Vue 3 + Element Plus，与当前仓库 **React 18 + TypeScript + Capacitor** 不符。  
-> **请改用**：
-> - [`APPLE_FEEL_EXECUTION_PLAN.md`](./APPLE_FEEL_EXECUTION_PLAN.md) — Apple 流体交互完整执行方案（当前主线）
-> - [`UX_OPTIMIZATION_PLAN_v2.md`](./UX_OPTIMIZATION_PLAN_v2.md) — React 版 UX 方案
+> **现行唯一主方案**：[`docs/OPTIMIZATION_MASTER_PLAN.md`](./docs/OPTIMIZATION_MASTER_PLAN.md)
+> **归档参考**（勿平行实施）：
+> - [`APPLE_FEEL_EXECUTION_PLAN.md`](./APPLE_FEEL_EXECUTION_PLAN.md) — 流体手感实施档案（已落地）
+> - [`UX_OPTIMIZATION_PLAN_v2.md`](./UX_OPTIMIZATION_PLAN_v2.md) — UX 诊断归档
 > - [`docs/LifeLog-后续优化计划.md`](./docs/LifeLog-后续优化计划.md)
 > - 交互对照 Demo：[`demo/apple-feel-compare.html`](./demo/apple-feel-compare.html)
 

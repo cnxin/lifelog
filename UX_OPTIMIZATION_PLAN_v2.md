@@ -1,6 +1,7 @@
 # LifeLog UX 优化方案 v2.0
 
-> 基于实际代码研究的优化建议  
+> **现行主方案**：[`docs/OPTIMIZATION_MASTER_PLAN.md`](./docs/OPTIMIZATION_MASTER_PLAN.md)（2026-07-13 起唯一优化任务板）
+> 本文仅作历史 UX 诊断归档，**请勿按正文平行开新迭代**。
 > 项目：React 18 + TypeScript + IndexedDB + Capacitor  
 > 日期：2026-07-07  
 > **状态更新 2026-07-11**：流体手感主线见 [`APPLE_FEEL_EXECUTION_PLAN.md`](./APPLE_FEEL_EXECUTION_PLAN.md)，对照 Demo：`demo/apple-feel-compare.html`。

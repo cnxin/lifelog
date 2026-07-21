@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.134",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.134",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.134/lifelog-v0.1.0-test.134.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.134.apk",
-    "apkName":  "lifelog-v0.1.0-test.134.apk",
-    "apkSize":  4129169,
-    "apkSha256":  "ec29a0e30ff74cf7d426c4894107e9a0a3d6c07e2cd021851657d51ee5573870",
-    "publishedAt":  "2026-07-20T16:24:26Z",
-    "body":  "- 新用户首页增加三步启用清单，第一条记录、首个人物和备份选择均可直接完成或跳过；已有真实数据的用户不会重复进入引导。\n- 搜索结果可回落到人物、地点和记录详情并短暂聚焦，返回后恢复同次查询；查询词不写入 URL、持久化数据或 UX 指标。\n- 分享增加私密默认、熟人和自定义预设，链接、二维码、图片与分享包共用同一组选项，切换分享目标时自动回到私密默认。\n- 设置与数据管理页改为更紧凑的内容优先分组，首页清单、分享面板和提醒分类在移动端与桌面端均保持无横向溢出。"
+    "version":  "0.1.0-test.135",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.135",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.135/lifelog-v0.1.0-test.135.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.135.apk",
+    "apkName":  "lifelog-v0.1.0-test.135.apk",
+    "apkSize":  4129237,
+    "apkSha256":  "337da6a3d780bccf6afb58aa2bf6003f75210f79858a5d56b3def0d82da02efe",
+    "publishedAt":  "2026-07-21T16:44:26Z",
+    "body":  "- 记录详情里的编辑与分享操作恢复到正文流中，不再悬浮于页面或遮挡后续内容；新增布局回归断言防止复发。"
 }

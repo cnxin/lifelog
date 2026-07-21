@@ -30,3 +30,22 @@ npm-debug.log*
 # Environment
 .env
 .env.local
+
+# Local planning only (not for remote)
+docs/LifeLog-总计划.md
+
+# Local UI exploration and screenshots
+react-app/.tmp-preview/
+react-app/account-debug.png
+react-app/account-page.png
+react-app/tab-*.png
+react-app/tab-*.json
+react-app/verify-*.png
+react-app/public/tab-demo.html
+react-app/scripts/debug-tab-frame.mjs
+react-app/scripts/inspect-tab.mjs
+react-app/scripts/verify-tab-frame.mjs
+demo/avatar-initials-options.html
+demo/new-ui-preview.html
+demo/concept_g.png
+demo/concept_[h-o].svg

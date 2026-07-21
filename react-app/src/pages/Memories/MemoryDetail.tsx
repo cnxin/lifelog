@@ -234,7 +234,7 @@ export default function MemoryDetail() {
               ))}
             </div>
           )}
-          <div className="memory-reader-actions sticky-reader-actions compact">
+          <div className="memory-reader-actions compact">
             <button type="button" onClick={() => setEditing(true)}>
               <PenLine /> {memory.content.trim() ? copy.detailAction : copy.emptyAction}
             </button>

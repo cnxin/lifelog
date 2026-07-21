@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="40" x2="456" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4A9FE0"/>
+      <stop offset="1" stop-color="#3578C0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Solid blue background like TapTap's green bg -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Bold geometric lowercase "life" in WHITE — high contrast on blue -->
+  <!-- Style: chunky rounded geometric, like Plex's lowercase wordmark -->
+
+  <!-- Letter: l -->
+  <path d="M88,142 L88,338 Q88,362 112,362 L128,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Letter: i -->
+  <path d="M190,222 L190,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round"/>
+  <!-- Dot — a playful accent: slightly larger, offset upward -->
+  <circle cx="190" cy="168" r="26" fill="#FFFFFF"/>
+
+  <!-- Letter: f -->
+  <path d="M294,172 Q294,148 278,142 Q262,138 252,148 Q242,158 242,178 L242,362"
+        fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Crossbar -->
+  <path d="M210,228 L292,228"
+        fill="none" stroke="#FFFFFF" stroke-width="36" stroke-linecap="round"/>
+
+  <!-- Letter: e -->
+  <path d="M334,290 L412,290 Q426,290 426,272 Q426,240 390,224 Q354,210 334,236 Q314,262 326,302 Q340,342 378,348 Q402,348 422,328"
+        fill="none" stroke="#FFFFFF" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
