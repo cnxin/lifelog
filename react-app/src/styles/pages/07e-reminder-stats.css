@@ -958,6 +958,56 @@
   overflow: visible;
 }
 
+.smart-prompt-settings-block {
+  display: grid;
+  gap: 12px;
+}
+
+.smart-prompt-settings-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.smart-prompt-settings-head > svg {
+  flex: 0 0 auto;
+  color: var(--accent-primary);
+}
+
+.smart-prompt-settings-head > div,
+.smart-prompt-category > span:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.smart-prompt-settings-head span,
+.smart-prompt-category small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+.smart-prompt-category-list {
+  display: grid;
+}
+
+.smart-prompt-category {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.smart-prompt-category:first-child {
+  border-top: 0;
+}
+
+.smart-prompt-category .reminder-toggle {
+  flex: 0 0 auto;
+}
+
 .reminder-config-header {
   color: var(--text-main);
 }

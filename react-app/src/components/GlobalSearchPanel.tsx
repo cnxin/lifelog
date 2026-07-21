@@ -7,39 +7,18 @@ import { formatMonthDay } from "../utils/date";
 import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, getMemoryKindLabel, isMemoryPlan } from "../utils/memoryDisplay";
 import { getMemoryPlaceIds } from "../utils/memoryPlaces";
 import { buildPlaceContextLine, buildPlaceDisplayName } from "../utils/placeMeta";
-
-type SearchKind = "memory" | "person" | "place";
-type SearchField = "标题" | "正文" | "标签" | "人物" | "地点" | "喜好" | "纪念日" | "地址" | "平台" | "备注" | "分类";
-
-interface SearchKeyword {
-  field: SearchField;
-  value: string;
-}
-
-interface SearchResult {
-  id: string;
-  kind: SearchKind;
-  kindLabel?: string;
-  title: string;
-  subtitle: string;
-  meta: string;
-  path: string;
-  searchText: string;
-  keywords: SearchKeyword[];
-  scoreBase: number;
-  date?: string;
-  personIds?: string[];
-  personNames?: string[];
-}
-
-interface ParsedSearchQuery {
-  raw: string;
-  tokens: string[];
-  mentionNames: string[];
-  exactDates: string[];
-  yearMonths: string[];
-  hasSemanticFilter: boolean;
-}
+import {
+  buildMatchHint,
+  isSearchKeyword,
+  keyword,
+  kindLabel,
+  normalizeSearchText,
+  parseSearchQuery,
+  rankSearchResults,
+  type SearchResult
+} from "../utils/globalSearch";
+import { getSearchResultCountBucket, recordUxMetric } from "../utils/uxMetrics";
+import { buildSearchResultRouteState } from "../utils/searchNavigation";
 
 const RECENT_SEARCH_LIMIT = 8;
 
@@ -58,12 +37,24 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   const [recentSearches, setRecentSearches] = usePersistentState<string[]>("lifelog:recent-searches", [], isStringArray);
   const privacyMode = Boolean(settings.privacyMode);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchStartedAtRef = useRef(0);
+  const searchRecordedRef = useRef(false);
+  const resultCountRef = useRef(0);
 
   useEffect(() => {
     if (!open) return;
     const timer = window.setTimeout(() => inputRef.current?.focus(), 80);
     return () => window.clearTimeout(timer);
   }, [open]);
+
+  useEffect(() => {
+    function handleResumeSearch(event: Event) {
+      const query = (event as CustomEvent<{ query?: unknown }>).detail?.query;
+      if (typeof query === "string") setQuery(query);
+    }
+    window.addEventListener("lifelog:resume-global-search", handleResumeSearch);
+    return () => window.removeEventListener("lifelog:resume-global-search", handleResumeSearch);
+  }, []);
 
   useEffect(() => {
     if (privacyMode && recentSearches.length) {
@@ -193,23 +184,18 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
     [state.memories.length, state.people.length, state.places.length]
   );
   const suggestions = useMemo(() => buildSearchSuggestions(state, getPersonName, getPlaceName), [getPersonName, getPlaceName, state.memories, state.people, state.places]);
-  const results = useMemo(() => {
-    if (!parsedQuery.tokens.length && !parsedQuery.hasSemanticFilter) return [];
-    return index
-      .map((item) => ({ item, score: scoreSearchResult(item, parsedQuery) }))
-      .filter((entry) => entry.score > 0)
-      .sort((left, right) => {
-        const kindRank = kindPriority(left.item.kind, parsedQuery) - kindPriority(right.item.kind, parsedQuery);
-        return (
-          kindRank ||
-          right.score - left.score ||
-          right.item.scoreBase - left.item.scoreBase ||
-          left.item.title.localeCompare(right.item.title, "zh-CN")
-        );
-      })
-      .slice(0, 36)
-      .map((entry) => entry.item);
-  }, [index, parsedQuery]);
+  const results = useMemo(() => rankSearchResults(index, parsedQuery), [index, parsedQuery]);
+  resultCountRef.current = results.length;
+
+  useEffect(() => {
+    if (open) {
+      searchStartedAtRef.current = performance.now();
+      searchRecordedRef.current = false;
+      return;
+    }
+    recordSearchOutcome("abandoned");
+    searchStartedAtRef.current = 0;
+  }, [open]);
 
   const sectionedResults = useMemo(() => {
     const people = results.filter((item) => item.kind === "person");
@@ -264,17 +250,29 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
 
       if (event.key === "Enter") {
         event.preventDefault();
-        openPath(results[Math.max(0, selectedIndex)]?.path || results[0].path);
+        openResult(results[Math.max(0, selectedIndex)] || results[0]);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose, results, selectedIndex]);
 
-  function openPath(path: string) {
+  function openResult(result: SearchResult) {
+    recordSearchOutcome("selected");
     saveRecentSearch(query);
-    navigate(path);
+    navigate(result.path, { state: buildSearchResultRouteState(result.kind, result.id, query) });
     onClose();
+  }
+
+  function recordSearchOutcome(outcome: "selected" | "abandoned") {
+    if (!searchStartedAtRef.current || searchRecordedRef.current) return;
+    searchRecordedRef.current = true;
+    recordUxMetric({
+      event: "search_flow",
+      resultCount: getSearchResultCountBucket(resultCountRef.current),
+      outcome,
+      durationMs: performance.now() - searchStartedAtRef.current
+    });
   }
 
   function saveRecentSearch(value: string) {
@@ -412,7 +410,7 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
                       key={`${result.kind}-${result.id}`}
                       className={`global-search-result glass-card ${index === selectedIndex ? "active" : ""}`}
                       type="button"
-                      onClick={() => openPath(result.path)}
+                      onClick={() => openResult(result)}
                       onMouseEnter={() => setSelectedIndex(index)}
                     >
                       <span className={`global-search-icon ${result.kind}`}>
@@ -452,174 +450,8 @@ export default function GlobalSearchPanel({ open, onClose }: { open: boolean; on
   );
 }
 
-function parseSearchQuery(raw: string): ParsedSearchQuery {
-  const source = raw.trim();
-  if (!source) {
-    return { raw: "", tokens: [], mentionNames: [], exactDates: [], yearMonths: [], hasSemanticFilter: false };
-  }
-
-  const mentionNames: string[] = [];
-  const mentionRegex = /@([一-鿿A-Za-z0-9_·]{1,24})/g;
-  let mentionMatch: RegExpExecArray | null;
-  while ((mentionMatch = mentionRegex.exec(source))) {
-    const name = mentionMatch[1].trim();
-    if (name) mentionNames.push(name);
-  }
-
-  const exactDates = Array.from(new Set(source.match(/\b\d{4}-\d{2}-\d{2}\b/g) || []));
-  const yearMonths = Array.from(
-    new Set((source.match(/\b\d{4}-\d{2}\b/g) || []).filter((item) => !exactDates.some((date) => date.startsWith(item))))
-  );
-
-  let residual = source;
-  for (const name of mentionNames) residual = residual.replace(new RegExp(`@${escapeRegExp(name)}`, "g"), " ");
-  for (const date of exactDates) residual = residual.replace(date, " ");
-  for (const month of yearMonths) residual = residual.replace(month, " ");
-  residual = residual.replace(/@/g, " ");
-
-  const tokens = normalizeSearchText(residual).split(" ").filter(Boolean);
-  return {
-    raw: source,
-    tokens,
-    mentionNames: uniquePreserve(mentionNames),
-    exactDates,
-    yearMonths,
-    hasSemanticFilter: Boolean(mentionNames.length || exactDates.length || yearMonths.length)
-  };
-}
-
-function scoreSearchResult(result: SearchResult, query: ParsedSearchQuery) {
-  if (query.mentionNames.length) {
-    const ok = query.mentionNames.some((name) => matchesMention(result, name));
-    if (!ok) return 0;
-  }
-
-  if (query.exactDates.length) {
-    if (result.kind !== "memory" || !result.date) return 0;
-    if (!query.exactDates.includes(result.date)) return 0;
-  } else if (query.yearMonths.length) {
-    if (result.kind !== "memory" || !result.date) return 0;
-    if (!query.yearMonths.some((month) => result.date!.startsWith(month))) return 0;
-  }
-
-  const tokens = query.tokens;
-  if (!tokens.length) {
-    let score = result.scoreBase + 20;
-    if (query.mentionNames.length && result.kind === "person") score += 40;
-    if (query.mentionNames.length && result.kind === "memory") score += 24;
-    if (query.exactDates.length || query.yearMonths.length) score += 30;
-    return score;
-  }
-
-  let score = 0;
-  const title = normalizeSearchText(result.title);
-  const subtitle = normalizeSearchText(result.subtitle);
-  for (const token of tokens) {
-    if (!result.searchText.includes(token)) return 0;
-    if (title === token) score += 42;
-    else if (title.startsWith(token)) score += 32;
-    else if (title.includes(token)) score += 24;
-    else if (subtitle.includes(token)) score += 12;
-    else score += 6;
-  }
-
-  if (query.mentionNames.length && result.kind === "person") score += 36;
-  if (query.mentionNames.length && result.kind === "memory") score += 18;
-  if (query.exactDates.length && result.kind === "memory") score += 28;
-  if (query.yearMonths.length && result.kind === "memory") score += 20;
-
-  return score + result.scoreBase;
-}
-
-function matchesMention(result: SearchResult, mention: string) {
-  const target = normalizeSearchText(mention);
-  if (!target) return false;
-  const names = (result.personNames || []).map((name) => normalizeSearchText(name)).filter(Boolean);
-  if (result.kind === "person" || result.kind === "memory") {
-    return names.some((name) => name === target || name.includes(target) || target.includes(name));
-  }
-  return false;
-}
-
-function kindPriority(kind: SearchKind, query: ParsedSearchQuery) {
-  if (query.mentionNames.length) {
-    if (kind === "person") return 0;
-    if (kind === "memory") return 1;
-    return 2;
-  }
-  if (query.exactDates.length || query.yearMonths.length) {
-    if (kind === "memory") return 0;
-    if (kind === "person") return 1;
-    return 2;
-  }
-  if (kind === "memory") return 0;
-  if (kind === "person") return 1;
-  return 2;
-}
-
-function buildMatchHint(result: SearchResult, query: ParsedSearchQuery) {
-  if (query.mentionNames.length && result.kind === "person") {
-    return `人物命中：@${query.mentionNames[0]}`;
-  }
-  if (query.mentionNames.length && result.kind === "memory") {
-    return `与 @${query.mentionNames[0]} 相关`;
-  }
-  if (query.exactDates.length && result.date) {
-    return `日期命中：${result.date}`;
-  }
-  if (query.yearMonths.length && result.date) {
-    return `月份命中：${result.date.slice(0, 7)}`;
-  }
-
-  const tokens = query.tokens;
-  const exactFields = new Set<SearchField>();
-  const matchedKeywords: SearchKeyword[] = [];
-
-  for (const keyword of result.keywords) {
-    const normalized = normalizeSearchText(keyword.value);
-    if (!normalized) continue;
-    if (tokens.some((token) => normalized.includes(token))) {
-      exactFields.add(keyword.field);
-      matchedKeywords.push(keyword);
-    }
-  }
-
-  const first = matchedKeywords.find((item) => item.field !== "标题") || matchedKeywords[0];
-  if (!first) return kindLabel(result.kind);
-
-  const fields = Array.from(exactFields).slice(0, 2).join("、");
-  return `命中${fields}：${compactMatchText(first.value, tokens)}`;
-}
-
-function compactMatchText(value: string, tokens: string[]) {
-  const text = value.replace(/\s+/g, " ").trim();
-  if (text.length <= 28) return text;
-
-  const normalized = normalizeSearchText(text);
-  const token = tokens.find((item) => normalized.includes(item));
-  if (!token) return `${text.slice(0, 26)}...`;
-
-  const start = Math.max(0, normalized.indexOf(token) - 8);
-  const end = Math.min(text.length, start + 28);
-  return `${start > 0 ? "..." : ""}${text.slice(start, end)}${end < text.length ? "..." : ""}`;
-}
-
-function normalizeSearchText(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[，。！？、；：,.!?;:()[\]{}"'“”‘’/\\|_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function firstLine(value: string) {
   return value.trim().split(/\n|。|！|？|!|\?/)[0]?.trim() || "";
-}
-
-function kindLabel(kind: SearchKind) {
-  if (kind === "person") return "人物";
-  if (kind === "place") return "地点";
-  return "记录";
 }
 
 function buildSearchSuggestions(
@@ -665,31 +497,6 @@ function uniqueSearchTerms(values: string[]) {
     result.push(text);
   }
   return result;
-}
-
-function uniquePreserve(values: string[]) {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const value of values) {
-    const key = normalizeSearchText(value);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    result.push(value);
-  }
-  return result;
-}
-
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function keyword(field: SearchField, value?: string | null): SearchKeyword | null {
-  const text = String(value || "").trim();
-  return text ? { field, value: text } : null;
-}
-
-function isSearchKeyword(value: SearchKeyword | null): value is SearchKeyword {
-  return Boolean(value);
 }
 
 function safeArray<T>(value: T[] | undefined | null): T[] {

@@ -1,12 +1,14 @@
 import { Calendar, ChevronDown, Clock, Heart, History, MapPin, PenLine, Search, Sparkles, Star, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AvatarFace from "../../components/AvatarFace";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
 import MemoryCard from "../../components/MemoryCard";
+import OnboardingChecklist from "../../components/OnboardingChecklist";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useHomeLayout } from "../../hooks/useHomeLayout";
+import { useOnboardingProgress } from "../../hooks/useOnboardingProgress";
 import { getBooleanPreference, useUserPreferences } from "../../hooks/useUserPreferences";
 import type { EntryType } from "../../types";
 import { buildPersonAnniversarySuffix } from "../../utils/anniversaryLinks";
@@ -36,8 +38,15 @@ import {
   saveTodayActionPrefs,
   type FlashbackItem,
   type OpenMemoryOptions,
+  type SmartPrompt,
   type TodayActionPrefs
 } from "./homeHelpers";
+import { recordUxMetric, type HomeMetricSection } from "../../utils/uxMetrics";
+import { seedData } from "../../data/seedData";
+
+const DEMO_PERSON_IDS = new Set(seedData.people.map((person) => person.id));
+const DEMO_PLACE_IDS = new Set(seedData.places.map((place) => place.id));
+const DEMO_MEMORY_IDS = new Set(seedData.memories.map((memory) => memory.id));
 
 export default function Home() {
   const navigate = useNavigate();
@@ -50,6 +59,8 @@ export default function Home() {
   const [pendingMemoryPlanId, setPendingMemoryPlanId] = useState<string | null>(null);
   const [actionPrefs, setActionPrefs] = useState<TodayActionPrefs>(() => loadTodayActionPrefs());
   const [smartPromptPrefs, setSmartPromptPrefs] = useState<TodayActionPrefs>(() => loadSmartPromptPrefs());
+  const [onboardingDeferred, setOnboardingDeferred] = useState(false);
+  const shownSmartPromptIdsRef = useRef(new Set<string>());
   const monthlySchedule = buildCurrentMonthScheduleItems({
     anniversaryPlans: state.anniversaryPlans,
     memories: state.memories,
@@ -83,6 +94,14 @@ export default function Home() {
   const mainOnThisDay = onThisDayMemories[0];
   const otherOnThisDayMemories = onThisDayMemories.slice(1);
   const totalRecords = state.people.length + state.places.length + actualMemories.length;
+  const userPersonCount = state.people.filter((person) => !DEMO_PERSON_IDS.has(person.id)).length;
+  const userPlaceCount = state.places.filter((place) => !DEMO_PLACE_IDS.has(place.id)).length;
+  const userMemoryCount = actualMemories.filter((memory) => !DEMO_MEMORY_IDS.has(memory.id)).length;
+  const onboarding = useOnboardingProgress({
+    memoryCount: userMemoryCount,
+    personCount: userPersonCount,
+    totalRecords: userPersonCount + userPlaceCount + userMemoryCount
+  });
   const isNewUser = totalRecords < 10;
   const hasMonthlySchedule = monthlyScheduleItems.length > 0 || upcoming.length > 0;
   const hasHomeLibrary = favorites.length > 0 || featuredPlaces.length > 0 || recentEntries.length > 0;
@@ -154,7 +173,8 @@ export default function Home() {
       onOpenPerson: (personId) => navigate(`/people/${personId}`),
       onOpenPlace: (placeId) => navigate(`/places/${placeId}`),
       onQuickMemory: openQuickMemory,
-      promptPrefs: smartPromptPrefs
+      promptPrefs: smartPromptPrefs,
+      promptCategories: prefs.smartPromptCategories
     });
   const homeLayout = useHomeLayout({
     totalRecords,
@@ -174,6 +194,19 @@ export default function Home() {
     updatePreference("homeTaskQueueExpanded", typeof updater === "function" ? updater(taskQueueOpen) : updater);
   const setHomeLibraryOpen = (updater: boolean | ((value: boolean) => boolean)) =>
     updatePreference("homeLibraryExpanded", typeof updater === "function" ? updater(homeLibraryOpen) : updater);
+
+  useEffect(() => {
+    const prompt = smartPrompts[0];
+    if (!prompt || shownSmartPromptIdsRef.current.has(prompt.id)) return;
+    shownSmartPromptIdsRef.current.add(prompt.id);
+    recordUxMetric({ event: "smart_prompt", category: prompt.category, outcome: "shown" });
+  }, [smartPrompts[0]?.id]);
+
+  function toggleHomeSection(section: HomeMetricSection, current: boolean, setOpen: (value: boolean) => void) {
+    const next = !current;
+    setOpen(next);
+    recordUxMetric({ event: "home_section", section, action: next ? "open" : "close" });
+  }
   function updateActionPref(actionId: string, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
       ...actionPrefs,
@@ -182,13 +215,19 @@ export default function Home() {
     setActionPrefs(next);
     saveTodayActionPrefs(next);
   }
-  function updateSmartPromptPref(promptId: string, mode: "snooze" | "dismiss") {
+  function updateSmartPromptPref(prompt: SmartPrompt, mode: "snooze" | "dismiss") {
     const next: TodayActionPrefs = {
       ...smartPromptPrefs,
-      [promptId]: mode === "snooze" ? buildSnoozeUntil() : "dismissed"
+      [prompt.id]: mode === "snooze" ? buildSnoozeUntil() : "dismissed"
     };
     setSmartPromptPrefs(next);
     saveSmartPromptPrefs(next);
+    recordUxMetric({ event: "smart_prompt", category: prompt.category, outcome: mode });
+  }
+
+  function openSmartPrompt(prompt: SmartPrompt) {
+    recordUxMetric({ event: "smart_prompt", category: prompt.category, outcome: "open" });
+    prompt.onClick();
   }
 
   function recordAnotherOnThisDay(item: FlashbackItem) {
@@ -218,32 +257,24 @@ export default function Home() {
         </button>
       </section>
 
-      {isNewUser && totalRecords === 0 && (
+      {onboarding.visible && !onboardingDeferred && (
         <section className="section" style={{ order: 0 }}>
-          <div className="home-welcome-card">
-            <h2>从一句小事开始你的 LifeLog</h2>
-            <p>不用一次写完。先留下今天，人物和地点以后再补。</p>
-            <div className="home-welcome-actions">
-              <button className="primary-btn pressable" type="button" onClick={() => openQuickMemory()}>
-                写下今天第一件事
-              </button>
-              <div className="home-welcome-secondary">
-                <button className="ghost-btn pressable" type="button" onClick={() => setEntrySheetType("person")}>
-                  先记一个人
-                </button>
-                <button className="ghost-btn pressable" type="button" onClick={() => setEntrySheetType("place")}>
-                  先记一个地方
-                </button>
-              </div>
-            </div>
-          </div>
+          <OnboardingChecklist
+            completedCount={onboarding.completedCount}
+            stepStates={onboarding.stepStates}
+            onStartMemory={() => openQuickMemory()}
+            onStartPerson={() => setEntrySheetType("person")}
+            onOpenBackup={() => navigate("/account", { state: { accountTab: "data" } })}
+            onSkipStep={onboarding.skipStep}
+            onLater={() => setOnboardingDeferred(true)}
+          />
         </section>
       )}
 
       {todayActions.length > 0 && (
         <section className="section" style={{ order: homeLayout.getSectionOrder("todayQueue") }}>
           <GlassCard className={`today-queue-card ${todayQueueOpen ? "open" : ""}`}>
-            <button className="today-queue-summary" type="button" onClick={() => setTodayQueueOpen((open) => !open)}>
+            <button className="today-queue-summary" type="button" onClick={() => toggleHomeSection("todayQueue", todayQueueOpen, setTodayQueueOpen)}>
               <span className="today-queue-icon">
                 <Sparkles />
               </span>
@@ -289,7 +320,7 @@ export default function Home() {
       {smartPrompts.length > 0 && (
         <section className="section" style={{ order: homeLayout.getSectionOrder("smartPrompt") }}>
           <GlassCard className={`home-smart-prompt-card ${smartPrompts[0].tone || ""}`}>
-            <button className="home-smart-prompt-main" type="button" onClick={smartPrompts[0].onClick}>
+            <button className="home-smart-prompt-main" type="button" onClick={() => openSmartPrompt(smartPrompts[0])}>
               <span className="home-smart-prompt-icon">{smartPrompts[0].icon}</span>
               <span className="home-smart-prompt-copy">
                 <strong>{smartPrompts[0].title}</strong>
@@ -298,10 +329,10 @@ export default function Home() {
               <em>{smartPrompts[0].meta}</em>
             </button>
             <span className="home-smart-prompt-tools">
-              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0].id, "snooze"))}>
+              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0], "snooze"))}>
                 稍后
               </button>
-              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0].id, "dismiss"))}>
+              <button type="button" onClick={(event) => handleActionTool(event, () => updateSmartPromptPref(smartPrompts[0], "dismiss"))}>
                 今天忽略
               </button>
             </span>
@@ -424,7 +455,7 @@ export default function Home() {
       {tasks.length > 0 && isNewUser && (
         <section className="section" style={{ order: homeLayout.getSectionOrder("taskQueue") }}>
           <GlassCard className={`today-queue-card profile-queue-card ${taskQueueOpen ? "open" : ""}`}>
-            <button className="today-queue-summary" type="button" onClick={() => setTaskQueueOpen((open) => !open)}>
+            <button className="today-queue-summary" type="button" onClick={() => toggleHomeSection("taskQueue", taskQueueOpen, setTaskQueueOpen)}>
               <span className="today-queue-icon">
                 <Sparkles />
               </span>
@@ -469,12 +500,12 @@ export default function Home() {
           <h2>
             <Clock /> 最近看看
           </h2>
-          <button className="see-all home-library-toggle" type="button" onClick={() => setHomeLibraryOpen((open) => !open)}>
+          <button className="see-all home-library-toggle" type="button" onClick={() => toggleHomeSection("homeLibrary", homeLibraryOpen, setHomeLibraryOpen)}>
             {homeLibraryOpen ? "收起" : "展开"}
             <ChevronDown />
           </button>
         </div>
-        <button className="home-library-strip glass-card" type="button" onClick={() => setHomeLibraryOpen((open) => !open)}>
+        <button className="home-library-strip glass-card" type="button" onClick={() => toggleHomeSection("homeLibrary", homeLibraryOpen, setHomeLibraryOpen)}>
           <span className="home-library-copy">
             <strong>{homeLibrarySummary}</strong>
             <small>需要回看时再展开，不占用今天的主流程</small>

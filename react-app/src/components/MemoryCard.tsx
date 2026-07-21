@@ -1,7 +1,7 @@
 import { ChevronDown, Heart, Image as ImageIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import GlassCard from "./GlassCard";
+import ListRow from "./ListRow";
 import MemoryTags from "./MemoryTags";
 import MemoryThumb from "./MemoryThumb";
 import NotionSyncBadge from "./NotionSyncBadge";
@@ -59,7 +59,7 @@ export default function MemoryCard({
   const useSoftThumb = showThumb && !dense;
 
   return (
-    <GlassCard className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${useSoftThumb ? "has-thumb" : ""} ${extrasOpen ? "extras-open" : ""} ${className}`}>
+    <ListRow className={`memory-card ${isMemoryPlan(memory) ? "memory-card-plan" : ""} ${collapseExtras ? "compact-memory-card" : ""} ${dense ? "dense-memory-card" : ""} ${useSoftThumb ? "has-thumb" : ""} ${extrasOpen ? "extras-open" : ""} ${className}`}>
       {selectionControl}
       <button className="place-tap" onClick={onOpen} type="button">
         {useSoftThumb ? <MemoryThumb memory={memory} enabled /> : <div className="memory-badge">{icon || <Heart />}</div>}
@@ -133,6 +133,6 @@ export default function MemoryCard({
         )}
       </div>
       {actions && <div className="person-side-actions">{actions}</div>}
-    </GlassCard>
+    </ListRow>
   );
 }

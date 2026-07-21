@@ -1,6 +1,7 @@
 import { CloudOff, Crown, Database, FlaskConical, Info, KeyRound, Settings, UserRound } from "lucide-react";
 import { useLayoutEffect, useState } from "react";
-import GlassCard from "../../components/GlassCard";
+import { useLocation } from "react-router-dom";
+import ListRow from "../../components/ListRow";
 import { AppSettingsPanel, DataOrganizePanel } from "../Settings/Settings";
 import AccountAbout from "./AccountAbout";
 import AccountDataManagement from "./AccountDataManagement";
@@ -10,7 +11,8 @@ import AccountNotionSync from "./AccountNotionSync";
 type AccountTab = "account" | "app" | "data" | "labs" | "about";
 
 export default function Account() {
-  const [activeTab, setActiveTab] = useState<AccountTab>("account");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<AccountTab>(() => getInitialAccountTab(location.state));
 
   useLayoutEffect(() => {
     document.querySelector<HTMLElement>(".main-content")?.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -41,35 +43,35 @@ export default function Account() {
 
       {activeTab === "account" && (
         <section className="section">
-          <div className="management-card-grid">
-            <GlassCard className="management-info-card">
+          <div className="management-card-grid content-list settings-list">
+            <ListRow className="management-info-card">
               <UserRound />
               <div>
                 <strong>本地免费</strong>
                 <span>人物、地点、回忆、提醒、备份、分享等本地功能全部免费使用。</span>
               </div>
-            </GlassCard>
-            <GlassCard className="management-info-card">
+            </ListRow>
+            <ListRow className="management-info-card">
               <CloudOff />
               <div>
                 <strong>云端高级</strong>
                 <span>暂未开启。后续只对云同步、云备份、多设备和云端恢复做高级能力。</span>
               </div>
-            </GlassCard>
-            <GlassCard className="management-info-card">
+            </ListRow>
+            <ListRow className="management-info-card">
               <Crown />
               <div>
                 <strong>购买验证</strong>
                 <span>仅用于云端高级权益校验，不影响任何本地功能使用。</span>
               </div>
-            </GlassCard>
-            <GlassCard className="management-info-card">
+            </ListRow>
+            <ListRow className="management-info-card">
               <KeyRound />
               <div>
                 <strong>授权信息</strong>
                 <span>暂无云端订阅凭证。后续可用于恢复购买和绑定云端账号。</span>
               </div>
-            </GlassCard>
+            </ListRow>
           </div>
         </section>
       )}
@@ -102,3 +104,11 @@ const managementTabs: Array<{ id: AccountTab; label: string; icon: typeof UserRo
   { id: "labs", label: "实验", icon: FlaskConical },
   { id: "about", label: "关于", icon: Info }
 ];
+
+function getInitialAccountTab(state: unknown): AccountTab {
+  if (!state || typeof state !== "object") return "account";
+  const value = (state as { accountTab?: unknown }).accountTab;
+  return value === "account" || value === "app" || value === "data" || value === "labs" || value === "about"
+    ? value
+    : "account";
+}

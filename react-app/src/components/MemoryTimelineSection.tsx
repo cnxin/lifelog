@@ -46,7 +46,7 @@ export default function MemoryTimelineSection({
           {groupedMemories.map((group) => (
             <div className="timeline-month" key={group.month}>
               <div className="timeline-month-title">{group.month}</div>
-              <div className="list">
+              <div className="content-list memory-timeline-content-list">
                 {group.memories.map((memory) => {
                   const ctx = buildMemoryDisplayContext(memory, getPersonName, getPlaceName);
                   const defaultRenderMeta = (item: MemoryEvent, itemCtx: MemoryDisplayContext, showContentLine: boolean) => (

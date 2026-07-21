@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(projectRoot, "..");
@@ -20,6 +21,16 @@ function expect(condition, message) {
 
 function getSha256(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+for (const script of ["test-ux-metrics.cjs", "test-main-path-smoke.cjs", "test-share-privacy.cjs"]) {
+  const result = spawnSync(process.execPath, [path.join(projectRoot, "scripts", script)], {
+    cwd: projectRoot,
+    encoding: "utf8"
+  });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  expect(result.status === 0, `${script} failed with exit code ${result.status ?? "unknown"}`);
 }
 
 const packageJsonPath = path.join(projectRoot, "package.json");

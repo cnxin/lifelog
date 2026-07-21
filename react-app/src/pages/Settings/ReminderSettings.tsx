@@ -1,15 +1,19 @@
-import { Bell, Clock, Calendar, Users, History } from "lucide-react";
+import { Bell, Clock, Calendar, Users, History, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import GlassCard from "../../components/GlassCard";
+import ListRow from "../../components/ListRow";
 import NumberStepper from "../../components/NumberStepper";
 import TimePicker from "../../components/TimePicker";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { notifyReminderPermissionChanged } from "../../hooks/useReminderScheduling";
 import { checkNotificationPermission, requestNotificationPermission } from "../../utils/notificationPermissions";
 import { previewReminderSchedule, previewUpcomingReminders, sendTestNotification } from "../../utils/reminderScheduler";
+import { isSmartPromptCategoryEnabled, useUserPreferences } from "../../hooks/useUserPreferences";
+import { recordUxMetric, type SmartPromptMetricCategory } from "../../utils/uxMetrics";
 
 export default function ReminderSettings() {
   const { state, reminderSettings, updateReminderSettings } = useLifeLog();
+  const { prefs, updatePreference } = useUserPreferences();
   const [hasPermission, setHasPermission] = useState(false);
   const [isCheckingPermission, setIsCheckingPermission] = useState(true);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
@@ -57,9 +61,20 @@ export default function ReminderSettings() {
     void updateReminderSettings({ [key]: value });
   }
 
+  function handleSmartPromptCategory(category: SmartPromptMetricCategory) {
+    const enabled = isSmartPromptCategoryEnabled(prefs, category);
+    updatePreference("smartPromptCategories", {
+      ...prefs.smartPromptCategories,
+      [category]: !enabled
+    });
+    if (enabled) {
+      recordUxMetric({ event: "smart_prompt", category, outcome: "reduce" });
+    }
+  }
+
   return (
     <div className="reminder-settings">
-      <GlassCard className="pref-block">
+      <ListRow className="pref-block">
         <div className="reminder-permission-status">
           <Bell size={20} />
           <div>
@@ -82,7 +97,7 @@ export default function ReminderSettings() {
             {isRequestingPermission ? "请求中..." : "启用通知"}
           </button>
         )}
-      </GlassCard>
+      </ListRow>
 
       <GlassCard className={`reminder-schedule-summary ${hasPermission ? "ready" : "blocked"}`}>
         <div className="reminder-schedule-summary-head">
@@ -135,7 +150,36 @@ export default function ReminderSettings() {
         </div>
       </GlassCard>
 
-      <GlassCard className="reminder-config-block">
+      <ListRow className="smart-prompt-settings-block">
+        <div className="smart-prompt-settings-head">
+          <Sparkles size={18} />
+          <div>
+            <strong>首页轻提示</strong>
+            <span>只控制现有建议类别，不影响系统通知</span>
+          </div>
+        </div>
+        <div className="smart-prompt-category-list">
+          {smartPromptCategoryOptions.map((option) => (
+            <label className="smart-prompt-category" key={option.id}>
+              <span>
+                <strong>{option.label}</strong>
+                <small>{option.desc}</small>
+              </span>
+              <span className="reminder-toggle">
+                <input
+                  type="checkbox"
+                  checked={isSmartPromptCategoryEnabled(prefs, option.id)}
+                  onChange={() => handleSmartPromptCategory(option.id)}
+                />
+                <span className="toggle-slider" aria-hidden="true" />
+              </span>
+            </label>
+          ))}
+        </div>
+      </ListRow>
+
+      <div className="content-list reminder-config-list">
+      <ListRow className="reminder-config-block">
         <div className="reminder-config-header">
           <Calendar size={18} />
           <strong>生日提醒</strong>
@@ -170,9 +214,9 @@ export default function ReminderSettings() {
             </div>
           </div>
         )}
-      </GlassCard>
+      </ListRow>
 
-      <GlassCard className="reminder-config-block">
+      <ListRow className="reminder-config-block">
         <div className="reminder-config-header">
           <History size={18} />
           <strong>纪念日提醒</strong>
@@ -207,9 +251,9 @@ export default function ReminderSettings() {
             </div>
           </div>
         )}
-      </GlassCard>
+      </ListRow>
 
-      <GlassCard className="reminder-config-block">
+      <ListRow className="reminder-config-block">
         <div className="reminder-config-header">
           <Users size={18} />
           <strong>定期联系提醒</strong>
@@ -244,9 +288,9 @@ export default function ReminderSettings() {
             </div>
           </div>
         )}
-      </GlassCard>
+      </ListRow>
 
-      <GlassCard className="reminder-config-block">
+      <ListRow className="reminder-config-block">
         <div className="reminder-config-header">
           <Clock size={18} />
           <strong>回忆回顾提醒</strong>
@@ -271,7 +315,8 @@ export default function ReminderSettings() {
             </div>
           </div>
         )}
-      </GlassCard>
+      </ListRow>
+      </div>
 
       {hasPermission && (
         <button
@@ -285,6 +330,14 @@ export default function ReminderSettings() {
     </div>
   );
 }
+
+const smartPromptCategoryOptions: Array<{ id: SmartPromptMetricCategory; label: string; desc: string }> = [
+  { id: "anniversary", label: "纪念日准备", desc: "临近纪念日但还没有安排" },
+  { id: "contact", label: "久未联系", desc: "重要人物较久没有新记录" },
+  { id: "profile", label: "档案补全", desc: "重要人物缺少喜好信息" },
+  { id: "place", label: "常去地点", desc: "多次到访但尚未收藏" },
+  { id: "record-gap", label: "记录间隔", desc: "一段时间没有留下新记录" }
+];
 
 function formatReminderDate(date: Date) {
   return date.toLocaleString("zh-CN", {

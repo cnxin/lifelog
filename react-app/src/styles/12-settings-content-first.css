@@ -1,0 +1,247 @@
+/* Content-first settings keep routine controls in continuous, quiet groups. */
+.data-action-grid.content-list {
+  gap: 0;
+}
+
+.data-action-grid.content-list > .data-action-card {
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.data-action-grid.content-list > .data-action-card:last-child {
+  border-bottom: 0;
+}
+
+.data-action-grid.content-list > button.data-action-card:not(:disabled):hover,
+.data-action-grid.content-list > button.data-action-card:not(:disabled):focus-visible {
+  background: var(--surface-secondary);
+}
+
+.backup-health-group {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+  box-shadow: none;
+}
+
+.backup-health-group.warning {
+  border-color: color-mix(in srgb, var(--danger) 22%, var(--border-subtle));
+  background: color-mix(in srgb, var(--danger-soft) 42%, var(--surface-primary));
+}
+
+.data-cleanup-card {
+  border-color: var(--border-subtle);
+  background: var(--surface-primary);
+  box-shadow: none;
+}
+
+.data-management-panel .backup-reminder-card,
+.data-management-panel .backup-health-card,
+.data-management-panel .backup-health-detail-card,
+.data-management-panel .backup-import-preview-card,
+.data-management-panel .backup-export-result,
+.data-management-panel .backup-import-recovery,
+.data-management-panel .share-history-card {
+  background: var(--surface-primary);
+  box-shadow: none;
+}
+
+.data-management-panel .backup-reminder-card.warning,
+.data-management-panel .backup-import-recovery {
+  background: color-mix(in srgb, var(--danger-soft) 20%, var(--surface-primary));
+}
+
+.data-management-panel .backup-reminder-action {
+  box-shadow: none;
+}
+
+.share-history-list.content-list {
+  gap: 0;
+}
+
+.share-history-list.content-list .share-history-item {
+  border-radius: 0;
+  background: transparent;
+}
+
+.share-history-list.content-list .share-history-item.imported,
+.share-history-list.content-list .share-history-item.created {
+  background: var(--accent-soft);
+}
+
+.share-history-list.content-list .share-history-item.failed {
+  background: var(--danger-soft);
+}
+
+.reminder-settings > .pref-block {
+  padding: 14px;
+}
+
+.reminder-config-list {
+  overflow: visible;
+}
+
+.reminder-config-list .reminder-config-block {
+  padding: 14px;
+  overflow: visible;
+}
+
+.home-layout-flow .home-top-tools {
+  gap: var(--space-2);
+}
+
+.home-search-pill {
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-composer {
+  min-height: 56px;
+  border-style: solid;
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  background: var(--surface-primary);
+  box-shadow: none;
+}
+
+.home-composer-dot {
+  color: var(--accent-primary);
+  background: var(--accent-soft);
+}
+
+.today-queue-card,
+.home-smart-prompt-card,
+.home-library-strip {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+  box-shadow: none;
+}
+
+.today-queue-icon {
+  color: var(--accent-primary);
+  background: var(--accent-soft);
+}
+
+.today-queue-list {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+}
+
+.today-action-card {
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.today-action-card:last-child {
+  border-bottom: 0;
+}
+
+.place-detail-info-list .detail-row {
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.place-detail-info-list .detail-row:last-child {
+  border-bottom: 0;
+}
+
+.place-detail-info-list .detail-button:active {
+  background: var(--surface-pressed);
+}
+
+/* Record browsers need visual breathing room between independent people, places, and memories. */
+.content-list--records {
+  gap: var(--space-2);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.content-list--records .windowed-list-window {
+  gap: var(--space-2);
+}
+
+.content-list--memories > div {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.content-list--records .list-row {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-primary);
+  box-shadow: 0 1px 3px rgb(31 34 54 / 0.08);
+}
+
+.content-list--records .list-row:last-child {
+  border-bottom: 1px solid var(--border-strong);
+}
+
+/* Keep quick-add actions aligned even when labels and descriptions differ in length. */
+.fab-menu button {
+  width: min(13rem, calc(100vw - 5.5rem));
+  min-height: 2.75rem;
+  justify-content: space-between;
+}
+
+.fab-menu-label {
+  width: calc(100% - 3.7rem);
+  min-height: 2.75rem;
+  max-width: none;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+}
+
+.fab-menu-icon {
+  margin-right: 0.375rem;
+}
+
+/* Detail summaries and reading surfaces are distinct content blocks, not glass panels. */
+.detail-summary-card,
+.memory-reader-card,
+.anniversary-detail-card,
+.inspiration-prompt-card,
+.person-action-card,
+.place-use-card,
+.memory-plan-original-card,
+.memory-photo-missing-card {
+  border: 1px solid var(--border-strong);
+  background: var(--surface-primary);
+  box-shadow: 0 1px 3px rgb(31 34 54 / 0.08);
+}
+
+.plan-completion-card {
+  border: 1px solid color-mix(in srgb, var(--status-success, var(--primary)) 34%, var(--border-strong));
+  box-shadow: 0 1px 3px rgb(31 34 54 / 0.08);
+}
+
+.plan-cancelled-card {
+  border: 1px solid color-mix(in srgb, var(--status-warning, var(--primary)) 34%, var(--border-strong));
+  box-shadow: 0 1px 3px rgb(31 34 54 / 0.08);
+}
+
+.memory-reader-card.is-memory,
+.memory-reader-card.is-plan {
+  background: var(--surface-primary);
+  box-shadow: 0 1px 3px rgb(31 34 54 / 0.08);
+}

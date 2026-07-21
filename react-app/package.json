@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.1.0-test.133",
+  "version": "0.1.0-test.134",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,9 @@
     "test:notion-sync": "node scripts/test-notion-sync.cjs",
     "test:calendar-items": "node scripts/test-calendar-items.cjs",
     "test:diagnostics": "node scripts/test-diagnostics.cjs",
+    "test:ux-metrics": "node scripts/test-ux-metrics.cjs",
+    "test:main-path": "node scripts/test-main-path-smoke.cjs",
+    "test:share-privacy": "node scripts/test-share-privacy.cjs",
     "test:backup-health": "node scripts/test-backup-health.cjs",
     "test:backup-import": "node scripts/test-backup-import.cjs",
     "test:external-links": "node scripts/test-external-links.cjs",
@@ -25,6 +28,7 @@
     "test:display": "node scripts/test-memory-display.cjs",
     "test:location": "node scripts/test-place-location-filter.cjs",
     "test:spring": "node scripts/test-spring-motion.cjs",
+    "test:ui": "node scripts/test-content-first-ui.cjs",
     "preview": "vite preview",
     "cap:add:android": "cap add android",
     "cap:add:ios": "cap add ios",
@@ -64,7 +68,7 @@
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^6.0.3",
-    "playwright": "^1.49.1",
+    "playwright": "^1.55.1",
     "typescript": "^5.2.2",
     "vite": "^8.1.4"
   }

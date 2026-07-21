@@ -450,7 +450,7 @@ export default function Memories() {
                   <strong>{group.month}</strong>
                   <span>{group.memories.length} 条</span>
                 </div>
-                <div className="list">
+                <div className="list content-list content-list--records content-list--memories">
                   <WindowedList
                     items={group.memories}
                     estimateSize={denseList ? 88 : 112}

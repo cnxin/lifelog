@@ -6,6 +6,7 @@ import { compressImage, validateImageFile, blobToObjectURL, isHeicImageFile, SUP
 import { useToast } from "../context/ToastContext";
 import { PhotoViewer } from "./PhotoViewer";
 import PhotoUploadQueue, { type PhotoUploadQueueItem } from "./PhotoUploadQueue";
+import { recordUxMetric } from "../utils/uxMetrics";
 
 interface PhotoUploaderProps {
   photos: Photo[];
@@ -46,10 +47,10 @@ export function PhotoUploader({
 
   async function retryFailedUploads() {
     if (!failedUploads.length || disabled) return;
-    await processFiles(failedUploads.map((item) => item.file));
+    await processFiles(failedUploads.map((item) => item.file), true);
   }
 
-  async function processFiles(selectedFiles: File[]) {
+  async function processFiles(selectedFiles: File[], isRetry = false) {
     setErrors([]);
     setFailedUploads([]);
     setUploadPercent(0);
@@ -64,6 +65,11 @@ export function PhotoUploader({
     }
 
     const filesToProcess = selectedFiles.slice(0, remainingSlots);
+    if (isRetry) {
+      for (const file of filesToProcess) {
+        recordPhotoProcess(file, "retry", 0);
+      }
+    }
     const nextQueueItems = filesToProcess.map((file, index) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
       name: file.name || `照片 ${index + 1}`,
@@ -83,6 +89,7 @@ export function PhotoUploader({
 
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
+      const startedAt = performance.now();
       const queueId = nextQueueItems[i]?.id;
       setUploadPercent(Math.round((i / filesToProcess.length) * 100));
       const isHeic = isHeicImageFile(file);
@@ -95,6 +102,7 @@ export function PhotoUploader({
         nextErrors.push(`${file.name}: ${message}`);
         nextFailedUploads.push({ file, message });
         if (queueId) updateQueueItem(queueId, { status: "error", message });
+        recordPhotoProcess(file, "fail", performance.now() - startedAt);
         continue;
       }
 
@@ -120,12 +128,14 @@ export function PhotoUploader({
         };
 
         newPhotos.push(photo);
+        recordPhotoProcess(file, "success", performance.now() - startedAt);
         if (queueId) updateQueueItem(queueId, { status: "done", message: "已添加" });
       } catch (error) {
         console.error(`处理 ${file.name} 失败:`, error);
         const message = getUploadErrorMessage(error);
         nextErrors.push(`${file.name}: ${message}`);
         nextFailedUploads.push({ file, message });
+        recordPhotoProcess(file, "fail", performance.now() - startedAt);
         if (queueId) updateQueueItem(queueId, { status: "error", message });
       }
     }
@@ -283,6 +293,15 @@ export function PhotoUploader({
       )}
     </div>
   );
+}
+
+function recordPhotoProcess(file: File, outcome: "success" | "retry" | "fail", durationMs: number) {
+  recordUxMetric({
+    event: "photo_process",
+    format: isHeicImageFile(file) ? "heic" : "other",
+    outcome,
+    durationMs
+  });
 }
 
 function getUploadErrorMessage(error: unknown) {

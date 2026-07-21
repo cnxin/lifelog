@@ -1,11 +1,11 @@
 {
-    "version":  "0.1.0-test.133",
-    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.133",
-    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.133/lifelog-v0.1.0-test.133.apk",
-    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.133.apk",
-    "apkName":  "lifelog-v0.1.0-test.133.apk",
-    "apkSize":  4119071,
-    "apkSha256":  "304ba10f5701df32b27b25f203a6be798573111afc357a505126ff7a53f1d821",
-    "publishedAt":  "2026-07-14T08:19:45Z",
-    "body":  "- 人物、地点和回忆详情的顶部卡片移除外层直角背景，仅保留内部圆角内容卡。\n- 记录时间线补齐网格与虚拟列表宽度约束；超长回忆标题会截断显示，不再撑出屏幕。\n- 设置页标签仅突出选中胶囊；添加菜单使用轻量 CSS 错峰动画并即时响应操作。"
+    "version":  "0.1.0-test.134",
+    "releaseUrl":  "https://github.com/cnxin/lifelog/releases/tag/v0.1.0-test.134",
+    "apkUrl":  "https://github.com/cnxin/lifelog/releases/download/v0.1.0-test.134/lifelog-v0.1.0-test.134.apk",
+    "mirrorApkUrl":  "https://gitee.com/ysjugg/lifelog/raw/main/downloads/lifelog-v0.1.0-test.134.apk",
+    "apkName":  "lifelog-v0.1.0-test.134.apk",
+    "apkSize":  4129169,
+    "apkSha256":  "ec29a0e30ff74cf7d426c4894107e9a0a3d6c07e2cd021851657d51ee5573870",
+    "publishedAt":  "2026-07-20T16:24:26Z",
+    "body":  "- 新用户首页增加三步启用清单，第一条记录、首个人物和备份选择均可直接完成或跳过；已有真实数据的用户不会重复进入引导。\n- 搜索结果可回落到人物、地点和记录详情并短暂聚焦，返回后恢复同次查询；查询词不写入 URL、持久化数据或 UX 指标。\n- 分享增加私密默认、熟人和自定义预设，链接、二维码、图片与分享包共用同一组选项，切换分享目标时自动回到私密默认。\n- 设置与数据管理页改为更紧凑的内容优先分组，首页清单、分享面板和提醒分类在移动端与桌面端均保持无横向溢出。"
 }

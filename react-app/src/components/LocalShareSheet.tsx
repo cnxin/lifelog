@@ -1,5 +1,5 @@
 import { ChevronDown, Copy, Download, ImageDown, QrCode, Share2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useLifeLog } from "../context/LifeLogContext";
 import { useToast } from "../context/ToastContext";
@@ -7,7 +7,7 @@ import { copyTextToClipboard } from "../utils/diagnostics";
 import { saveImageToGallery, shareImageFile } from "../utils/imageShare";
 import { addShareHistoryEntry, formatShareHistoryCounts } from "../utils/shareHistory";
 import { buildLifeLogShareLink, buildLifeLogShareQrCode, ShareLinkTooLargeError } from "../utils/lifelogShareLink";
-import type { LifeLogSharePayload, MemoryShareOptions, PlaceShareOptions, SharedMemoryPlaceMode, SharedPeopleMode } from "../utils/lifelogShare";
+import { buildSharePresetOptions, type LifeLogSharePayload, type MemoryShareOptions, type PlaceShareOptions, type SharePrivacyPreset, type SharedMemoryPlaceMode, type SharedPeopleMode } from "../utils/lifelogShare";
 import SheetPrimitive from "./motion/SheetPrimitive";
 
 type ShareTarget =
@@ -49,6 +49,12 @@ const shareCardTemplateOptions: Array<{ value: ShareCardTemplate; label: string 
   { value: "night", label: "夜色" }
 ];
 
+const privacyPresetOptions: Array<{ value: SharePrivacyPreset; label: string }> = [
+  { value: "private", label: "私密" },
+  { value: "trusted", label: "熟人" },
+  { value: "custom", label: "自定义" }
+];
+
 export default function LocalShareSheet({ target, onClose }: LocalShareSheetProps) {
   const { buildMemoryShare, buildPlacesShare, exportMemoryShare, exportPlacesShare } = useLifeLog();
   const notify = useToast();
@@ -62,22 +68,49 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
   const [qrSaveStatus, setQrSaveStatus] = useState("");
   const [shareCardTemplate, setShareCardTemplate] = useState<ShareCardTemplate>("clean");
-  const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>({
-    includeContent: true,
-    peopleMode: "public",
-    placeMode: "full",
-    includePhotos: false
-  });
-  const [placeOptions, setPlaceOptions] = useState<PlaceShareOptions>({
-    includeAddress: true,
-    includePreciseLocation: false,
-    includeLinks: true,
-    includePhotos: false
-  });
+  const [privacyPreset, setPrivacyPreset] = useState<SharePrivacyPreset>("private");
+  const [memoryOptions, setMemoryOptions] = useState<MemoryShareOptions>(() => buildSharePresetOptions("private").memory);
+  const [placeOptions, setPlaceOptions] = useState<PlaceShareOptions>(() => buildSharePresetOptions("private").place);
+  const targetKey = target?.type === "memory"
+    ? `memory:${target.memoryId}`
+    : target?.type === "places"
+      ? `places:${target.placeIds.join("|")}`
+      : "";
+
+  useEffect(() => {
+    const next = buildSharePresetOptions("private");
+    setPrivacyPreset("private");
+    setMemoryOptions(next.memory);
+    setPlaceOptions(next.place);
+    setAdvancedOpen(false);
+    setShareLink("");
+    setQrImage("");
+  }, [targetKey]);
 
   if (!target) return null;
 
   const isBusy = isExporting || isCopyingLink || isSharing || isSharingCard;
+
+  function applyPrivacyPreset(preset: SharePrivacyPreset) {
+    setPrivacyPreset(preset);
+    if (preset === "custom") {
+      setAdvancedOpen(true);
+      return;
+    }
+    const next = buildSharePresetOptions(preset);
+    setMemoryOptions(next.memory);
+    setPlaceOptions(next.place);
+  }
+
+  function updateMemoryOptions(update: (current: MemoryShareOptions) => MemoryShareOptions) {
+    setPrivacyPreset("custom");
+    setMemoryOptions(update);
+  }
+
+  function updatePlaceOptions(update: (current: PlaceShareOptions) => PlaceShareOptions) {
+    setPrivacyPreset("custom");
+    setPlaceOptions(update);
+  }
 
   async function handleExport() {
     if (!target) return;
@@ -199,7 +232,7 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
     if (!target) return;
     setIsSharingCard(true);
     try {
-      const payload = await buildQuickSharePayload(true);
+      const payload = await buildQuickSharePayload();
       const dataUrl = await buildShareCardImage(payload, shareCardTemplate);
       await shareImageFile(buildShareCardFileName(target.title), dataUrl, "分享 LifeLog 卡片");
       const counts = target.type === "memory" ? { memories: 1 } : { places: target.count };
@@ -270,8 +303,8 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
   async function buildQuickSharePayload(compact = false) {
     if (!target) throw new Error("没有可分享的内容。");
     return target.type === "memory"
-      ? await buildMemoryShare(target.memoryId, compact ? getCompactMemoryShareOptions() : getQuickMemoryShareOptions())
-      : await buildPlacesShare(target.placeIds, compact ? getCompactPlaceShareOptions() : getQuickPlaceShareOptions());
+      ? await buildMemoryShare(target.memoryId, compact ? getCompactMemoryShareOptions(memoryOptions) : { ...memoryOptions, includePhotos: false })
+      : await buildPlacesShare(target.placeIds, compact ? getCompactPlaceShareOptions(placeOptions) : { ...placeOptions, includePhotos: false });
   }
 
   async function buildQuickShareLink() {
@@ -341,8 +374,25 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
             </span>
             <div>
               <strong>{target.type === "memory" ? "分享这条回忆" : `分享 ${target.count} 个地点`}</strong>
-              <span>{getQuickShareSummary(target)}</span>
+              <span>{getShareFieldSummary(target, memoryOptions, placeOptions)}</span>
             </div>
+          </div>
+          <div className="local-share-privacy-presets" role="group" aria-label="分享隐私预设">
+            {privacyPresetOptions.map((option) => (
+              <button
+                className={privacyPreset === option.value ? "active" : ""}
+                type="button"
+                key={option.value}
+                aria-pressed={privacyPreset === option.value}
+                onClick={() => applyPrivacyPreset(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="local-share-field-preview">
+            <strong>发送前确认</strong>
+            <span>{getShareExclusionSummary(target, memoryOptions, placeOptions)}</span>
           </div>
           <div className="local-share-primary-actions">
             <button className="primary-btn pressable" type="button" onClick={() => void handleImmediateShare()} disabled={isBusy}>
@@ -386,26 +436,26 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
                     checked={memoryOptions.includeContent}
                     title="分享正文"
                     desc="关闭后只保留标题、日期、心情和标签。"
-                    onChange={(includeContent) => setMemoryOptions((current) => ({ ...current, includeContent }))}
+                    onChange={(includeContent) => updateMemoryOptions((current) => ({ ...current, includeContent }))}
                   />
                   <ShareOptionGroup
                     title="关联人物"
                     options={peopleModeOptions}
                     value={memoryOptions.peopleMode}
-                    onChange={(peopleMode) => setMemoryOptions((current) => ({ ...current, peopleMode }))}
+                    onChange={(peopleMode) => updateMemoryOptions((current) => ({ ...current, peopleMode }))}
                   />
                   <ShareOptionGroup
                     title="关联地点"
                     options={placeModeOptions}
                     value={memoryOptions.placeMode}
-                    onChange={(placeMode) => setMemoryOptions((current) => ({ ...current, placeMode }))}
+                    onChange={(placeMode) => updateMemoryOptions((current) => ({ ...current, placeMode }))}
                   />
                   <ShareSwitch
                     checked={memoryOptions.includePhotos}
                     title={`分享图片${target.photoCount ? `（${target.photoCount} 张）` : ""}`}
                     desc="图片会让分享包明显变大，默认不导出。"
                     disabled={!target.photoCount}
-                    onChange={(includePhotos) => setMemoryOptions((current) => ({ ...current, includePhotos }))}
+                    onChange={(includePhotos) => updateMemoryOptions((current) => ({ ...current, includePhotos }))}
                   />
                 </>
               ) : (
@@ -414,25 +464,25 @@ export default function LocalShareSheet({ target, onClose }: LocalShareSheetProp
                     checked={placeOptions.includeAddress}
                     title="分享地址"
                     desc="保留城市、区域、商场和详细地址。"
-                    onChange={(includeAddress) => setPlaceOptions((current) => ({ ...current, includeAddress }))}
+                    onChange={(includeAddress) => updatePlaceOptions((current) => ({ ...current, includeAddress }))}
                   />
                   <ShareSwitch
                     checked={placeOptions.includePreciseLocation}
                     title="分享精准定位"
                     desc="包含经纬度和地图入口，适合可信接收方。"
-                    onChange={(includePreciseLocation) => setPlaceOptions((current) => ({ ...current, includePreciseLocation }))}
+                    onChange={(includePreciseLocation) => updatePlaceOptions((current) => ({ ...current, includePreciseLocation }))}
                   />
                   <ShareSwitch
                     checked={placeOptions.includeLinks}
                     title="分享外部链接"
                     desc="包含美团、大众点评、小红书或参考链接。"
-                    onChange={(includeLinks) => setPlaceOptions((current) => ({ ...current, includeLinks }))}
+                    onChange={(includeLinks) => updatePlaceOptions((current) => ({ ...current, includeLinks }))}
                   />
                   <ShareSwitch
                     checked={placeOptions.includePhotos}
                     title="分享地点图片链接"
                     desc="仅导出地点里的图片链接，不处理本地回忆照片。"
-                    onChange={(includePhotos) => setPlaceOptions((current) => ({ ...current, includePhotos }))}
+                    onChange={(includePhotos) => updatePlaceOptions((current) => ({ ...current, includePhotos }))}
                   />
                 </>
               )}
@@ -525,11 +575,39 @@ function buildShareCardFileName(title: string) {
   return `lifelog-card-${slug}.png`;
 }
 
-function getQuickShareSummary(target: ShareTarget) {
+function getShareFieldSummary(target: ShareTarget, memory: MemoryShareOptions, place: PlaceShareOptions) {
   if (target.type === "memory") {
-    return "默认分享正文、日期、人物姓名和地点名称，不包含照片和精准定位。";
+    const fields = [
+      "标题与日期",
+      memory.includeContent ? "正文" : "不含正文",
+      memory.peopleMode === "public" ? "人物姓名" : memory.peopleMode === "anonymous" ? "匿名人物" : "不含人物",
+      memory.placeMode === "full" ? "地点与地址" : memory.placeMode === "name" ? "地点名称" : "不含地点",
+      memory.includePhotos ? "照片仅进分享包" : "不含照片"
+    ];
+    return fields.join(" · ");
   }
-  return "默认分享地点名称和基础地址，不包含精准定位和图片链接。";
+  return [
+    "地点名称与城市",
+    place.includeAddress ? "详细地址" : "不含详细地址",
+    place.includeLinks ? "外部链接" : "不含链接",
+    place.includePhotos ? "图片链接仅进分享包" : "不含图片"
+  ].join(" · ");
+}
+
+function getShareExclusionSummary(target: ShareTarget, memory: MemoryShareOptions, place: PlaceShareOptions) {
+  if (target.type === "memory") {
+    const excluded = [
+      memory.peopleMode === "public" ? "" : "公开姓名",
+      "精准定位",
+      memory.includePhotos ? "链接和二维码中的照片" : "照片"
+    ].filter(Boolean);
+    return `不会包含：${excluded.join("、")}`;
+  }
+  const excluded = [
+    place.includePreciseLocation ? "" : "经纬度与地图定位",
+    place.includePhotos ? "链接和二维码中的图片" : "图片链接"
+  ].filter(Boolean);
+  return `不会包含：${excluded.join("、") || "无"}`;
 }
 
 function buildShareMessage(target: ShareTarget) {
@@ -538,38 +616,20 @@ function buildShareMessage(target: ShareTarget) {
     : `我用 LifeLog 分享了 ${target.count} 个地点：${target.title}`;
 }
 
-function getQuickMemoryShareOptions(): MemoryShareOptions {
-  return {
-    includeContent: true,
-    peopleMode: "public",
-    placeMode: "name",
-    includePhotos: false
-  };
-}
-
-function getCompactMemoryShareOptions(): MemoryShareOptions {
+function getCompactMemoryShareOptions(options: MemoryShareOptions): MemoryShareOptions {
   return {
     includeContent: false,
-    peopleMode: "public",
-    placeMode: "name",
+    peopleMode: options.peopleMode,
+    placeMode: options.placeMode,
     includePhotos: false
   };
 }
 
-function getQuickPlaceShareOptions(): PlaceShareOptions {
-  return {
-    includeAddress: true,
-    includePreciseLocation: false,
-    includeLinks: false,
-    includePhotos: false
-  };
-}
-
-function getCompactPlaceShareOptions(): PlaceShareOptions {
+function getCompactPlaceShareOptions(options: PlaceShareOptions): PlaceShareOptions {
   return {
     includeAddress: false,
     includePreciseLocation: false,
-    includeLinks: false,
+    includeLinks: options.includeLinks,
     includePhotos: false
   };
 }

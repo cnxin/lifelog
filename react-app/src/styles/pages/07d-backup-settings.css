@@ -196,6 +196,74 @@
   color: var(--danger);
 }
 
+.ux-metrics-card {
+  display: grid;
+  gap: 14px;
+}
+
+.ux-metrics-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ux-metrics-card-title > svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: var(--accent-primary);
+}
+
+.ux-metrics-card-title > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ux-metrics-card-title span,
+.ux-metrics-card > p {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.ux-metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ux-metrics-summary span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+.ux-metrics-summary strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.ux-metrics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ux-metrics-actions .mini-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 520px) {
+  .ux-metrics-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .backup-photo-mode-card {
   cursor: default;
 }

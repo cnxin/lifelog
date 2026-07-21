@@ -7,7 +7,7 @@ export interface ReleaseNote {
 
 export const UNRELEASED_NOTE: ReleaseNote = {
   version: "Unreleased",
-  date: "2026-07-13",
+  date: "2026-07-21",
   title: "暂无未发布变更",
   highlights: [
     "暂无未发布变更。"
@@ -15,6 +15,17 @@ export const UNRELEASED_NOTE: ReleaseNote = {
 };
 
 export const RELEASE_NOTES: ReleaseNote[] = [
+  {
+    version: "0.1.0-test.134",
+    date: "2026-07-21",
+    title: "新用户闭环、搜索回落与隐私分享",
+    highlights: [
+      "新用户首页增加三步启用清单，第一条记录、首个人物和备份选择均可直接完成或跳过。",
+      "搜索结果可回落到人物、地点和记录详情并恢复同次查询，查询词不会进入 URL 或本地 UX 指标。",
+      "分享增加私密默认、熟人和自定义预设，链接、二维码、图片与分享包共用同一组选项。",
+      "本地 UX 指标采用固定枚举和按日聚合，五类首页轻提示支持独立开关。"
+    ]
+  },
   {
     version: "0.1.0-test.133",
     date: "2026-07-14",

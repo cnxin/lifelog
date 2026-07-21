@@ -1,7 +1,8 @@
-import { ChevronDown, Database, Download, ExternalLink, RotateCcw, ShieldCheck, Sparkles, Upload } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { BarChart3, ChevronDown, Database, Download, ExternalLink, RotateCcw, ShieldCheck, Sparkles, Trash2, Upload } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import GlassCard from "../../components/GlassCard";
+import ContentCard from "../../components/ContentCard";
+import ListRow from "../../components/ListRow";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useToast } from "../../context/ToastContext";
@@ -13,6 +14,7 @@ import { buildReadableHtml, buildReadableMarkdown } from "../../utils/readableEx
 import { addShareHistoryEntry, clearShareHistory, formatShareHistoryCounts, loadShareHistory, updateShareHistoryEntry, type ShareHistoryEntry } from "../../utils/shareHistory";
 import { getShareImportViewTarget } from "../../utils/shareImportResult";
 import type { BackupPhotoMode } from "../../utils/lifelogBackup";
+import { clearUxMetrics, exportUxMetricsJson, getUxMetricsSummary } from "../../utils/uxMetrics";
 
 export default function AccountDataManagement() {
   const { state, exportData, importData, importShareData, undoShareImport, resetDemo, duplicatePlaceGroups, mergeAllDuplicatePlaces } = useLifeLog();
@@ -29,6 +31,7 @@ export default function AccountDataManagement() {
   const [importRecovery, setImportRecovery] = useState<ImportRecoveryState | null>(null);
   const [shareHistory, setShareHistory] = useState<ShareHistoryEntry[]>(() => loadShareHistory());
   const [openHealthGroupId, setOpenHealthGroupId] = useState<string | null>(null);
+  const [uxMetricsSummary, setUxMetricsSummary] = useState(() => getUxMetricsSummary());
   const healthReport = useMemo(() => buildBackupHealthReport(state), [state]);
   const healthDetails = useMemo(() => buildBackupHealthDetailGroups(state), [state]);
   const [lastFullBackupAt, setLastFullBackupAt] = useState(() => localStorage.getItem("lifelog:last-full-backup-at") || "");
@@ -55,6 +58,12 @@ export default function AccountDataManagement() {
     [healthReport.memories, healthReport.memoryPlans, state.people.length, state.places.length]
   );
   const hasUserData = state.people.length > 0 || state.places.length > 0 || state.memories.length > 0;
+
+  useEffect(() => {
+    const refreshUxMetrics = () => setUxMetricsSummary(getUxMetricsSummary());
+    window.addEventListener("lifelog:ux-metrics-changed", refreshUxMetrics);
+    return () => window.removeEventListener("lifelog:ux-metrics-changed", refreshUxMetrics);
+  }, []);
 
   async function handleImport(file: File | undefined) {
     if (!file) return;
@@ -381,6 +390,33 @@ export default function AccountDataManagement() {
     }
   }
 
+  async function handleExportUxMetrics() {
+    try {
+      const date = new Date().toISOString().slice(0, 10);
+      const result = await saveReadableFile(
+        `lifelog-ux-metrics-${date}.json`,
+        exportUxMetricsJson(),
+        "application/json;charset=utf-8"
+      );
+      notify({ message: `UX 聚合已导出：${result.fileName}`, tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "请稍后重试";
+      notify({ message: `UX 聚合导出失败：${message}`, tone: "error" });
+    }
+  }
+
+  async function handleClearUxMetrics() {
+    const accepted = await confirm({
+      title: "清空本地 UX 聚合？",
+      message: "这只会清空本机按日汇总的流程计数和耗时桶，不会删除人物、地点、记录或照片。",
+      confirmText: "清空聚合"
+    });
+    if (!accepted) return;
+    clearUxMetrics();
+    setUxMetricsSummary(getUxMetricsSummary());
+    notify({ message: "本地 UX 聚合已清空", tone: "success" });
+  }
+
   async function retryLastImport() {
     if (!importRecovery?.file) return;
     await handleImport(importRecovery.file);
@@ -457,12 +493,41 @@ export default function AccountDataManagement() {
         </h2>
       </div>
       <div className="data-management-panel">
-        <GlassCard className="data-management-intro">
+        <ContentCard className="data-management-intro">
           <strong>本地数据备份与分享导入</strong>
           <span>{dataSummary}</span>
           <p>数据保存在当前设备的 IndexedDB 中。完整备份会包含资料、照片、设置和提醒；导入和重置会覆盖当前本地数据。</p>
-        </GlassCard>
-        <GlassCard className={`backup-reminder-card ${backupReminder.state}`}>
+        </ContentCard>
+        <ContentCard className="ux-metrics-card">
+          <div className="settings-capability-overview-head">
+            <div className="ux-metrics-card-title">
+              <BarChart3 />
+              <div>
+                <strong>本地 UX 聚合</strong>
+                <span>仅保存按日计数与耗时桶，最多保留 90 天</span>
+              </div>
+            </div>
+            <span>{uxMetricsSummary.dayCount} 天</span>
+          </div>
+          <div className="ux-metrics-summary" aria-label="本地 UX 聚合摘要">
+            <span><strong>{uxMetricsSummary.totalSamples}</strong>总样本</span>
+            <span><strong>{uxMetricsSummary.eventCounts.record_flow}</strong>记录</span>
+            <span><strong>{uxMetricsSummary.eventCounts.search_flow}</strong>搜索</span>
+            <span><strong>{uxMetricsSummary.eventCounts.photo_process}</strong>照片</span>
+          </div>
+          <p>不记录正文、标题、搜索词、名称、业务 ID、照片数据或精确位置；数据不会上传。</p>
+          <div className="ux-metrics-actions">
+            <button className="mini-action" type="button" onClick={() => void handleExportUxMetrics()}>
+              <Download size={14} />
+              导出聚合
+            </button>
+            <button className="mini-action danger" type="button" onClick={() => void handleClearUxMetrics()} disabled={!uxMetricsSummary.totalSamples}>
+              <Trash2 size={14} />
+              清空
+            </button>
+          </div>
+        </ContentCard>
+        <ContentCard className={`backup-reminder-card ${backupReminder.state}`}>
           <div className="backup-reminder-main">
             <div className="backup-reminder-head">
               <ShieldCheck />
@@ -492,8 +557,8 @@ export default function AccountDataManagement() {
               <small>{lastBackupMeta.locationLabel}</small>
             </div>
           )}
-        </GlassCard>
-        <GlassCard className={`backup-health-card ${healthReport.status}`}>
+        </ContentCard>
+        <ContentCard className={`backup-health-card ${healthReport.status}`}>
           <div className="backup-health-head">
             <ShieldCheck />
             <div>
@@ -510,11 +575,11 @@ export default function AccountDataManagement() {
                 : "当前数据关联完整，可以直接导出完整备份。"
               : `${healthReport.issueCount} 个问题：${healthReport.issues.slice(0, 2).join("；")}`}
           </p>
-        </GlassCard>
+        </ContentCard>
         <div className="backup-health-grid">
           {healthReport.groups.map((group) => (
             <button
-              className={`backup-health-group glass-card ${group.status} ${openHealthGroupId === group.id ? "open" : ""}`}
+              className={`backup-health-group ${group.status} ${openHealthGroupId === group.id ? "open" : ""}`}
               type="button"
               key={group.id}
               onClick={() => setOpenHealthGroupId((current) => (current === group.id ? null : group.id))}
@@ -535,7 +600,7 @@ export default function AccountDataManagement() {
           ))}
         </div>
         {openHealthGroupId && (
-          <GlassCard className="backup-health-detail-card">
+          <ContentCard className="backup-health-detail-card">
             {healthDetails
               .filter((group) => group.id === openHealthGroupId)
               .map((group) => (
@@ -573,10 +638,10 @@ export default function AccountDataManagement() {
                   )}
                 </div>
               ))}
-          </GlassCard>
+          </ContentCard>
         )}
         {healthReport.strongDuplicatePlaceGroups > 0 && (
-          <button className="data-cleanup-card glass-card" type="button" onClick={() => void handleMergeStrongDuplicates()}>
+          <button className="data-cleanup-card" type="button" onClick={() => void handleMergeStrongDuplicates()}>
             <div className="data-action-icon">
               <Sparkles />
             </div>
@@ -586,9 +651,9 @@ export default function AccountDataManagement() {
             </div>
           </button>
         )}
-        <div className="data-action-grid">
+        <div className="data-action-grid content-list">
           <button
-            className="data-action-card glass-card"
+            className="data-action-card"
             onClick={() => void handleExport()}
             disabled={!hasUserData}
           >
@@ -612,7 +677,7 @@ export default function AccountDataManagement() {
               </span>
             </div>
           </button>
-          <div className="data-action-card glass-card backup-photo-mode-card">
+          <div className="data-action-card backup-photo-mode-card">
             <div className="data-action-icon">
               <ShieldCheck />
             </div>
@@ -641,7 +706,7 @@ export default function AccountDataManagement() {
             </div>
           </div>
           <button
-            className="data-action-card glass-card"
+            className="data-action-card"
             onClick={() => void handleReadableExport("markdown")}
             disabled={!hasUserData}
           >
@@ -654,7 +719,7 @@ export default function AccountDataManagement() {
             </div>
           </button>
           <button
-            className="data-action-card glass-card"
+            className="data-action-card"
             onClick={() => void handleReadableExport("html")}
             disabled={!hasUserData}
           >
@@ -667,7 +732,7 @@ export default function AccountDataManagement() {
             </div>
           </button>
           <button
-            className="data-action-card glass-card"
+            className="data-action-card"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
           >
@@ -679,7 +744,7 @@ export default function AccountDataManagement() {
               <span>备份会覆盖恢复，分享包只会添加内容</span>
             </div>
           </button>
-          <button className="data-action-card danger glass-card" onClick={() => void handleReset()}>
+          <button className="data-action-card danger" onClick={() => void handleReset()}>
             <div className="data-action-icon">
               <RotateCcw />
             </div>
@@ -690,7 +755,7 @@ export default function AccountDataManagement() {
           </button>
         </div>
         {lastImportPreview && (
-          <GlassCard className={`backup-import-preview-card ${lastImportPreview.kind}`}>
+          <ContentCard className={`backup-import-preview-card ${lastImportPreview.kind}`}>
             <div className="backup-import-preview-head">
               <span>{lastImportPreview.modeLabel}</span>
               <strong>{lastImportPreview.title}</strong>
@@ -710,19 +775,19 @@ export default function AccountDataManagement() {
               {lastImportPreview.exportedAt ? `来源时间：${formatBackupDate(lastImportPreview.exportedAt)}` : "来源时间：未记录"}
               {lastImportPreview.issueCount ? ` · 预检问题 ${lastImportPreview.issueCount} 个` : ""}
             </small>
-          </GlassCard>
+          </ContentCard>
         )}
         {latestExportResult && (
-          <GlassCard className="backup-export-result">
+          <ContentCard className="backup-export-result">
             <strong>{latestExportResult.fileName}</strong>
             <span>{latestExportResult.locationLabel}</span>
             <p>{latestExportResult.locationDetail}</p>
             {latestExportResult.exportedAt && <p>导出时间：{formatBackupDate(latestExportResult.exportedAt)}</p>}
             {latestExportResult.path && <code>{latestExportResult.path}</code>}
-          </GlassCard>
+          </ContentCard>
         )}
         {importRecovery && (
-          <GlassCard className="backup-import-recovery">
+          <ContentCard className="backup-import-recovery">
             <div>
               <strong>上次导入失败</strong>
               <span>{importRecovery.fileName} · {formatBackupDate(importRecovery.happenedAt)}</span>
@@ -769,9 +834,9 @@ export default function AccountDataManagement() {
                 先导出当前数据
               </button>
             </div>
-          </GlassCard>
+          </ContentCard>
         )}
-        <GlassCard className="share-history-card">
+        <ContentCard className="share-history-card">
           <div className="settings-capability-overview-head">
             <strong>分享记录</strong>
             {shareHistory.length ? (
@@ -783,9 +848,9 @@ export default function AccountDataManagement() {
             )}
           </div>
           {shareHistory.length ? (
-            <div className="share-history-list">
+            <div className="share-history-list content-list">
               {shareHistory.slice(0, 8).map((entry) => (
-                <div className={`share-history-item ${entry.status}`} key={entry.id}>
+                <ListRow className={`share-history-item ${entry.status}`} key={entry.id}>
                   <div>
                     <strong>{entry.title}</strong>
                     <span>{entry.summary || formatShareHistoryCounts(entry.counts) || "分享记录"}</span>
@@ -803,13 +868,13 @@ export default function AccountDataManagement() {
                       </button>
                     )}
                   </div>
-                </div>
+                </ListRow>
               ))}
             </div>
           ) : (
             <p className="form-hint">生成分享包、复制分享链接或导入分享后，这里会保留最近记录。</p>
           )}
-        </GlassCard>
+        </ContentCard>
       </div>
       <input
         ref={fileInputRef}

@@ -1,0 +1,89 @@
+/* Semantic surfaces are deliberately quieter than the legacy glass-card skin. */
+.app-surface--canvas {
+  background: var(--surface-canvas);
+}
+
+.app-surface--primary,
+.content-card,
+.list-row {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.app-surface--secondary {
+  background: var(--surface-secondary);
+}
+
+.app-surface--elevated,
+.content-card--elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--elevation-floating);
+}
+
+.content-card {
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.list-row {
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+.content-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-primary);
+}
+
+.content-list .list-row {
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+}
+
+.content-list .list-row:last-child {
+  border-bottom: 0;
+}
+
+.content-list .list-row:active {
+  background: var(--surface-pressed);
+}
+
+.content-list.windowed-list {
+  position: relative;
+}
+
+.content-list .windowed-list-window {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.content-list .windowed-list-item {
+  min-width: 0;
+}
+
+.content-list .memory-card,
+.content-list .person-card,
+.content-list .place-card {
+  box-shadow: none;
+}
+
+.content-list .memory-card.selected,
+.content-list .person-card.selected,
+.content-list .place-card.selected {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .content-card,
+  .list-row,
+  .content-list {
+    background: var(--surface-primary);
+  }
+}

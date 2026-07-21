@@ -45,7 +45,7 @@ export function useHomeLayout({
     });
 
     return {
-      defaultTodayQueueOpen: todayActionCount > 0 && todayActionCount <= 2,
+      defaultTodayQueueOpen: false,
       defaultTaskQueueOpen: isNewUser && taskCount > 0,
       defaultHomeLibraryOpen: false,
       getSectionOrder: (id: HomeSectionId) => priority.get(id) || 99

@@ -13,6 +13,7 @@ const MAX_SHARE_TOTAL_PHOTO_DATA_URL_LENGTH = 24 * 1024 * 1024;
 export type LifeLogShareType = "memory" | "places";
 export type SharedPeopleMode = "public" | "anonymous" | "hidden";
 export type SharedMemoryPlaceMode = "full" | "name" | "hidden";
+export type SharePrivacyPreset = "private" | "trusted" | "custom";
 
 export interface MemoryShareOptions {
   includeContent: boolean;
@@ -26,6 +27,45 @@ export interface PlaceShareOptions {
   includePreciseLocation: boolean;
   includeLinks: boolean;
   includePhotos: boolean;
+}
+
+export interface SharePresetOptions {
+  memory: MemoryShareOptions;
+  place: PlaceShareOptions;
+}
+
+export function buildSharePresetOptions(preset: SharePrivacyPreset): SharePresetOptions {
+  if (preset === "trusted") {
+    return {
+      memory: {
+        includeContent: true,
+        peopleMode: "public",
+        placeMode: "full",
+        includePhotos: false
+      },
+      place: {
+        includeAddress: true,
+        includePreciseLocation: false,
+        includeLinks: true,
+        includePhotos: false
+      }
+    };
+  }
+
+  return {
+    memory: {
+      includeContent: false,
+      peopleMode: "anonymous",
+      placeMode: "name",
+      includePhotos: false
+    },
+    place: {
+      includeAddress: false,
+      includePreciseLocation: false,
+      includeLinks: false,
+      includePhotos: false
+    }
+  };
 }
 
 export interface LifeLogSharePayload {
@@ -412,7 +452,7 @@ function buildSharedMemoryPlaces(placeIds: string[], places: Place[], mode: Shar
       }
       return sanitizePlace(place, {
         includeAddress: true,
-        includePreciseLocation: true,
+        includePreciseLocation: false,
         includeLinks: true,
         includePhotos: false
       });

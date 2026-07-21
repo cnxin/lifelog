@@ -21,6 +21,8 @@ import { PlaceFields } from "./EntrySheet/PlaceFields";
 import { MemoryFields } from "./EntrySheet/MemoryFields";
 import { buildDraftFieldMap, type DraftFieldMap } from "./EntrySheet/draftValues";
 import { canSyncNotionRecord } from "../utils/notionStatus";
+import { useUxFlowTimer } from "../hooks/useUxFlowTimer";
+import { recordUxMetric } from "../utils/uxMetrics";
 
 interface EntrySheetProps {
   type: EntryType | null;
@@ -76,12 +78,14 @@ export default function EntrySheet({
   const formRef = useRef<HTMLFormElement | null>(null);
   const draftTimerRef = useRef<number | undefined>();
   const draftRestoredRef = useRef(false);
+  const memoryFlowRecordedRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [availableDraft, setAvailableDraft] = useState<EntryFormDraft | null>(null);
   const [restoredDraftValues, setRestoredDraftValues] = useState<DraftFieldMap | undefined>();
   const [draftRestoreKey, setDraftRestoreKey] = useState(0);
   const [formDirty, setFormDirty] = useState(false);
+  const [draftSaveState, setDraftSaveState] = useState<"idle" | "saving" | "saved">("idle");
 
   const editingItem = type ? findEditingItem(type, itemId, state) : undefined;
   const entrySessionKey = type
@@ -102,6 +106,8 @@ export default function EntrySheet({
       })
     : "";
   const draftKey = type ? buildDraftKey(type, itemId, entrySessionKey) : "";
+  const trackNewMemoryFlow = type === "memory" && !itemId;
+  const getMemoryFlowDuration = useUxFlowTimer(trackNewMemoryFlow, entrySessionKey);
   const editingMemoryPhotoKey = type === "memory" ? ((editingItem as MemoryEvent | undefined)?.photos || []).join("|") : "";
 
   useEffect(() => {
@@ -127,10 +133,15 @@ export default function EntrySheet({
     setAvailableDraft(loadEntryDraft(draftKey));
     setRestoredDraftValues(undefined);
     setDraftRestoreKey(0);
+    setDraftSaveState("idle");
     draftRestoredRef.current = false;
     return () => {
       if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
     };
+  }, [entrySessionKey]);
+
+  useEffect(() => {
+    memoryFlowRecordedRef.current = false;
   }, [entrySessionKey]);
 
   useEffect(() => {
@@ -192,6 +203,7 @@ export default function EntrySheet({
 
       const savedId = savedMemoryId || savedPersonId || savedPlaceId;
       if (savedId) await onSaved?.({ type: entryType, id: savedId });
+      if (entryType === "memory" && !itemId && savedMemoryId) recordMemoryFlow("saved");
       clearEntryDraft(draftKey);
       forceClose();
       notify(buildSaveToast({
@@ -211,8 +223,20 @@ export default function EntrySheet({
   }
 
   function forceClose() {
+    if (trackNewMemoryFlow) recordMemoryFlow("cancelled");
     initialFormFingerprintRef.current = "";
     onClose();
+  }
+
+  function recordMemoryFlow(outcome: "saved" | "cancelled") {
+    if (!trackNewMemoryFlow || memoryFlowRecordedRef.current) return;
+    memoryFlowRecordedRef.current = true;
+    recordUxMetric({
+      event: "record_flow",
+      mode: memoryMode,
+      outcome,
+      durationMs: getMemoryFlowDuration()
+    });
   }
 
   function captureInitialFingerprint(photoCount: number) {
@@ -253,11 +277,16 @@ export default function EntrySheet({
   function scheduleDraftSave() {
     if (!draftKey || !formRef.current) return;
     if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+    setDraftSaveState("saving");
     draftTimerRef.current = window.setTimeout(() => {
       const dirty = hasUnsavedChanges(formRef.current, initialFormFingerprintRef.current, photos.length);
       setFormDirty(dirty);
-      if (!dirty) return;
+      if (!dirty) {
+        setDraftSaveState("idle");
+        return;
+      }
       saveEntryDraft(draftKey, formRef.current);
+      setDraftSaveState("saved");
     }, 350);
   }
 
@@ -299,6 +328,7 @@ export default function EntrySheet({
         <form
           ref={formRef}
           className="form"
+          aria-busy={isSubmitting}
           onSubmit={handleSubmit}
           onChange={() => {
             if (error) setError("");
@@ -306,7 +336,16 @@ export default function EntrySheet({
           }}
           onInput={scheduleDraftSave}
         >
-          {error && <div className="form-error">{error}</div>}
+          {error && <div className="form-error" role="alert">{error}</div>}
+          <div className={`form-save-status form-save-status--${isSubmitting ? "saving-record" : draftSaveState}`} role="status" aria-live="polite">
+            {isSubmitting
+              ? "正在保存记录"
+              : draftSaveState === "saving"
+                ? "正在保存草稿"
+                : draftSaveState === "saved"
+                  ? "草稿已保存到当前设备"
+                  : ""}
+          </div>
           {availableDraft && (
             <div className="form-draft-card">
               <div>

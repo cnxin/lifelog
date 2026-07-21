@@ -9,6 +9,8 @@ import { buildPlaceDisplayName } from "../../utils/placeMeta";
 import { buildPlaceVisitStats, type PlaceVisitStats } from "../../utils/placeVisitStats";
 import { previewUpcomingReminders } from "../../utils/reminderScheduler";
 import type { useLifeLog } from "../../context/LifeLogContext";
+import type { SmartPromptMetricCategory } from "../../utils/uxMetrics";
+import type { SmartPromptCategoryPreferences } from "../../hooks/useUserPreferences";
 
 export interface FlashbackItem {
   kind: string;
@@ -95,6 +97,7 @@ export type TodayActionPrefs = Record<string, number | "dismissed">;
 
 export interface SmartPrompt {
   id: string;
+  category: SmartPromptMetricCategory;
   icon: JSX.Element;
   title: string;
   desc: string;
@@ -277,7 +280,8 @@ export function buildSmartPrompts({
   onOpenPerson,
   onOpenPlace,
   onQuickMemory,
-  promptPrefs
+  promptPrefs,
+  promptCategories
 }: {
   state: ReturnType<typeof useLifeLog>["state"];
   actualMemories: MemoryEvent[];
@@ -287,6 +291,7 @@ export function buildSmartPrompts({
   onOpenPlace: (placeId: string) => void;
   onQuickMemory: (options?: OpenMemoryOptions) => void;
   promptPrefs: TodayActionPrefs;
+  promptCategories?: SmartPromptCategoryPreferences;
 }): SmartPrompt[] {
   const prompts: SmartPrompt[] = [
     buildAnniversaryPrepPrompt(upcoming, onOpenPerson),
@@ -297,6 +302,7 @@ export function buildSmartPrompts({
   ].filter((item): item is SmartPrompt => Boolean(item));
 
   return prompts
+    .filter((prompt) => promptCategories?.[prompt.category] !== false)
     .filter((prompt) => !isActionSuppressed(prompt.id, promptPrefs))
     .sort((left, right) => right.priority - left.priority)
     .slice(0, 1);
@@ -312,6 +318,7 @@ function buildAnniversaryPrepPrompt(
   if (!candidate) return null;
   return {
     id: `anniversary-prep-${candidate.personId}-${candidate.title}-${candidate.date}`,
+    category: "anniversary",
     icon: <Gift />,
     title: `${candidate.personName}的${candidate.title}还有 ${candidate.days} 天`,
     desc: "可以提前想一下安排、礼物或当天要记录的事。",
@@ -346,6 +353,7 @@ function buildContactPrompt(
   if (!candidate || candidate.daysSinceLast === null) return null;
   return {
     id: `contact-${candidate.person.id}`,
+    category: "contact",
     icon: <Users />,
     title: `${candidate.person.name} 已经 ${candidate.daysSinceLast} 天没有新记录`,
     desc: `上次共同回忆在 ${formatMonthDayOffset(candidate.daysSinceLast)}，可以回看一下最近的互动。`,
@@ -369,6 +377,7 @@ function buildProfilePrompt(
   if (!candidate) return null;
   return {
     id: `profile-${candidate.id}`,
+    category: "profile",
     icon: <Heart />,
     title: `${candidate.name} 还没有喜好档案`,
     desc: "补几条喜欢和避雷信息，之后准备礼物或约饭会更省心。",
@@ -397,6 +406,7 @@ function buildFrequentPlacePrompt(
   if (!candidate) return null;
   return {
     id: `place-favorite-${candidate.place.id}`,
+    category: "place",
     icon: <MapPin />,
     title: `${buildPlaceDisplayName(candidate.place)} 去过 ${candidate.stats.visitCount} 次`,
     desc: candidate.stats.topPeople.length
@@ -420,6 +430,7 @@ function buildRecordGapPrompt(
   if (days < 10) return null;
   return {
     id: "record-gap",
+    category: "record-gap",
     icon: <Sparkles />,
     title: `${days} 天没有新记录了`,
     desc: "不用补很多，先写一句最近值得留下的小事就够了。",

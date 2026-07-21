@@ -1726,6 +1726,23 @@
   font-weight: 700;
 }
 
+.form-save-status {
+  min-height: 18px;
+  margin: -2px 0 8px;
+  color: var(--text-tertiary, var(--text-sub));
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.form-save-status--saving,
+.form-save-status--saving-record {
+  color: var(--accent-primary, var(--primary));
+}
+
+.form-save-status--saved {
+  color: var(--text-secondary, var(--text-sub));
+}
+
 .form-draft-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

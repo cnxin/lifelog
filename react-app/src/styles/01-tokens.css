@@ -25,6 +25,36 @@ html[data-theme-style="classic"] {
   --press-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 6%, transparent);
 }
 
+/* Content-first semantic layer. Legacy tokens remain available during migration. */
+:root {
+  --surface-canvas: var(--bg-color);
+  --surface-primary: var(--card-solid);
+  --surface-secondary: var(--soft-purple);
+  --surface-elevated: var(--card-solid);
+  --surface-pressed: color-mix(in srgb, var(--text-main) 8%, transparent);
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-sub);
+  --text-tertiary: color-mix(in srgb, var(--text-sub) 72%, transparent);
+  --text-on-accent: #fff;
+  --border-subtle: var(--line);
+  --border-strong: var(--control-border);
+  --accent-primary: var(--primary);
+  --accent-soft: var(--soft-purple);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-pill: 999px;
+  --elevation-floating: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
 html[data-theme-style="cream"] {
   --primary: #9f7b55;
   --primary-light: #d7bea1;
@@ -271,6 +301,6 @@ body {
     ),
     var(--bg-color);
   color: var(--text-main);
-  font-family: "Inter", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: system-ui, -apple-system, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
   transition: background-color 0.3s ease;
 }

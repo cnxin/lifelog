@@ -7,6 +7,7 @@ import EmptyState from "../../components/EmptyState";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ListRow from "../../components/ListRow";
 import ListViewModeToggle from "../../components/ListViewModeToggle";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import NotionSyncBadge from "../../components/NotionSyncBadge";
@@ -887,7 +888,7 @@ export default function Places() {
           </>
         )}
         <WindowedList
-          className="list"
+          className="list content-list content-list--records"
           items={storePlaceRows}
           estimateSize={denseList ? 96 : 124}
           getKey={({ place }) => place.id}
@@ -896,7 +897,7 @@ export default function Places() {
             const expanded = defaultPlaceCardExpanded || expandedPlaceId === place.id;
             const hasExtraDetail = Boolean(place.address || place.desc || place.tags.length || visitStats.topPeople.length);
             return (
-              <GlassCard className={`place-card ${denseList ? "compact-place-card dense-place-card" : ""} ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`}>
+              <ListRow className={`place-card ${denseList ? "compact-place-card dense-place-card" : ""} ${batchShareMode ? "selectable" : ""} ${selected ? "selected" : ""} ${expanded ? "expanded" : ""}`}>
                 {batchShareMode && (
                   <button
                     className="place-share-select"
@@ -1019,7 +1020,7 @@ export default function Places() {
                     />
                   )}
                 </div>
-              </GlassCard>
+              </ListRow>
             );
           }}
         />

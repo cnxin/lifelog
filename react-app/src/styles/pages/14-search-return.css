@@ -1,0 +1,20 @@
+.search-result-focus {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 62%, transparent);
+  outline-offset: 3px;
+  animation: search-result-focus-pulse 900ms ease-out 1;
+}
+
+@keyframes search-result-focus-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 24%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-result-focus {
+    animation: none;
+  }
+}

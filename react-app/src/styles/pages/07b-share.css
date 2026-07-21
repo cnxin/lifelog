@@ -24,6 +24,46 @@
   gap: 9px;
 }
 
+.local-share-privacy-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-secondary);
+}
+
+.local-share-privacy-presets button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: transparent;
+  font-weight: 700;
+}
+
+.local-share-privacy-presets button.active {
+  color: var(--text-primary);
+  background: var(--surface-primary);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+}
+
+.local-share-field-preview {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent-primary);
+  color: var(--text-secondary);
+  background: var(--surface-secondary);
+  font-size: 0.78rem;
+}
+
+.local-share-field-preview strong {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
 .local-share-primary-actions .primary-btn {
   min-height: 44px;
   font-size: 14px;

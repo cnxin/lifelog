@@ -62,7 +62,6 @@ export default function FloatingActionButton({ actions }: { actions: FloatingAct
           >
             <span className="fab-menu-label">
               <strong>{action.label}</strong>
-              <small>{action.desc}</small>
             </span>
             <span className="fab-menu-icon">{action.icon}</span>
           </button>

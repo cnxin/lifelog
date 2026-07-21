@@ -2,6 +2,7 @@ import { APP_VERSION } from "../constants/version";
 import type { LifeLogState } from "../types";
 import type { BackupHealthReport } from "./backupHealth";
 import { isMemoryPlan } from "./memoryDisplay";
+import { getUxMetricsSummary, type UxMetricsSummary } from "./uxMetrics";
 
 export interface DiagnosticsPayload {
   appVersion: string;
@@ -22,6 +23,7 @@ export interface DiagnosticsPayload {
     issueCount: number;
     issues: string[];
   };
+  uxMetrics: UxMetricsSummary;
 }
 
 export function buildDiagnosticsPayload(state: LifeLogState, healthReport: BackupHealthReport): DiagnosticsPayload {
@@ -43,7 +45,8 @@ export function buildDiagnosticsPayload(state: LifeLogState, healthReport: Backu
       status: healthReport.status,
       issueCount: healthReport.issueCount,
       issues: healthReport.issues
-    }
+    },
+    uxMetrics: getUxMetricsSummary()
   };
 }
 
@@ -68,7 +71,17 @@ export function formatDiagnosticsText(payload: DiagnosticsPayload) {
     "备份健康：",
     `- 状态：${payload.backupHealth.status}`,
     `- 问题数：${payload.backupHealth.issueCount}`,
-    ...payload.backupHealth.issues.map((issue) => `- ${issue}`)
+    ...payload.backupHealth.issues.map((issue) => `- ${issue}`),
+    "",
+    "本地 UX 聚合：",
+    `- 日期桶：${payload.uxMetrics.dayCount}`,
+    `- 总样本：${payload.uxMetrics.totalSamples}`,
+    `- 记录流程：${payload.uxMetrics.eventCounts.record_flow}`,
+    `- 照片处理：${payload.uxMetrics.eventCounts.photo_process}`,
+    `- 搜索流程：${payload.uxMetrics.eventCounts.search_flow}`,
+    `- 首页区块：${payload.uxMetrics.eventCounts.home_section}`,
+    `- 新用户步骤：${payload.uxMetrics.eventCounts.onboarding_step}`,
+    `- 智能提示：${payload.uxMetrics.eventCounts.smart_prompt}`
   ].join("\n");
 }
 

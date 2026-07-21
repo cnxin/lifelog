@@ -1,9 +1,10 @@
 import { ArrowLeft, Camera, ExternalLink, Heart, MapPin, Navigation, PenLine, Share2, Sparkles, Star, Store, Users } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ContentCard from "../../components/ContentCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import NotionRecordAction from "../../components/NotionRecordAction";
@@ -24,9 +25,12 @@ import {
   buildPlaceGeoLine,
   getPlaceReferenceUrl
 } from "../../utils/placeMeta";
+import { useSearchResultFocus } from "../../hooks/useSearchResultFocus";
+import { getSearchReturnQuery, resumeGlobalSearch } from "../../utils/searchNavigation";
 
 export default function PlaceDetail() {
   const { placeId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { state, getPersonName, getPlaceName } = useLifeLog();
   const headerCollapsed = useCollapsingDetailHeader();
@@ -34,6 +38,7 @@ export default function PlaceDetail() {
   const [addingMemory, setAddingMemory] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [placeInspirationOpen, setPlaceInspirationOpen] = useState(false);
+  const { focusRef, focusClassName } = useSearchResultFocus("place", placeId || "");
   const place = state.places.find((item) => item.id === placeId);
 
   if (!place) {
@@ -103,9 +108,9 @@ export default function PlaceDetail() {
   return (
     <>
       <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className="profile-card detail-profile-card">
+        <ContentCard ref={focusRef} className={`profile-card detail-profile-card ${focusClassName}`}>
           <div className="detail-profile-nav">
-            <button className="back-button" type="button" onClick={() => navigate("/places")}>
+            <button className="back-button" type="button" onClick={() => handleDetailBack()}>
               <ArrowLeft /> 返回地点
             </button>
             <strong className="detail-compact-title">{buildPlaceDisplayName(place)}</strong>
@@ -134,7 +139,7 @@ export default function PlaceDetail() {
               </div>
             </div>
           </div>
-        </GlassCard>
+        </ContentCard>
       </section>
 
       <section className="section">
@@ -221,7 +226,7 @@ export default function PlaceDetail() {
             <MapPin /> 地点信息
           </h2>
         </div>
-        <div className="list">
+        <div className="content-list place-detail-info-list">
           <GlassCard className="detail-row">
             <strong>国家 / 省 / 市</strong>
             <span>{buildPlaceGeoLine(place)}</span>
@@ -382,6 +387,16 @@ export default function PlaceDetail() {
       />
     </>
   );
+
+  function handleDetailBack() {
+    const searchQuery = getSearchReturnQuery(location.state);
+    if (searchQuery === null) {
+      navigate("/places");
+      return;
+    }
+    navigate(-1);
+    window.setTimeout(() => resumeGlobalSearch(searchQuery), 0);
+  }
 }
 
 function buildPlaceNextUseCards({

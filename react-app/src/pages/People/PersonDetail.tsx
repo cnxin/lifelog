@@ -4,12 +4,15 @@ import AnniversaryPlanSheet from "../../components/AnniversaryPlanSheet";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ContentCard from "../../components/ContentCard";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
 import NotionRecordAction from "../../components/NotionRecordAction";
 import PersonPreferenceSheet, { type PersonPreferenceMode } from "../../components/PersonPreferenceSheet";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useLifeLog } from "../../context/LifeLogContext";
 import { useCollapsingDetailHeader } from "../../hooks/useCollapsingDetailHeader";
+import { useSearchResultFocus } from "../../hooks/useSearchResultFocus";
+import { getSearchReturnQuery, resumeGlobalSearch } from "../../utils/searchNavigation";
 import type { Anniversary, AnniversaryPlan, AnniversaryPlanTargetKind } from "../../types";
 import { getAnniversaryKey } from "../../utils/anniversaryLinks";
 import { buildAnnualPlanTarget, buildMilestonePlanTarget, findAnnualPlanHistory, findMilestonePlanHistory, findPlanForAnniversaryTarget, normalizeAnniversaryPlanTargetKind, type AnniversaryPlanTarget } from "../../utils/anniversaryPlans";
@@ -39,6 +42,7 @@ export default function PersonDetail() {
   const { personId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { focusRef, focusClassName } = useSearchResultFocus("person", personId || "");
   const [searchParams, setSearchParams] = useSearchParams();
   const confirm = useConfirm();
   const { state, getPersonName, getPlaceName, saveAnniversaryPlan, deleteAnniversaryPlan, updatePersonProfile } = useLifeLog();
@@ -182,10 +186,10 @@ export default function PersonDetail() {
   return (
     <>
       <section className={`section detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className="profile-card detail-profile-card person-detail-profile-card">
+        <ContentCard ref={focusRef} className={`profile-card detail-profile-card person-detail-profile-card ${focusClassName}`}>
           {person.favorite && <Star className="person-profile-favorite" />}
           <div className="detail-profile-nav">
-            <button className="back-button" type="button" onClick={() => navigate("/people")}>
+            <button className="back-button" type="button" onClick={() => handleDetailBack()}>
               <ArrowLeft /> 返回人物
             </button>
             <strong className="detail-compact-title">
@@ -212,7 +216,7 @@ export default function PersonDetail() {
               </div>
             </div>
           </div>
-        </GlassCard>
+        </ContentCard>
       </section>
 
       <section className="section person-detail-section">
@@ -568,6 +572,16 @@ export default function PersonDetail() {
       )}
     </>
   );
+
+  function handleDetailBack() {
+    const searchQuery = getSearchReturnQuery(location.state);
+    if (searchQuery === null) {
+      navigate("/people");
+      return;
+    }
+    navigate(-1);
+    window.setTimeout(() => resumeGlobalSearch(searchQuery), 0);
+  }
 }
 
 function buildPersonActionCenter({

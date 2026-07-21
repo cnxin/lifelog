@@ -6,6 +6,7 @@ import EmptyState from "../../components/EmptyState";
 import CardActions from "../../components/CardActions";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ListRow from "../../components/ListRow";
 import ListViewModeToggle from "../../components/ListViewModeToggle";
 import NotionSyncBadge from "../../components/NotionSyncBadge";
 import PageSegmentNav from "../../components/PageSegmentNav";
@@ -304,7 +305,7 @@ export default function People() {
           />
         )}
         <WindowedList
-          className="list"
+          className="list content-list content-list--records"
           items={peopleRows}
           estimateSize={denseList ? 92 : 118}
           getKey={({ person }) => person.id}
@@ -313,7 +314,7 @@ export default function People() {
             const birthdayInfo = buildBirthdayInfo(person.birthday);
             const selected = selectedPersonIds.includes(person.id);
             return (
-              <GlassCard className={`person-card ${denseList ? "dense-person-card" : ""} ${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`}>
+              <ListRow className={`person-card ${denseList ? "dense-person-card" : ""} ${batchMode ? "selectable" : ""} ${selected ? "selected" : ""}`}>
                 {batchMode && (
                   <button
                     className="person-select-toggle"
@@ -415,7 +416,7 @@ export default function People() {
                     <CardActions onEdit={() => setEditingId(person.id)} onDelete={() => handleDelete(person.id)} />
                   )}
                 </div>
-              </GlassCard>
+              </ListRow>
             );
           }}
         />

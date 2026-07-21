@@ -1,11 +1,12 @@
 import { ArrowLeft, Calendar, CheckCircle2, ChevronDown, Heart, Image as ImageIcon, MapPin, PenLine, QrCode, Sparkles, Tag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CompletionTipsSection, { type CompletionTip } from "../../components/CompletionTipsSection";
 import DateInput from "../../components/DateInput";
 import EmptyState from "../../components/EmptyState";
 import EntrySheet from "../../components/EntrySheet";
 import GlassCard from "../../components/GlassCard";
+import ContentCard from "../../components/ContentCard";
 import LocalShareSheet from "../../components/LocalShareSheet";
 import MemoryTags from "../../components/MemoryTags";
 import MemoryTimelineSection from "../../components/MemoryTimelineSection";
@@ -24,13 +25,17 @@ import { buildMemoryDisplayContext, buildMemoryMetaLine, getMemoryDisplayTitle, 
 import { getMemoryPlaceIds } from "../../utils/memoryPlaces";
 import { toCalendarDateKey } from "../../utils/calendarItems";
 import type { AnniversaryPlan, MemoryEvent, Photo } from "../../types";
+import { useSearchResultFocus } from "../../hooks/useSearchResultFocus";
+import { getSearchReturnQuery, resumeGlobalSearch } from "../../utils/searchNavigation";
 
 export default function MemoryDetail() {
   const { memoryId } = useParams();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const notify = useToast();
   const { state, getPersonName, getPlaceName, loadMemoryPhotos, saveMemory } = useLifeLog();
+  const { focusRef, focusClassName } = useSearchResultFocus("memory", memoryId || "");
   const headerCollapsed = useCollapsingDetailHeader();
   const [editing, setEditing] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -157,9 +162,9 @@ export default function MemoryDetail() {
   return (
     <>
       <section className={`section detail-hero-section memory-detail-hero-section ${headerCollapsed ? "collapsed" : ""}`}>
-        <GlassCard className={`profile-card detail-profile-card memory-detail-profile-card ${isMemoryPlan(memory) ? "is-plan" : "is-memory"}`}>
+        <ContentCard ref={focusRef} className={`profile-card detail-profile-card memory-detail-profile-card ${isMemoryPlan(memory) ? "is-plan" : "is-memory"} ${focusClassName}`}>
           <div className="detail-profile-nav">
-            <button className="back-button" type="button" onClick={() => navigate("/memories")}>
+            <button className="back-button" type="button" onClick={() => handleDetailBack()}>
               <ArrowLeft /> 返回记录
             </button>
             <strong className="detail-compact-title">
@@ -184,7 +189,7 @@ export default function MemoryDetail() {
               </button>
             </div>
           </div>
-        </GlassCard>
+        </ContentCard>
       </section>
 
       <section className="section">
@@ -512,6 +517,16 @@ export default function MemoryDetail() {
       />
     </>
   );
+
+  function handleDetailBack() {
+    const searchQuery = getSearchReturnQuery(location.state);
+    if (searchQuery === null) {
+      navigate("/memories");
+      return;
+    }
+    navigate(-1);
+    window.setTimeout(() => resumeGlobalSearch(searchQuery), 0);
+  }
 }
 
 function formatLinkedPlanMeta(plan: Pick<AnniversaryPlan, "targetKind" | "targetDate" | "occurrenceYear" | "milestoneLabel">) {

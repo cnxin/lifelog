@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useToast } from "../context/ToastContext";
 import { blobToDataURL, compressImage, validateImageFile, SUPPORTED_IMAGE_ACCEPT, SUPPORTED_IMAGE_FORMAT_LABEL } from "../utils/imageCompression";
 import PhotoUploadQueue, { type PhotoUploadQueueItem } from "./PhotoUploadQueue";
+import { recordUxMetric } from "../utils/uxMetrics";
 
 interface PlacePhotoInputProps {
   value?: string;
@@ -49,10 +50,10 @@ export default function PlacePhotoInput({
 
   async function retryFailedPhotos() {
     if (!failedPhotos.length || disabled) return;
-    await processFiles(failedPhotos.map((item) => item.file));
+    await processFiles(failedPhotos.map((item) => item.file), true);
   }
 
-  async function processFiles(selectedFiles: File[]) {
+  async function processFiles(selectedFiles: File[], isRetry = false) {
     setErrors([]);
     setFailedPhotos([]);
     setProcessingText("");
@@ -72,6 +73,11 @@ export default function PlacePhotoInput({
     const nextErrors: string[] = [];
     const nextFailedPhotos: FailedPlacePhoto[] = [];
     const filesToProcess = selectedFiles.slice(0, remaining);
+    if (isRetry) {
+      for (const file of filesToProcess) {
+        recordPlacePhotoProcess(file, "retry", 0);
+      }
+    }
     const nextQueueItems = filesToProcess.map((file, index) => ({
       id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
       name: file.name || `地点照片 ${index + 1}`,
@@ -85,6 +91,7 @@ export default function PlacePhotoInput({
     try {
       for (let index = 0; index < filesToProcess.length; index += 1) {
         const file = filesToProcess[index];
+        const startedAt = performance.now();
         const queueId = nextQueueItems[index]?.id;
         setProcessingPercent(Math.round((index / filesToProcess.length) * 100));
         const isHeic = isHeicFile(file);
@@ -96,16 +103,19 @@ export default function PlacePhotoInput({
           nextErrors.push(`${file.name}: ${message}`);
           nextFailedPhotos.push({ file, message });
           if (queueId) updateQueueItem(queueId, { status: "error", message });
+          recordPlacePhotoProcess(file, "fail", performance.now() - startedAt);
           continue;
         }
         try {
           const compressed = await compressImage(file);
           nextPhotos.push(await blobToDataURL(compressed.original));
+          recordPlacePhotoProcess(file, "success", performance.now() - startedAt);
           if (queueId) updateQueueItem(queueId, { status: "done", message: "已添加" });
         } catch (error) {
           const message = getPlacePhotoErrorMessage(error);
           nextErrors.push(`${file.name}: ${message}`);
           nextFailedPhotos.push({ file, message });
+          recordPlacePhotoProcess(file, "fail", performance.now() - startedAt);
           if (queueId) updateQueueItem(queueId, { status: "error", message });
         }
       }
@@ -208,6 +218,15 @@ export default function PlacePhotoInput({
       <p className="form-hint">支持 {SUPPORTED_IMAGE_FORMAT_LABEL}；HEIC 会自动尝试转换。本地图片会压缩后保存到地点资料中，最多 {maxPhotos} 张。</p>
     </div>
   );
+}
+
+function recordPlacePhotoProcess(file: File, outcome: "success" | "retry" | "fail", durationMs: number) {
+  recordUxMetric({
+    event: "photo_process",
+    format: isHeicFile(file) ? "heic" : "other",
+    outcome,
+    durationMs
+  });
 }
 
 function splitPhotoLines(value: string) {
