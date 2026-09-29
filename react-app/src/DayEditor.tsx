@@ -21,6 +21,7 @@ export default function DayEditor(props: EditorProps) {
       onClose={props.onClose}
       onCancel={dateOpen ? () => setDateOpen(false) : undefined}
       busy={busy}
+      className="editor-modal"
     >
       <EditorForm
         {...props}
@@ -89,7 +90,8 @@ function EditorForm({
         <label>
           日子名称
           <input
-            autoFocus
+            autoFocus={!existing}
+            data-initial-focus={!existing || undefined}
             required
             maxLength={80}
             value={draft.title}

@@ -196,7 +196,10 @@ const fs = require("node:fs/promises");
     assert.match(await selected().getAttribute("aria-label"), /^2026年2月18日/);
     await audit("200% calendar text");
     const bounds = await page.getByRole("dialog").boundingBox();
-    assert.ok(bounds.y >= 32 && bounds.y + bounds.height <= 820, "safe areas");
+    assert.ok(bounds.y >= 32 && Math.abs(bounds.y + bounds.height - 844) <= 1, "sheet reaches viewport bottom");
+    const bodyBounds = await page.locator(".modal-body").boundingBox();
+    assert.ok(bodyBounds.y + bodyBounds.height <= 820, "sheet content clears bottom safe area");
+    assert.ok(await page.getByRole("dialog").evaluate(el => parseFloat(getComputedStyle(el).paddingBottom) >= 44), "sheet includes safe-bottom padding");
     await page.evaluate(() =>
       document.documentElement.style.removeProperty("font-size"),
     );

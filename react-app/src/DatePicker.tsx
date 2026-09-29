@@ -59,6 +59,14 @@ export default function DatePicker({
         ?.focus();
       focusDay.current = false;
     }
+    if (open && !wasOpen.current) {
+      panel.current?.scrollIntoView({
+        block: "nearest",
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    }
     if (!open && wasOpen.current) trigger.current?.focus();
     wasOpen.current = open;
   }, [open, cursor, chooseMonth]);

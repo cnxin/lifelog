@@ -61,6 +61,7 @@ export default function Modal({
     document.body.style.overflow = "hidden";
     closing.current = false;
     dialog.showModal();
+    dialog.querySelector<HTMLElement>('[data-initial-focus="true"]')?.focus();
     return () => {
       window.clearTimeout(timer.current);
       dialog.close();
@@ -134,7 +135,7 @@ export default function Modal({
             <X size={20} />
           </button>
         </div>
-        {children}
+        <div className="modal-body">{children}</div>
       </dialog>
     </ModalContext.Provider>
   );

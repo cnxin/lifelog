@@ -102,9 +102,12 @@ const fs = require("node:fs/promises");
     );
     const dialog = await page.getByRole("dialog").boundingBox();
     assert.ok(
-      dialog.y >= 32 && dialog.y + dialog.height <= 820,
-      "dialog stays inside safe area",
+      dialog.y >= 32 && Math.abs(dialog.y + dialog.height - 844) <= 1,
+      "sheet reaches viewport bottom",
     );
+    const modalBody = await page.locator(".modal-body").boundingBox();
+    assert.ok(modalBody.y + modalBody.height <= 820, "sheet controls clear bottom safe area");
+    assert.ok(await page.getByRole("dialog").evaluate(el => parseFloat(getComputedStyle(el).paddingBottom) >= 44), "sheet includes safe-bottom padding");
     await page.screenshot({ path: ".artifacts/chrome-editor.png" });
     await page.keyboard.press("Escape");
     await page.getByRole("dialog").waitFor({ state: "hidden" });
