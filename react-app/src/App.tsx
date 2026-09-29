@@ -28,7 +28,7 @@ import DayEditor from "./DayEditor";
 import CalendarView from "./CalendarView";
 import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
-import { modalExitMs } from "./Modal";
+import { commitWithTransition, dayTransitionName } from "./listTransition";
 
 const icons = { 纪念日: Heart, 生日: Cake, 倒数日: Hourglass };
 const tones = { 纪念日: "rose", 生日: "amber", 倒数日: "sage" };
@@ -60,6 +60,10 @@ export default function App() {
   }, []);
   const [days, setDays] = useState<Day[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const loadedOnce = useRef(false);
+  const reloadSequence = useRef(0);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [today, setToday] = useState(todayKey());
   const [filter, setFilter] = useState<"全部" | Category>("全部");
@@ -70,9 +74,19 @@ export default function App() {
   const [settings, setSettings] = useState(false);
   const [notice, setNotice] = useState<{ message: string } | null>(null);
   const [noticeVisible, setNoticeVisible] = useState(false);
-  const noticeDelay = useRef<number>();
+  const afterEditorNotice = useRef<string | null>(null);
   const reload = useCallback(async () => {
-    setDays(await db.days.toArray());
+    const sequence = ++reloadSequence.current;
+    const next = await db.days.toArray();
+    if (sequence !== reloadSequence.current) return;
+    const update = () => {
+      if (sequence === reloadSequence.current) setDays(next);
+    };
+    if (loadedOnce.current) await commitWithTransition(update);
+    else {
+      update();
+      loadedOnce.current = true;
+    }
   }, []);
   const load = useCallback(async () => {
     setError("");
@@ -118,7 +132,6 @@ export default function App() {
       clearTimeout(clear);
     };
   }, [notice]);
-  useEffect(() => () => window.clearTimeout(noticeDelay.current), []);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const listener = import("@capacitor/app").then(({ App }) =>
@@ -141,12 +154,38 @@ export default function App() {
     const channel = new BroadcastChannel("lifelog-days");
     channel.postMessage("updated");
     channel.close();
-    window.clearTimeout(noticeDelay.current);
-    const announce = () => setNotice({ message });
-    if (afterClose && modalExitMs())
-      noticeDelay.current = window.setTimeout(announce, modalExitMs());
-    else announce();
+    if (afterClose) afterEditorNotice.current = message;
+    else setNotice({ message });
   }
+  useEffect(() => {
+    // Do not scroll the inert home underneath an editor or a retained calendar.
+    if (!focusId || editor || calendarDate || settings) return;
+    const frame = requestAnimationFrame(() => {
+      const card = Array.from(
+        document.querySelectorAll<HTMLElement>(".day-card[data-id]"),
+      ).find((item) => item.dataset.id === focusId);
+      if (card) {
+        card.scrollIntoView({
+          block: "center",
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+        });
+        card
+          .querySelector<HTMLElement>(".card-main")
+          ?.focus({ preventScroll: true });
+        setHighlightId(focusId);
+      }
+      setFocusId(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusId, editor, calendarDate, settings]);
+  useEffect(() => {
+    if (!highlightId) return;
+    // animationend does not fire in reduced-motion, or if a card is filtered out.
+    const timer = window.setTimeout(() => setHighlightId(null), 1400);
+    return () => window.clearTimeout(timer);
+  }, [highlightId]);
   function add(category: Category = "纪念日", selectedDate = today) {
     setEditor({
       id: crypto.randomUUID(),
@@ -284,6 +323,7 @@ export default function App() {
               <section className="overview" aria-label="日子概览">
                 <div
                   className={`hero ${featured ? tones[featured.category] : "rose"}`}
+                  style={{ viewTransitionName: "hero" }}
                 >
                   <div className="hero-orbit" aria-hidden="true">
                     <Heart />
@@ -463,6 +503,17 @@ export default function App() {
                         <li
                           className={`day-card ${tones[day.category]}`}
                           key={day.id}
+                          style={{
+                            viewTransitionName: dayTransitionName(day.id),
+                          }}
+                          data-id={day.id}
+                          data-highlight={highlightId === day.id || undefined}
+                          onAnimationEnd={(event) => {
+                            if (event.animationName === "day-highlight")
+                              setHighlightId((id) =>
+                                id === day.id ? null : id,
+                              );
+                          }}
                         >
                           <div className="card-top">
                             <span className="category-icon">
@@ -479,7 +530,9 @@ export default function App() {
                                 void saveDay({ ...day, pinned: !day.pinned })
                                   .then(() =>
                                     changed(
-                                      day.pinned ? "已取消置顶" : "已置顶",
+                                      day.pinned
+                                        ? "已取消置顶"
+                                        : "已置顶，移到最前",
                                     ),
                                   )
                                   .catch(() =>
@@ -611,10 +664,28 @@ export default function App() {
             key={editor.id}
             day={editor}
             existing={days.some((day) => day.id === editor.id)}
-            onClose={() => setEditor(null)}
+            onClose={() => {
+              setEditor(null);
+              // Modal invokes this only after exit completes (immediately in reduced motion).
+              if (afterEditorNotice.current) {
+                setNotice({ message: afterEditorNotice.current });
+                afterEditorNotice.current = null;
+              }
+            }}
             onSave={async (day) => {
               await saveDay(day);
               await changed("这个日子，记下了。", true);
+              // Reveal a saved record if the current category/search would hide it.
+              if (filter !== "全部" && filter !== day.category)
+                setFilter("全部");
+              if (
+                !`${day.title} ${day.note}`
+                  .toLocaleLowerCase()
+                  .includes(query.trim().toLocaleLowerCase())
+              )
+                setQuery("");
+              // Calendar-origin edits return to the agenda, not the home list.
+              if (!calendarDate) setFocusId(day.id);
             }}
             onDelete={async () => {
               await db.days.delete(editor.id);
