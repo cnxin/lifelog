@@ -28,6 +28,7 @@ import DayEditor from "./DayEditor";
 import CalendarView from "./CalendarView";
 import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
+import { modalExitMs } from "./Modal";
 
 const icons = { 纪念日: Heart, 生日: Cake, 倒数日: Hourglass };
 const tones = { 纪念日: "rose", 生日: "amber", 倒数日: "sage" };
@@ -67,7 +68,9 @@ export default function App() {
   const [editor, setEditor] = useState<Day | null>(null);
   const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<{ message: string } | null>(null);
+  const [noticeVisible, setNoticeVisible] = useState(false);
+  const noticeDelay = useRef<number>();
   const reload = useCallback(async () => {
     setDays(await db.days.toArray());
   }, []);
@@ -101,14 +104,28 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!notice) return;
-    const timer = setTimeout(() => setNotice(""), 4000);
-    return () => clearTimeout(timer);
+    setNoticeVisible(true);
+    let clear: ReturnType<typeof setTimeout>;
+    const timer = setTimeout(() => {
+      setNoticeVisible(false);
+      clear = setTimeout(
+        () => setNotice(null),
+        matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200,
+      );
+    }, 4000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(clear);
+    };
   }, [notice]);
+  useEffect(() => () => window.clearTimeout(noticeDelay.current), []);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const listener = import("@capacitor/app").then(({ App }) =>
       App.addListener("backButton", () => {
-        const dialog = document.querySelector("dialog[open]");
+        const open =
+          document.querySelectorAll<HTMLDialogElement>("dialog[open]");
+        const dialog = open[open.length - 1];
         if (dialog)
           dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
         else void App.minimizeApp();
@@ -119,12 +136,16 @@ export default function App() {
       void listener.then((handle) => handle.remove());
     };
   }, []);
-  async function changed(message: string) {
+  async function changed(message: string, afterClose = false) {
     await reload();
     const channel = new BroadcastChannel("lifelog-days");
     channel.postMessage("updated");
     channel.close();
-    setNotice(message);
+    window.clearTimeout(noticeDelay.current);
+    const announce = () => setNotice({ message });
+    if (afterClose && modalExitMs())
+      noticeDelay.current = window.setTimeout(announce, modalExitMs());
+    else announce();
   }
   function add(category: Category = "纪念日", selectedDate = today) {
     setEditor({
@@ -568,8 +589,8 @@ export default function App() {
             <span>简单记录 · 本地保存</span>
           </footer>
         </main>
-        <div className="toast" role="status">
-          {notice}
+        <div className="toast" role="status" data-visible={noticeVisible}>
+          {notice?.message}
         </div>
         {calendarDate && !editor && (
           <CalendarView
@@ -593,11 +614,11 @@ export default function App() {
             onClose={() => setEditor(null)}
             onSave={async (day) => {
               await saveDay(day);
-              await changed("这个日子，记下了。");
+              await changed("这个日子，记下了。", true);
             }}
             onDelete={async () => {
               await db.days.delete(editor.id);
-              await changed("已删除这个日子");
+              await changed("已删除这个日子", true);
             }}
           />
         )}

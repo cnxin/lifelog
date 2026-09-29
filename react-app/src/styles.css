@@ -901,9 +901,44 @@ button:not(:disabled):active {
   box-shadow: 0 24px 90px #1f2d2433;
   overflow-y: auto;
 }
+.modal {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+.modal[open] {
+  opacity: 1;
+  transform: none;
+}
+@supports (transition-behavior: allow-discrete) {
+  .modal {
+    transition:
+      opacity 0.2s ease-out,
+      transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+      overlay 0.24s allow-discrete,
+      display 0.24s allow-discrete;
+  }
+  .modal::backdrop {
+    transition:
+      background-color 0.24s,
+      overlay 0.24s allow-discrete,
+      display 0.24s allow-discrete;
+  }
+}
 .modal::backdrop {
-  background: #202c2459;
+  background: transparent;
   backdrop-filter: blur(4px);
+}
+.modal[open]::backdrop {
+  background: #202c2459;
+}
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  .modal[open]::backdrop {
+    background: transparent;
+  }
 }
 .modal-heading {
   display: flex;
@@ -1276,7 +1311,11 @@ button:not(:disabled):active {
   bottom: calc(var(--safe-bottom) + 1.5rem);
   max-width: calc(100% - var(--safe-left) - var(--safe-right) - 2rem);
   left: 50%;
-  transform: translateX(-50%);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
   border-radius: 10px;
   background: #3e503b;
   color: #fff;
@@ -1286,8 +1325,10 @@ button:not(:disabled):active {
   box-shadow: 0 4px 20px #0001;
   pointer-events: none;
 }
-.toast:empty {
-  display: none;
+.toast[data-visible="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-duration: 160ms;
 }
 .sr-only {
   position: absolute;
@@ -1587,6 +1628,7 @@ button:not(:disabled):active {
   *::before,
   *::after {
     transition: none !important;
+    animation: none !important;
     scroll-behavior: auto !important;
   }
 }
