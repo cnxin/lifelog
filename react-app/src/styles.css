@@ -209,7 +209,9 @@ button svg {
   padding: 0.625rem 1rem;
   font-size: 0.875rem;
 }
-button:not(:disabled):active {
+button:not(:disabled):not(.card-main):not(.calendar-day):not(
+    .calendar-event
+  ):not(.hero-link):active {
   transform: scale(0.97);
   transition-duration: 80ms;
 }
@@ -296,18 +298,24 @@ button:not(:disabled):active {
 }
 .rose {
   --tint: #f5e8e3;
+  --tint-pressed: #e6dad5;
   --ink: #a26a58;
   --soft: #fcf5f1;
+  --soft-pressed: #ede6e3;
 }
 .amber {
   --tint: #f6eedb;
+  --tint-pressed: #e7e0ce;
   --ink: #997535;
   --soft: #fdf9f0;
+  --soft-pressed: #eeeae2;
 }
 .sage {
   --tint: #e6ecdf;
+  --tint-pressed: #d8ded2;
   --ink: #617650;
   --soft: #f3f7ef;
+  --soft-pressed: #e4e8e1;
 }
 .hero {
   background: var(--tint);
@@ -1726,7 +1734,7 @@ button:not(:disabled):active {
 }
 @media (prefers-reduced-motion: reduce) {
   button:not(:disabled):active {
-    transform: none;
+    transform: none !important;
   }
 }
 @media (max-width: 760px) {
@@ -2517,4 +2525,31 @@ button:not(:disabled):active {
 /* Keep closing sheets non-interactive until their exit snapshot is gone. */
 .modal[data-closing="true"] {
   pointer-events: none;
+}
+
+/* Large surfaces respond with color, not a layout-disrupting scale. */
+.card-main,
+.calendar-day,
+.calendar-event,
+.hero-link {
+  transition: background-color 120ms ease-out;
+}
+.card-main:not(:disabled):active,
+.calendar-event:not(:disabled):active {
+  background: var(--soft-pressed, #e2e4de);
+  transition-duration: 80ms;
+}
+.hero-link:not(:disabled):active {
+  background: var(--tint-pressed, #e2e4de);
+  transition-duration: 80ms;
+}
+.calendar-day:not(:disabled):active {
+  background: #e2e4de;
+  transition-duration: 80ms;
+}
+.calendar-day[data-selected="true"]:not(:disabled):active {
+  background: #425641;
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
 }

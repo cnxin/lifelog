@@ -469,6 +469,9 @@ export default function App() {
                     <div className="search">
                       <Search size={16} />
                       <input
+                        type="search"
+                        enterKeyHint="search"
+                        autoComplete="off"
                         aria-label="搜索日子"
                         placeholder="搜索日子…"
                         value={query}

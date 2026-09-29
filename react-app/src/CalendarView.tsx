@@ -258,7 +258,7 @@ export default function CalendarView({
                   <li key={day.id}>
                     <button
                       type="button"
-                      className="calendar-event"
+                      className={`calendar-event ${tones[day.category]}`}
                       aria-label={`编辑：${day.title}`}
                       onClick={() => onEdit(day)}
                     >
