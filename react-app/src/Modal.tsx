@@ -16,9 +16,12 @@ export default function Modal({
   useEffect(() => {
     const dialog = ref.current!;
     const trigger = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     dialog.showModal();
     return () => {
       dialog.close();
+      document.body.style.overflow = previousOverflow;
       trigger?.focus();
     };
   }, []);

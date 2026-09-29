@@ -1,7 +1,7 @@
 {
   "name": "lifelog-react-app",
   "private": true,
-  "version": "0.2.0-alpha.1",
+  "version": "0.2.0-alpha.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5188 --strictPort",
@@ -13,13 +13,13 @@
     "cap:open:android": "cap open android",
     "test:offline": "node scripts/offline.cjs",
     "android:doctor": "node scripts/android.cjs doctor",
-    "android:preview": "node scripts/android.cjs preview"
+    "android:preview": "node scripts/android.cjs preview",
+    "test:chrome": "node scripts/chrome.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
     "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.3.1",
-    "@capacitor/status-bar": "^8.0.2",
     "dexie": "^4.4.2",
     "lucide-react": "1.14.0",
     "lunar-javascript": "^1.7.7",

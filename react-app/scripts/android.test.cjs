@@ -136,3 +136,21 @@ test('Android local-only storage is excluded from cloud backup and automatic dev
     assert.ok(!section.includes('<include'));
   }
 });
+
+test('SystemBars owns native insets and foreground style without the legacy overlay plugin', () => {
+  const config = read('capacitor.config.ts');
+  assert.match(config, /SystemBars:\s*\{\s*insetsHandling: "css",\s*style: "LIGHT"/);
+  assert.doesNotMatch(config, /overlaysWebView|StatusBar:/);
+  const app = read('src/App.tsx');
+  assert.match(app, /SystemBars\.setStyle\(\{ style: SystemBarsStyle.Light \}\)/);
+  assert.doesNotMatch(app, /@capacitor\/status-bar|setBackgroundColor|setOverlaysWebView/);
+  assert.equal(JSON.parse(read('package.json')).dependencies['@capacitor/status-bar'], undefined);
+  const css = read('src/styles.css');
+  for (const edge of ['top', 'right', 'bottom', 'left']) {
+    assert.ok(css.replace(/\s+/g, "").includes(`var(--safe-area-inset-${edge},env(safe-area-inset-${edge},0px))`));
+  }
+  assert.match(read('index.html'), /viewport-fit=cover/);
+  const theme = read('android/app/src/main/res/values/styles.xml');
+  assert.match(theme, /Theme.AppCompat.Light.NoActionBar/);
+  assert.match(theme, /android:windowBackground">#f7f8fa/);
+});

@@ -2,13 +2,15 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前开发版本：`0.2.0-alpha.1`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前开发版本：`0.2.0-alpha.2`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
 ## 下载 Android 测试版
 
-在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.1-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.1-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
+在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.2-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.2-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
 
 **请保留旧版，先导出完整 JSON 备份，再在测试版中导入。** 此包使用 debug 签名，已通过构建、签名校验和自动化测试，但尚未完成真机验收，不作为正式升级版。
+
+`alpha.2` 新增常驻顶栏与系统安全区适配，通过独立测试版预发布分发；保留 `alpha.1` 与正式旧版 Release。详见 [顶栏与 UI 验收记录](docs/UI_CHROME.md)。
 
 ## 只做这些事
 
@@ -43,6 +45,7 @@ npx playwright install chromium  # 首次浏览器测试前安装
 npm run test:e2e                  # 另一个终端保持 npm run dev 运行（含 axe 无障碍扫描）
 # 生产离线测试：另一终端启动 npm run preview -- --host 127.0.0.1 --port 5189 --strictPort
 npm run test:offline
+npm run test:chrome               # 顶栏、安全区模拟、横屏、大字号与焦点回归
 ```
 
 浏览器测试使用隔离的测试上下文，不写入日常浏览器的数据。测试截图位于 `react-app/.artifacts/`（已忽略）。生产服务测试可设置 `BASE_URL`。
@@ -56,7 +59,7 @@ npm run android:preview          # 检查通过后：测试 → Web 构建 → �
 
 测试版使用独立包名 `com.cnxin.lifelog.preview`，桌面名称「日子 · 测试版」，不替换旧应用。它不能直接读取原版私有数据，使用旧 JSON 备份测试导入。
 
-正式升级版保留包名 `com.cnxin.lifelog` 与原 WebView origin，必须使用原签名进行覆盖升级验收。原生侧只保留应用生命周期、状态栏和文件保存；移除通知、相机、安装更新等旧权限及分享入口。
+正式升级版保留包名 `com.cnxin.lifelog` 与原 WebView origin，必须使用原签名进行覆盖升级验收。原生侧只保留应用生命周期、内置 SystemBars 和文件保存；移除通知、相机、安装更新等旧权限及分享入口。
 
 需要 JDK 21、Android SDK API 36、Build Tools 35.0.0 和足够磁盘空间。**Web 构建和 Capacitor 同步成功不代表 APK 已打包、签名或升级验证。** 不要卸载旧版来尝试迁移，先在旧版导出完整备份。详见 [Android 测试与升级验收](docs/ANDROID_RELEASE.md)。
 

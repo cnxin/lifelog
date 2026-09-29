@@ -8,10 +8,9 @@ const config: CapacitorConfig = {
     androidScheme: "https",
   },
   plugins: {
-    StatusBar: {
-      overlaysWebView: false,
+    SystemBars: {
+      insetsHandling: "css",
       style: "LIGHT",
-      backgroundColor: "#f7f8fa",
     },
   },
 };

@@ -1,27 +1,53 @@
 :root {
   font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    "PingFang SC",
-    "Microsoft YaHei",
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
   color: #303530;
   background: #f7f8fa;
   font-synthesis: none;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 1rem;
+  color-scheme: light;
+  font-optical-sizing: auto;
   --muted: #636d5d;
   --border: #e8eae5;
   --green: #465b45;
   --accent: #e3a593;
+  /* Capacitor supplies these on Android; browsers/PWA use env(). Never add both. */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(
+    --safe-area-inset-bottom,
+    env(safe-area-inset-bottom, 0px)
+  );
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --header-height: 5rem;
 }
 * {
   box-sizing: border-box;
 }
+html {
+  scroll-padding-top: calc(var(--header-offset, var(--header-height)) + 1.5rem);
+}
 body {
   margin: 0;
+  line-height: 1.5;
+}
+main:focus {
+  outline: none;
+}
+.skip-link {
+  position: fixed;
+  top: calc(var(--safe-top) + 0.5rem);
+  left: max(1rem, var(--safe-left));
+  padding: 0.75rem 1rem;
+  background: white;
+  z-index: 30;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
 }
 button,
 input,
@@ -65,7 +91,8 @@ button {
   transition:
     background-color 0.16s,
     color 0.16s,
-    border-color 0.16s;
+    border-color 0.16s,
+    transform 0.16s ease-out;
 }
 a {
   color: inherit;
@@ -85,53 +112,112 @@ button svg {
 }
 .app-shell {
   max-width: 1200px;
-  padding: 0 48px;
+  padding: 0 max(var(--gutter), var(--safe-right)) var(--safe-bottom)
+    max(var(--gutter), var(--safe-left));
   margin: 0 auto;
 }
 .site-header {
-  height: 100px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: var(--safe-top);
+  background: rgba(247, 248, 250, 0.94);
+  isolation: isolate;
+}
+@supports (backdrop-filter: blur(20px)) {
+  .site-header {
+    background: rgba(247, 248, 250, 0.86);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+}
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 0.75rem;
+  background: linear-gradient(rgba(247, 248, 250, 0.7), transparent);
+  pointer-events: none;
+}
+.header-inner {
+  max-width: 1200px;
+  min-height: var(--header-height);
+  margin: auto;
+  padding: 0.5rem max(var(--gutter), var(--safe-right)) 0.5rem
+    max(var(--gutter), var(--safe-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.8px;
+  gap: 0.75rem;
+  min-height: 3rem;
+  flex-shrink: 0;
 }
 .brand-icon {
-  width: 42px;
-  height: 42px;
+  width: 2.75rem;
+  height: 2.75rem;
   display: grid;
   place-items: center;
   background: #e8eddf;
-  border-radius: 13px;
-  color: #50614a;
+  border-radius: 0.9rem;
+  color: #465b45;
 }
-.brand-divider {
-  margin: 0 13px;
-  font-weight: 300;
-  color: #c7cbc1;
+.brand-label {
+  display: grid;
+  gap: 0.125rem;
 }
 .brand-cn {
-  font-size: 19px;
-  font-weight: 500;
-  letter-spacing: 2px;
+  font-size: 1.375rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+.brand-caption {
+  color: var(--muted);
+  font-size: 0.6875rem;
+  letter-spacing: 0.025em;
 }
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.header-backup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 3rem;
+  min-height: 3rem;
+  padding: 0.625rem 0.75rem;
+  background: transparent;
+  border-radius: 1rem;
+  font-size: 0.8125rem;
+}
+.header-backup:hover {
+  background: #e9ece5;
+}
+.header-add.primary {
+  min-height: 3rem;
+  border-radius: 1rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 .local-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .local-indicator i {
@@ -156,28 +242,37 @@ button svg {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 48px 0 32px;
+  margin: 2.5rem 0 1.75rem;
 }
 .eyebrow {
   color: #636d5d;
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 2.4px;
 }
 .page-heading h1 {
-  font-size: 30px;
-  letter-spacing: 1px;
-  line-height: 1.5;
+  font-size: clamp(1.625rem, 3vw, 2.25rem);
+  letter-spacing: -0.035em;
+  line-height: 1.25;
   font-weight: 600;
-  margin: 13px 0 9px;
+  margin: 0.625rem 0 0.75rem;
+}
+.heading-date {
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  font-weight: 500;
+}
+.section-caption {
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 .page-heading h1 > span {
   color: #b1bea2;
 }
 .subtitle {
-  font-size: 13px;
+  font-size: 0.875rem;
   color: var(--muted);
-  letter-spacing: 0.4px;
+  letter-spacing: 0;
 }
 .today {
   display: flex;
@@ -186,12 +281,12 @@ button svg {
   text-align: right;
 }
 .today > span {
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 500;
   letter-spacing: 1px;
 }
 .today small {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .overview {
@@ -232,7 +327,7 @@ button svg {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 0.75rem;
   color: #725e56;
   letter-spacing: 1px;
 }
@@ -247,7 +342,7 @@ button svg {
   border: 1px solid #b38e7d40;
   border-radius: 5px;
   padding: 4px 9px;
-  font-size: 10px;
+  font-size: 0.75rem;
   letter-spacing: 0;
 }
 .hero-link {
@@ -262,7 +357,7 @@ button svg {
   margin: 23px 0 14px;
 }
 .hero h2 {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 550;
   letter-spacing: 1px;
   overflow-wrap: anywhere;
@@ -277,10 +372,10 @@ button svg {
   color: #69594e;
 }
 .hero-count > span {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .hero-count > strong {
-  font-size: 70px;
+  font-size: 4.375rem;
   line-height: 1.1;
   font-weight: 500;
   letter-spacing: -3px;
@@ -288,7 +383,7 @@ button svg {
   color: #514c40;
 }
 .hero-caption {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.9;
   color: #715e54;
   max-width: 86%;
@@ -307,7 +402,7 @@ button svg {
   border-top: 1px solid #b48f801f;
   padding-top: 17px;
   margin-top: auto;
-  font-size: 10px;
+  font-size: 0.75rem;
   color: #705e53;
 }
 .hero-bottom > span:first-child {
@@ -370,17 +465,17 @@ button svg {
   place-items: center;
 }
 .summary-title {
-  font-size: 12px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 .summary-title > span {
   display: block;
   color: #636d5d;
-  font-size: 10px;
+  font-size: 0.75rem;
   margin-top: 7px;
 }
 .summary-card > strong {
-  font-size: 27px;
+  font-size: 1.6875rem;
   margin-left: auto;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -388,7 +483,7 @@ button svg {
   letter-spacing: -1px;
 }
 .summary-card > strong small {
-  font-size: 10px;
+  font-size: 0.75rem;
   margin-left: 5px;
   color: var(--muted);
   font-weight: 400;
@@ -408,7 +503,7 @@ button svg {
 }
 .little-note p {
   line-height: 1.85;
-  font-size: 13px;
+  font-size: 0.8125rem;
   letter-spacing: 2px;
 }
 .little-note > span {
@@ -416,7 +511,7 @@ button svg {
   bottom: 15px;
   right: 16px;
   letter-spacing: 1.8px;
-  font-size: 7px;
+  font-size: 0.75rem;
   color: #59694b;
 }
 .days-section {
@@ -429,7 +524,7 @@ button svg {
   margin-bottom: 22px;
 }
 .section-heading h2 {
-  font-size: 19px;
+  font-size: 1.1875rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -442,12 +537,12 @@ button svg {
   background: #e9ece5;
   padding: 2px 7px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 400;
   color: #6f7b60;
 }
 .section-heading p {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 7px;
 }
@@ -461,7 +556,7 @@ button svg {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -502,12 +597,12 @@ button svg {
   display: flex;
   align-items: center;
   gap: 7px;
-  min-height: 38px;
+  min-height: 44px;
   padding: 8px 13px;
   border-radius: 8px;
   background: transparent;
   color: #636d5d;
-  font-size: 11px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 .filters button.active {
@@ -542,7 +637,7 @@ button svg {
   outline-offset: 1px;
   color: #424b3e;
   background: transparent;
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 .search input::placeholder {
   color: #636d5d;
@@ -552,6 +647,8 @@ button svg {
   display: grid;
   place-items: center;
   padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .sort {
   display: flex;
@@ -562,7 +659,7 @@ button svg {
 .sort select {
   border: 0;
   background: transparent;
-  font-size: 11px;
+  font-size: 0.75rem;
   color: inherit;
   min-height: 44px;
   width: 92px;
@@ -601,14 +698,14 @@ button svg {
   border-radius: 12px;
 }
 .card-category {
-  font-size: 10px;
+  font-size: 0.75rem;
   color: #636d5d;
 }
 .pin-button {
   margin-left: auto;
   background: transparent;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   color: #8b9384;
   display: grid;
@@ -632,14 +729,14 @@ button svg {
   width: 100%;
 }
 .card-main h3 {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 550;
   overflow-wrap: anywhere;
   line-height: 1.5;
   letter-spacing: 0.3px;
 }
 .card-date {
-  font-size: 10px;
+  font-size: 0.75rem;
   color: #636d5d;
   margin-top: 7px;
 }
@@ -650,10 +747,10 @@ button svg {
   gap: 9px;
   padding: 20px 0;
   color: #636d5d;
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 .card-count > strong {
-  font-size: 37px;
+  font-size: 2.3125rem;
   font-weight: 500;
   line-height: 1;
   letter-spacing: -1px;
@@ -667,7 +764,7 @@ button svg {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 10px;
+  font-size: 0.75rem;
   color: #636d5d;
   min-height: 44px;
 }
@@ -681,7 +778,7 @@ button svg {
   justify-content: space-between;
   align-items: center;
   color: #636d5d;
-  font-size: 10px;
+  font-size: 0.75rem;
   letter-spacing: 0.5px;
   padding: 30px 0 25px;
   margin-top: 18px;
@@ -706,7 +803,7 @@ button svg {
   background: #fff9;
   color: #795c4e;
   align-self: flex-start;
-  font-size: 12px;
+  font-size: 0.75rem;
   min-height: 44px;
 }
 .starter-grid {
@@ -730,12 +827,12 @@ button svg {
   background: var(--soft);
 }
 .starter-card strong {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   margin-top: 19px;
 }
 .starter-card > span:not(.category-icon) {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 8px;
 }
@@ -758,15 +855,22 @@ button svg {
 }
 .no-results h3 {
   font-weight: 500;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .no-results p {
   margin: 12px 0 22px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .modal {
-  width: min(490px, calc(100% - 32px));
-  max-height: calc(100dvh - 40px);
+  width: min(
+    490px,
+    calc(100% - max(16px, var(--safe-left)) - max(16px, var(--safe-right)))
+  );
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem);
+  margin: auto;
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  overscroll-behavior: contain;
+  scroll-padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 20px;
   background: #fcfdfb;
@@ -786,13 +890,13 @@ button svg {
   margin-bottom: 24px;
 }
 .modal-heading h2 {
-  font-size: 21px;
+  font-size: 1.3125rem;
   letter-spacing: 0.5px;
   font-weight: 550;
   margin-top: 8px;
 }
 .modal .eyebrow {
-  font-size: 8px;
+  font-size: 0.75rem;
 }
 .editor-fields {
   padding: 0;
@@ -806,7 +910,7 @@ button svg {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
   position: relative;
 }
@@ -820,7 +924,7 @@ button svg {
   color: #354331;
   min-height: 44px;
   padding: 11px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .editor-fields input[type="date"] {
   min-width: 0;
@@ -835,11 +939,11 @@ button svg {
   top: 0;
   left: 33px;
   color: #636d5d;
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 400;
 }
 .field-help {
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.8;
   color: var(--muted);
   margin-top: -9px;
@@ -852,12 +956,12 @@ button svg {
   padding: 3px 0;
 }
 .check-row strong {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 .check-row small {
   display: block;
-  font-size: 10px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 6px;
 }
@@ -881,7 +985,7 @@ button svg {
   background: transparent;
   color: #a36358;
   margin-right: auto;
-  font-size: 12px;
+  font-size: 0.75rem;
   min-height: 44px;
   padding: 8px;
 }
@@ -890,7 +994,7 @@ button svg {
   border-radius: 10px;
   padding: 16px;
   margin-top: 20px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.8;
 }
 .button-row {
@@ -901,7 +1005,7 @@ button svg {
 }
 .error-box,
 .success-box {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 15px;
   border-radius: 9px;
   line-height: 1.8;
@@ -929,11 +1033,11 @@ button svg {
   color: #526449;
 }
 .privacy-note strong {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 .privacy-note p {
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.9;
   margin-top: 7px;
   color: #6b7762;
@@ -964,17 +1068,17 @@ button svg {
 }
 .data-actions strong {
   display: block;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
 }
 .data-actions small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.75rem;
   margin-top: 6px;
 }
 .data-footnote {
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.9;
   color: var(--muted);
   text-align: center;
@@ -987,18 +1091,19 @@ button svg {
   border-radius: 10px;
 }
 .import-preview h3 {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .import-preview p {
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.9;
   margin-top: 10px;
   color: var(--muted);
 }
 .toast {
   position: fixed;
-  bottom: 30px;
+  bottom: calc(var(--safe-bottom) + 1.5rem);
+  max-width: calc(100% - var(--safe-left) - var(--safe-right) - 2rem);
   left: 50%;
   transform: translateX(-50%);
   border-radius: 10px;
@@ -1006,7 +1111,7 @@ button svg {
   color: #fff;
   padding: 12px 20px;
   z-index: 5;
-  font-size: 12px;
+  font-size: 0.75rem;
   box-shadow: 0 4px 20px #0001;
   pointer-events: none;
 }
@@ -1040,9 +1145,6 @@ button svg {
   margin-top: 20px;
 }
 @media (min-width: 1300px) {
-  .app-shell {
-    padding: 0 40px;
-  }
   .page-heading {
     margin-top: 52px;
   }
@@ -1051,9 +1153,6 @@ button svg {
   }
 }
 @media (max-width: 1000px) {
-  .app-shell {
-    padding: 0 30px;
-  }
   .overview {
     grid-template-columns: minmax(0, 1fr) 250px;
   }
@@ -1083,22 +1182,37 @@ button svg {
     padding: 16px 16px 0;
   }
   .page-heading h1 {
-    font-size: 25px;
+    font-size: 1.5625rem;
   }
 }
 @media (max-width: 760px) {
-  .app-shell {
-    padding: 0 22px;
+  :root {
+    --header-height: 4.5rem;
   }
-  .site-header {
-    height: 78px;
+  .brand-caption {
+    font-size: 0.625rem;
+  }
+  .header-backup > span {
+    display: none;
+  }
+  .header-backup {
+    padding: 0.5rem;
+  }
+  .header-add.primary {
+    padding-inline: 0.75rem;
+  }
+  .header-inner {
+    gap: 0.5rem;
+  }
+  .brand {
+    gap: 0.625rem;
   }
   .page-heading {
     margin: 32px 0 24px;
   }
   .page-heading h1 {
-    font-size: 23px;
-    letter-spacing: 0;
+    font-size: 1.75rem;
+    letter-spacing: -0.035em;
   }
   .today {
     display: none;
@@ -1107,7 +1221,7 @@ button svg {
     grid-template-columns: 1fr;
   }
   .hero {
-    min-height: 300px;
+    min-height: 260px;
   }
   .overview-side {
     display: grid;
@@ -1122,13 +1236,13 @@ button svg {
     padding: 15px;
   }
   .summary-card > strong {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
   .summary-title {
-    font-size: 11px;
+    font-size: 0.75rem;
   }
   .summary-title > span {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .toolbar {
     flex-direction: column;
@@ -1168,40 +1282,37 @@ button svg {
     display: none;
   }
   .starter-card strong {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .starter-card > span:not(.category-icon) {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .footer {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .hero-count > strong {
-    font-size: 64px;
+    font-size: 4rem;
   }
   .modal {
     padding: 24px;
   }
 }
 @media (max-width: 430px) {
-  .app-shell {
-    padding: 0 18px;
-  }
   .page-heading h1 {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
   .subtitle {
-    font-size: 11px;
+    font-size: 0.75rem;
   }
   .hero {
     padding: 24px;
     min-height: 292px;
   }
   .hero h2 {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
   .hero-bottom {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .hero-bottom > span:last-child {
     display: none;
@@ -1213,7 +1324,7 @@ button svg {
     padding: 16px 13px;
   }
   .summary-card > strong {
-    font-size: 25px;
+    font-size: 1.5625rem;
   }
   .card-top {
     padding: 14px 13px 0;
@@ -1228,10 +1339,10 @@ button svg {
     padding: 14px 13px 0;
   }
   .card-main h3 {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .card-date {
-    font-size: 9px;
+    font-size: 0.75rem;
     line-height: 1.8;
     min-height: 33px;
   }
@@ -1239,7 +1350,7 @@ button svg {
     display: block;
   }
   .card-count > strong {
-    font-size: 32px;
+    font-size: 2rem;
   }
   .card-count {
     gap: 6px;
@@ -1249,10 +1360,10 @@ button svg {
     height: 36px;
   }
   .card-category {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .card-bottom {
-    font-size: 9px;
+    font-size: 0.75rem;
   }
   .day-grid {
     gap: 12px;
@@ -1262,8 +1373,8 @@ button svg {
     justify-content: space-between;
   }
   .filters button {
-    font-size: 11px;
-    min-height: 40px;
+    font-size: 0.75rem;
+    min-height: 44px;
     padding: 7px 10px;
   }
   .footer > span:last-child {
@@ -1285,22 +1396,22 @@ button svg {
   }
   .starter-card strong {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .starter-card > span:not(.category-icon) {
-    font-size: 10px;
+    font-size: 0.75rem;
   }
   .brand {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   .section-heading h2 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   .hero-orbit {
     right: -130px;
   }
   .modal {
-    max-height: calc(100dvh - 24px);
+    max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem);
     padding: 22px 20px;
   }
   .modal-heading {
@@ -1323,7 +1434,7 @@ button svg {
   .filters button {
     padding-inline: 6px;
     gap: 4px;
-    font-size: 10px;
+    font-size: 0.75rem;
   }
   .overview-side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1333,19 +1444,214 @@ button svg {
     gap: 5px;
   }
   .summary-title {
-    font-size: 10px;
+    font-size: 0.75rem;
     white-space: normal;
   }
   .summary-title > span {
     line-height: 1.6;
   }
   .summary-card > strong {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
   .day-grid {
     grid-template-columns: 1fr;
   }
   .page-heading h1 {
-    font-size: 19px;
+    font-size: 1.5rem;
+  }
+  .brand-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+/* Keep functional surfaces legible when the user reduces transparency. */
+@media (prefers-reduced-transparency: reduce) {
+  .site-header {
+    background: #f7f8fa;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .modal::backdrop {
+    backdrop-filter: none;
+  }
+  .site-header::after {
+    display: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .site-header {
+    background: #f7f8fa;
+    backdrop-filter: none;
+    border-bottom: 1px solid #465b45;
+  }
+  .site-header::after {
+    display: none;
+  }
+  .day-card,
+  .summary-card,
+  .filters,
+  .search {
+    border: 1px solid #636d5d;
+  }
+  .filters {
+    background: #edf0e8;
+  }
+  .filters button {
+    color: #303530;
+  }
+  .filters button.active {
+    outline: 1px solid #465b45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active {
+    transform: none;
+  }
+}
+@media (max-width: 760px) {
+  .page-heading {
+    margin: 1.5rem 0;
+  }
+  .page-heading h1 {
+    font-size: 1.625rem;
+  }
+  .section-heading h2 {
+    font-size: 1.25rem;
+    letter-spacing: -0.025em;
+  }
+  .hero {
+    border-radius: 1.5rem;
+    min-height: 16rem;
+  }
+  .hero-count > strong {
+    font-size: 4rem;
+    letter-spacing: -0.05em;
+  }
+  .hero-caption {
+    font-size: 0.8125rem;
+  }
+  .subtitle {
+    font-size: 0.8125rem;
+  }
+  .overview-side {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  }
+  .summary-title {
+    font-size: 0.75rem;
+    white-space: normal;
+  }
+  .summary-title > span {
+    font-size: 0.6875rem;
+  }
+  .starter-card strong {
+    font-size: 0.9375rem;
+  }
+  .starter-card > span:not(.category-icon) {
+    font-size: 0.75rem;
+  }
+  .day-grid {
+    grid-template-columns: 1fr;
+  }
+  .day-card {
+    border-radius: 1.25rem;
+  }
+  .card-top {
+    padding: 0.5rem 1rem 0;
+    gap: 0.5rem;
+  }
+  .category-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  .pin-button {
+    min-width: 3rem;
+    min-height: 3rem;
+  }
+  .card-category {
+    font-size: 0.75rem;
+  }
+  .card-main {
+    padding: 0.25rem 1rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    column-gap: 0.75rem;
+  }
+  .card-copy {
+    min-width: 0;
+    align-self: center;
+  }
+  .card-main h3 {
+    font-size: 1rem;
+    letter-spacing: -0.015em;
+    align-self: end;
+  }
+  .card-date {
+    grid-column: 1;
+    font-size: 0.75rem;
+    min-height: 0;
+    margin: 0.25rem 0 0.75rem;
+    line-height: 1.6;
+  }
+  .card-count {
+    align-self: center;
+    justify-self: end;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.125rem 0.25rem;
+    min-height: 0;
+    padding: 0.25rem 0 0.75rem;
+    font-size: 0.6875rem;
+  }
+  .card-count > span:first-child {
+    grid-column: 1 / -1;
+  }
+  .card-count > strong {
+    font-size: 2rem;
+    letter-spacing: -0.04em;
+  }
+  .card-count > span:last-child {
+    align-self: end;
+  }
+  .card-bottom {
+    grid-column: 1 / -1;
+    min-width: 0;
+    font-size: 0.75rem;
+    padding-block: 0.75rem;
+  }
+  .filters {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr));
+  }
+  .filters button {
+    padding-inline: 0.25rem;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    min-height: 3rem;
+  }
+  .search {
+    min-height: 3rem;
+    max-width: none;
+  }
+  .search input,
+  .sort select {
+    font-size: 0.8125rem;
+  }
+  .sort {
+    min-height: 3rem;
+  }
+  .header-actions svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .filters button {
+    gap: 0.25rem;
+  }
+  .filters button svg {
+    width: 0.875rem;
   }
 }
