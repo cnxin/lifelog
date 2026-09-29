@@ -136,6 +136,7 @@ export default function App() {
     if (!Capacitor.isNativePlatform()) return;
     const listener = import("@capacitor/app").then(({ App }) =>
       App.addListener("backButton", () => {
+        if (document.querySelector('dialog[data-closing="true"]')) return;
         const open =
           document.querySelectorAll<HTMLDialogElement>("dialog[open]");
         const dialog = open[open.length - 1];
@@ -645,7 +646,7 @@ export default function App() {
         <div className="toast" role="status" data-visible={noticeVisible}>
           {notice?.message}
         </div>
-        {calendarDate && !editor && (
+        {calendarDate && (
           <CalendarView
             days={days}
             today={today}

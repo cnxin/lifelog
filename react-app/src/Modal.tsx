@@ -48,7 +48,11 @@ export default function Modal({
   const requestClose = useCallback(() => {
     if (closing.current || latest.current.busy) return;
     closing.current = true;
-    ref.current?.close();
+    if (ref.current) {
+      ref.current.dataset.closing = "true";
+      ref.current.setAttribute("inert", "");
+      ref.current.close();
+    }
     const delay = modalExitMs();
     if (delay)
       timer.current = window.setTimeout(() => latest.current.onClose(), delay);
@@ -60,13 +64,24 @@ export default function Modal({
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closing.current = false;
+    delete dialog.dataset.closing;
+    dialog.removeAttribute("inert");
     dialog.showModal();
     dialog.querySelector<HTMLElement>('[data-initial-focus="true"]')?.focus();
     return () => {
       window.clearTimeout(timer.current);
       dialog.close();
       document.body.style.overflow = previousOverflow;
-      trigger?.focus();
+      if (trigger?.isConnected) trigger.focus();
+      else {
+        const open =
+          document.querySelectorAll<HTMLDialogElement>("dialog[open]");
+        const previous = open[open.length - 1];
+        (
+          previous?.querySelector<HTMLElement>('[tabindex="0"]') ??
+          previous?.querySelector<HTMLElement>("button:not(:disabled)")
+        )?.focus();
+      }
     };
   }, []);
   return (
@@ -80,7 +95,8 @@ export default function Modal({
             // Handle nested disclosures before the browser closes the dialog.
             event.preventDefault();
             event.stopPropagation();
-            if (!busy) (onCancel ?? requestClose)();
+            if (!busy && !document.querySelector('dialog[data-closing="true"]'))
+              (onCancel ?? requestClose)();
             return;
           }
           if (event.key !== "Tab") return;
@@ -105,7 +121,8 @@ export default function Modal({
         }}
         onCancel={(event) => {
           event.preventDefault();
-          if (!busy) (onCancel ?? requestClose)();
+          if (!busy && !document.querySelector('dialog[data-closing="true"]'))
+            (onCancel ?? requestClose)();
         }}
         onClick={(event) => {
           if (event.target === ref.current && !busy) {

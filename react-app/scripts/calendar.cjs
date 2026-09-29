@@ -101,12 +101,14 @@ const fs = require("node:fs/promises");
     await page.keyboard.press("Shift+PageUp");
     assert.match(await selected().getAttribute("aria-label"), /^2025年1月18日/);
     await page.getByRole("button", { name: "今天", exact: true }).click();
-    // Editing returns to the selected calendar day, never stacks dialogs.
+    // A6 keeps the same calendar DOM below the editor instead of unmounting it.
+    await page.evaluate(() => { window.calendarNode = document.querySelector(".calendar-modal"); });
     await page
       .getByRole("dialog")
       .getByRole("button", { name: "编辑：团圆的日子", exact: true })
       .click();
-    assert.equal(await page.getByRole("dialog").count(), 1);
+    assert.equal(await page.locator("dialog[open]").count(), 2);
+    assert.ok(await page.evaluate(() => window.calendarNode === document.querySelector(".calendar-modal")), "calendar remains mounted under editor");
     assert.equal(
       await page.locator(".date-trigger").getAttribute("data-date"),
       "2024-02-10",
@@ -114,6 +116,8 @@ const fs = require("node:fs/promises");
     );
     await page.getByLabel("日子名称").fill("每年的团圆");
     await page.getByRole("button", { name: "保存修改", exact: true }).click();
+    await page.getByRole("dialog", { name: "编辑这个日子", exact: true }).waitFor({ state: "hidden" });
+    assert.ok(await page.evaluate(() => window.calendarNode === document.querySelector(".calendar-modal")), "same calendar after saving");
     await page.getByRole("dialog", { name: "日历", exact: true }).waitFor();
     assert.equal(await page.getByRole("dialog").count(), 1);
     assert.equal(
@@ -134,6 +138,7 @@ const fs = require("node:fs/promises");
       "2026-02-20",
     );
     await page.keyboard.press("Escape");
+    await page.getByRole("dialog", { name: "记下一个日子", exact: true }).waitFor({ state: "hidden" });
     await page.getByRole("dialog", { name: "日历", exact: true }).waitFor();
     await page
       .getByRole("button", { name: "在所选日期新增日子", exact: true })
@@ -142,6 +147,7 @@ const fs = require("node:fs/promises");
     await page
       .getByRole("button", { name: "记下这个日子", exact: true })
       .click();
+    await page.getByRole("dialog", { name: "记下一个日子", exact: true }).waitFor({ state: "hidden" });
     await page.getByRole("dialog", { name: "日历", exact: true }).waitFor();
     assert.equal(
       await page
