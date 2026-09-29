@@ -2,29 +2,33 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前开发版本：`0.2.0-alpha.2`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前开发版本：`0.2.0-alpha.3`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
 ## 下载 Android 测试版
 
-在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.2-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.2-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
+在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.3-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.3-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
 
 **请保留旧版，先导出完整 JSON 备份，再在测试版中导入。** 此包使用 debug 签名，已通过构建、签名校验和自动化测试，但尚未完成真机验收，不作为正式升级版。
 
-`alpha.2` 新增常驻顶栏与系统安全区适配，通过独立测试版预发布分发；保留 `alpha.1` 与正式旧版 Release。详见 [顶栏与 UI 验收记录](docs/UI_CHROME.md)。
+`alpha.3` 新增农历月历、内联日期选择器，并统一分类单选控件、修正卡片和弹窗布局；每年重复与置顶仍保留勾选框。延续常驻顶栏与系统安全区适配，通过独立测试版预发布分发，保留之前的测试版与正式旧版 Release。详见 [Android 验收记录](docs/ANDROID_RELEASE.md)。
 
 ## 只做这些事
 
+以下功能包含在 `alpha.3` 独立测试版中。
+
 - 直接创建日子：名称、日期、分类、备注、置顶。
+- 表单内展开圆角日期选择器：公历与农历同看、节日 / 节气提示、输入年份快速选月、选择今天；浏览不改值，点选日期才确认。
 - 过去的日子显示「已经 X 天」，未来显示「还有 X 天」，当天显示「就是今天」。不重复的记录按实际经过天数计算，起始当天是 0 天。
 - 公历 / 农历年度重复：生日、周年纪念日显示下一次到来的倒计时。
 - 单页浏览、分类筛选、关键词搜索、临近优先 / 日期排序。
+- 左上角打开轻量月历：公历 / 农历、传统节日与节气、干支生肖、日子标记；点选日期查看、新增或编辑记录。农历信息沿用旧版计算库，不表示官方放假 / 调休安排。
 - 本地 IndexedDB 保存；JSON 导出、预览并合并导入；同源多窗口刷新。
 - 显式迁移旧版人物生日、年度纪念日；不修改旧版数据库。
 - Web / PWA；保留 Android Capacitor 工程和原生文件保存器。
 
 不再包含：人物档案、地点库、回忆与照片管理、复杂安排与待办、统计、账号、Notion、二维码分享、内置更新器。
 
-**当前不提供系统通知、云同步、里程碑或月历页面。** 这不是在后台继续运行旧系统、只把入口藏起来：旧业务已经移出活动源码和构建依赖。
+**当前不提供系统通知、云同步或里程碑。** 这不是在后台继续运行旧系统、只把入口藏起来：旧业务已经移出活动源码和构建依赖。
 
 ## 开发与验证
 
@@ -46,6 +50,10 @@ npm run test:e2e                  # 另一个终端保持 npm run dev 运行（�
 # 生产离线测试：另一终端启动 npm run preview -- --host 127.0.0.1 --port 5189 --strictPort
 npm run test:offline
 npm run test:chrome               # 顶栏、安全区模拟、横屏、大字号与焦点回归
+npm run test:controls             # 分段选项与圆角勾选框
+npm run test:calendar             # 农历月历、键盘、日历与编辑往返、布局与 axe
+npm run test:date-picker          # 选日期、年月跳转、边界、返回、保存和无障碍
+npm run test:ui                   # 全界面布局、长内容、紧凑控件、弹窗按钮与大字号回归
 ```
 
 浏览器测试使用隔离的测试上下文，不写入日常浏览器的数据。测试截图位于 `react-app/.artifacts/`（已忽略）。生产服务测试可设置 `BASE_URL`。
@@ -87,6 +95,9 @@ npm run android:preview          # 检查通过后：测试 → Web 构建 → �
 react-app/src/
   App.tsx            单页列表、筛选、置顶与应用状态
   DayEditor.tsx      新增 / 编辑 / 删除
+  DatePicker.tsx     表单内日期选择与年月跳转
+  CalendarView.tsx   农历月历和当天记录
+  calendar.ts        月历计算与农历信息
   DataPanel.tsx      备份和旧版迁移确认
   Modal.tsx          原生 dialog、焦点管理
   domain.ts          日期计算、数据类型、备份验证与旧格式转换

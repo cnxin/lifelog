@@ -4,13 +4,17 @@ import { X } from "lucide-react";
 export default function Modal({
   title,
   onClose,
+  onCancel,
   children,
   busy = false,
+  className = "",
 }: {
   title: string;
   onClose: () => void;
+  onCancel?: () => void;
   children: ReactNode;
   busy?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -28,9 +32,16 @@ export default function Modal({
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={`modal ${className}`}
       aria-labelledby="modal-title"
       onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          // Handle nested disclosures before the browser closes the dialog.
+          event.preventDefault();
+          event.stopPropagation();
+          if (!busy) (onCancel ?? onClose)();
+          return;
+        }
         if (event.key !== "Tab") return;
         const controls = Array.from(
           ref.current!.querySelectorAll<HTMLElement>(
@@ -53,7 +64,7 @@ export default function Modal({
       }}
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onClose();
+        if (!busy) (onCancel ?? onClose)();
       }}
       onClick={(event) => {
         if (event.target === ref.current && !busy) {

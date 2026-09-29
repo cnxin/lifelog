@@ -1,3 +1,4 @@
+const { pickDate } = require("./date-picker-helper.cjs");
 // Browser layout simulation only: this does not certify Android device insets.
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
@@ -54,7 +55,7 @@ const fs = require("node:fs/promises");
     await page.getByRole("button", { name: "新增日子", exact: true }).waitFor();
     await page.getByRole("button", { name: "新增日子", exact: true }).click();
     await page.getByLabel("日子名称").fill("每一个平凡的日子，都值得好好记住");
-    await page.getByLabel("日期", { exact: true }).fill("2024-05-20");
+    await pickDate(page, "2024-05-20");
     await page
       .getByRole("button", { name: "记下这个日子", exact: true })
       .click();

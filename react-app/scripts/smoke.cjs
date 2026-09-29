@@ -1,3 +1,4 @@
+const { pickDate } = require("./date-picker-helper.cjs");
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
@@ -49,9 +50,11 @@ const path = require("node:path");
     });
     await page.getByRole("button", { name: "新增日子", exact: true }).click();
     await page.getByLabel("日子名称").fill("我们在一起");
-    await page.getByLabel("日期", { exact: true }).fill("2024-05-20");
+    await pickDate(page, "2024-05-20");
     await page.getByLabel("备注").fill("平凡的每一天，都因为你而特别。");
-    await page.getByLabel("置顶这个日子").check();
+    await page
+      .getByRole("checkbox", { name: "置顶这个日子", exact: true })
+      .check();
     await page
       .getByRole("button", { name: "记下这个日子", exact: true })
       .click();
@@ -136,15 +139,13 @@ const path = require("node:path");
         pinned: false,
       },
     ];
-    await page
-      .getByLabel("选择备份文件")
-      .setInputFiles({
-        name: "backup.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(
-          JSON.stringify({ ...backup, days: [...backup.days, ...records] }),
-        ),
-      });
+    await page.getByLabel("选择备份文件").setInputFiles({
+      name: "backup.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({ ...backup, days: [...backup.days, ...records] }),
+      ),
+    });
     await page
       .getByRole("button", { name: "确认合并导入", exact: true })
       .click();
@@ -275,19 +276,17 @@ const path = require("node:path");
         }),
     );
     assert.equal(oldMemory, "原回忆不要删除");
-    await page
-      .getByLabel("选择备份文件")
-      .setInputFiles({
-        name: "bad.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(
-          JSON.stringify({
-            format: "lifelog-days",
-            version: 1,
-            days: [{ ...records[0], id: "bad", date: "2026-02-31" }],
-          }),
-        ),
-      });
+    await page.getByLabel("选择备份文件").setInputFiles({
+      name: "bad.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({
+          format: "lifelog-days",
+          version: 1,
+          days: [{ ...records[0], id: "bad", date: "2026-02-31" }],
+        }),
+      ),
+    });
     await page.getByRole("alert").waitFor();
     await page.getByRole("button", { name: "关闭", exact: true }).click();
     assert.equal(

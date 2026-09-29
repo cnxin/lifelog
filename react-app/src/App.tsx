@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowDownUp,
   ArrowUpRight,
   CalendarDays,
   Cake,
@@ -26,6 +25,8 @@ import {
 } from "./domain";
 import { db, saveDay } from "./storage";
 import DayEditor from "./DayEditor";
+import CalendarView from "./CalendarView";
+import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
 
 const icons = { 纪念日: Heart, 生日: Cake, 倒数日: Hourglass };
@@ -39,6 +40,7 @@ function Icon({ category, size = 22 }: { category: Category; size?: number }) {
 }
 
 export default function App() {
+  const calendarButtonRef = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const header = headerRef.current!;
@@ -63,6 +65,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("upcoming");
   const [editor, setEditor] = useState<Day | null>(null);
+  const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
   const [notice, setNotice] = useState("");
   const reload = useCallback(async () => {
@@ -123,11 +126,11 @@ export default function App() {
     channel.close();
     setNotice(message);
   }
-  function add(category: Category = "纪念日") {
+  function add(category: Category = "纪念日", selectedDate = today) {
     setEditor({
       id: crypto.randomUUID(),
       title: "",
-      date: today,
+      date: selectedDate,
       category,
       repeat: category === "生日" ? "yearly" : "none",
       calendar: "solar",
@@ -166,15 +169,24 @@ export default function App() {
       </a>
       <header ref={headerRef} className="site-header">
         <div className="header-inner">
-          <a className="brand" href="/" aria-label="LifeLog 日子首页">
-            <span className="brand-icon">
+          <div className="brand">
+            <button
+              ref={calendarButtonRef}
+              type="button"
+              className="brand-icon brand-calendar"
+              aria-label="打开日历"
+              title="打开日历"
+              aria-haspopup="dialog"
+              disabled={!loaded}
+              onClick={() => setCalendarDate(today)}
+            >
               <CalendarDays size={23} strokeWidth={1.7} aria-hidden="true" />
-            </span>
-            <span className="brand-label">
+            </button>
+            <a className="brand-label" href="/" aria-label="LifeLog 日子首页">
               <span className="brand-cn">日子</span>
               <span className="brand-caption">LifeLog</span>
-            </span>
-          </a>
+            </a>
+          </div>
           <div className="header-actions">
             <span className="local-indicator">
               <i />
@@ -409,17 +421,17 @@ export default function App() {
                         </button>
                       )}
                     </div>
-                    <label className="sort">
-                      <ArrowDownUp size={16} />
-                      <select
-                        aria-label="排序方式"
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                      >
-                        <option value="upcoming">临近优先</option>
-                        <option value="date">日期从新到旧</option>
-                      </select>
-                    </label>
+                    <SegmentedControl
+                      className="sort"
+                      label="排序方式"
+                      hideLabel
+                      value={sort}
+                      options={[
+                        { value: "upcoming", label: "临近优先" },
+                        { value: "date", label: "日期从新到旧" },
+                      ]}
+                      onChange={setSort}
+                    />
                   </div>
                 </div>
                 {visible.length > 0 ? (
@@ -465,11 +477,9 @@ export default function App() {
                             <div className="card-copy">
                               <h3>{day.title}</h3>
                               <p className="card-date">
-                                {formatDate(day.date)}
+                                <span>{formatDate(day.date)}</span>
                                 {day.repeat === "yearly" && (
                                   <span>
-                                    {" "}
-                                    ·{" "}
                                     {day.calendar === "lunar"
                                       ? lunarLabel(day.date)
                                       : "每年重复"}
@@ -561,6 +571,20 @@ export default function App() {
         <div className="toast" role="status">
           {notice}
         </div>
+        {calendarDate && !editor && (
+          <CalendarView
+            days={days}
+            today={today}
+            selectedDate={calendarDate}
+            onSelect={setCalendarDate}
+            onClose={() => {
+              setCalendarDate(null);
+              requestAnimationFrame(() => calendarButtonRef.current?.focus());
+            }}
+            onAdd={(date) => add("纪念日", date)}
+            onEdit={setEditor}
+          />
+        )}
         {editor && (
           <DayEditor
             key={editor.id}

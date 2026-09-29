@@ -26,7 +26,7 @@ npm run android:preview
 - 脚本要求项目和用户缓存所在磁盘各有至少 6 GiB 可用空间。这是保守的本地检查门槛，不是官方最低要求，也不是空间一定够用的保证。
 - `android:preview` 在环境检查通过后运行单元测试、Web 生产构建、Capacitor 同步、Gradle `assembleDebug` 和 `lintDebug`，再用 SDK 工具校验 APK 的包名、桌面名称、版本、合并权限和签名。校验失败不会产生新的交付副本。不自动安装到设备，不构建或发布正式版。
 - 首次 Gradle 构建需要联网下载依赖；本脚本不自动安装 SDK 或代为接受 SDK 许可。
-- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本在 `react-app/.artifacts/lifelog-days-0.2.0-alpha.1-preview.apk`，旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。
+- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本在 `react-app/.artifacts/lifelog-days-0.2.0-alpha.3-preview.apk`，旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。
 - Gradle 使用固定的 8.14.3 `bin` 分发包，已配置官方 SHA-256 校验，避免下载不需要的源码/文档。
 - 若手工跳过脚本在 Android Studio 构建，请先完成 Web 构建和 `npx cap sync android`，避免把旧资源打进 APK。
 
@@ -86,7 +86,7 @@ npm run android:preview
 
 原版签名文件仍未配置。独立测试 APK 使用自动生成的本机 debug 签名，不是正式升级包。仅通过 `v0.2.0-alpha.1-preview` 预发布版分发独立测试 APK，不合并主分支、不替换旧版发布。
 
-### 本轮实际验证结果
+### alpha.1 历史验证结果
 
 - `npm run android:preview` 完整通过，包括 27 项 Node 测试、Web 构建、Capacitor 同步、真实 Gradle `assembleDebug` 和 `lintDebug`。
 - APK：`react-app/.artifacts/lifelog-days-0.2.0-alpha.1-preview.apk`，4,651,929 字节。
@@ -106,3 +106,16 @@ npm run android:preview
 3. 试用新增/编辑/删除、公历/农历年度重复、置顶、搜索，退出后重开核对持久化。
 4. 测试原生文件保存成功和取消、再导入、返回键、软键盘和断网冷启动。
 5. 测试结果确认后，再准备原签名 release 覆盖升级；不把此 preview 包当作正式版替代品。
+
+## alpha.3 预发布验收（2026-09-30）
+
+- 版本：`0.2.0-alpha.3-preview`，Android `versionCode 138`；独立包名仍为 `com.cnxin.lifelog.preview`。
+- 新增带农历、节日和节气的月历，以及编辑器内联日期选择器；统一分类单选控件，每年重复和置顶仍为勾选框。修正移动端排序、长标题、桌面卡片对齐、大字号及弹窗按钮布局。
+- `android:doctor` 与 `android:preview` 通过：36 项 Node 测试、Web 生产构建、Capacitor 同步、Gradle `assembleDebug` 和 `lintDebug`。Android lint 为 **0 错误、26 条警告**。
+- APK：`react-app/.artifacts/lifelog-days-0.2.0-alpha.3-preview.apk`，4,363,446 字节。
+- SHA-256：`50ebfa12309b3c127bfafd81edb2596035af0221e3bad9322b8aedbfc5436b2f`。重新构建时请以实际生成的 JSON 验证报告为准。
+- APK 签名验证成功，证书 SHA-256 与 GitHub 已发布的 alpha.2 APK 一致（`421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52`）。包名不变且版本号递增，支持更新现有测试版，无需卸载；更新前仍应导出备份。
+- APK 内 16 个 Web 文件与本轮生产构建逐字节一致。合并权限仍只有 `INTERNET` 和本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`。
+- 浏览器回归覆盖控件、农历月历、日期选择器、全局 UI、顶部栏、数据增删改与备份、离线持久化及旧缓存清理。
+- **未进行真机或模拟器安装验收**。本版仍使用 debug 签名，不是原 LifeLog 正式升级包，不能跨沙箱直接读取旧版数据。保留旧 LifeLog，先备份再导入；不要卸载原版或清除数据。
+- 在 `codex/anniversary-lite` 分支通过 `v0.2.0-alpha.3-preview` 预发布分发，不合并主分支，不替换旧版发布。

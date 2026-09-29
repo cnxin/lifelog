@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Trash2 } from "lucide-react";
+import { Cake, Heart, Hourglass, Trash2 } from "lucide-react";
 import Modal from "./Modal";
+import DatePicker from "./DatePicker";
+import SegmentedControl from "./SegmentedControl";
 import { categories, lunarLabel, validDate, type Day } from "./domain";
 
 export default function DayEditor({
@@ -17,6 +19,7 @@ export default function DayEditor({
   onDelete: () => Promise<void>;
 }) {
   const [draft, setDraft] = useState(day);
+  const [dateOpen, setDateOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -51,6 +54,7 @@ export default function DayEditor({
     <Modal
       title={existing ? "编辑这个日子" : "记下一个日子"}
       onClose={onClose}
+      onCancel={dateOpen ? () => setDateOpen(false) : onClose}
       busy={busy}
     >
       <form onSubmit={submit}>
@@ -66,31 +70,30 @@ export default function DayEditor({
               onChange={(e) => patch({ title: e.target.value })}
             />
           </label>
-          <label>
-            分类
-            <select
-              value={draft.category}
-              onChange={(e) =>
-                patch({ category: e.target.value as Day["category"] })
-              }
-            >
-              {categories.map((category) => (
-                <option key={category}>{category}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            日期
-            <input
-              type="date"
-              required
-              min="1901-01-01"
-              max="2099-12-31"
-              value={draft.date}
-              onChange={(e) => patch({ date: e.target.value })}
-              aria-describedby="date-help"
-            />
-          </label>
+          <SegmentedControl
+            label="分类"
+            value={draft.category}
+            options={categories.map((category) => {
+              const Icon =
+                category === "纪念日"
+                  ? Heart
+                  : category === "生日"
+                    ? Cake
+                    : Hourglass;
+              return {
+                value: category,
+                label: category,
+                icon: <Icon size={18} aria-hidden="true" />,
+              };
+            })}
+            onChange={(category) => patch({ category })}
+          />
+          <DatePicker
+            value={draft.date}
+            onChange={(date) => patch({ date })}
+            open={dateOpen}
+            onOpenChange={setDateOpen}
+          />
           <p className="field-help" id="date-help">
             {draft.calendar === "lunar" && validDate(draft.date)
               ? `对应${lunarLabel(draft.date)}。选择原始公历日期，之后按农历重复。`
@@ -98,43 +101,43 @@ export default function DayEditor({
           </p>
           <label className="check-row">
             <span>
-              <strong>每年重复</strong>
-              <small>生日、周年纪念日，自动计算下一次</small>
+              <strong id="repeat-label">每年重复</strong>
+              <small id="repeat-help">生日、周年纪念日，自动计算下一次</small>
             </span>
             <input
               type="checkbox"
+              aria-labelledby="repeat-label"
+              aria-describedby="repeat-help"
               checked={draft.repeat === "yearly"}
-              onChange={(e) =>
+              onChange={(event) =>
                 patch({
-                  repeat: e.target.checked ? "yearly" : "none",
-                  calendar: e.target.checked ? draft.calendar : "solar",
+                  repeat: event.target.checked ? "yearly" : "none",
+                  calendar: event.target.checked ? draft.calendar : "solar",
                 })
               }
             />
           </label>
           {draft.repeat === "yearly" && (
-            <>
-              <label>
-                重复历法
-                <select
-                  value={draft.calendar}
-                  onChange={(e) =>
-                    patch({ calendar: e.target.value as Day["calendar"] })
-                  }
-                >
-                  <option value="solar">公历</option>
-                  <option value="lunar">农历</option>
-                </select>
-              </label>
-              <p className="field-help">
-                {draft.calendar === "solar"
+            <SegmentedControl
+              className="repeat-calendar"
+              label="重复历法"
+              value={draft.calendar}
+              options={[
+                { value: "solar", label: "公历" },
+                { value: "lunar", label: "农历" },
+              ]}
+              onChange={(calendar) => patch({ calendar })}
+              description={
+                draft.calendar === "solar"
                   ? "2 月 29 日在非闰年按 2 月 28 日计算。"
-                  : "无对应闰月时按同名普通月计算；小月的三十按廿九计算。"}
-              </p>
-            </>
+                  : "无对应闰月时按同名普通月计算；小月的三十按廿九计算。"
+              }
+            />
           )}
           <label>
-            备注 <span className="optional">选填</span>
+            <span className="field-label">
+              备注 <span className="optional">选填</span>
+            </span>
             <textarea
               rows={3}
               maxLength={2000}
@@ -145,13 +148,15 @@ export default function DayEditor({
           </label>
           <label className="check-row">
             <span>
-              <strong>置顶这个日子</strong>
-              <small>让重要的日子出现在前面</small>
+              <strong id="pin-label">置顶这个日子</strong>
+              <small id="pin-help">让重要的日子出现在前面</small>
             </span>
             <input
               type="checkbox"
+              aria-labelledby="pin-label"
+              aria-describedby="pin-help"
               checked={draft.pinned}
-              onChange={(e) => patch({ pinned: e.target.checked })}
+              onChange={(event) => patch({ pinned: event.target.checked })}
             />
           </label>
         </fieldset>
