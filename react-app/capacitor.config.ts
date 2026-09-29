@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.cnxin.lifelog",
-  appName: "LifeLog",
+  appName: "LifeLog · 日子",
   webDir: "dist",
   server: {
     androidScheme: "https",
@@ -10,8 +10,8 @@ const config: CapacitorConfig = {
   plugins: {
     StatusBar: {
       overlaysWebView: false,
-      style: "DARK",
-      backgroundColor: "#f8f5ff",
+      style: "LIGHT",
+      backgroundColor: "#f7f8fa",
     },
   },
 };

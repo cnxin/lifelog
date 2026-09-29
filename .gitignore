@@ -49,3 +49,7 @@ demo/avatar-initials-options.html
 demo/new-ui-preview.html
 demo/concept_g.png
 demo/concept_[h-o].svg
+
+# Local validation artifacts
+react-app/.artifacts/
+react-app/*.tsbuildinfo

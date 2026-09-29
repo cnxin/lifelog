@@ -4,26 +4,24 @@
 // - 静态资源（JS/CSS/图片/字体）：缓存优先 + 后台更新
 // - 不缓存：第三方请求、非 GET 请求
 
-const VERSION = "v3";
+const VERSION = "days-v1";
 const STATIC_CACHE = `lifelog-static-${VERSION}`;
 const RUNTIME_CACHE = `lifelog-runtime-${VERSION}`;
 
 // 必须立即可用的核心资源
+const BUILD_ASSETS = [];
 const APP_SHELL = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/icon.svg",
-  "/ingot.png"
+  ...BUILD_ASSETS,
 ];
 
 // 安装时预缓存核心资源
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL)),
   );
 });
 
@@ -35,11 +33,16 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== STATIC_CACHE && key !== RUNTIME_CACHE)
-            .map((key) => caches.delete(key))
-        )
+            .filter(
+              (key) =>
+                key.startsWith("lifelog-") &&
+                key !== STATIC_CACHE &&
+                key !== RUNTIME_CACHE,
+            )
+            .map((key) => caches.delete(key)),
+        ),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -70,13 +73,6 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkFirst(request));
 });
 
-// 监听跳过等待消息（用于更新提示）
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
 function isStaticAsset(pathname) {
   return /\.(?:js|css|png|jpg|jpeg|svg|webp|woff2?|ttf|ico)$/i.test(pathname);
 }
@@ -86,11 +82,16 @@ async function networkFirst(request) {
     const response = await fetch(request);
     if (response.ok) {
       const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request.mode === "navigate" ? "/index.html" : request, response.clone());
+      cache.put(
+        request.mode === "navigate" ? "/index.html" : request,
+        response.clone(),
+      );
     }
     return response;
   } catch (error) {
-    const cached = await caches.match(request.mode === "navigate" ? "/index.html" : request);
+    const cached = await caches.match(
+      request.mode === "navigate" ? "/index.html" : request,
+    );
     if (cached) return cached;
     throw error;
   }
@@ -98,7 +99,7 @@ async function networkFirst(request) {
 
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(RUNTIME_CACHE);
-  const cached = await cache.match(request);
+  const cached = await caches.match(request);
 
   const networkPromise = fetch(request)
     .then((response) => {

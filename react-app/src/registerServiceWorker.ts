@@ -1,52 +1,42 @@
-type UpdateCallback = () => void;
-
-let updateCallback: UpdateCallback | null = null;
+import { Capacitor } from "@capacitor/core";
 
 export function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  if (!import.meta.env.PROD) return;
-
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        // 检测新版本
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // 新版本安装完成，旧版本仍在控制
-              updateCallback?.();
-            }
-          });
-        });
-
-        // 每小时检查一次更新
-        setInterval(() => registration.update(), 60 * 60 * 1000);
-      })
-      .catch((error) => {
-        console.warn("Service worker registration failed", error);
-      });
-
-    // 监听控制器变化（新 SW 接管）
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
+  // The old APK registered /sw.js too. Skipping registration alone leaves it alive.
+  if (Capacitor.isNativePlatform()) {
+    void clearNativeWebCache().catch((error) => {
+      console.warn("Old offline cache cleanup failed", error);
     });
-  });
+    return;
+  }
+  if (!import.meta.env.PROD) return;
+  const register = () => {
+    void navigator.serviceWorker.register("/sw.js").catch((error) => {
+      console.warn("Offline cache unavailable", error);
+    });
+  };
+  if (document.readyState === "complete") register();
+  else window.addEventListener("load", register, { once: true });
+  // New workers wait for old tabs to close. Never reload an unsaved editor.
 }
 
-export function onServiceWorkerUpdate(callback: UpdateCallback) {
-  updateCallback = callback;
-}
-
-export async function applyServiceWorkerUpdate() {
-  if (!("serviceWorker" in navigator)) return;
-  const registration = await navigator.serviceWorker.getRegistration();
-  if (!registration?.waiting) return;
-  registration.waiting.postMessage({ type: "SKIP_WAITING" });
+export async function clearNativeWebCache() {
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  for (const registration of registrations) {
+    const owned = [registration.active, registration.waiting, registration.installing]
+      .some((worker) => {
+        if (!worker) return false;
+        const url = new URL(worker.scriptURL);
+        return url.origin === location.origin && url.pathname === "/sw.js";
+      });
+    if (owned) await registration.unregister();
+  }
+  if ("caches" in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((key) => key.startsWith("lifelog-static-") || key.startsWith("lifelog-runtime-"))
+      .map((key) => caches.delete(key)));
+  }
+  // Never touch IndexedDB/localStorage or reload an editor. Existing controlled
+  // documents release their worker when closed; verify cold restart on a device.
 }

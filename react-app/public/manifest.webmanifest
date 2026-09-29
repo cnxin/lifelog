@@ -1,15 +1,19 @@
 {
-  "name": "LifeLog · 生活记录本",
-  "short_name": "LifeLog",
-  "description": "记录重要的人、地点、纪念日和回忆。",
+  "name": "LifeLog · 日子",
+  "short_name": "日子",
+  "description": "记住重要的日子，珍藏每一份期待。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F8F9FA",
-  "theme_color": "#3578C0",
+  "background_color": "#f7f8fa",
+  "theme_color": "#f7f8fa",
   "lang": "zh-CN",
-  "categories": ["lifestyle", "productivity", "personalization"],
+  "categories": [
+    "lifestyle",
+    "productivity",
+    "personalization"
+  ],
   "icons": [
     {
       "src": "/icon.svg",
@@ -28,26 +32,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "新增回忆",
-      "short_name": "回忆",
-      "description": "快速记录一段新回忆",
-      "url": "/memories?new=1"
-    },
-    {
-      "name": "新增人物",
-      "short_name": "人物",
-      "description": "添加一个新的人物档案",
-      "url": "/people?new=1"
-    },
-    {
-      "name": "查看日历",
-      "short_name": "日历",
-      "description": "打开日历视图",
-      "url": "/calendar"
     }
   ]
 }

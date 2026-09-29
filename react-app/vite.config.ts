@@ -1,54 +1,51 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import packageJson from "./package.json";
-
-export default defineConfig(({ command }) => ({
-  plugins: [react()],
-  define: {
-    __APP_VERSION__: JSON.stringify(packageJson.version),
-    __NOTION_DEV_PROXY__: JSON.stringify(command === "serve")
-  },
-  server: {
-    proxy: {
-      "/api/notion": {
-        target: "https://api.notion.com",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/api\/notion/, "")
-      }
-    }
-  },
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+export default defineConfig({
+  plugins: [
+    react(),
+    {
+      name: "days-offline-shell",
+      apply: "build",
+      generateBundle(_, bundle) {
+        const assets = Object.keys(bundle)
+          .filter((name) => /\.(js|css)$/.test(name))
+          .map((name) => "/" + name)
+          .sort();
+        const version = createHash("sha256")
+          .update(assets.join("|"))
+          .digest("hex")
+          .slice(0, 12);
+        const template = readFileSync(
+          new URL("./public/sw.js", import.meta.url),
+          "utf8",
+        );
+        const source = template
+          .replace(
+            "const BUILD_ASSETS = [];",
+            "const BUILD_ASSETS = " + JSON.stringify(assets) + ";",
+          )
+          .replace("days-v1", "days-" + version);
+        this.emitFile({ type: "asset", fileName: "sw.js", source });
+      },
+    },
+  ],
   build: {
     target: "es2020",
-    cssCodeSplit: true,
     sourcemap: false,
-    chunkSizeWarningLimit: 800,
     rolldownOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes("node_modules")) return undefined;
-
-          if (id.includes("react-dom") || id.includes("react/") || id.includes("react-router")) {
-            return "react-vendor";
-          }
-          if (id.includes("dexie")) {
-            return "db-vendor";
-          }
-          if (id.includes("lunar-javascript")) {
-            return "lunar-vendor";
-          }
-          if (id.includes("@capacitor")) {
-            return "capacitor-vendor";
-          }
-          if (id.includes("lucide-react")) {
-            return "icons-vendor";
-          }
-          if (id.includes("browser-image-compression") || id.includes("uuid")) {
-            return "utils-vendor";
-          }
-          return "vendor";
+          if (id.includes("lunar-javascript")) return "lunar";
+          if (id.includes("dexie")) return "storage";
+          if (
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/react/")
+          )
+            return "react";
         },
       },
     },
   },
-}));
+});
