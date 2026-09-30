@@ -404,6 +404,7 @@ const fs = require("node:fs/promises");
     assert.ok(countFits, "long hero count is not clipped at large text");
     await audit("large hero count");
     assert.deepEqual(errors, []);
+    await require('./reminders-ui.cjs').checkReminderUI(browser);
     console.log(
       "PASS: UI polish across empty/populated home, long titles/counts, editor, compact repeat/year fields, delete/import buttons, backup icon alignment, calendar, no results, 320–1440px, 200% text, axe.",
     );

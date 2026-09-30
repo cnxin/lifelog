@@ -77,15 +77,59 @@ exports.checkReminderUI = async function(browser) {
     await page.locator('.detail-modal').waitFor();
     assert.ok(await page.locator('.detail-modal').getByRole('img',{name:'已设置提醒'}).isVisible());
     await page.getByRole('button',{name:'编辑',exact:true}).click();
+    await toggle.uncheck();
+    assert.equal(await group.count(),0,'switch off hides the offset row');
+    await toggle.check();
+    assert.deepEqual(await group.getByRole('button').evaluateAll(els=>els.map(el=>el.getAttribute('aria-pressed'))),
+      ['true','true','false','false'],'switch on preserves the previous offset draft');
+    assert.equal(await page.locator('#reminder-help').textContent(),'会在 20:00 提醒');
     await page.getByRole('group',{name:'提醒提前天数'}).getByRole('button',{name:'当天',exact:true}).click();
     await page.getByRole('group',{name:'提醒提前天数'}).getByRole('button',{name:'提前1天',exact:true}).click();
-    assert.equal(await toggle.isChecked(),false,'deselecting the last offset turns reminders off');
+    assert.equal(await toggle.isChecked(),true,'deselecting the last offset keeps the reminder switch enabled');
+    assert.ok(await group.isVisible(),'empty offset row remains visible');
+    assert.deepEqual(await group.getByRole('button').evaluateAll(els=>els.map(el=>el.getAttribute('aria-pressed'))),
+      ['false','false','false','false'],'all four offsets can be unselected');
+    assert.equal(await page.locator('#reminder-help').textContent(),'至少选一项才会提醒，保存后按不提醒处理');
+    await page.evaluate(()=>new Promise(requestAnimationFrame));
+    assert.ok(await group.getByRole('button',{name:'提前1天',exact:true}).evaluate(el=>el===document.activeElement),
+      'deselecting the last offset does not move focus back to the switch');
+    await audit('native reminder empty offsets');
     await page.getByRole('button',{name:'保存修改',exact:true}).click();
     await page.locator('.editor-modal').waitFor({state:'hidden'});
     await page.waitForFunction(()=>window.__notif.pending.length===0);
     await page.locator('.detail-modal').getByRole('button',{name:'关闭',exact:true}).click();
     await page.evaluate(()=>window.__notif.listeners.localNotificationActionPerformed({notification:{extra:{dayId:'deleted'}}}));
     await page.waitForTimeout(100);assert.equal(await page.locator('dialog[open]').count(),0,'deleted notification ID is ignored');
+
+    // New-record regression requested for test:ui: enabled but empty is saved as off.
+    await page.setViewportSize({width:390,height:740});
+    await page.getByRole('button',{name:'新增日子',exact:true}).click();
+    await page.getByLabel('日子名称').fill('提醒空选保存');
+    await toggle.check();
+    assert.deepEqual(await group.getByRole('button').evaluateAll(els=>els.map(el=>el.getAttribute('aria-pressed'))),
+      ['true','false','false','false'],'enabling an empty draft defaults to today');
+    await group.getByRole('button',{name:'当天',exact:true}).click();
+    assert.ok(await group.isVisible(),'new-record chip row survives deselecting today');
+    assert.deepEqual(await group.getByRole('button').evaluateAll(els=>els.map(el=>el.getAttribute('aria-pressed'))),
+      ['false','false','false','false']);
+    assert.equal(await page.locator('#reminder-help').textContent(),'至少选一项才会提醒，保存后按不提醒处理');
+    await audit('new-record reminder empty offsets');
+    await page.getByRole('button',{name:'记下这个日子',exact:true}).click();
+    await page.locator('.editor-modal').waitFor({state:'hidden'});
+    const emptySaved=await page.evaluate(async()=>{const {db}=await import('/src/storage.ts');return (await db.days.toArray()).find(day=>day.title==='提醒空选保存')});
+    assert.deepEqual(emptySaved.reminders,[],'saving enabled empty offsets persists no reminders');
+
+    // Disabled draft selections must not leak into persisted reminders either.
+    await page.getByRole('button',{name:'新增日子',exact:true}).click();
+    await page.getByLabel('日子名称').fill('提醒关闭保存');
+    await toggle.check();
+    await group.getByRole('button',{name:'提前3天',exact:true}).click();
+    await toggle.uncheck();
+    assert.equal(await group.count(),0);
+    await page.getByRole('button',{name:'记下这个日子',exact:true}).click();
+    await page.locator('.editor-modal').waitFor({state:'hidden'});
+    const disabledSaved=await page.evaluate(async()=>{const {db}=await import('/src/storage.ts');return (await db.days.toArray()).find(day=>day.title==='提醒关闭保存')});
+    assert.deepEqual(disabledSaved.reminders,[],'saving a disabled switch discards the retained draft offsets');
     assert.deepEqual(errors,[]);
   } finally {await page.close();}
   const web=await browser.newPage();

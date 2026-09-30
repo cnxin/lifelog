@@ -59,11 +59,11 @@ function EditorForm({
     if (finished && !busy) requestClose();
   }, [finished, busy, requestClose]);
   const [draft, setDraft] = useState(day);
+  const [remindersEnabled, setRemindersEnabled] = useState(day.reminders.length > 0);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [permission, setPermission] = useState<"granted" | "denied" | "unavailable" | null>(null);
   const askedPermission = useRef(false);
-  const reminderToggle = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!hasNativeNotifications() || !day.reminders.length) return;
     let disposed = false;
@@ -73,7 +73,8 @@ function EditorForm({
   const patch = (value: Partial<Day>) =>
     setDraft((prev) => ({ ...prev, ...value }));
   function toggleReminders(enabled: boolean) {
-    patch({ reminders: enabled ? [0] : [] });
+    setRemindersEnabled(enabled);
+    if (enabled && !draft.reminders.length) patch({ reminders: [0] });
     void haptic("light");
     if (enabled && !askedPermission.current) {
       askedPermission.current = true;
@@ -85,7 +86,8 @@ function EditorForm({
     setBusy(true);
     setError("");
     try {
-      await onSave({ ...draft, title: draft.title.trim() });
+      await onSave({ ...draft, title: draft.title.trim(),
+        reminders: remindersEnabled && draft.reminders.length > 0 ? draft.reminders : [] });
       void haptic("success");
       setFinished(true);
     } catch (err) {
@@ -214,14 +216,15 @@ function EditorForm({
           <div className="reminder-field">
             <label className="check-row">
               <span><strong id="reminder-label">提醒我</strong>
-                <small id="reminder-help">会在 {getReminderTime()} 提醒，时间在「数据与备份」里统一设置</small>
+                <small id="reminder-time-help">时间在「数据与备份」里统一设置</small>
               </span>
-              <input ref={reminderToggle} type="checkbox" aria-labelledby="reminder-label"
-                aria-describedby="reminder-help" checked={draft.reminders.length > 0}
+              <input type="checkbox" aria-labelledby="reminder-label"
+                aria-describedby={remindersEnabled ? "reminder-time-help reminder-help" : "reminder-time-help"}
+                checked={remindersEnabled}
                 onChange={event => toggleReminders(event.target.checked)} />
             </label>
-            {draft.reminders.length > 0 && (
-              <div className="filters reminder-offsets" role="group" aria-label="提醒提前天数">
+            {remindersEnabled && (<>
+              <div className="filters reminder-offsets" role="group" aria-label="提醒提前天数" aria-describedby="reminder-help">
                 {REMINDER_OFFSETS.map(offset => (
                   <button type="button" key={offset} aria-pressed={draft.reminders.includes(offset)}
                     className={draft.reminders.includes(offset) ? "active" : ""}
@@ -231,13 +234,17 @@ function EditorForm({
                         : [...draft.reminders, offset].sort((a, b) => a - b);
                       patch({ reminders });
                       void haptic("light");
-                      if (!reminders.length) requestAnimationFrame(() => reminderToggle.current?.focus());
                     }}>
                     {offset === 0 ? "当天" : `提前${offset}天`}
                   </button>
                 ))}
               </div>
-            )}
+              <p id="reminder-help" className="field-help" role="status">
+                {draft.reminders.length > 0
+                  ? `会在 ${getReminderTime()} 提醒`
+                  : "至少选一项才会提醒，保存后按不提醒处理"}
+              </p>
+            </>)}
             {permission === "denied" && <p className="field-help" role="status">系统未允许通知，提醒会在你到系统设置里开启后生效</p>}
             {permission === "unavailable" && <p className="field-help" role="status">此设备的通知暂不可用，设置已保留，重新打开应用后会重试</p>}
           </div>
