@@ -4,4 +4,8 @@
     <string name="title_activity_main">LifeLog · 日子</string>
     <string name="package_name">com.cnxin.lifelog</string>
     <string name="custom_url_scheme">com.cnxin.lifelog</string>
+    <string name="widget_day_name">日子</string>
+    <string name="widget_day_description">显示最近的一个日子</string>
+    <string name="widget_day_empty">记下第一个日子</string>
+    <string name="widget_day_open">点击打开日子</string>
 </resources>

@@ -109,8 +109,8 @@ function main(mode) {
   run(npm, ['run', 'build']);
   run(process.execPath, ['node_modules/@capacitor/cli/bin/capacitor', 'sync', 'android']);
   const env = { ...process.env, ANDROID_HOME: sdk, ANDROID_SDK_ROOT: sdk };
-  if (windows) run('gradlew.bat', [':app:assembleDebug', ':app:lintDebug', '--no-daemon'], android, env);
-  else run('sh', ['./gradlew', ':app:assembleDebug', ':app:lintDebug', '--no-daemon'], android, env);
+  if (windows) run('gradlew.bat', [':app:testDebugUnitTest', ':app:assembleDebug', ':app:lintDebug', '--no-daemon'], android, env);
+  else run('sh', ['./gradlew', ':app:testDebugUnitTest', ':app:assembleDebug', ':app:lintDebug', '--no-daemon'], android, env);
   const apk = path.join(android, 'app/build/outputs/apk/debug/app-debug.apk');
   if (!fs.existsSync(apk)) throw new Error('Gradle 结束但未找到测试 APK');
   inspectApk(apk, sdk, env);
