@@ -23,6 +23,7 @@ export default function DayEditor(props: EditorProps) {
       onCancel={dateOpen ? () => setDateOpen(false) : undefined}
       busy={busy}
       className="editor-modal"
+      focusDialog
     >
       <EditorForm
         {...props}
@@ -93,8 +94,7 @@ function EditorForm({
         <label>
           日子名称
           <input
-            autoFocus={!existing}
-            data-initial-focus={!existing || undefined}
+            data-tab-entry="true"
             required
             maxLength={80}
             value={draft.title}

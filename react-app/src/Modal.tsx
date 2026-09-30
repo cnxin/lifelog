@@ -34,6 +34,7 @@ export default function Modal({
   children,
   busy = false,
   className = "",
+  focusDialog = false,
 }: {
   title: string;
   eyebrow?: string;
@@ -42,6 +43,7 @@ export default function Modal({
   children: ReactNode;
   busy?: boolean;
   className?: string;
+  focusDialog?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -72,7 +74,8 @@ export default function Modal({
     delete dialog.dataset.closing;
     dialog.removeAttribute("inert");
     dialog.showModal();
-    dialog.querySelector<HTMLElement>('[data-initial-focus="true"]')?.focus();
+    if (focusDialog) dialog.focus({ preventScroll: true });
+    else dialog.querySelector<HTMLElement>('[data-initial-focus="true"]')?.focus();
     return () => {
       window.clearTimeout(timer.current);
       dialog.close();
@@ -101,6 +104,7 @@ export default function Modal({
         ref={ref}
         className={`modal ${className}`}
         aria-labelledby={titleId}
+        tabIndex={-1}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             // Handle nested disclosures before the browser closes the dialog.
@@ -120,6 +124,12 @@ export default function Modal({
             last = controls[controls.length - 1];
           if (!first) {
             event.preventDefault();
+            return;
+          }
+          if (focusDialog && document.activeElement === ref.current) {
+            event.preventDefault();
+            const entry = controls.find(el => el.dataset.tabEntry === "true") ?? first;
+            (event.shiftKey ? last : entry).focus();
             return;
           }
           if (event.shiftKey && document.activeElement === first) {

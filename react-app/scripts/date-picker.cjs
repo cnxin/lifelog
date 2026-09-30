@@ -32,6 +32,11 @@ const { pickDate } = require("./date-picker-helper.cjs");
     await page.clock.install({ time: new Date("2026-09-30T12:00:00+08:00") });
     await page.goto(process.env.BASE_URL || "http://127.0.0.1:5188");
     await page.getByRole("button", { name: "新增日子", exact: true }).click();
+    assert.ok(await page.locator('.editor-modal').evaluate(el =>
+      el === document.activeElement && !el.querySelector('input:focus, textarea:focus, select:focus')),
+      'opening the editor does not auto-focus an input');
+    await page.keyboard.press('Tab');
+    assert.ok(await page.getByLabel('日子名称').evaluate(el => el === document.activeElement), 'first Tab focuses the title');
     await page.getByLabel("日子名称").fill("日期选择测试");
     assert.equal(await page.locator("input[type=date]").count(), 0);
     await trigger.click();

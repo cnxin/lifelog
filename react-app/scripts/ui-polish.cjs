@@ -96,6 +96,14 @@ const fs = require("node:fs/promises");
     await page.clock.setFixedTime(new Date("2026-09-30T12:00:00+08:00"));
     await page.goto(process.env.BASE_URL || "http://127.0.0.1:5188");
     await audit("empty home");
+    await page.getByRole('button', {name: '新增日子', exact: true}).click();
+    assert.ok(await page.locator('.editor-modal').evaluate(el =>
+      el === document.activeElement && !el.querySelector('input:focus, textarea:focus, select:focus')),
+      'new editor focuses the dialog, not an input');
+    await page.keyboard.press('Tab');
+    assert.ok(await page.getByLabel('日子名称').evaluate(el => el === document.activeElement), 'first Tab enters the title field');
+    await page.keyboard.press('Escape');
+    await page.getByRole('dialog').waitFor({state: 'hidden'});
     await page.getByRole("button", { name: "数据与备份", exact: true }).click();
     await page.getByLabel("选择备份文件").setInputFiles(file);
     await page
@@ -154,6 +162,9 @@ const fs = require("node:fs/promises");
       await audit(label + " detail");
       assert.ok(await page.locator(".detail-count").evaluate(el => el.scrollWidth <= el.clientWidth));
       await page.getByRole("button", { name: "编辑", exact: true }).click();
+      assert.ok(await page.locator('.editor-modal').evaluate(el =>
+        el === document.activeElement && !el.querySelector('input:focus, textarea:focus, select:focus')),
+        'existing editor also focuses the dialog, not an input');
       await audit(label + " editor");
       const geometry = await page.evaluate(() => {
         const r = (selector) =>
