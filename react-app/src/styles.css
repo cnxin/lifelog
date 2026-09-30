@@ -23,6 +23,18 @@
   --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
   --gutter: clamp(1rem, 4vw, 3rem);
   --header-height: 5rem;
+  --input-height: 44px;
+  --input-radius: 12px;
+  --input-border: #dce1d6;
+  --input-background: #fff;
+  --input-font-size: 0.9375rem;
+  --input-padding: 14px;
+  --input-placeholder: #9aa394;
+  --input-focus-border: #809b74;
+  /* The translucent halo alone is <3:1; the solid inner ring is >4:1. */
+  --input-focus-ring: #617650;
+  --input-focus-shadow: 0 0 0 2px var(--input-focus-ring),
+    0 0 0 3px rgba(128, 155, 116, 0.35);
 }
 * {
   box-sizing: border-box;
@@ -642,36 +654,45 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .search {
   flex: 1 1 12rem;
   min-width: min(100%, 12rem);
-  min-height: 52px;
+  min-height: var(--input-height);
   display: flex;
   align-items: center;
   gap: 8px;
   color: #636d5d;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: #fff;
-  padding: 0 11px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-background);
+  padding: 0 var(--input-padding);
   width: auto;
 }
 .search input {
   border: 0;
   min-width: 0;
   width: 100%;
-  outline-offset: 1px;
+  outline: none;
   color: #424b3e;
   background: transparent;
-  font-size: 0.75rem;
+  font-size: var(--input-font-size);
+  height: calc(var(--input-height) - 2px);
 }
 .search input::placeholder {
-  color: #636d5d;
+  color: var(--input-placeholder);
+  opacity: 1;
 }
 .search button {
   background: transparent;
   display: grid;
   place-items: center;
   padding: 4px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  position: relative;
+}
+.search button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
 }
 /* Sorting is a secondary, content-sized tool, not a full-width navigation bar. */
 .sort.choice-field {
@@ -918,7 +939,8 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scroll-padding: 1rem;
+  padding: 4px;
+  scroll-padding: 8px 1rem 1rem;
 }
 .editor-modal .modal-body {
   scroll-padding-bottom: 4.5rem;
@@ -1007,13 +1029,36 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .editor-fields input:not([type="radio"]):not([type="checkbox"]),
 .editor-fields textarea {
   width: 100%;
-  border: 1px solid #dce1d6;
-  border-radius: 9px;
-  background: #fff;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-background);
   color: #354331;
-  min-height: 44px;
-  padding: 11px 12px;
-  font-size: 0.8125rem;
+  min-height: var(--input-height);
+  padding: 0 var(--input-padding);
+  font-size: var(--input-font-size);
+}
+.editor-fields input:not([type="radio"]):not([type="checkbox"]) {
+  height: var(--input-height);
+}
+.editor-fields input::placeholder,
+.editor-fields textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+.editor-fields input:not([type="radio"]):not([type="checkbox"]):focus,
+.editor-fields textarea:focus,
+.search:focus-within {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--input-focus-shadow);
+}
+@media (forced-colors: active) {
+  .editor-fields input:not([type="radio"]):not([type="checkbox"]):focus,
+  .editor-fields textarea:focus,
+  .search:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+  }
 }
 .editor-fields input[type="date"] {
   min-width: 0;
@@ -1022,6 +1067,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .editor-fields textarea {
   resize: vertical;
   line-height: 1.6;
+  padding-block: 10px;
 }
 .field-label {
   display: flex;
@@ -1863,11 +1909,11 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     min-height: 3rem;
   }
   .search {
-    min-height: 52px;
+    min-height: var(--input-height);
     max-width: none;
   }
   .search input {
-    font-size: 0.8125rem;
+    font-size: var(--input-font-size);
   }
   .header-actions svg {
     width: 1.25rem;
@@ -2385,7 +2431,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .editor-fields .date-year-row .date-year-label input {
   width: 6rem;
   max-width: 100%;
-  padding-inline: 0.5rem;
+  padding-inline: var(--input-padding);
 }
 .date-year-row > button,
 .calendar-event > svg,
@@ -2742,7 +2788,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   .toolbar .search {
     width: 100%;
     min-width: 0;
-    min-height: 52px;
+    min-height: var(--input-height);
     flex: 1 1 0;
   }
 }

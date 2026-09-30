@@ -27,12 +27,64 @@ const fs = require("node:fs/promises");
     );
     assert.deepEqual(violations, [], label);
   };
+  const inputAppearance = async (input, shell = input, multiline = false) => {
+    await input.focus();
+    const appearance = await shell.evaluate((el) => {
+      const css = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      const field = el.matches('input, textarea') ? el : el.querySelector('input');
+      return {
+        height: rect.height, radius: css.borderRadius, border: css.borderWidth,
+        borderColor: css.borderColor, background: css.backgroundColor,
+        padding: css.paddingInlineStart, fontSize: getComputedStyle(field).fontSize,
+        outline: getComputedStyle(field).outlineStyle, shadow: css.boxShadow,
+        placeholder: field.hasAttribute('placeholder')
+          ? getComputedStyle(field, '::placeholder').color
+          : null,
+        placeholderToken: css.getPropertyValue('--input-placeholder').trim(),
+        ring: css.getPropertyValue('--input-focus-ring').trim(),
+      };
+    });
+    if (!multiline) assert.equal(appearance.height, 44, 'shared input height');
+    assert.equal(appearance.radius, '12px');
+    assert.equal(appearance.border, '1px');
+    assert.equal(appearance.borderColor, 'rgb(128, 155, 116)');
+    assert.equal(appearance.background, 'rgb(255, 255, 255)');
+    assert.equal(appearance.padding, '14px');
+    assert.equal(appearance.fontSize, '15px');
+    assert.equal(appearance.placeholderToken, '#9aa394');
+    if (appearance.placeholder !== null)
+      assert.equal(appearance.placeholder, 'rgb(154, 163, 148)');
+    assert.equal(appearance.outline, 'none', 'input outline replaced, not doubled');
+    assert.match(appearance.shadow, /rgb\(97, 118, 80\) 0px 0px 0px 2px/);
+    const luminance = (hex) => {
+      const values = hex.slice(1).match(/../g).map(v => parseInt(v, 16) / 255)
+        .map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      return values[0] * .2126 + values[1] * .7152 + values[2] * .0722;
+    };
+    for (const background of ['#ffffff', '#fcfdfb', '#f7f8fa']) {
+      const levels = [luminance(appearance.ring), luminance(background)].sort((a,b) => a-b);
+      assert.ok((levels[1] + .05) / (levels[0] + .05) >= 3,
+        'solid focus ring >=3:1 against input and adjacent backgrounds');
+    }
+  };
   try {
     await fs.mkdir(".artifacts", { recursive: true });
     await page.goto(process.env.BASE_URL || "http://127.0.0.1:5188");
     await page.getByRole("button", { name: "新增日子", exact: true }).click();
     await page.getByLabel("日子名称").fill("我们的纪念日");
+    await inputAppearance(page.getByLabel('日子名称'));
+    const firstRing = await page.getByLabel('日子名称').evaluate(el => {
+      const input = el.getBoundingClientRect(), body = el.closest('.modal-body').getBoundingClientRect();
+      return input.top - 3 >= body.top && input.left - 3 >= body.left;
+    });
+    assert.ok(firstRing, 'first input focus ring is not clipped by the modal body');
+    await inputAppearance(page.locator('.editor-fields textarea'), undefined, true);
     await pickDate(page, "2024-05-20");
+    await page.locator('.date-trigger').click();
+    await page.getByRole('button', {name: '切换年月', exact: true}).click();
+    await inputAppearance(page.getByLabel('年份', {exact: true}));
+    await page.getByRole('button', {name: '收起', exact: true}).click();
     const category = page.getByRole("group", { name: "分类", exact: true });
     const radios = category.getByRole("radio");
     assert.equal(await radios.count(), 3);
@@ -255,6 +307,7 @@ const fs = require("node:fs/promises");
         };
       });
       assert.equal(layout.overflow, false, "no toolbar overflow");
+      await inputAppearance(page.getByRole('searchbox', {name: '搜索日子', exact: true}), page.locator('.search'));
       assert.ok(layout.sort.width <= 240, "sorting does not stretch");
       assert.ok(
         Math.abs(layout.sort.right - layout.tools.right) < 1,
@@ -262,13 +315,14 @@ const fs = require("node:fs/promises");
       );
       assert.equal(
         layout.search.height,
-        layout.sort.height,
-        "search and sorting have matching heights",
+        44,
+        "search uses the shared 44px input height",
       );
       if (width >= 600)
         assert.ok(
-          Math.abs(layout.sort.y - layout.search.y) < 1,
-          "search and sorting share a row when space permits",
+          Math.abs((layout.sort.y + layout.sort.height / 2) -
+            (layout.search.y + layout.search.height / 2)) < 1,
+          "search and sorting share a centered row when space permits",
         );
       else
         assert.ok(

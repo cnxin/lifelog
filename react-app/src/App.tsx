@@ -520,7 +520,7 @@ export default function App() {
                     )}
                     {(!compact || mobileSearchOpen) && (
                       <div className="search" id="days-search">
-                        <Search size={16} />
+                        <Search size={16} aria-hidden="true" />
                         <input
                           ref={searchInput}
                           autoFocus={compact}
