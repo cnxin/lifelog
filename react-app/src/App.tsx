@@ -297,7 +297,7 @@ export default function App() {
               disabled={!loaded}
               onClick={() => add()}
             >
-              <Plus size={20} aria-hidden="true" />
+              <Plus size={18} aria-hidden="true" />
               <span>新增</span>
             </button>
           </div>
@@ -515,7 +515,7 @@ export default function App() {
                           );
                         }}
                       >
-                        <Search size={20} aria-hidden="true" />
+                        <Search size={18} aria-hidden="true" />
                       </button>
                     )}
                     {(!compact || mobileSearchOpen) && (

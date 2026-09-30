@@ -1,4 +1,5 @@
 const { pickDate } = require("./date-picker-helper.cjs");
+const { hitTarget } = require('./hit-target.cjs');
 // Isolated browser profile: never touches the user's local records.
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
@@ -275,15 +276,25 @@ const fs = require("node:fs/promises");
       if (width <= 760) {
         const select = page.getByRole("button", { name: "排序方式", exact: true });
         await select.waitFor();
+        await page.getByRole('button', {name: '打开搜索', exact: true}).waitFor();
         assert.equal(await select.count(), 1);
         const filter = await page.locator(".filters").boundingBox();
         const toggle = await page.locator(".search-toggle").boundingBox();
         const sorting = await select.boundingBox();
-        assert.ok(toggle.width >= 44 && toggle.height >= 44);
-        assert.ok(sorting.width >= 44 && sorting.height >= 44);
+        const toggleHit = await hitTarget(page.locator('.search-toggle'));
+        const sortingHit = await hitTarget(select);
+        assert.ok(toggleHit.width >= 44 && toggleHit.height >= 44 && toggleHit.painted, 'search hit area >=44px, including pseudo-element');
+        assert.ok(sortingHit.width >= 44 && sortingHit.height >= 44 && sortingHit.painted, 'sort hit area >=44px, including pseudo-element');
         assert.ok(Math.abs(toggle.y - sorting.y) <= 1, "mobile actions share one row");
         assert.ok(filter.x + filter.width <= toggle.x, "chips do not overlap actions");
         assert.ok(sorting.x + sorting.width <= width, "mobile sort fits viewport");
+        await page.mouse.click(sorting.x + sorting.width / 2, sorting.y - 3);
+        await page.getByRole('menu', {name: '排序方式', exact: true}).waitFor();
+        await page.keyboard.press('Escape');
+        await page.mouse.click(toggle.x + toggle.width / 2, toggle.y - 3);
+        await page.getByRole('searchbox', {name: '搜索日子', exact: true}).waitFor();
+        await page.keyboard.press('Escape');
+        await page.getByRole('button', {name: '打开搜索', exact: true}).waitFor();
         continue;
       }
       await page.getByRole("button", { name: "排序方式", exact: true }).waitFor();

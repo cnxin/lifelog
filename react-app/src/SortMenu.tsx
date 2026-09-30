@@ -67,7 +67,7 @@ export default function SortMenu({
         aria-controls={open ? id : undefined}
         onClick={() => onOpenChange(!open)}
       >
-        <ArrowDownUp size={17} aria-hidden="true" />
+        <ArrowDownUp size={16} aria-hidden="true" />
         <span>{value === "date" ? "日期" : "临近"}</span>
       </button>
       {open && (

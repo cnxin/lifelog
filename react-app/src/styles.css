@@ -22,7 +22,7 @@
   --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
   --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
   --gutter: clamp(1rem, 4vw, 3rem);
-  --header-height: 5rem;
+  --header-height: 4.5rem;
   --input-height: 44px;
   --input-radius: 12px;
   --input-border: #dce1d6;
@@ -167,12 +167,12 @@ button svg {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  min-height: 3rem;
+  min-height: 40px;
   flex-shrink: 0;
 }
 .brand-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   background: #e8eddf;
@@ -181,18 +181,22 @@ button svg {
 }
 .brand-label {
   display: grid;
-  gap: 0.125rem;
+  gap: 0;
 }
 .brand-cn {
   font-size: 1.375rem;
   font-weight: 650;
   letter-spacing: -0.03em;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 .brand-caption {
   color: var(--muted);
   font-size: 0.6875rem;
-  letter-spacing: 0.025em;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  /* Match the CJK title's visible left bearing, not merely its line box. */
+  padding-inline-start: 0.1875rem;
 }
 .header-actions {
   display: flex;
@@ -205,20 +209,37 @@ button svg {
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  min-width: 3rem;
-  min-height: 3rem;
-  padding: 0.625rem 0.75rem;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
   background: transparent;
   border-radius: 1rem;
   font-size: 0.8125rem;
+}
+.header-backup > span {
+  display: none;
+}
+.header-add,
+.header-backup,
+.brand-calendar {
+  position: relative;
+}
+.header-add::before,
+.header-backup::before,
+.brand-calendar::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
 }
 .header-backup:hover {
   background: #e9ece5;
 }
 .header-add.primary {
-  min-height: 3rem;
+  min-height: 40px;
   border-radius: 1rem;
-  padding: 0.625rem 1rem;
+  padding: 0 14px;
   font-size: 0.875rem;
 }
 button:not(:disabled):not(.card-main):not(.calendar-day):not(
@@ -608,37 +629,56 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   justify-content: space-between;
   gap: 14px;
   margin-bottom: 19px;
+  padding: 4px 0;
 }
 .filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: 10px;
   flex-shrink: 0;
   background: #eef0e9;
   padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--border);
+  border-radius: 12px;
 }
 .filters button {
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 0;
-  gap: 7px;
-  min-height: 44px;
-  padding: 8px 13px;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
   color: #636d5d;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   white-space: nowrap;
+  position: relative;
+  scroll-margin-inline: 4px;
+}
+.filters button svg {
+  width: 14px;
+  height: 14px;
+}
+.search-toggle {
+  /* Keep the hit pseudo-element anchored even between responsive renders. */
+  position: relative;
+}
+.filters button::before,
+.search-toggle::before,
+.sort-button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
 }
 .filters button.active {
   background: white;
   color: var(--green);
   border-color: #c6cfc0;
-  box-shadow: 0 1px 3px #2632220a;
+  box-shadow: inset 0 0 0 1px #c6cfc0, 0 1px 3px #2632220a;
 }
 .filters button:hover:not(.active) {
   background: #e5e9df;
@@ -1447,7 +1487,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     gap: 8px;
   }
   .filters button {
-    padding: 8px 10px;
+    padding: 0 12px;
   }
   .hero {
     padding: 28px;
@@ -1467,19 +1507,19 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 }
 @media (max-width: 760px) {
   :root {
-    --header-height: 4.5rem;
+    --header-height: 4rem;
   }
   .brand-caption {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
   }
   .header-backup > span {
     display: none;
   }
   .header-backup {
-    padding: 0.5rem;
+    padding: 0;
   }
   .header-add.primary {
-    padding-inline: 0.75rem;
+    padding-inline: 14px;
   }
   .header-inner {
     gap: 0.5rem;
@@ -1646,9 +1686,9 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     justify-content: space-between;
   }
   .filters button {
-    font-size: 0.75rem;
-    min-height: 44px;
-    padding: 7px 10px;
+    font-size: 0.8125rem;
+    min-height: 36px;
+    padding: 0 12px;
   }
   .footer > span:last-child {
     display: none;
@@ -1706,9 +1746,9 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 
 @media (max-width: 360px) {
   .filters button {
-    padding-inline: 6px;
-    gap: 4px;
-    font-size: 0.75rem;
+    padding-inline: 12px;
+    gap: 6px;
+    font-size: 0.8125rem;
   }
   .overview-side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1903,10 +1943,10 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.5rem), 1fr));
   }
   .filters button {
-    padding-inline: 0.25rem;
-    gap: 0.375rem;
-    font-size: 0.75rem;
-    min-height: 3rem;
+    padding-inline: 12px;
+    gap: 6px;
+    font-size: 0.8125rem;
+    min-height: 36px;
   }
   .search {
     min-height: var(--input-height);
@@ -1916,14 +1956,14 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     font-size: var(--input-font-size);
   }
   .header-actions svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 360px) {
   .filters button {
-    gap: 0.25rem;
+    gap: 6px;
   }
   .filters button svg {
     width: 0.875rem;
@@ -1941,8 +1981,8 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 /* Calendar: retain the legacy lunar detail without its old navigation/modules. */
 .brand-calendar {
   padding: 0;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 40px;
+  min-height: 40px;
 }
 .brand-calendar:hover:not(:disabled) {
   background: #dce5d2;
@@ -2750,7 +2790,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     overflow: hidden;
   }
   .hero[data-populated="true"] .hero-count {
-    gap: 8px;
+    gap: 10px;
   }
   .hero[data-populated="true"] .hero-count > strong {
     font-size: 3rem;
@@ -2773,12 +2813,12 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     top: var(--header-offset, var(--header-height));
     z-index: 5;
     background: rgba(247, 248, 250, 0.94);
-    border-bottom: 1px solid var(--border);
+    box-shadow: inset 0 -1px 0 var(--border);
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 6px;
-    padding: 6px 0;
+    gap: 8px;
+    padding: 4px 0;
   }
   .toolbar .filters {
     display: flex;
@@ -2794,9 +2834,9 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   }
   .toolbar .filters button {
     flex: none;
-    width: 6.5rem;
+    width: 6rem;
     min-width: 96px;
-    min-height: 44px;
+    min-height: 36px;
     scroll-snap-align: start;
   }
   .toolbar .list-tools {
@@ -2804,11 +2844,14 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     width: auto;
     flex-wrap: nowrap;
     min-width: 0;
-    gap: 6px;
+    gap: 10px;
   }
   .search-toggle {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    position: relative;
     background: #eef0e9;
   }
   .sort-button {
@@ -2819,15 +2862,18 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     gap: 4px;
     width: calc(3rem + 2em);
     min-width: 76px;
-    min-height: 44px;
+    min-height: 36px;
     border-radius: 10px;
     background: #eef0e9;
     color: var(--green);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
   .toolbar[data-search-open="true"] .filters,
   .toolbar[data-search-open="true"] .search-toggle,
   .toolbar[data-search-open="true"] .sort {
+    display: none;
+  }
+  .toolbar[data-search-open="false"] .search {
     display: none;
   }
   .toolbar[data-search-open="true"] .list-tools {
@@ -2852,12 +2898,13 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   justify-content: center;
   gap: 6px;
   min-width: 76px;
-  min-height: 52px;
+  min-height: 36px;
+  position: relative;
   padding: 0 12px;
   background: #eef0e9;
   color: var(--green);
   border-radius: 10px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 .sort-menu {
   position: absolute;
@@ -2902,11 +2949,6 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   to {
     opacity: 1;
     transform: none;
-  }
-}
-@media (max-width: 760px) {
-  .sort-button {
-    min-height: 44px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

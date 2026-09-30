@@ -1,4 +1,5 @@
 const { pickDate } = require("./date-picker-helper.cjs");
+const { hitTarget } = require('./hit-target.cjs');
 // Browser layout simulation only: this does not certify Android device insets.
 const { chromium } = require("playwright");
 const assert = require("node:assert/strict");
@@ -85,7 +86,8 @@ const fs = require("node:fs/promises");
     await lastChip.scrollIntoViewIfNeeded();
     const chip = await lastChip.boundingBox(), strip = await page.locator(".filters").boundingBox();
     assert.ok(chip.x >= strip.x && chip.x + chip.width <= strip.x + strip.width, "last chip can scroll into view at 320px");
-    assert.ok(chip.width >= 44 && chip.height >= 44);
+    const lastChipHit = await hitTarget(lastChip);
+    assert.ok(lastChipHit.width >= 44 && lastChipHit.height >= 44 && lastChipHit.painted, 'scrolled chip retains an unclipped 44px hit area');
     await page.evaluate(async () => {
       const { db } = await import("/src/storage.ts");
       const source = (await db.days.toArray())[0];
@@ -96,6 +98,10 @@ const fs = require("node:fs/promises");
 
     for (const width of [320, 375, 390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 844 });
+      // Wait for the responsive React mode as well as the CSS breakpoint.
+      await page.getByRole(width <= 760 ? 'button' : 'searchbox', {
+        name: width <= 760 ? '打开搜索' : '搜索日子', exact: true,
+      }).waitFor();
       await page.evaluate(() => scrollTo(0, 0));
       await noOverflow(`${width}px`);
       for (const selector of [
@@ -104,11 +110,64 @@ const fs = require("node:fs/promises");
         ".pin-button",
         ".filters button",
       ]) {
-        const bounds = await page.locator(selector).first().boundingBox();
+        const bounds = selector === '.pin-button'
+          ? await page.locator(selector).first().boundingBox()
+          : await hitTarget(page.locator(selector).first());
         assert.ok(
-          bounds.width >= 44 && bounds.height >= 44,
+          bounds.width >= 44 && bounds.height >= 44 &&
+            (selector === '.pin-button' || bounds.painted),
           selector + ": touch target",
         );
+      }
+      const geometry = await page.evaluate(() => {
+        const box = s => {
+          const r = document.querySelector(s).getBoundingClientRect();
+          const css = getComputedStyle(document.querySelector(s));
+          return {width: r.width, height: r.height, centerY: r.top + r.height / 2,
+            font: css.fontSize, line: css.lineHeight, padding: css.paddingInlineStart,
+            tracking: css.letterSpacing, marginTop: css.marginTop};
+        };
+        const inkLeft = s => {
+          const el = document.querySelector(s), css = getComputedStyle(el);
+          const range = document.createRange();
+          range.selectNodeContents(el.firstChild);
+          const canvas = document.createElement('canvas').getContext('2d');
+          canvas.font = css.font;
+          return range.getBoundingClientRect().left - canvas.measureText(el.textContent[0]).actualBoundingBoxLeft;
+        };
+        return {icon: box('.brand-icon'), label: box('.brand-label'),
+          cn: box('.brand-cn'), caption: box('.brand-caption'),
+          inkOffset: Math.abs(inkLeft('.brand-cn') - inkLeft('.brand-caption')),
+          add: box('.header-add'), addIcon: box('.header-add svg'),
+          backup: box('.header-backup'), toolbar: box('.toolbar'),
+          chip: box('.filters button'), chipIcon: box('.filters button svg'),
+          sort: box('.sort-button'), search: innerWidth <= 760 ? box('.search-toggle') : null};
+      });
+      assert.equal(geometry.icon.width, 40);
+      assert.equal(geometry.icon.height, 40);
+      assert.ok(Math.abs(geometry.label.centerY - geometry.icon.centerY) <= .5, 'brand text block vertically centered');
+      assert.equal(geometry.cn.font, '22px');
+      assert.ok(Math.abs(parseFloat(geometry.cn.line) - 24.2) < .1);
+      assert.equal(geometry.caption.font, '11px');
+      assert.equal(geometry.caption.line, '11px');
+      assert.equal(geometry.caption.marginTop, '2px');
+      assert.ok(Math.abs(parseFloat(geometry.caption.tracking) - .44) < .01);
+      assert.ok(geometry.inkOffset <= .5, 'visible Chinese/English left edges align by measured glyph bearings');
+      assert.equal(geometry.add.height, 40);
+      assert.equal(geometry.add.font, '14px');
+      assert.equal(geometry.add.padding, '14px');
+      assert.equal(geometry.addIcon.width, 18);
+      assert.equal(geometry.backup.width, 40);
+      assert.equal(geometry.backup.height, 40);
+      assert.equal(geometry.chip.height, 36);
+      assert.equal(geometry.chip.font, '13px');
+      assert.equal(geometry.chip.padding, '12px');
+      assert.equal(geometry.chipIcon.width, 14);
+      assert.equal(geometry.sort.height, 36);
+      if (width <= 760) {
+        assert.equal(geometry.search.width, 36);
+        assert.equal(geometry.search.height, 36);
+        assert.ok(geometry.toolbar.height <= 52, 'mobile toolbar <=52px including vertical padding');
       }
     }
     await page.setViewportSize({ width: 390, height: 844 });
