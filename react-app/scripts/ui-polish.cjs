@@ -234,6 +234,7 @@ const fs = require("node:fs/promises");
       await page.getByRole("button", { name: "关闭", exact: true }).click();
       await style.evaluate((el) => el.remove());
     }
+    await page.getByRole("button", { name: "打开搜索", exact: true }).click();
     await page.getByRole("searchbox", { name: "搜索日子" }).fill("不存在的日子");
     await audit("no results");
     await page.getByRole("button", { name: "查看全部", exact: true }).click();

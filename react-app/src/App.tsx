@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
+  ArrowDownUp,
   CalendarDays,
   ChevronRight,
   Heart,
@@ -27,6 +28,7 @@ import DayEditor from "./DayEditor";
 import DayDetail from "./DayDetail";
 import { icons, tones, formatDate } from "./dayMeta";
 import { haptic } from "./haptics";
+import useCompactLayout from "./useCompactLayout";
 import CalendarView from "./CalendarView";
 import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
@@ -38,6 +40,10 @@ function Icon({ category, size = 22 }: { category: Category; size?: number }) {
 }
 
 export default function App() {
+  const compact = useCompactLayout();
+  const searchInput = useRef<HTMLInputElement>(null);
+  const searchButton = useRef<HTMLButtonElement>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const calendarButtonRef = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -65,6 +71,13 @@ export default function App() {
   const [today, setToday] = useState(todayKey());
   const [filter, setFilter] = useState<"全部" | Category>("全部");
   const [query, setQuery] = useState("");
+  const mobileSearchOpen = compact && (searchOpen || query.length > 0);
+  function closeSearch() {
+    setQuery("");
+    if (!compact) return;
+    setSearchOpen(false);
+    requestAnimationFrame(() => searchButton.current?.focus());
+  }
   const [sort, setSort] = useState("upcoming");
   const [editor, setEditor] = useState<Day | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -293,7 +306,7 @@ export default function App() {
                   weekday: "long",
                 })}
               </p>
-              <h1>
+              <h1 className={compact ? "sr-only" : undefined}>
                 把日子，放在心上<span>。</span>
               </h1>
               <p className="subtitle">有些日子值得期待，有些时光值得记住。</p>
@@ -331,6 +344,7 @@ export default function App() {
               <section className="overview" aria-label="日子概览">
                 <div
                   className={`hero ${featured ? tones[featured.category] : "rose"}`}
+                  data-populated={!!featured}
                   style={{ viewTransitionName: "hero" }}
                 >
                   <div className="hero-orbit" aria-hidden="true">
@@ -364,12 +378,14 @@ export default function App() {
                           </>
                         )}
                       </div>
-                      <p className="hero-caption">
-                        {status.delta === 0
-                          ? "今天，记得为这个日子留一点仪式感。"
-                          : featured.note ||
-                            "平凡的日历里，藏着独一无二的意义。"}
-                      </p>
+                      {(!compact || status.delta === 0) && (
+                        <p className="hero-caption">
+                          {status.delta === 0
+                            ? "今天，记得为这个日子留一点仪式感。"
+                            : featured.note ||
+                              "平凡的日历里，藏着独一无二的意义。"}
+                        </p>
+                      )}
                       <div className="hero-bottom">
                         <span>
                           <CalendarDays size={15} />
@@ -455,7 +471,7 @@ export default function App() {
                   </div>
                   <span className="section-caption">每一个，都特别</span>
                 </div>
-                <div className="toolbar">
+                <div className="toolbar" data-search-open={mobileSearchOpen}>
                   <div className="filters" role="group" aria-label="按分类筛选">
                     {(["全部", ...categories] as const).map((item) => (
                       <button
@@ -474,37 +490,87 @@ export default function App() {
                     ))}
                   </div>
                   <div className="list-tools">
-                    <div className="search">
-                      <Search size={16} />
-                      <input
-                        type="search"
-                        enterKeyHint="search"
-                        autoComplete="off"
-                        aria-label="搜索日子"
-                        placeholder="搜索日子…"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                      {query && (
-                        <button
-                          aria-label="清除搜索"
-                          onClick={() => setQuery("")}
+                    {compact && (
+                      <button
+                        ref={searchButton}
+                        type="button"
+                        className="search-toggle icon-button"
+                        aria-label="打开搜索"
+                        aria-expanded={mobileSearchOpen}
+                        aria-controls={
+                          mobileSearchOpen ? "days-search" : undefined
+                        }
+                        onClick={() => {
+                          setSearchOpen(true);
+                          requestAnimationFrame(() =>
+                            searchInput.current?.focus(),
+                          );
+                        }}
+                      >
+                        <Search size={20} aria-hidden="true" />
+                      </button>
+                    )}
+                    {(!compact || mobileSearchOpen) && (
+                      <div className="search" id="days-search">
+                        <Search size={16} />
+                        <input
+                          ref={searchInput}
+                          autoFocus={compact}
+                          type="search"
+                          enterKeyHint="search"
+                          autoComplete="off"
+                          aria-label="搜索日子"
+                          placeholder="搜索日子…"
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          onKeyDown={(event) => {
+                            if (compact && event.key === "Escape") {
+                              event.preventDefault();
+                              if (!query) closeSearch();
+                            }
+                          }}
+                        />
+                        {(query || compact) && (
+                          <button
+                            aria-label={query ? "清除搜索" : "收起搜索"}
+                            onClick={closeSearch}
+                          >
+                            <X size={15} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {compact ? (
+                      <div className="mobile-sort">
+                        <ArrowDownUp size={17} aria-hidden="true" />
+                        <span aria-hidden="true">
+                          {sort === "date" ? "日期" : "临近"}
+                        </span>
+                        <select
+                          aria-label="排序方式"
+                          value={sort}
+                          onChange={(event) => {
+                            setSort(event.target.value);
+                            void haptic("light");
+                          }}
                         >
-                          <X size={15} />
-                        </button>
-                      )}
-                    </div>
-                    <SegmentedControl
-                      className="sort"
-                      label="排序方式"
-                      hideLabel
-                      value={sort}
-                      options={[
-                        { value: "upcoming", label: "临近优先" },
-                        { value: "date", label: "日期从新到旧" },
-                      ]}
-                      onChange={setSort}
-                    />
+                          <option value="upcoming">临近优先</option>
+                          <option value="date">日期从新到旧</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <SegmentedControl
+                        className="sort"
+                        label="排序方式"
+                        hideLabel
+                        value={sort}
+                        options={[
+                          { value: "upcoming", label: "临近优先" },
+                          { value: "date", label: "日期从新到旧" },
+                        ]}
+                        onChange={setSort}
+                      />
+                    )}
                   </div>
                 </div>
                 {visible.length > 0 ? (

@@ -28,6 +28,8 @@ const fs = require("node:fs/promises");
     );
   };
   const noOverflow = async (label) => {
+    if (page.viewportSize().width <= 760) await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
+    else await page.getByRole("group", { name: "排序方式", exact: true }).waitFor();
     assert.ok(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -61,6 +63,38 @@ const fs = require("node:fs/promises");
       .click();
     await page.getByRole("dialog").waitFor({ state: "hidden" });
 
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.evaluate(() => scrollTo(0, 0));
+    assert.ok((await page.locator(".day-card").first().boundingBox()).y < 740, "first mobile card begins in the first viewport");
+    assert.ok((await page.locator(".hero").boundingBox()).height <= 200, "populated mobile hero is compact");
+    assert.equal(await page.getByRole("heading", { level: 1 }).count(), 1, "mobile h1 remains accessible");
+    assert.equal(await page.locator(".overview-side").isVisible(), false, "mobile hides duplicate statistics");
+    await page.getByRole("button", { name: "打开搜索", exact: true }).click();
+    const search = page.getByRole("searchbox", { name: "搜索日子", exact: true });
+    assert.ok(await search.evaluate(el => el === document.activeElement), "expanded search receives focus");
+    await search.fill("平凡");
+    await page.keyboard.press("Escape");
+    assert.equal(await search.inputValue(), "平凡", "nonempty query stays expanded");
+    await page.getByRole("button", { name: "清除搜索", exact: true }).click();
+    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "打开搜索");
+    assert.equal(await page.getByRole("searchbox", { name: "搜索日子" }).count(), 0, "clear collapses mobile search");
+    await page.getByRole("button", { name: "打开搜索", exact: true }).click();
+    await page.getByRole("button", { name: "收起搜索", exact: true }).click();
+    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "打开搜索");
+    await page.setViewportSize({ width: 320, height: 740 });
+    const lastChip = page.locator(".filters button").last();
+    await lastChip.scrollIntoViewIfNeeded();
+    const chip = await lastChip.boundingBox(), strip = await page.locator(".filters").boundingBox();
+    assert.ok(chip.x >= strip.x && chip.x + chip.width <= strip.x + strip.width, "last chip can scroll into view at 320px");
+    assert.ok(chip.width >= 44 && chip.height >= 44);
+    await page.evaluate(async () => {
+      const { db } = await import("/src/storage.ts");
+      const source = (await db.days.toArray())[0];
+      await db.days.bulkPut(Array.from({ length: 8 }, (_, index) => ({ ...source, id: "chrome-scroll-" + index, title: "列表滚动验收 " + index })));
+    });
+    await page.reload();
+    await page.locator(".day-card").first().waitFor();
+
     for (const width of [320, 375, 390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 844 });
       await page.evaluate(() => scrollTo(0, 0));
@@ -81,7 +115,10 @@ const fs = require("node:fs/promises");
     await page.setViewportSize({ width: 390, height: 844 });
     await inset(32, 0, 24, 0);
     await page.evaluate(() => scrollTo(0, 420));
+    await page.waitForFunction(() => Math.abs(document.querySelector(".toolbar").getBoundingClientRect().top - document.querySelector(".site-header").getBoundingClientRect().bottom) <= 1);
     const header = await page.locator(".site-header").boundingBox();
+    const toolbar = await page.locator(".toolbar").boundingBox();
+    assert.ok(Math.abs(toolbar.y - (header.y + header.height)) <= 1, "sticky list toolbar sits directly below header without overlap or gap");
     const add = await page.locator(".header-add").boundingBox();
     assert.equal(header.y, 0, "header stays at viewport top while scrolling");
     assert.ok(add.y >= 32, "toolbar clears status bar");

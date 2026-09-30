@@ -220,6 +220,21 @@ const fs = require("node:fs/promises");
     // Sorting stays content-sized; only the search field absorbs spare space.
     for (const width of [320, 390, 600, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
+      if (width <= 760) {
+        const select = page.getByRole("combobox", { name: "排序方式", exact: true });
+        await select.waitFor();
+        assert.equal(await select.count(), 1);
+        const filter = await page.locator(".filters").boundingBox();
+        const toggle = await page.locator(".search-toggle").boundingBox();
+        const sorting = await select.boundingBox();
+        assert.ok(toggle.width >= 44 && toggle.height >= 44);
+        assert.ok(sorting.width >= 44 && sorting.height >= 44);
+        assert.ok(Math.abs(toggle.y - sorting.y) <= 1, "mobile actions share one row");
+        assert.ok(filter.x + filter.width <= toggle.x, "chips do not overlap actions");
+        assert.ok(sorting.x + sorting.width <= width, "mobile sort fits viewport");
+        continue;
+      }
+      await page.getByRole("group", { name: "排序方式", exact: true }).waitFor();
       const layout = await page.evaluate(() => {
         const box = (selector) => {
           const r = document.querySelector(selector).getBoundingClientRect();
@@ -265,6 +280,7 @@ const fs = require("node:fs/promises");
           .screenshot({ path: ".artifacts/sort-" + width + ".png" });
     }
     await page.setViewportSize({ width: 320, height: 1000 });
+    await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
     const largeText = await page.addStyleTag({
       content: ":root { font-size: 200% !important; }",
     });
@@ -276,10 +292,16 @@ const fs = require("node:fs/promises");
     );
     await audit("large-text toolbar accessibility");
     await largeText.evaluate((el) => el.remove());
+    const mobileSorting = page.getByRole("combobox", { name: "排序方式", exact: true });
+    await mobileSorting.selectOption("date");
+    assert.equal(await mobileSorting.inputValue(), "date");
+    await page.setViewportSize({ width: 768, height: 1000 });
     const sorting = page.getByRole("group", { name: "排序方式" });
+    await sorting.waitFor();
     await sorting
       .getByRole("radio", { name: "日期从新到旧", exact: true })
       .check();
+    await sorting.getByRole("radio", { name: "日期从新到旧", exact: true }).focus();
     assert.ok(
       await sorting
         .getByRole("radio", { name: "日期从新到旧", exact: true })
@@ -294,7 +316,7 @@ const fs = require("node:fs/promises");
     assert.equal(
       await page.locator("select").count(),
       0,
-      "no legacy dropdowns",
+      "desktop retains segmented sorting without dropdowns",
     );
     await audit("filter accessibility");
     assert.deepEqual(errors, []);

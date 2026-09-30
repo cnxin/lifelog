@@ -193,6 +193,7 @@ const path = require("node:path");
     );
     // Mobile layout, edit, deletion confirmation and persistence.
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -325,6 +326,8 @@ const path = require("node:path");
     assert.deepEqual(errors, [], "no browser runtime errors");
     for (const width of [320, 375, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 900 });
+      if (width <= 760) await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
+      else await page.getByRole("group", { name: "排序方式", exact: true }).waitFor();
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
