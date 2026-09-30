@@ -1030,6 +1030,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   .modal::backdrop {
     transition:
       background-color 0.24s,
+      opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
       overlay 0.24s allow-discrete,
       display 0.24s allow-discrete;
   }
@@ -2620,11 +2621,34 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     transform: translateY(100%);
   }
   .modal[open] {
-    transform: none;
+    transform: translateY(var(--drag-y, 0px));
+  }
+  .modal::backdrop {
+    opacity: var(--drag-backdrop, 1);
+  }
+  .modal[data-rebounding="true"] {
+    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .modal[data-dragging="true"],
+  .modal[data-dragging="true"]::backdrop {
+    transition: none;
+    user-select: none;
+  }
+  .modal .modal-body {
+    touch-action: pan-y;
+  }
+  @supports (touch-action: pan-x pan-down) {
+    /* pan-down allows scrolling further down the content (finger up).
+       Preserve that native pan, but reserve finger-down for the sheet.
+       Unsupported engines retain native scroll and heading dragging. */
+    .modal[data-body-at-top="true"] .modal-body {
+      touch-action: pan-x pan-down;
+    }
   }
   .modal-heading {
     position: relative;
     padding-top: 16px;
+    touch-action: none;
   }
   .modal-heading::before {
     content: "";
