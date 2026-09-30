@@ -17,6 +17,37 @@ import MonthGrid, { calendarKeyboardHelp, dateLabel } from "./MonthGrid";
 import MonthPicker from "./MonthPicker";
 import useMonthSwipe from "./useMonthSwipe";
 
+function scrollDateField(field: HTMLDivElement) {
+  const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 'auto' : 'smooth';
+  const scroller = field.closest<HTMLElement>('.modal-body');
+  const ancestors: { el: HTMLElement; top: number; left: number }[] = [];
+  for (let el = field.parentElement; el; el = el.parentElement)
+    ancestors.push({ el, top: el.scrollTop, left: el.scrollLeft });
+  const fallbackTop = scroller
+    ? scroller.scrollTop + field.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top - scroller.clientTop -
+      (parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0) -
+      (parseFloat(getComputedStyle(field).scrollMarginTop) || 0)
+    : 0;
+  let supportsContainer = false;
+  const options: ScrollIntoViewOptions & { readonly container: 'nearest' } = {
+    block: 'start', behavior,
+    // WebIDL reads recognized dictionary members; older engines ignore this.
+    get container() { supportsContainer = true; return 'nearest' as const; },
+  };
+  field.scrollIntoView(options);
+  if (!supportsContainer && scroller) {
+    // Cancel ancestor scrolling in old WebViews, including the overflow-hidden
+    // dialog, then animate only its body using the same padding/margin geometry.
+    for (const { el, top, left } of ancestors) {
+      el.scrollTop = top;
+      el.scrollLeft = left;
+    }
+    scroller.scrollTo({ top: fallbackTop, behavior });
+  }
+}
+
 export default function DatePicker({
   value,
   onChange,
@@ -30,33 +61,38 @@ export default function DatePicker({
 }) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
+  const field = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const focusDay = useRef(false);
   const wasOpen = useRef(false);
   const [cursor, setCursor] = useState(value);
   const [chooseMonth, setChooseMonth] = useState(false);
   const month = cursor.slice(0, 7);
+  const previousLayout = useRef({ month, chooseMonth });
   const info = calendarDateInfo(value);
   const today = todayKey();
   const swipe = useMonthSwipe((direction) =>
     move(shiftMonth(cursor, direction)),
   );
   useEffect(() => {
+    const keyboardNavigation = focusDay.current && wasOpen.current;
     if (open && focusDay.current && !chooseMonth) {
       panel.current
         ?.querySelector<HTMLButtonElement>('.calendar-day[tabindex="0"]')
-        ?.focus();
+        ?.focus({ preventScroll: !wasOpen.current });
       focusDay.current = false;
     }
-    if (open && !wasOpen.current)
-      panel.current?.scrollIntoView({
-        block: "nearest",
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
-          : "smooth",
-      });
+    // A quick month/menu click can interrupt the opening scroll with native
+    // focus scrolling. Re-align the whole field after that layout change;
+    // keyboard day navigation still gets its own focused-day scrolling.
+    const layoutChanged = previousLayout.current.month !== month ||
+      previousLayout.current.chooseMonth !== chooseMonth;
+    if (open && field.current &&
+      (!wasOpen.current || (layoutChanged && !keyboardNavigation)))
+      scrollDateField(field.current);
     if (!open && wasOpen.current) trigger.current?.focus();
     wasOpen.current = open;
+    previousLayout.current = { month, chooseMonth };
   }, [open, cursor, chooseMonth]);
   function move(date: string, focus = false) {
     const bounded =
@@ -76,7 +112,7 @@ export default function DatePicker({
     onOpenChange(false);
   }
   return (
-    <div className="date-field">
+    <div className={open ? "date-field date-field-open" : "date-field"} ref={field}>
       <span className="date-field-label" id={id + "-label"}>
         日期
       </span>

@@ -35,6 +35,44 @@ const { pickDate } = require("./date-picker-helper.cjs");
     await page.getByLabel("日子名称").fill("日期选择测试");
     assert.equal(await page.locator("input[type=date]").count(), 0);
     await trigger.click();
+    // Real geometry in a short phone viewport, including the trigger and label.
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.keyboard.press('Escape');
+    await trigger.click();
+    const geometry = await page.evaluate(() => {
+      const box = selector => {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return {top: r.top, bottom: r.bottom, height: r.height};
+      };
+      return {
+        body: box('.modal-body'), trigger: box('.date-trigger'),
+        label: box('.date-field-label'), panel: box('.date-picker'),
+        nav: box('.date-picker-toolbar'), footer: box('.date-picker-footer'),
+        cells: [...document.querySelectorAll('.date-picker .calendar-day')]
+          .map(el => el.getBoundingClientRect().height),
+        number: getComputedStyle(document.querySelector('.date-picker .calendar-number')).fontSize,
+        lunar: getComputedStyle(document.querySelector('.date-picker .calendar-lunar')).fontSize,
+      };
+    });
+    assert.ok(geometry.trigger.top >= geometry.body.top, 'expanded date trigger stays inside scroller');
+    assert.ok(geometry.label.top >= geometry.body.top, 'date label stays visible above the trigger');
+    assert.ok(geometry.panel.height <= 440, 'compact date panel <=440px');
+    assert.equal(geometry.nav.height, 40);
+    assert.equal(geometry.footer.height, 44);
+    assert.ok(geometry.cells.every(height => height === 52), 'date cells are 52px');
+    assert.equal(geometry.number, '15px');
+    assert.equal(geometry.lunar, '10.5px');
+    await picker.getByRole('button', {name: '上个月', exact: true}).click();
+    const sixRows = await page.evaluate(() => {
+      const panel = document.querySelector('.date-picker').getBoundingClientRect();
+      const footer = document.querySelector('.editor-footer').getBoundingClientRect();
+      return {height: panel.height, bottom: panel.bottom, actionsTop: footer.top};
+    });
+    assert.ok(sixRows.height <= 440, 'six-week month also fits the panel budget');
+    assert.ok(sixRows.bottom <= sixRows.actionsTop, 'six-week date panel clears sticky save actions');
+    await page.keyboard.press('Escape');
+    await trigger.click();
+    await page.setViewportSize({ width: 390, height: 1000 });
     assert.equal(await page.locator("dialog[open]").count(), 1);
     assert.equal(
       await page.locator(":focus").getAttribute("data-date"),
@@ -162,6 +200,49 @@ const { pickDate } = require("./date-picker-helper.cjs");
       "2026-09-30",
       "date persisted after reload",
     );
+    // A quick month click interrupts the opening scroll. Cover normal motion
+    // too, and simulate old WebViews that ignore the container option.
+    for (const motion of ['no-preference', 'reduce']) {
+      for (const oldOptions of [false, true]) {
+        const regression = await browser.newPage({
+          viewport: {width: 360, height: 740}, timezoneId: 'Asia/Shanghai', reducedMotion: motion,
+        });
+        regression.on('pageerror', error => errors.push(error.message));
+        try {
+          if (oldOptions) await regression.addInitScript(() => {
+            const native = Element.prototype.scrollIntoView;
+            Element.prototype.scrollIntoView = function(options) {
+              if (options && typeof options === 'object')
+                return native.call(this, {block: options.block, inline: options.inline, behavior: options.behavior});
+              return native.call(this, options);
+            };
+          });
+          await regression.goto(process.env.BASE_URL || 'http://127.0.0.1:5188');
+          await regression.locator('.header-add').click();
+          await regression.getByLabel('日子名称').fill('快速切月几何回归');
+          await pickDate(regression, '2026-09-30');
+          await regression.locator('.date-trigger').click();
+          await regression.locator('.date-picker').getByRole('button', {name: '上个月', exact: true}).click();
+          // Check after animation completion, not an early, transient passing box.
+          await regression.waitForTimeout(800);
+          const bounds = await regression.evaluate(() => {
+            const rect = selector => {
+              const r = document.querySelector(selector).getBoundingClientRect();
+              return {top: r.top, bottom: r.bottom, height: r.height};
+            };
+            return {trigger: rect('.date-trigger'), label: rect('.date-field-label'),
+              body: rect('.modal-body'), panel: rect('.date-picker'), actions: rect('.editor-footer'),
+              outerScroll: document.querySelector('.modal').scrollTop};
+          });
+          assert.ok(bounds.trigger.top >= bounds.body.top, `${motion}/${oldOptions}: trigger stays visible after rapid month change`);
+          assert.ok(bounds.label.top >= bounds.body.top, 'date label stays visible after interrupted opening scroll');
+          assert.ok(bounds.panel.height <= 440 && bounds.panel.bottom <= bounds.actions.top, 'six-week panel remains compact and clears save actions');
+          assert.equal(bounds.outerScroll, 0, 'date alignment does not scroll the hidden outer dialog and clip its heading');
+        } finally {
+          await regression.close();
+        }
+      }
+    }
     assert.deepEqual(errors, []);
     console.log(
       "Date picker passed: selection, lunar labels, keyboard, bounds, cancellation, persistence, responsive layout, large type, forced colors, axe.",
