@@ -21,6 +21,7 @@ import {
   shiftMonth,
 } from "./calendar";
 import { todayKey } from "./domain";
+import { haptic } from "./haptics";
 
 const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
 export default function DatePicker({
@@ -98,6 +99,7 @@ export default function DatePicker({
     }
   }
   function select(date: string) {
+    void haptic("light");
     onChange(date);
     onOpenChange(false);
   }

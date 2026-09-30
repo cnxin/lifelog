@@ -26,6 +26,7 @@ import { db, saveDay } from "./storage";
 import DayEditor from "./DayEditor";
 import DayDetail from "./DayDetail";
 import { icons, tones, formatDate } from "./dayMeta";
+import { haptic } from "./haptics";
 import CalendarView from "./CalendarView";
 import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
@@ -161,6 +162,7 @@ export default function App() {
   }
   async function togglePin(day: Day) {
     await saveDay({ ...day, pinned: !day.pinned });
+    void haptic("light");
     await changed(day.pinned ? "已取消置顶" : "已置顶，移到最前");
   }
   useEffect(() => {

@@ -27,15 +27,17 @@ test('Android source contract: preview isolation, stable release identity and ve
   assert.match(read('android/app/src/debug/res/values/strings.xml'), /日子 · 测试版/);
 });
 
-test('Android source contract: only INTERNET permission, no old native integrations', () => {
+test('Android source contract: INTERNET with plugin-owned VIBRATE, no old native integrations', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
   assert.deepEqual([...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"/g)].map(m => m[1]), ['android.permission.INTERNET']);
+  assert.match(read('node_modules/@capacitor/haptics/android/src/main/AndroidManifest.xml'), /android.permission.VIBRATE/);
   const activity = read('android/app/src/main/java/com/cnxin/lifelog/MainActivity.java');
   assert.match(activity, /registerPlugin\(NativeBackupFilePlugin.class\)/);
   assert.doesNotMatch(activity, /NativeExternalBrowser|NativeImageShare/);
   const dependencies = JSON.parse(read('package.json')).dependencies;
   assert.equal(dependencies['@capacitor/local-notifications'], undefined);
   assert.equal(dependencies['@capacitor/browser'], undefined);
+  assert.ok(dependencies['@capacitor/haptics']);
 });
 
 function workerModule({ native = true, prod = true, registrations = [], cacheKeys = [] } = {}) {
@@ -102,6 +104,8 @@ test('APK inspection accepts isolated preview identity and expected merged permi
   assert.equal(info.applicationId, 'com.cnxin.lifelog.preview');
   assert.equal(info.versionCode, 136);
   assert.equal(info.permissions.length, 2);
+  const haptics = verifyPreviewBadging(sampleBadging + "uses-permission: name='android.permission.VIBRATE'\n", '0.2.0-alpha.1', 136);
+  assert.ok(haptics.permissions.includes('android.permission.VIBRATE'));
 });
 test('APK inspection rejects production ID, stale versions and ambiguous labels', () => {
   for (const [before, after] of [

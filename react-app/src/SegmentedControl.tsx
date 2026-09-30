@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from "react";
+import { haptic } from "./haptics";
 
 /** Native radios provide focus, arrow keys and fieldset-disabled behavior. */
 export default function SegmentedControl<T extends string>({
@@ -31,7 +32,10 @@ export default function SegmentedControl<T extends string>({
               value={option.value}
               checked={value === option.value}
               aria-describedby={description ? `${id}-help` : undefined}
-              onChange={() => onChange(option.value)}
+              onChange={() => {
+                void haptic("light");
+                onChange(option.value);
+              }}
             />
             <span>
               {option.icon}

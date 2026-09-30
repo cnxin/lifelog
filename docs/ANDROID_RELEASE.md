@@ -55,6 +55,13 @@ Android 12+ 显式通过 `dataExtractionRules` 排除云备份和自动设备迁
 
 旧版曾注册 `/sw.js`。新版 Android 启动时会注销自己的 worker，并只清理 `lifelog-static-*` / `lifelog-runtime-*` 缓存，不触碰 IndexedDB 或 localStorage，不强制刷新未保存编辑。已受控的页面需要关闭后才完全脱离 worker；仍需真机冷启动验证。浏览器测试只能模拟该清理过程，不能代替 Android WebView 测试。
 
+## 下一版 alpha.4 的触觉反馈权限
+
+- 从 alpha.4 起，原生置顶、分段选择、日期点选、保存和确认删除提供轻微震动反馈；新增 `android.permission.VIBRATE`，由 `@capacitor/haptics` 的 Manifest 合并，不重复手写权限。
+- 下一版预期合并权限为 `INTERNET`、`VIBRATE` 和本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`；仍不包含通知、相机、存储或安装权限。
+- `android:preview` 的 APK 权限校验仅新增允许 `VIBRATE`，其它非预期权限仍会阻止交付。
+- 以下 alpha.1 / alpha.2 / alpha.3 构建记录描述旧 APK；不代表下一版已发布。震动强度、软键盘与返回键仍需真机验收。
+
 ## 回退与提交策略
 
 旧版本已有 Git 标签 `v0.1.0-test.135`，指向：

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Cake, Heart, Hourglass, Trash2 } from "lucide-react";
 import Modal, { useModalClose } from "./Modal";
+import { haptic } from "./haptics";
 import DatePicker from "./DatePicker";
 import SegmentedControl from "./SegmentedControl";
 import { categories, lunarLabel, validDate, type Day } from "./domain";
@@ -65,6 +66,7 @@ function EditorForm({
     setError("");
     try {
       await onSave({ ...draft, title: draft.title.trim() });
+      void haptic("success");
       setFinished(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "保存失败，请重试。");
@@ -73,6 +75,7 @@ function EditorForm({
     }
   }
   async function remove() {
+    void haptic("medium");
     setBusy(true);
     setError("");
     try {

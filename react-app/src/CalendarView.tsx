@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, type KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Modal from "./Modal";
 import { icons, tones } from "./dayMeta";
+import { haptic } from "./haptics";
 import { categories, type Day } from "./domain";
 import {
   MAX_CALENDAR_DATE,
@@ -67,8 +68,11 @@ export default function CalendarView({
       ?.focus();
     keyboardFocus.current = false;
   }, [selectedDate]);
-  function select(date: string) {
-    if (date >= MIN_CALENDAR_DATE && date <= MAX_CALENDAR_DATE) onSelect(date);
+  function select(date: string, feedback = false) {
+    if (date >= MIN_CALENDAR_DATE && date <= MAX_CALENDAR_DATE) {
+      if (feedback) void haptic("light");
+      onSelect(date);
+    }
   }
   function navigate(event: KeyboardEvent<HTMLButtonElement>, date: string) {
     const weekday = (new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7;
@@ -161,7 +165,7 @@ export default function CalendarView({
                           tabIndex={date === selectedDate ? 0 : -1}
                           aria-current={date === today ? "date" : undefined}
                           aria-label={`${dateLabel(date)}，${info.lunar}${info.festivals.length || info.term ? "，" + [...info.festivals, info.term].filter(Boolean).join("、") : ""}${date === today ? "，今天" : ""}，${entries.length ? `${entries.length}个日子：${entries.map((day) => day.title).join("、")}` : "暂无记录"}`}
-                          onClick={() => select(date)}
+                          onClick={() => select(date, true)}
                           onKeyDown={(event) => navigate(event, date)}
                         >
                           <span className="calendar-number">

@@ -59,7 +59,7 @@ function verifyPreviewBadging(badging, version, versionCode) {
   const actualVersion = badging.match(/^package:.* versionName='([^']+)'/m)?.[1];
   const actualCode = Number(badging.match(/^package:.* versionCode='([^']+)'/m)?.[1]);
   const permissions = [...badging.matchAll(/^uses-permission(?:-sdk-\d+)?: name='([^']+)'/gm)].map(match => match[1]);
-  const allowed = new Set(['android.permission.INTERNET', 'com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']);
+  const allowed = new Set(['android.permission.INTERNET', 'android.permission.VIBRATE', 'com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']);
   if (id !== 'com.cnxin.lifelog.preview') throw new Error('APK 包名不是独立测试版，停止交付');
   if (name !== '日子 · 测试版') throw new Error('APK 桌面名称不能区分测试版');
   if (actualVersion !== version + '-preview' || actualCode !== versionCode) throw new Error('APK 版本与源码不符');
