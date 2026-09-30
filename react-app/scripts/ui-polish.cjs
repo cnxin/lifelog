@@ -73,17 +73,18 @@ const fs = require("node:fs/promises");
       assert.ok(
         await page
           .locator("dialog[open]")
-          .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+          .evaluateAll((elements) => elements.every(el => el.scrollWidth <= el.clientWidth + 1)),
         label + " dialog overflow",
       );
   }
   async function shot(name, bottom = false) {
     if (await page.locator("dialog[open]").count()) {
-      await page.locator("dialog[open]").evaluate((el, bottom) => {
+      await page.locator("dialog[open]").last().evaluate((el, bottom) => {
         el.scrollTop = bottom ? el.scrollHeight : 0;
       }, bottom);
       await page
         .locator("dialog[open]")
+        .last()
         .screenshot({ path: ".artifacts/ui-review/" + name + ".png" });
     } else
       await page
@@ -147,8 +148,12 @@ const fs = require("node:fs/promises");
         );
       }
       await page
-        .getByRole("button", { name: "编辑：妈妈的生日", exact: true })
+        .locator(".day-grid")
+        .getByRole("button", { name: "查看：妈妈的生日", exact: true })
         .click();
+      await audit(label + " detail");
+      assert.ok(await page.locator(".detail-count").evaluate(el => el.scrollWidth <= el.clientWidth));
+      await page.getByRole("button", { name: "编辑", exact: true }).click();
       await audit(label + " editor");
       const geometry = await page.evaluate(() => {
         const r = (selector) =>
@@ -188,7 +193,10 @@ const fs = require("node:fs/promises");
       await audit(label + " delete confirmation");
       if (scale === 2) await shot(label + "-delete", true);
       await page.getByRole("button", { name: "保留", exact: true }).click();
-      await page.getByRole("button", { name: "关闭", exact: true }).click();
+      await page.locator(".editor-modal").getByRole("button", { name: "关闭", exact: true }).click();
+      await page.locator(".editor-modal").waitFor({ state: "hidden" });
+      await page.locator(".detail-modal").getByRole("button", { name: "关闭", exact: true }).click();
+      await page.locator(".detail-modal").waitFor({ state: "hidden" });
       await page
         .getByRole("button", { name: "数据与备份", exact: true })
         .click();

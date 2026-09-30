@@ -156,8 +156,10 @@ const fs = require("node:fs/promises");
     await page.getByRole("dialog").waitFor({ state: "hidden" });
     await page.reload();
     await page
-      .getByRole("button", { name: "编辑：我们的纪念日", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：我们的纪念日", exact: true })
       .click();
+    await page.getByRole("button", { name: "编辑", exact: true }).click();
     assert.ok(
       await page.getByRole("radio", { name: "生日", exact: true }).isChecked(),
     );
@@ -166,6 +168,7 @@ const fs = require("node:fs/promises");
     assert.ok(
       await page.getByRole("radio", { name: "农历", exact: true }).isChecked(),
     );
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     // Every filter has equal geometry and centered icon+text, regardless of selection.
     for (const width of [320, 390, 768, 1024, 1440]) {

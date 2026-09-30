@@ -22,7 +22,8 @@ const ts = require("typescript");
     await page.getByRole("dialog").waitFor({ state: "hidden" });
     await page.reload();
     await page
-      .getByRole("button", { name: "编辑：离线也能记住", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：离线也能记住", exact: true })
       .waitFor();
     assert.equal(await page.locator(".day-card").count(), 1);
     console.log(

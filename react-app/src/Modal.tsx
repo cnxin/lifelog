@@ -18,6 +18,8 @@ export function modalExitMs() {
     : 0;
 }
 const ModalContext = createContext<(() => void) | null>(null);
+const mountedDialogs = new Set<HTMLDialogElement>();
+let unlockedOverflow = "";
 export function useModalClose() {
   const close = useContext(ModalContext);
   if (!close) throw new Error("useModalClose must be used inside Modal");
@@ -26,6 +28,7 @@ export function useModalClose() {
 
 export default function Modal({
   title,
+  eyebrow = "LIFELOG · DAYS",
   onClose,
   onCancel,
   children,
@@ -33,6 +36,7 @@ export default function Modal({
   className = "",
 }: {
   title: string;
+  eyebrow?: string;
   onClose: () => void;
   onCancel?: () => void;
   children: ReactNode;
@@ -61,7 +65,8 @@ export default function Modal({
   useEffect(() => {
     const dialog = ref.current!;
     const trigger = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
+    if (!mountedDialogs.size) unlockedOverflow = document.body.style.overflow;
+    mountedDialogs.add(dialog);
     document.body.style.overflow = "hidden";
     closing.current = false;
     delete dialog.dataset.closing;
@@ -71,7 +76,13 @@ export default function Modal({
     return () => {
       window.clearTimeout(timer.current);
       dialog.close();
-      document.body.style.overflow = previousOverflow;
+      const stack = Array.from(mountedDialogs);
+      const wasTop = stack[stack.length - 1] === dialog;
+      mountedDialogs.delete(dialog);
+      document.body.style.overflow = mountedDialogs.size
+        ? "hidden"
+        : unlockedOverflow;
+      if (!wasTop) return;
       if (trigger?.isConnected) trigger.focus();
       else {
         const open =
@@ -139,7 +150,7 @@ export default function Modal({
       >
         <div className="modal-heading">
           <div>
-            <span className="eyebrow">LIFELOG · DAYS</span>
+            <span className="eyebrow">{eyebrow}</span>
             <h2 id={titleId}>{title}</h2>
           </div>
           <button

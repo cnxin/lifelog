@@ -105,9 +105,12 @@ const fs = require("node:fs/promises");
     await page.evaluate(() => { window.calendarNode = document.querySelector(".calendar-modal"); });
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: "编辑：团圆的日子", exact: true })
+      .getByRole("button", { name: "查看：团圆的日子", exact: true })
       .click();
     assert.equal(await page.locator("dialog[open]").count(), 2);
+    await audit("calendar day detail");
+    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    assert.equal(await page.locator("dialog[open]").count(), 3);
     assert.ok(await page.evaluate(() => window.calendarNode === document.querySelector(".calendar-modal")), "calendar remains mounted under editor");
     assert.equal(
       await page.locator(".date-trigger").getAttribute("data-date"),
@@ -117,13 +120,16 @@ const fs = require("node:fs/promises");
     await page.getByLabel("日子名称").fill("每年的团圆");
     await page.getByRole("button", { name: "保存修改", exact: true }).click();
     await page.getByRole("dialog", { name: "编辑这个日子", exact: true }).waitFor({ state: "hidden" });
+    await page.getByRole("dialog", { name: "每年的团圆", exact: true }).waitFor();
+    await page.keyboard.press("Escape");
+    await page.locator(".detail-modal").waitFor({ state: "hidden" });
     assert.ok(await page.evaluate(() => window.calendarNode === document.querySelector(".calendar-modal")), "same calendar after saving");
     await page.getByRole("dialog", { name: "日历", exact: true }).waitFor();
     assert.equal(await page.getByRole("dialog").count(), 1);
     assert.equal(
       await page
         .getByRole("dialog")
-        .getByRole("button", { name: "编辑：每年的团圆", exact: true })
+        .getByRole("button", { name: "查看：每年的团圆", exact: true })
         .count(),
       1,
     );
@@ -152,7 +158,7 @@ const fs = require("node:fs/promises");
     assert.equal(
       await page
         .getByRole("dialog")
-        .getByRole("button", { name: "编辑：新的约定", exact: true })
+        .getByRole("button", { name: "查看：新的约定", exact: true })
         .count(),
       1,
     );

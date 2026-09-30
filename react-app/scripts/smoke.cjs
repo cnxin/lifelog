@@ -62,17 +62,25 @@ const path = require("node:path");
     assert.equal(await page.locator(".day-card").count(), 1);
     await page.reload();
     await page
-      .getByRole("button", { name: "编辑：我们在一起", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：我们在一起", exact: true })
       .waitFor();
     await page
-      .getByRole("button", { name: "编辑：我们在一起", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：我们在一起", exact: true })
       .click();
+    await audit("day detail");
+    await page.getByRole("button", { name: "编辑", exact: true }).click();
     await page.getByLabel("日子名称").fill("我们在一起的日子");
     await page.getByRole("button", { name: "保存修改", exact: true }).click();
-    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await page.locator(".editor-modal").waitFor({ state: "hidden" });
+    await page.getByRole("dialog", { name: "我们在一起的日子", exact: true }).waitFor();
+    assert.equal(await page.locator(".day-card[data-highlight]").count(), 0);
+    await page.getByRole("button", { name: "关闭", exact: true }).click();
     assert.equal(
       await page
-        .getByRole("button", { name: "编辑：我们在一起的日子", exact: true })
+        .locator(".day-grid")
+        .getByRole("button", { name: "查看：我们在一起的日子", exact: true })
         .count(),
       1,
     );
@@ -156,7 +164,8 @@ const path = require("node:path");
     assert.equal(await page.locator(".day-card").count(), 6);
     assert.equal(
       await page
-        .getByRole("button", { name: "编辑：旧标题不应覆盖", exact: true })
+        .locator(".day-grid")
+        .getByRole("button", { name: "查看：旧标题不应覆盖", exact: true })
         .count(),
       0,
     );
@@ -193,8 +202,12 @@ const path = require("node:path");
     );
     await page.screenshot({ path: ".artifacts/mobile.png", fullPage: true });
     await page
-      .getByRole("button", { name: "编辑：阿禾的生日", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：阿禾的生日", exact: true })
       .click();
+    await audit("mobile detail");
+    assert.ok(await page.locator(".detail-count").evaluate(el => el.scrollWidth <= el.clientWidth));
+    await page.getByRole("button", { name: "编辑", exact: true }).click();
     await audit("mobile editor");
     await page.screenshot({
       path: ".artifacts/mobile-editor.png",
@@ -212,7 +225,8 @@ const path = require("node:path");
     await page.getByRole("button", { name: "保留", exact: true }).click();
     await page.getByRole("button", { name: "删除", exact: true }).click();
     await page.getByRole("button", { name: "确认删除", exact: true }).click();
-    await page.getByRole("dialog").waitFor({ state: "hidden" });
+    await page.locator(".editor-modal").waitFor({ state: "hidden" });
+    assert.equal(await page.locator(".detail-modal").count(), 0);
     await page.reload();
     await page.locator(".day-card").first().waitFor();
     assert.equal(await page.locator(".day-card").count(), 5);
@@ -304,7 +318,8 @@ const path = require("node:path");
       .getByRole("button", { name: "记下这个日子", exact: true })
       .click();
     await second
-      .getByRole("button", { name: "编辑：跨窗口同步", exact: true })
+      .locator(".day-grid")
+      .getByRole("button", { name: "查看：跨窗口同步", exact: true })
       .waitFor();
     await second.close();
     assert.deepEqual(errors, [], "no browser runtime errors");

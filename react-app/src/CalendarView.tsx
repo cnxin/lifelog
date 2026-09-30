@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useRef, type KeyboardEvent } from "react";
-import {
-  Cake,
-  ChevronLeft,
-  ChevronRight,
-  Heart,
-  Hourglass,
-  Plus,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Modal from "./Modal";
+import { icons, tones } from "./dayMeta";
 import { categories, type Day } from "./domain";
 import {
   MAX_CALENDAR_DATE,
@@ -20,8 +14,6 @@ import {
 } from "./calendar";
 
 const week = ["一", "二", "三", "四", "五", "六", "日"];
-const tones = { 纪念日: "rose", 生日: "amber", 倒数日: "sage" };
-const icons = { 纪念日: Heart, 生日: Cake, 倒数日: Hourglass };
 function dateLabel(date: string) {
   const [year, month, day] = date.split("-").map(Number);
   return `${year}年${month}月${day}日`;
@@ -34,7 +26,7 @@ export default function CalendarView({
   onSelect,
   onClose,
   onAdd,
-  onEdit,
+  onOpen,
 }: {
   days: Day[];
   today: string;
@@ -42,7 +34,7 @@ export default function CalendarView({
   onSelect: (date: string) => void;
   onClose: () => void;
   onAdd: (date: string) => void;
-  onEdit: (day: Day) => void;
+  onOpen: (day: Day) => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const keyboardFocus = useRef(true);
@@ -259,8 +251,8 @@ export default function CalendarView({
                     <button
                       type="button"
                       className={`calendar-event ${tones[day.category]}`}
-                      aria-label={`编辑：${day.title}`}
-                      onClick={() => onEdit(day)}
+                      aria-label={`查看：${day.title}`}
+                      onClick={() => onOpen(day)}
                     >
                       <span
                         className={`calendar-event-icon ${tones[day.category]}`}

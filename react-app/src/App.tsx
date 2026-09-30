@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
   CalendarDays,
-  Cake,
   ChevronRight,
   Heart,
   Hourglass,
@@ -25,16 +24,13 @@ import {
 } from "./domain";
 import { db, saveDay } from "./storage";
 import DayEditor from "./DayEditor";
+import DayDetail from "./DayDetail";
+import { icons, tones, formatDate } from "./dayMeta";
 import CalendarView from "./CalendarView";
 import SegmentedControl from "./SegmentedControl";
 import DataPanel from "./DataPanel";
 import { commitWithTransition, dayTransitionName } from "./listTransition";
 
-const icons = { 纪念日: Heart, 生日: Cake, 倒数日: Hourglass };
-const tones = { 纪念日: "rose", 生日: "amber", 倒数日: "sage" };
-function formatDate(date: string) {
-  return date.replace(/-/g, ".");
-}
 function Icon({ category, size = 22 }: { category: Category; size?: number }) {
   const Component = icons[category];
   return <Component size={size} strokeWidth={1.7} aria-hidden="true" />;
@@ -70,6 +66,11 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("upcoming");
   const [editor, setEditor] = useState<Day | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const detail = days.find((day) => day.id === detailId);
+  useEffect(() => {
+    if (detailId && !detail) setDetailId(null);
+  }, [detailId, detail]);
   const [calendarDate, setCalendarDate] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
   const [notice, setNotice] = useState<{ message: string } | null>(null);
@@ -158,9 +159,13 @@ export default function App() {
     if (afterClose) afterEditorNotice.current = message;
     else setNotice({ message });
   }
+  async function togglePin(day: Day) {
+    await saveDay({ ...day, pinned: !day.pinned });
+    await changed(day.pinned ? "已取消置顶" : "已置顶，移到最前");
+  }
   useEffect(() => {
     // Do not scroll the inert home underneath an editor or a retained calendar.
-    if (!focusId || editor || calendarDate || settings) return;
+    if (!focusId || editor || detailId || calendarDate || settings) return;
     const frame = requestAnimationFrame(() => {
       const card = Array.from(
         document.querySelectorAll<HTMLElement>(".day-card[data-id]"),
@@ -180,7 +185,7 @@ export default function App() {
       setFocusId(null);
     });
     return () => cancelAnimationFrame(frame);
-  }, [focusId, editor, calendarDate, settings]);
+  }, [focusId, editor, detailId, calendarDate, settings]);
   useEffect(() => {
     if (!highlightId) return;
     // animationend does not fire in reduced-motion, or if a card is filtered out.
@@ -342,7 +347,8 @@ export default function App() {
                       </div>
                       <button
                         className="hero-link"
-                        onClick={() => setEditor(featured)}
+                        aria-label={`查看：${featured.title}`}
+                        onClick={() => setDetailId(featured.id)}
                       >
                         <h2>{featured.title}</h2>
                         <ArrowUpRight size={23} />
@@ -531,17 +537,9 @@ export default function App() {
                               aria-label={`${day.pinned ? "取消置顶" : "置顶"}：${day.title}`}
                               aria-pressed={day.pinned}
                               onClick={() =>
-                                void saveDay({ ...day, pinned: !day.pinned })
-                                  .then(() =>
-                                    changed(
-                                      day.pinned
-                                        ? "已取消置顶"
-                                        : "已置顶，移到最前",
-                                    ),
-                                  )
-                                  .catch(() =>
-                                    setError("置顶更新失败，请重试。"),
-                                  )
+                                void togglePin(day).catch(() =>
+                                  setError("置顶更新失败，请重试。"),
+                                )
                               }
                             >
                               <Pin size={16} />
@@ -549,8 +547,8 @@ export default function App() {
                           </div>
                           <button
                             className="card-main"
-                            aria-label={`编辑：${day.title}`}
-                            onClick={() => setEditor(day)}
+                            aria-label={`查看：${day.title}`}
+                            onClick={() => setDetailId(day.id)}
                           >
                             <div className="card-copy">
                               <h3>{day.title}</h3>
@@ -660,7 +658,16 @@ export default function App() {
               requestAnimationFrame(() => calendarButtonRef.current?.focus());
             }}
             onAdd={(date) => add("纪念日", date)}
+            onOpen={(day) => setDetailId(day.id)}
+          />
+        )}
+        {detail && (
+          <DayDetail
+            day={detail}
+            today={today}
+            onClose={() => setDetailId(null)}
             onEdit={setEditor}
+            onTogglePin={togglePin}
           />
         )}
         {editor && (
@@ -689,7 +696,7 @@ export default function App() {
               )
                 setQuery("");
               // Calendar-origin edits return to the agenda, not the home list.
-              if (!calendarDate) setFocusId(day.id);
+              if (!calendarDate && !detailId) setFocusId(day.id);
             }}
             onDelete={async () => {
               await db.days.delete(editor.id);

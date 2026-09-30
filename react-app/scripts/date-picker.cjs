@@ -155,7 +155,8 @@ const { pickDate } = require("./date-picker-helper.cjs");
       .click();
     await page.getByRole("dialog").waitFor({ state: "hidden" });
     await page.reload();
-    await page.getByRole("button", { name: /编辑.*日期选择测试/ }).click();
+    await page.locator(".day-grid").getByRole("button", { name: /查看.*日期选择测试/ }).click();
+    await page.getByRole("button", { name: "编辑", exact: true }).click();
     assert.equal(
       await trigger.getAttribute("data-date"),
       "2026-09-30",
