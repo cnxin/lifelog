@@ -634,13 +634,14 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
-  background: #eef0e9;
-  padding: 4px;
+  background: transparent;
+  padding: 0 4px;
+  margin-inline-start: -4px;
   border: 0;
-  box-shadow: inset 0 0 0 1px var(--border);
-  border-radius: 12px;
+  box-shadow: none;
+  border-radius: 0;
 }
 .filters button {
   display: flex;
@@ -648,16 +649,35 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   justify-content: center;
   min-width: 0;
   gap: 6px;
-  min-height: 36px;
+  /* 44px hit box, with a 36px painted capsule. Overflow must not clip hits. */
+  min-height: 44px;
   padding: 0 12px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
   color: #636d5d;
   font-size: 0.8125rem;
   white-space: nowrap;
   position: relative;
+  isolation: isolate;
   scroll-margin-inline: 4px;
+}
+.filters button::after {
+  content: "";
+  position: absolute;
+  inset: 4px 0;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid var(--chip-border, var(--border));
+  border-radius: inherit;
+  background: var(--chip-background, transparent);
+}
+.filters button:focus-visible {
+  outline: none;
+}
+.filters button:focus-visible::after {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
 }
 .filters button svg {
   width: 14px;
@@ -667,21 +687,24 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   /* Keep the hit pseudo-element anchored even between responsive renders. */
   position: relative;
 }
-.filters button::before,
 .search-toggle::before,
 .sort-button::before {
   content: "";
   position: absolute;
   inset: -4px;
 }
+.filters button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
 .filters button.active {
-  background: white;
+  --chip-background: #eef0e9;
+  --chip-border: #c6cfc0;
   color: var(--green);
-  border-color: #c6cfc0;
-  box-shadow: inset 0 0 0 1px #c6cfc0, 0 1px 3px #2632220a;
 }
 .filters button:hover:not(.active) {
-  background: #e5e9df;
+  --chip-background: #e5e9df;
 }
 .list-tools {
   display: flex;
@@ -1687,7 +1710,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   }
   .filters button {
     font-size: 0.8125rem;
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 12px;
   }
   .footer > span:last-child {
@@ -1804,18 +1827,15 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
   }
   .day-card,
   .summary-card,
-  .filters,
   .search {
     border: 1px solid #636d5d;
   }
-  .filters {
-    background: #edf0e8;
-  }
   .filters button {
+    --chip-border: #636d5d;
     color: #303530;
   }
   .filters button.active {
-    outline: 1px solid #465b45;
+    --chip-border: #465b45;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1946,7 +1966,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     padding-inline: 12px;
     gap: 6px;
     font-size: 0.8125rem;
-    min-height: 36px;
+    min-height: 44px;
   }
   .search {
     min-height: var(--input-height);
@@ -2829,6 +2849,10 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     scroll-snap-type: x proximity;
     scrollbar-width: none;
   }
+  .toolbar .filters:not([data-at-end="true"]) {
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
   .toolbar .filters::-webkit-scrollbar {
     display: none;
   }
@@ -2836,7 +2860,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     flex: none;
     width: 6rem;
     min-width: 96px;
-    min-height: 36px;
+    min-height: 44px;
     scroll-snap-align: start;
   }
   .toolbar .list-tools {

@@ -30,6 +30,7 @@ import { haptic } from "./haptics";
 import useCompactLayout from "./useCompactLayout";
 import CalendarView from "./CalendarView";
 import SortMenu from "./SortMenu";
+import FilterStrip from "./FilterStrip";
 import DataPanel from "./DataPanel";
 import { commitWithTransition, dayTransitionName } from "./listTransition";
 
@@ -480,7 +481,7 @@ export default function App() {
                   <span className="section-caption">每一个，都特别</span>
                 </div>
                 <div className="toolbar" data-search-open={mobileSearchOpen}>
-                  <div className="filters" role="group" aria-label="按分类筛选">
+                  <FilterStrip>
                     {(["全部", ...categories] as const).map((item) => (
                       <button
                         key={item}
@@ -496,7 +497,7 @@ export default function App() {
                         {item}
                       </button>
                     ))}
-                  </div>
+                  </FilterStrip>
                   <div className="list-tools">
                     {compact && (
                       <button

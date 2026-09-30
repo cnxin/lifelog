@@ -88,6 +88,39 @@ const fs = require("node:fs/promises");
     assert.ok(chip.x >= strip.x && chip.x + chip.width <= strip.x + strip.width, "last chip can scroll into view at 320px");
     const lastChipHit = await hitTarget(lastChip);
     assert.ok(lastChipHit.width >= 44 && lastChipHit.height >= 44 && lastChipHit.painted, 'scrolled chip retains an unclipped 44px hit area');
+    for (const width of [320, 360, 412, 430]) {
+      await page.setViewportSize({ width, height: 740 });
+      await page.locator('.filters').evaluate(el => { el.scrollLeft = 0; });
+      await page.waitForFunction(() => document.querySelector('.filters').dataset.atEnd === 'false');
+      const stripStyle = await page.locator('.filters').evaluate(el => {
+        const css = getComputedStyle(el);
+        const first = el.firstElementChild.getBoundingClientRect();
+        const hero = document.querySelector('.hero').getBoundingClientRect();
+        return { background: css.backgroundColor, border: css.borderWidth,
+          paddingTop: css.paddingTop, paddingBottom: css.paddingBottom,
+          paddingLeft: css.paddingLeft, paddingRight: css.paddingRight,
+          gap: css.gap, shadow: css.boxShadow, mask: css.maskImage,
+          firstLeft: first.left, heroLeft: hero.left };
+      });
+      assert.equal(stripStyle.background, 'rgba(0, 0, 0, 0)', 'strip has no visual background');
+      assert.equal(stripStyle.border, '0px');
+      assert.equal(stripStyle.shadow, 'none');
+      assert.equal(stripStyle.paddingTop, '0px');
+      assert.equal(stripStyle.paddingBottom, '0px');
+      assert.equal(stripStyle.paddingLeft, '4px');
+      assert.equal(stripStyle.paddingRight, '4px');
+      assert.equal(stripStyle.gap, '8px');
+      assert.match(stripStyle.mask, /linear-gradient/, 'overflow has a trailing fade');
+      if (width >= 360) assert.ok(Math.abs(stripStyle.firstLeft - stripStyle.heroLeft) <= .5,
+        `first chip aligns with hero at ${width}px using actual rectangles`);
+      await page.locator('.filters').evaluate(el => { el.scrollLeft = el.scrollWidth; });
+      await page.waitForFunction(() => document.querySelector('.filters').dataset.atEnd === 'true');
+      assert.equal(await page.locator('.filters').evaluate(el => getComputedStyle(el).maskImage), 'none',
+        'trailing fade disappears at the scroll end');
+      const last = await lastChip.boundingBox(), bounds = await page.locator('.filters').boundingBox();
+      assert.ok(last.x >= bounds.x && last.x + last.width <= bounds.x + bounds.width,
+        `last chip is fully visible at ${width}px`);
+    }
     await page.evaluate(async () => {
       const { db } = await import("/src/storage.ts");
       const source = (await db.days.toArray())[0];
@@ -140,7 +173,11 @@ const fs = require("node:fs/promises");
           inkOffset: Math.abs(inkLeft('.brand-cn') - inkLeft('.brand-caption')),
           add: box('.header-add'), addIcon: box('.header-add svg'),
           backup: box('.header-backup'), toolbar: box('.toolbar'),
-          chip: box('.filters button'), chipIcon: box('.filters button svg'),
+          chip: box('.filters button'), chipVisualHeight: (() => {
+            const css = getComputedStyle(document.querySelector('.filters button'), '::after');
+            return parseFloat(css.height) + parseFloat(css.borderTopWidth) + parseFloat(css.borderBottomWidth);
+          })(),
+          chipIcon: box('.filters button svg'),
           sort: box('.sort-button'), search: innerWidth <= 760 ? box('.search-toggle') : null};
       });
       assert.equal(geometry.icon.width, 40);
@@ -159,7 +196,7 @@ const fs = require("node:fs/promises");
       assert.equal(geometry.addIcon.width, 18);
       assert.equal(geometry.backup.width, 40);
       assert.equal(geometry.backup.height, 40);
-      assert.equal(geometry.chip.height, 36);
+      assert.equal(geometry.chipVisualHeight, 36, 'painted capsule remains 36px high');
       assert.equal(geometry.chip.font, '13px');
       assert.equal(geometry.chip.padding, '12px');
       assert.equal(geometry.chipIcon.width, 14);
