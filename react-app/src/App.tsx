@@ -226,6 +226,7 @@ export default function App() {
       calendar: "solar",
       note: "",
       pinned: false,
+      reminders: [],
     });
   }
   const ordered = useMemo(

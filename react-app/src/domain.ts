@@ -11,6 +11,7 @@ export type Day = {
   calendar: "solar" | "lunar";
   note: string;
   pinned: boolean;
+  reminders: number[];
 };
 export const MAX_RECORDS = 10000;
 export function todayKey(now = new Date()): string {
@@ -130,7 +131,9 @@ export function validateDay(v: unknown): Day {
     typeof v.pinned !== "boolean" ||
     typeof v.note !== "string" ||
     v.note.length > 2000 ||
-    (v.calendar === "lunar" && v.repeat !== "yearly")
+    (v.calendar === "lunar" && v.repeat !== "yearly") ||
+    (v.reminders !== undefined && (!Array.isArray(v.reminders) ||
+      Array.from(v.reminders).some(offset => ![0, 1, 3, 7].includes(offset))))
   ) {
     throw new Error(
       "备份中有无效记录，请检查日期、名称和文件格式；没有导入任何数据。",
@@ -145,6 +148,7 @@ export function validateDay(v: unknown): Day {
     calendar: v.calendar as Day["calendar"],
     note: v.note,
     pinned: v.pinned,
+    reminders: [...new Set((v.reminders ?? []) as number[])].sort((a, b) => a - b),
   };
 }
 export function extractLegacy(value: unknown): {
@@ -188,6 +192,7 @@ export function extractLegacy(value: unknown): {
         calendar: lunar ? "lunar" : "solar",
         note: "从旧版 LifeLog 导入",
         pinned: person.favorite === true,
+        reminders: [],
       });
     };
     if (person.birthday)
@@ -240,6 +245,6 @@ export function makeBackup(days: Day[]) {
     format: "lifelog-days",
     version: 1,
     exportedAt: new Date().toISOString(),
-    days,
+    days: days.map(validateDay),
   };
 }

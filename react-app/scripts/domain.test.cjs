@@ -37,6 +37,7 @@ const day = (patch = {}) => ({
   calendar: "solar",
   note: "",
   pinned: false,
+  reminders: [],
   ...patch,
 });
 

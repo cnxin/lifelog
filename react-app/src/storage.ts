@@ -7,6 +7,8 @@ class DaysDatabase extends Dexie {
     // Never upgrade or mutate the original LifeLogDatabase.
     super("LifeLogDays");
     this.version(1).stores({ days: "id, date, category" });
+    // Normalize old records without a schema upgrade or rewriting their data.
+    this.days.hook("reading", day => day === undefined ? undefined : validateDay(day));
   }
 }
 export const db = new DaysDatabase();
@@ -22,11 +24,11 @@ export async function mergeDays(days: Day[]): Promise<number> {
   });
 }
 export async function saveDay(day: Day): Promise<void> {
-  validateDay(day);
+  const normalized = validateDay(day);
   await db.transaction("rw", db.days, async () => {
     if (!(await db.days.get(day.id)) && (await db.days.count()) >= MAX_RECORDS)
       throw new Error("最多支持 10,000 个日子。");
-    await db.days.put(day);
+    await db.days.put(normalized);
   });
 }
 export async function readLegacyDays() {
