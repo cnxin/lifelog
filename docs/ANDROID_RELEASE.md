@@ -1,5 +1,25 @@
 # 日子：Android 测试与升级验收
 
+## alpha.6 / 阶段 F 小组件 — 2026-09-30
+
+- `0.2.0-alpha.6-preview`，versionCode 141，独立包名仍为 `com.cnxin.lifelog.preview`。阶段 F 在 alpha.5 已发布后才开始；保留提醒版，alpha.6 单独预发布，不替换旧版 LifeLog。
+- Android 2×2 单条小组件显示与首页 hero 相同的置顶／临近记录，包含分类底色、标题、天数与日期；点整块进入该记录详情，空列表显示「记下第一个日子」。不存在 iOS 或 Web 实现。
+- `WidgetBridge` 写入本应用私有 SharedPreferences 快照并刷新全部实例；应用启动／恢复、记录重载完成后与提醒共用 500ms 防抖。点击 ID 只消费一次，记录已删除则忽略。
+- 原生只对缓存 `nextDate` 计算公历日差，不计算农历或重新排序。跨周年后需要打开应用更新下一次日期；长期不打开时不保证推荐记录仍与当日重新计算的首页一致。快照的 `updatedAt` 是输入日期对应的确定性 ISO 日期戳，不是桥调用的墙上时钟时间。
+- 非精确闹钟请求每天本地 00:05 更新，最后一个实例移除后取消；重启、时间与时区变化后刷新并重新注册。宿主更新周期请求为 30 分钟，系统休眠／省电可延后，均不保证准点或最长延迟。
+- 不新增权限；实际权限保持 alpha.5 的六项，不含 `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM`。provider 与开机 receiver 均非导出，点击 `PendingIntent` 使用 `FLAG_IMMUTABLE`。
+- `android:preview` 包含 `:app:testDebugUnitTest`；8 项 JVM 用例覆盖今天／未来／过去／空与非法快照、严格日期、夏令时及闰年／跨年。此处的 JVM 和浏览器检查不是桌面宿主或真机通知验收。
+
+### 小组件验收（由作者执行，未真机验证）
+
+1. 先从测试版导出备份，再更新 alpha.6；保留旧 LifeLog。长按桌面添加「日子」2×2 小组件，核对与应用 hero 相同的记录、天数、日期及分类色；同时试窄尺寸、大字体与长标题。
+2. 在应用里置顶另一条记录，回桌面观察是否在 3 秒内切换；编辑标题／日期、取消置顶与删除后亦核对。记录实际延迟，不将浏览器桥测试视为宿主通过。
+3. 删除所有记录，确认提示「记下第一个日子」，点击能打开应用；重新添加后恢复显示。
+4. 点小组件，分别测试应用关闭、后台与前台时直达正确详情；删除记录后旧点击不得进入错误详情。多个实例均应更新。
+5. 设备日期 +1 天，观察天数减 1；分别记录 30 分钟观察与重启后的结果。周期为非精确请求，省电／休眠下不承诺 30 分钟内；调整时区后也需核对本地日期。
+6. 重启后确认仍显示，次日检查非精确刷新；最后一个小组件移除再添加，核对闹钟重新注册。
+7. 公历与农历年度重复分别在日期跨过后打开应用，确认快照刷新到下一次日期。长期未打开时的缓存不是无限续算能力。
+
 ## alpha.5 / 阶段 E 提醒 — 2026-09-30
 
 - `0.2.0-alpha.5-preview`，versionCode 140，独立包名不变。alpha.4 已先行发布，alpha.5 单独预发布；未真机验证通知。
@@ -48,9 +68,9 @@ npm run android:preview
 
 - `android:doctor` 只读检查 JDK 21、编译器、Android SDK API 36、Build Tools 35.0.0、platform-tools、Gradle wrapper 和磁盘空间，不读取签名密码。非默认 SDK 路径请设置 `ANDROID_HOME`，JDK 路径请设置 `JAVA_HOME`。
 - 脚本要求项目和用户缓存所在磁盘各有至少 6 GiB 可用空间。这是保守的本地检查门槛，不是官方最低要求，也不是空间一定够用的保证。
-- `android:preview` 在环境检查通过后运行单元测试、Web 生产构建、Capacitor 同步、Gradle `assembleDebug` 和 `lintDebug`，再用 SDK 工具校验 APK 的包名、桌面名称、版本、合并权限和签名。校验失败不会产生新的交付副本。不自动安装到设备，不构建或发布正式版。
+- `android:preview` 在环境检查通过后运行 Node 单元测试、Web 生产构建、Capacitor 同步、Gradle `:app:testDebugUnitTest`、`assembleDebug` 和 `lintDebug`，再用 SDK 工具校验 APK 的包名、桌面名称、版本、合并权限和签名。校验失败不会产生新的交付副本。不自动安装到设备，不构建或发布正式版。
 - 首次 Gradle 构建需要联网下载依赖；本脚本不自动安装 SDK 或代为接受 SDK 许可。
-- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本在 `react-app/.artifacts/lifelog-days-0.2.0-alpha.3-preview.apk`，旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。
+- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本按当前版本命名，本版为 `react-app/.artifacts/lifelog-days-0.2.0-alpha.6-preview.apk`；旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。本次另复制 APK 到可见的 `react-app/apk-test/` 供作者查找（不提交 Git）。
 - Gradle 使用固定的 8.14.3 `bin` 分发包，已配置官方 SHA-256 校验，避免下载不需要的源码/文档。
 - 若手工跳过脚本在 Android Studio 构建，请先完成 Web 构建和 `npx cap sync android`，避免把旧资源打进 APK。
 
@@ -60,7 +80,7 @@ npm run android:preview
 2. 找到原版使用的签名密钥，安全地在本地配置已被 Git 忽略的 `android/keystore.properties`。不要生成新密钥冒充旧签名，不要在聊天中发送密钥或密码。
 3. 只有这些条件满足后才构建 release。现有 Gradle 在未配置签名时可生成 unsigned APK，**构建成功本身不证明已签名**。
 4. 使用 Android SDK 的 `apksigner verify --verbose --print-certs` 分别检查原版 APK 与候选 APK，验证候选签名有效，并核对原版签名证书 SHA-256；本次不涉及签名轮换。
-5. 用 `apkanalyzer manifest application-id` 和 `apkanalyzer manifest version-code` 检查候选包：正式包名不变、versionCode 高于设备上已安装版本。目前源码配置为 136；仍须读取实际安装版本确认。
+5. 用 `apkanalyzer manifest application-id` 和 `apkanalyzer manifest version-code` 检查候选包：正式包名不变、versionCode 高于设备上已安装版本。目前源码配置为 141；仍须读取实际安装版本确认。
 6. 在有备份的测试设备上执行同签名覆盖升级。签名不一致时停止，**不要通过卸载原应用来绕过**。
 
 ## 真机验收单（仍待执行）
@@ -79,12 +99,12 @@ Android 12+ 显式通过 `dataExtractionRules` 排除云备份和自动设备迁
 
 旧版曾注册 `/sw.js`。新版 Android 启动时会注销自己的 worker，并只清理 `lifelog-static-*` / `lifelog-runtime-*` 缓存，不触碰 IndexedDB 或 localStorage，不强制刷新未保存编辑。已受控的页面需要关闭后才完全脱离 worker；仍需真机冷启动验证。浏览器测试只能模拟该清理过程，不能代替 Android WebView 测试。
 
-## 下一版 alpha.4 的触觉反馈权限
+## alpha.4 的触觉反馈权限（历史记录）
 
 - 从 alpha.4 起，原生置顶、分段选择、日期点选、保存和确认删除提供轻微震动反馈；新增 `android.permission.VIBRATE`，由 `@capacitor/haptics` 的 Manifest 合并，不重复手写权限。
-- 下一版预期合并权限为 `INTERNET`、`VIBRATE` 和本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`；仍不包含通知、相机、存储或安装权限。
+- 当时合并权限为 `INTERNET`、`VIBRATE` 和本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`；不包含通知、相机、存储或安装权限。alpha.5／alpha.6 的当前权限见本文顶部，不使用本节历史清单判断新包。
 - `android:preview` 的 APK 权限校验仅新增允许 `VIBRATE`，其它非预期权限仍会阻止交付。
-- 以下 alpha.1 / alpha.2 / alpha.3 构建记录描述旧 APK；不代表下一版已发布。震动强度、软键盘与返回键仍需真机验收。
+- 以下 alpha.1 / alpha.2 / alpha.3 构建记录描述旧 APK；不代表当前包的构建结果。A–D 已由作者验收；本机未执行设备验收，新增提醒与小组件仍待复测。
 
 ## 回退与提交策略
 
