@@ -115,7 +115,7 @@ const { pickDate } = require("./date-picker-helper.cjs");
         .getAttribute("aria-label"),
       /农历正月初一，春节/,
     );
-    await picker.getByRole("button", { name: "选择今天", exact: true }).click();
+    await picker.getByRole("button", { name: "今天", exact: true }).click();
     assert.equal(await trigger.getAttribute("data-date"), "2026-09-30");
     await trigger.click();
     for (const width of [320, 375, 390, 768, 1440]) {

@@ -2593,3 +2593,33 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .detail-footer {
   justify-content: space-between;
 }
+.calendar-grid {
+  touch-action: pan-y;
+}
+.calendar-grid[data-slide="next"] {
+  animation: month-next 180ms ease-out;
+}
+.calendar-grid[data-slide="prev"] {
+  animation: month-prev 180ms ease-out;
+}
+@keyframes month-next {
+  from {
+    transform: translateX(20px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes month-prev {
+  from {
+    transform: translateX(-20px);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-grid[data-slide] {
+    animation: none !important;
+  }
+}

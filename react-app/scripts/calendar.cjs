@@ -85,6 +85,33 @@ const fs = require("node:fs/promises");
       /马年/,
     );
     await audit("populated calendar");
+    const agendaDate = await page.locator("#calendar-selected-title").textContent();
+    await page.getByRole("button", { name: "下个月", exact: true }).click();
+    assert.match(await page.locator("#calendar-month").textContent(), /2026年\s*3月/);
+    assert.equal(await page.locator("#calendar-selected-title").textContent(), agendaDate, "month browsing preserves agenda selection");
+    assert.equal(await page.locator(".calendar-event").count(), 2, "agenda records remain from selected date");
+    await cell("2026年3月20日").click();
+    assert.match(await page.locator("#calendar-selected-title").textContent(), /2026年3月20日/);
+    await page.getByRole("button", { name: "今天", exact: true }).click();
+    assert.match(await page.locator("#calendar-month").textContent(), /2026年\s*2月/);
+    assert.equal(await page.locator("#calendar-selected-title").textContent(), agendaDate);
+    const drag = async (dx, dy) => {
+      const bounds = await page.locator(".calendar-scroll").boundingBox();
+      const x = bounds.x + bounds.width * 0.7, y = bounds.y + 12;
+      await page.mouse.move(x, y); await page.mouse.down();
+      await page.mouse.move(x + dx, y + dy, { steps: 8 }); await page.mouse.up();
+    };
+    await drag(-80, 0);
+    assert.match(await page.locator("#calendar-month").textContent(), /2026年\s*3月/);
+    assert.equal(await page.locator("#calendar-selected-title").textContent(), agendaDate, "swipe does not change agenda");
+    await drag(0, 80);
+    assert.match(await page.locator("#calendar-month").textContent(), /2026年\s*3月/, "vertical movement does not switch month");
+    await page.getByRole("button", { name: "切换年月", exact: true }).click();
+    await page.getByLabel("年份", { exact: true }).fill("2025");
+    await page.getByRole("group", { name: "月份", exact: true }).getByRole("button", { name: "4月", exact: true }).click();
+    assert.match(await page.locator("#calendar-month").textContent(), /2025年\s*4月/);
+    assert.equal(await page.locator("#calendar-selected-title").textContent(), agendaDate, "month picker preserves agenda");
+    await page.getByRole("button", { name: "今天", exact: true }).click();
     // Keyboard grid navigation crosses week/month/year boundaries without losing focus.
     await selected().focus();
     await page.keyboard.press("ArrowRight");
