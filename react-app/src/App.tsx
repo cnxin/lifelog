@@ -36,6 +36,8 @@ import { commitWithTransition, dayTransitionName } from "./listTransition";
 import { hasNativeNotifications, onOpenFromNotification, resync } from "./notifications";
 import { getReminderTime, REMINDER_TIME_KEY } from "./reminders";
 import ReminderBell from "./ReminderBell";
+import { buildWidgetPayload } from "./widget";
+import { WidgetBridge } from "./widgetBridge";
 
 function Icon({ category, size = 22 }: { category: Category; size?: number }) {
   const Component = icons[category];
@@ -69,8 +71,11 @@ export default function App() {
     };
   }, []);
   const [days, setDays] = useState<Day[]>([]);
+  const daysRef = useRef(days);
+  daysRef.current = days;
   const [loaded, setLoaded] = useState(false);
   const [nativeSyncTick, setNativeSyncTick] = useState(0);
+  const [widgetLaunchTick, setWidgetLaunchTick] = useState(0);
   const loadedOnce = useRef(false);
   const reloadSequence = useRef(0);
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -129,11 +134,21 @@ export default function App() {
   useEffect(() => {
     if (!loaded || !hasNativeNotifications()) return;
     const timer = window.setTimeout(() => {
-      void resync(days, getReminderTime()).catch(() =>
-        setError("提醒暂时未能更新，重新打开应用后将重试。"));
+      const payload = buildWidgetPayload(days, today);
+      void Promise.all([resync(days, getReminderTime()),
+        payload ? WidgetBridge.update({ json: JSON.stringify(payload) }) : Promise.resolve(),
+      ]).catch(() => setError("提醒或桌面小组件暂时未能更新，重新打开应用后将重试。"));
     }, 500);
     return () => window.clearTimeout(timer);
-  }, [days, loaded, nativeSyncTick]);
+  }, [days, loaded, nativeSyncTick, today]);
+  useEffect(() => {
+    if (!loaded || !hasNativeNotifications()) return;
+    let disposed = false;
+    void WidgetBridge.consumeLaunchDayId().then(({ dayId }) => {
+      if (!disposed && dayId && daysRef.current.some(day => day.id === dayId)) setDetailId(dayId);
+    }).catch(() => {});
+    return () => { disposed = true; };
+  }, [loaded, widgetLaunchTick]);
   useEffect(() => {
     if (!hasNativeNotifications()) return;
     const sync = () => setNativeSyncTick(value => value + 1);
@@ -142,7 +157,10 @@ export default function App() {
     window.addEventListener("storage", storage);
     const active = import("@capacitor/app").then(({ App }) =>
       App.addListener("appStateChange", ({ isActive }) => {
-        if (isActive) { setToday(todayKey()); void load(); sync(); }
+        if (isActive) {
+          setToday(todayKey());
+          void load().then(() => { sync(); setWidgetLaunchTick(value => value + 1); });
+        }
       }));
     let disposed = false;
     const opening = onOpenFromNotification(id => {
