@@ -33,6 +33,8 @@ import SortMenu from "./SortMenu";
 import FilterStrip from "./FilterStrip";
 import DataPanel from "./DataPanel";
 import { commitWithTransition, dayTransitionName } from "./listTransition";
+import { hasNativeNotifications, onOpenFromNotification, resync } from "./notifications";
+import { getReminderTime, REMINDER_TIME_KEY } from "./reminders";
 
 function Icon({ category, size = 22 }: { category: Category; size?: number }) {
   const Component = icons[category];
@@ -67,6 +69,7 @@ export default function App() {
   }, []);
   const [days, setDays] = useState<Day[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [nativeSyncTick, setNativeSyncTick] = useState(0);
   const loadedOnce = useRef(false);
   const reloadSequence = useRef(0);
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -122,6 +125,40 @@ export default function App() {
       );
     }
   }, [reload]);
+  useEffect(() => {
+    if (!loaded || !hasNativeNotifications()) return;
+    const timer = window.setTimeout(() => {
+      void resync(days, getReminderTime()).catch(() =>
+        setError("提醒暂时未能更新，重新打开应用后将重试。"));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [days, loaded, nativeSyncTick]);
+  useEffect(() => {
+    if (!hasNativeNotifications()) return;
+    const sync = () => setNativeSyncTick(value => value + 1);
+    const storage = (event: StorageEvent) => { if (event.key === REMINDER_TIME_KEY) sync(); };
+    window.addEventListener("lifelog-reminder-time-change", sync);
+    window.addEventListener("storage", storage);
+    const active = import("@capacitor/app").then(({ App }) =>
+      App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) { setToday(todayKey()); void load(); sync(); }
+      }));
+    let disposed = false;
+    const opening = onOpenFromNotification(id => {
+      void db.days.get(id).then(day => {
+        if (!disposed && day) setDetailId(day.id);
+      }).catch(() => {});
+    });
+    void active.catch(() => {});
+    void opening.catch(() => {});
+    return () => {
+      disposed = true;
+      window.removeEventListener("lifelog-reminder-time-change", sync);
+      window.removeEventListener("storage", storage);
+      void active.then(handle => handle.remove()).catch(() => {});
+      void opening.then(remove => remove()).catch(() => {});
+    };
+  }, [load]);
   useEffect(() => {
     void load();
     const channel = new BroadcastChannel("lifelog-days");

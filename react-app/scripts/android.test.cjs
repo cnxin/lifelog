@@ -29,13 +29,15 @@ test('Android source contract: preview isolation, stable release identity and ve
 
 test('Android source contract: INTERNET with plugin-owned VIBRATE, no old native integrations', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
-  assert.deepEqual([...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"/g)].map(m => m[1]), ['android.permission.INTERNET']);
+  assert.deepEqual([...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"\s*\/>/g)].map(m => m[1]), ['android.permission.INTERNET']);
+  for (const permission of ['SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM'])
+    assert.match(manifest, new RegExp(`android.permission.${permission}" tools:node="remove"`));
   assert.match(read('node_modules/@capacitor/haptics/android/src/main/AndroidManifest.xml'), /android.permission.VIBRATE/);
   const activity = read('android/app/src/main/java/com/cnxin/lifelog/MainActivity.java');
   assert.match(activity, /registerPlugin\(NativeBackupFilePlugin.class\)/);
   assert.doesNotMatch(activity, /NativeExternalBrowser|NativeImageShare/);
   const dependencies = JSON.parse(read('package.json')).dependencies;
-  assert.equal(dependencies['@capacitor/local-notifications'], undefined);
+  assert.ok(dependencies['@capacitor/local-notifications']);
   assert.equal(dependencies['@capacitor/browser'], undefined);
   assert.ok(dependencies['@capacitor/haptics']);
 });
@@ -119,6 +121,15 @@ test('APK inspection rejects removed capabilities even in sdk-specific permissio
   for (const entry of ["uses-permission: name='android.permission.CAMERA'", "uses-permission-sdk-23: name='android.permission.READ_EXTERNAL_STORAGE'"]) {
     assert.throws(() => verifyPreviewBadging(sampleBadging + entry, '0.2.0-alpha.1', 136), /未预期权限/);
   }
+});
+test('notification permissions are accepted but exact-alarm permissions are rejected', () => {
+  for (const name of ['POST_NOTIFICATIONS', 'RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK'])
+    assert.ok(verifyPreviewBadging(sampleBadging + `uses-permission: name='android.permission.${name}'\n`, '0.2.0-alpha.1', 136).permissions.includes('android.permission.' + name));
+  for (const name of ['SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM'])
+    assert.throws(() => verifyPreviewBadging(sampleBadging + `uses-permission: name='android.permission.${name}'\n`, '0.2.0-alpha.1', 136), /未预期权限/);
+  const pluginManifest = read('node_modules/@capacitor/local-notifications/android/src/main/AndroidManifest.xml');
+  assert.match(pluginManifest, /android.permission.POST_NOTIFICATIONS/);
+  assert.match(pluginManifest, /android.permission.RECEIVE_BOOT_COMPLETED/);
 });
 test('Gradle uses a checksum-pinned binary distribution', () => {
   const wrapper = read('android/gradle/wrapper/gradle-wrapper.properties');
