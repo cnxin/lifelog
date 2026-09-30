@@ -399,6 +399,7 @@ const fs = require("node:fs/promises");
     );
     await audit("filter accessibility");
     assert.deepEqual(errors, []);
+    await require('./touch-hover.cjs').checkTouchHover(browser);
     await require('./reminders-ui.cjs').checkReminderUI(browser);
     console.log(
       "PASS: category/calendar keyboard radios, rounded repeat/pin checkboxes and sort radios, label taps, repeat reset, persisted values, 320–1440px equal centered filters, 200% text, forced colors, reduced motion, axe.",
