@@ -1,5 +1,22 @@
 # 日子：Android 测试与升级验收
 
+## alpha.5 / 阶段 E 提醒 — 2026-09-30
+
+- `0.2.0-alpha.5-preview`，versionCode 140，独立包名不变。alpha.4 已先行发布，alpha.5 单独预发布；未真机验证通知。
+- 权限清单：INTERNET、VIBRATE、POST_NOTIFICATIONS、RECEIVE_BOOT_COMPLETED、插件自身的 WAKE_LOCK，以及本应用签名级 DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION。
+- 插件默认声明 SCHEDULE_EXACT_ALARM，应用用 `tools:node="remove"` 移除，并防御性移除 USE_EXACT_ALARM；最终 APK 必须不含两者。排程显式 `isExactNotification:false`、`allowWhileIdle:false`，不设 repeats，也不调用精确闹钟设置 API。
+- 单应用仅本地通知，最多 64 条；年度重复只排下一次，启动／恢复应用时补排。系统休眠、省电与非精确批处理可能延迟，不能把“一分钟内送达”当作硬性通过标准。
+- 提醒提前天数保存在日子／JSON v1；旧记录缺省 []。统一时间保存在 localStorage，不进备份。Web/PWA 无提醒 UI。
+
+### 提醒真机验收（由作者执行，尚未执行）
+
+1. 新建明天的记录，勾当天＋提前 1 天，统一时间选 09:00。设备时间设为 08:59；记录通知实际送达时刻，不保证 1 分钟内。调时间后重新打开应用使下一次按当前设备时钟重排。
+2. 点击通知直达记录详情；删除该记录后点击残留通知不打开错误详情。
+3. 重启后检查后续通知是否恢复，并分别测试前台、关闭应用与休眠／省电。必要的 getPending 诊断仅用于本地测试，不在发布 UI 留诊断行。
+4. 拒绝权限后仍能保存选项，编辑器显示提示；到系统设置授权，再打开应用检查补排。不会自动打开精确闹钟授权页面。
+5. Web 开发版／PWA 的编辑器、备份面板、卡片和详情都不出现提醒 UI。
+6. APK 必须检查 POST_NOTIFICATIONS / RECEIVE_BOOT_COMPLETED 存在、两种精确权限不存在；原版签名覆盖升级仍另行验证。
+
 ## alpha.4 / 阶段 A–D — 2026-09-30
 
 - `0.2.0-alpha.4-preview`，versionCode 139，包名 `com.cnxin.lifelog.preview`。
