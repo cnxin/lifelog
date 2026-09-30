@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpRight,
-  ArrowDownUp,
   CalendarDays,
   ChevronRight,
   Heart,
@@ -30,7 +29,7 @@ import { icons, tones, formatDate } from "./dayMeta";
 import { haptic } from "./haptics";
 import useCompactLayout from "./useCompactLayout";
 import CalendarView from "./CalendarView";
-import SegmentedControl from "./SegmentedControl";
+import SortMenu from "./SortMenu";
 import DataPanel from "./DataPanel";
 import { commitWithTransition, dayTransitionName } from "./listTransition";
 
@@ -54,7 +53,11 @@ export default function App() {
         `${header.getBoundingClientRect().height}px`,
       );
     const observer = new ResizeObserver(update);
-    observer.observe(header);
+    try {
+      observer.observe(header, { box: "border-box" });
+    } catch {
+      observer.observe(header);
+    }
     update();
     return () => {
       observer.disconnect();
@@ -79,6 +82,10 @@ export default function App() {
     requestAnimationFrame(() => searchButton.current?.focus());
   }
   const [sort, setSort] = useState("upcoming");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortMenuOpenRef = useRef(false);
+  sortMenuOpenRef.current = sortMenuOpen;
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
   const [editor, setEditor] = useState<Day | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const detail = days.find((day) => day.id === detailId);
@@ -157,6 +164,7 @@ export default function App() {
         const dialog = open[open.length - 1];
         if (dialog)
           dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+        else if (sortMenuOpenRef.current) setSortMenuOpen(false);
         else void App.minimizeApp();
       }),
     );
@@ -540,37 +548,13 @@ export default function App() {
                         )}
                       </div>
                     )}
-                    {compact ? (
-                      <div className="mobile-sort">
-                        <ArrowDownUp size={17} aria-hidden="true" />
-                        <span aria-hidden="true">
-                          {sort === "date" ? "日期" : "临近"}
-                        </span>
-                        <select
-                          aria-label="排序方式"
-                          value={sort}
-                          onChange={(event) => {
-                            setSort(event.target.value);
-                            void haptic("light");
-                          }}
-                        >
-                          <option value="upcoming">临近优先</option>
-                          <option value="date">日期从新到旧</option>
-                        </select>
-                      </div>
-                    ) : (
-                      <SegmentedControl
-                        className="sort"
-                        label="排序方式"
-                        hideLabel
-                        value={sort}
-                        options={[
-                          { value: "upcoming", label: "临近优先" },
-                          { value: "date", label: "日期从新到旧" },
-                        ]}
-                        onChange={setSort}
-                      />
-                    )}
+                    <SortMenu
+                      value={sort}
+                      onChange={setSort}
+                      open={sortMenuOpen}
+                      onOpenChange={setSortMenuOpen}
+                      triggerRef={sortButtonRef}
+                    />
                   </div>
                 </div>
                 {visible.length > 0 ? (

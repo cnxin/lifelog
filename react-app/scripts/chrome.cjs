@@ -28,8 +28,7 @@ const fs = require("node:fs/promises");
     );
   };
   const noOverflow = async (label) => {
-    if (page.viewportSize().width <= 760) await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
-    else await page.getByRole("group", { name: "排序方式", exact: true }).waitFor();
+    await page.getByRole("button", { name: "排序方式", exact: true }).waitFor();
     assert.ok(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

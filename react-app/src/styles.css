@@ -2716,7 +2716,7 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     height: 44px;
     background: #eef0e9;
   }
-  .mobile-sort {
+  .sort-button {
     position: relative;
     display: flex;
     align-items: center;
@@ -2730,23 +2730,9 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     color: var(--green);
     font-size: 0.75rem;
   }
-  .mobile-sort select {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    min-height: 44px;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .mobile-sort:focus-within {
-    outline: 2px solid var(--green);
-    outline-offset: 2px;
-  }
   .toolbar[data-search-open="true"] .filters,
   .toolbar[data-search-open="true"] .search-toggle,
-  .toolbar[data-search-open="true"] .mobile-sort {
+  .toolbar[data-search-open="true"] .sort {
     display: none;
   }
   .toolbar[data-search-open="true"] .list-tools {
@@ -2758,6 +2744,79 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
     min-width: 0;
     min-height: 52px;
     flex: 1 1 0;
+  }
+}
+.sort {
+  position: relative;
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+}
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+  min-height: 52px;
+  padding: 0 12px;
+  background: #eef0e9;
+  color: var(--green);
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
+.sort-menu {
+  position: absolute;
+  inset: calc(100% + 8px) 0 auto auto;
+  z-index: 6;
+  width: 216px;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px #1f2d2422;
+  animation: sort-menu-enter 120ms ease-out;
+}
+.sort-menu [role="menuitemradio"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.sort-menu [role="menuitemradio"]:hover,
+.sort-menu [aria-checked="true"] {
+  background: #eef0e9;
+}
+.sort-check {
+  width: 18px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+@keyframes sort-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 760px) {
+  .sort-button {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sort-menu {
+    animation: none !important;
   }
 }
 @supports (backdrop-filter: blur(20px)) {

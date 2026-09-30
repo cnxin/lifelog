@@ -221,7 +221,7 @@ const fs = require("node:fs/promises");
     for (const width of [320, 390, 600, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       if (width <= 760) {
-        const select = page.getByRole("combobox", { name: "排序方式", exact: true });
+        const select = page.getByRole("button", { name: "排序方式", exact: true });
         await select.waitFor();
         assert.equal(await select.count(), 1);
         const filter = await page.locator(".filters").boundingBox();
@@ -234,7 +234,8 @@ const fs = require("node:fs/promises");
         assert.ok(sorting.x + sorting.width <= width, "mobile sort fits viewport");
         continue;
       }
-      await page.getByRole("group", { name: "排序方式", exact: true }).waitFor();
+      await page.getByRole("button", { name: "排序方式", exact: true }).waitFor();
+      await page.getByRole("searchbox", { name: "搜索日子", exact: true }).waitFor();
       const layout = await page.evaluate(() => {
         const box = (selector) => {
           const r = document.querySelector(selector).getBoundingClientRect();
@@ -280,7 +281,8 @@ const fs = require("node:fs/promises");
           .screenshot({ path: ".artifacts/sort-" + width + ".png" });
     }
     await page.setViewportSize({ width: 320, height: 1000 });
-    await page.getByRole("combobox", { name: "排序方式", exact: true }).waitFor();
+    await page.getByRole("button", { name: "排序方式", exact: true }).waitFor();
+    await page.getByRole("button", { name: "打开搜索", exact: true }).waitFor();
     const largeText = await page.addStyleTag({
       content: ":root { font-size: 200% !important; }",
     });
@@ -292,31 +294,43 @@ const fs = require("node:fs/promises");
     );
     await audit("large-text toolbar accessibility");
     await largeText.evaluate((el) => el.remove());
-    const mobileSorting = page.getByRole("combobox", { name: "排序方式", exact: true });
-    await mobileSorting.selectOption("date");
-    assert.equal(await mobileSorting.inputValue(), "date");
+    const sortButton = page.getByRole("button", { name: "排序方式", exact: true });
+    const menu = page.getByRole("menu", { name: "排序方式", exact: true });
+    assert.equal(await sortButton.getAttribute("aria-haspopup"), "menu");
+    await sortButton.click();
+    assert.equal(await sortButton.getAttribute("aria-expanded"), "true");
+    const nearby = menu.getByRole("menuitemradio", { name: "临近优先", exact: true });
+    const byDate = menu.getByRole("menuitemradio", { name: "日期从新到旧", exact: true });
+    assert.ok(await nearby.evaluate(el => el === document.activeElement));
+    await page.keyboard.press("ArrowDown");
+    assert.ok(await byDate.evaluate(el => el === document.activeElement));
+    await page.keyboard.press("ArrowUp");
+    assert.ok(await nearby.evaluate(el => el === document.activeElement));
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
+    await menu.waitFor({ state: "hidden" });
+    assert.ok(await sortButton.evaluate(el => el === document.activeElement));
     await page.setViewportSize({ width: 768, height: 1000 });
-    const sorting = page.getByRole("group", { name: "排序方式" });
-    await sorting.waitFor();
-    await sorting
-      .getByRole("radio", { name: "日期从新到旧", exact: true })
-      .check();
-    await sorting.getByRole("radio", { name: "日期从新到旧", exact: true }).focus();
-    assert.ok(
-      await sorting
-        .getByRole("radio", { name: "日期从新到旧", exact: true })
-        .isChecked(),
-    );
-    await page.keyboard.press("ArrowLeft");
-    assert.ok(
-      await sorting
-        .getByRole("radio", { name: "临近优先", exact: true })
-        .isChecked(),
-    );
+    await sortButton.click();
+    assert.equal(await byDate.getAttribute("aria-checked"), "true", "sorting survives breakpoint change");
+    assert.ok(await byDate.evaluate(el => el === document.activeElement));
+    await audit("sort menu accessibility");
+    await page.keyboard.press("Escape");
+    await menu.waitFor({ state: "hidden" });
+    assert.ok(await sortButton.evaluate(el => el === document.activeElement));
+    await sortButton.click();
+    await page.locator("#days-title").click();
+    await menu.waitFor({ state: "hidden" });
+    assert.ok(await sortButton.evaluate(el => el === document.activeElement), "outside close returns focus");
+    await sortButton.click();
+    await nearby.click();
+    await sortButton.click();
+    assert.equal(await nearby.getAttribute("aria-checked"), "true");
+    await page.keyboard.press("Escape");
     assert.equal(
       await page.locator("select").count(),
       0,
-      "desktop retains segmented sorting without dropdowns",
+      "both layouts use custom sorting without native dropdowns",
     );
     await audit("filter accessibility");
     assert.deepEqual(errors, []);
