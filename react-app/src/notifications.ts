@@ -23,6 +23,13 @@ export async function ensurePermission(): Promise<"granted" | "denied" | "unavai
     return permission.display === "granted" ? "granted" : "denied";
   } catch { return "unavailable"; }
 }
+export async function checkNotificationPermission(): Promise<"granted" | "denied" | "unavailable"> {
+  try {
+    const plugin = await nativePlugin();
+    if (!plugin) return "unavailable";
+    return (await plugin.checkPermissions()).display === "granted" ? "granted" : "denied";
+  } catch { return "unavailable"; }
+}
 let channelPromise: Promise<void> | undefined;
 let queue: Promise<void> = Promise.resolve();
 export function resync(days: Day[], time: string): Promise<void> {

@@ -1,10 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Cake, Heart, Hourglass, Trash2 } from "lucide-react";
 import Modal, { useModalClose } from "./Modal";
 import { haptic } from "./haptics";
 import DatePicker from "./DatePicker";
 import SegmentedControl from "./SegmentedControl";
 import { categories, lunarLabel, validDate, type Day } from "./domain";
+import { checkNotificationPermission, ensurePermission, hasNativeNotifications } from "./notifications";
+import { getReminderTime, REMINDER_OFFSETS } from "./reminders";
 
 type EditorProps = {
   day: Day;
@@ -59,8 +61,25 @@ function EditorForm({
   const [draft, setDraft] = useState(day);
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [permission, setPermission] = useState<"granted" | "denied" | "unavailable" | null>(null);
+  const askedPermission = useRef(false);
+  const reminderToggle = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!hasNativeNotifications() || !day.reminders.length) return;
+    let disposed = false;
+    void checkNotificationPermission().then(value => { if (!disposed) setPermission(value); });
+    return () => { disposed = true; };
+  }, [day.id]);
   const patch = (value: Partial<Day>) =>
     setDraft((prev) => ({ ...prev, ...value }));
+  function toggleReminders(enabled: boolean) {
+    patch({ reminders: enabled ? [0] : [] });
+    void haptic("light");
+    if (enabled && !askedPermission.current) {
+      askedPermission.current = true;
+      void ensurePermission().then(setPermission);
+    }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -191,6 +210,38 @@ function EditorForm({
             onChange={(event) => patch({ pinned: event.target.checked })}
           />
         </label>
+        {hasNativeNotifications() && (
+          <div className="reminder-field">
+            <label className="check-row">
+              <span><strong id="reminder-label">提醒我</strong>
+                <small id="reminder-help">会在 {getReminderTime()} 提醒，时间在「数据与备份」里统一设置</small>
+              </span>
+              <input ref={reminderToggle} type="checkbox" aria-labelledby="reminder-label"
+                aria-describedby="reminder-help" checked={draft.reminders.length > 0}
+                onChange={event => toggleReminders(event.target.checked)} />
+            </label>
+            {draft.reminders.length > 0 && (
+              <div className="filters reminder-offsets" role="group" aria-label="提醒提前天数">
+                {REMINDER_OFFSETS.map(offset => (
+                  <button type="button" key={offset} aria-pressed={draft.reminders.includes(offset)}
+                    className={draft.reminders.includes(offset) ? "active" : ""}
+                    onClick={() => {
+                      const reminders = draft.reminders.includes(offset)
+                        ? draft.reminders.filter(value => value !== offset)
+                        : [...draft.reminders, offset].sort((a, b) => a - b);
+                      patch({ reminders });
+                      void haptic("light");
+                      if (!reminders.length) requestAnimationFrame(() => reminderToggle.current?.focus());
+                    }}>
+                    {offset === 0 ? "当天" : `提前${offset}天`}
+                  </button>
+                ))}
+              </div>
+            )}
+            {permission === "denied" && <p className="field-help" role="status">系统未允许通知，提醒会在你到系统设置里开启后生效</p>}
+            {permission === "unavailable" && <p className="field-help" role="status">此设备的通知暂不可用，设置已保留，重新打开应用后会重试</p>}
+          </div>
+        )}
       </fieldset>
       {error && (
         <p role="alert" className="error-box">

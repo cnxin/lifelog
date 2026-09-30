@@ -10,6 +10,9 @@ import Modal from "./Modal";
 import { exportBackup } from "./backup";
 import { parseBackup, type Day } from "./domain";
 import { readLegacyDays, mergeDays } from "./storage";
+import SegmentedControl from "./SegmentedControl";
+import { hasNativeNotifications } from "./notifications";
+import { getReminderTime, setReminderTime, REMINDER_TIMES } from "./reminders";
 
 type Pending = ReturnType<typeof parseBackup>;
 export default function DataPanel({
@@ -26,6 +29,7 @@ export default function DataPanel({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [time, setTime] = useState(getReminderTime);
   async function run(task: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -49,6 +53,15 @@ export default function DataPanel({
           </p>
         </div>
       </div>
+      {hasNativeNotifications() && <section className="reminder-time">
+        <SegmentedControl label="提醒时间" value={time}
+          className="reminder-time-choice"
+          options={REMINDER_TIMES.map(value => ({ value, label: value }))}
+          onChange={value => {
+            try { setReminderTime(value); setTime(value); }
+            catch { setError("提醒时间保存失败，请重试。"); }
+          }} description="仅 Android 本地通知；非精确闹钟，系统休眠或省电时可能延后。" />
+      </section>}
       <div className="data-actions">
         <button
           disabled={busy}

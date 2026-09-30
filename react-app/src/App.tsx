@@ -35,6 +35,7 @@ import DataPanel from "./DataPanel";
 import { commitWithTransition, dayTransitionName } from "./listTransition";
 import { hasNativeNotifications, onOpenFromNotification, resync } from "./notifications";
 import { getReminderTime, REMINDER_TIME_KEY } from "./reminders";
+import ReminderBell from "./ReminderBell";
 
 function Icon({ category, size = 22 }: { category: Category; size?: number }) {
   const Component = icons[category];
@@ -622,6 +623,7 @@ export default function App() {
                             </span>
                             <span className="card-category">
                               {day.category}
+                              <ReminderBell day={day} />
                             </span>
                             <button
                               className={`pin-button ${day.pinned ? "is-pinned" : ""}`}

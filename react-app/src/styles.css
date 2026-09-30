@@ -706,6 +706,34 @@ button:not(:disabled):not(.card-main):not(.calendar-day):not(
 .filters button:hover:not(.active) {
   --chip-background: #e5e9df;
 }
+.filters.reminder-offsets {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  margin-top: 8px;
+}
+.filters.reminder-offsets button {
+  flex: 1 0 0;
+  padding-inline: 4px;
+  min-width: max(44px, calc(3em + 1ch + 8px));
+  scroll-snap-align: start;
+}
+.reminder-bell {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+  vertical-align: middle;
+}
+.reminder-time {
+  margin-block: 20px;
+}
+.reminder-time-choice .choice-options {
+  grid-auto-flow: unset;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
+}
 .list-tools {
   display: flex;
   flex: 1 1 28rem;

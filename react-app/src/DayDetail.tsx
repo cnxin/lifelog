@@ -3,6 +3,7 @@ import { Pin, Pencil } from "lucide-react";
 import Modal from "./Modal";
 import { dayStatus, lunarLabel, type Day } from "./domain";
 import { formatDate, icons, tones } from "./dayMeta";
+import ReminderBell from "./ReminderBell";
 
 export default function DayDetail({
   day,
@@ -44,6 +45,7 @@ export default function DayDetail({
         <span className="detail-category">
           <Icon size={20} aria-hidden="true" />
           {day.category}
+          <ReminderBell day={day} />
         </span>
         <div className="detail-count">
           <span>{status.label}</span>
