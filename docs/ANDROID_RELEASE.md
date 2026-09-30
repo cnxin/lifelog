@@ -1,5 +1,12 @@
 # 日子：Android 测试与升级验收
 
+## alpha.4 / 阶段 A–D — 2026-09-30
+
+- `0.2.0-alpha.4-preview`，versionCode 139，包名 `com.cnxin.lifelog.preview`。
+- 作者在本线程确认 A–D 真机验收通过；本机没有设备安装记录，不将作者验收描述成本机测试。
+- 按既有预发布流程发布 `v0.2.0-alpha.4-preview`，不合并主分支、不替换旧版 LifeLog Release。
+- 权限为 INTERNET、VIBRATE 与本应用签名级 DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION；不含通知或精确闹钟权限。
+
 ## 两种安装用途，不能混用
 
 | | 独立测试版（debug） | 原应用升级版（release） |
