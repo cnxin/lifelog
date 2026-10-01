@@ -1,0 +1,352 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.8-preview",
+  "versionCode": 143,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4441477,
+  "sha256": "1b88df8506c74fd6bd4c3965ccf6281d30e26804ac360f3a91213db58a44f549",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "artifactFilename": "lifelog-days-0.2.0-alpha.8-preview.apk",
+  "verifiedAt": "2026-10-01T16:42:01.480Z",
+  "source": {
+    "branch": "codex/anniversary-lite",
+    "alpha7ReleaseCommit": "d6bf6f3de9b673ebe3103eefc373f8c4955569fc",
+    "featureCommit": "2f8412310695e470ea7092f809739f3fa439aad4",
+    "provenanceNote": "Built from the feature commit plus alpha.8 version metadata/docs, before the single G2 preparation commit. Input hashes avoid a circular release commit hash.",
+    "fileHashes": {
+      "react-app/scripts/android.cjs": "f70f21e1813b317a6b6174b3fa7b61bea10d276dcd20cdceced3af734257baf6",
+      "react-app/scripts/android.test.cjs": "70d28b22f527f9939c15164def7b2fed209fd2c8c37fafd60caeed49dbb31a74",
+      "react-app/scripts/calendar.cjs": "3ce24d2285a882ddf2679e896789c91a9f5409a314371a2cb904ff0584e4da19",
+      "react-app/scripts/calendar.test.cjs": "ba0f92ef9019b44d4d84205a544b2973c2d0a14759cd666fa5842be75c0be30e",
+      "react-app/scripts/celebrate-ui.cjs": "28a3ace0622a0be3c5a31424e4da3a36aa6993dbe540ea3304e1da7368f9f56a",
+      "react-app/scripts/celebrate.test.cjs": "61f3d41d292b4cb985478e117b79ee74543cf3dcf1ca6c879ed1afb7d6ba6d70",
+      "react-app/scripts/chrome.cjs": "33340de37efa0774b5e79e5cd787d4677a10b87e224effe7a65d872a6a6360f8",
+      "react-app/scripts/controls.cjs": "cd253b7f61b58d62637887759603835d70eb35ef5d0d2fea8b677b50851e7761",
+      "react-app/scripts/date-picker-helper.cjs": "9fe76da920cd38144b288ce642beb4e1d4b37ad3c9da8f344f67b6ab8e22af0a",
+      "react-app/scripts/date-picker.cjs": "ae0b214d61e4a47a455ef84dbe384903b7fe2c8cc9eded0d3b3ffa0bced4a8bb",
+      "react-app/scripts/domain.test.cjs": "c72b9f28ccebd23791a0cb7ad1c0abc1515aba1059f885250adcf4cb54892280",
+      "react-app/scripts/haptics.test.cjs": "08948dc7f55f00d2be3604a972f438587fc9a8279df5e5e2536755757e9135ae",
+      "react-app/scripts/hit-target.cjs": "c79e3d7f63a380738e4643aae6983850c611061967c9f690ac8eaacfe85a8044",
+      "react-app/scripts/load-ts.cjs": "cf883e173cfa773bca0b7388da5562a6e0b2b84c19ec4ca5eba8b1699308b387",
+      "react-app/scripts/notifications.test.cjs": "2c9d83811428e58a5c8823ebfa642dc8c60558e5eee5322df1bd2a121b7a8826",
+      "react-app/scripts/offline.cjs": "cdca5135bf01079a1091cd0a801781c5cd757d669e1cca15594c86a0103b81e2",
+      "react-app/scripts/reminders-ui.cjs": "4d12f32e2d4c2846e6ca64d2e159cc63e94b3d4f94ee4fbb50905fcedabb54c7",
+      "react-app/scripts/reminders.test.cjs": "0649f5a80463c25963cf4b8a3c643e075d412b18845cd8b9fa819907902cc9f8",
+      "react-app/scripts/smoke.cjs": "f93644efbc756c50feb9dd1162784be3f67f5347f0d15c2e87feea89441e947e",
+      "react-app/scripts/touch-hover.cjs": "73a01c770ab20115e3821484251ccc1fbd68d29a0944b57872f55c86a6dd091d",
+      "react-app/scripts/ui-polish.cjs": "39be737dc70346cc99781156a201075431b27dc8276e43198eea42a84803da93",
+      "react-app/scripts/widget.test.cjs": "6ab31a9910f58114608499d4664f8bf653ed4abff5d29ec955fe881eec4bb4cd",
+      "react-app/src/App.tsx": "0f93492abeb648dd7889e41dc9ced2e198e5e50b02c0e154a98a5f1f60308dc2",
+      "react-app/src/CalendarView.tsx": "1ab0a139d79e30c09250a95bbb6001a4a1e1c29abd31e459023736a2dbef4731",
+      "react-app/src/DataPanel.tsx": "7022d69d17f5b7a4cd6d9ecc426694d7c421131d3c35992272e2ffea262127a6",
+      "react-app/src/DatePicker.tsx": "3a7b594743116b7a23141d8e7e5c5f8688dbbd48ef103807c616e2d318469eb0",
+      "react-app/src/DayDetail.tsx": "f0ee4171220226df5973bb06c78a69e568eec3ecd8f52ee1473d7a740146dd76",
+      "react-app/src/DayEditor.tsx": "690419db10dbff7f7673873947e7269c5b7e123f49d65ddc2c6fdc984e3cb4a6",
+      "react-app/src/FilterStrip.tsx": "521b602e9e3d47f6dd35dcd2a565f600fb045c030e6c9dcb6492b449fe1932ed",
+      "react-app/src/Modal.tsx": "60deb3021ebac4d4a3ffa56e1b8ef7446d11bef3ad02d2ee713870a9e20d4944",
+      "react-app/src/MonthGrid.tsx": "ad3e9187f91ebebc384d8d7d12fd9ae54c77ace9fbbb6bb805bae7511e16498b",
+      "react-app/src/MonthPicker.tsx": "6c8ca1c1bc59535afc582072c39c6ea7c80714d72e5fbf0d8bbb78bc020fd4d3",
+      "react-app/src/ReminderBell.tsx": "6979ec354fdb5f0d2e9b197dcd17b44d92ba853b173ba4eae30bb76b18ac1fd0",
+      "react-app/src/SegmentedControl.tsx": "528104b251e9b95adf27ddbba6ce671735cbaebd617750184b4af02a7c29a85c",
+      "react-app/src/SortMenu.tsx": "6b1fd63daf6d9c32bfd87b0efd7cbbd9ec877b066db4e68df9ec5af096301e9a",
+      "react-app/src/backup.ts": "a2230f84d0147d0095090928b20e502c6769a0d7f35a4336ffa7c9fb5585d2c4",
+      "react-app/src/calendar.ts": "e803500812997a50d5d8f01a7100204a6c36df5e422d0d2103d72d1e34b1afaf",
+      "react-app/src/celebrate.ts": "12e1f90cefc43744c4c5c8c167d6f76cdd86ffc9809986adab4ddfe6b5cd9a70",
+      "react-app/src/dayMeta.ts": "3583bdb63bff9f9f96ade4976a4c20f370914bb42e5c3170c589483f39ebb374",
+      "react-app/src/domain.ts": "dc0f28bbc7b763264fb9811c17f8cdf9d8ff2175516b8f915d75d4a50c9849c4",
+      "react-app/src/haptics.ts": "c5e4f7a7854cc35263d0e0cdae7ff1652a71dd69194dd915531381ef62cceea4",
+      "react-app/src/listTransition.ts": "037516630b2b273cd715e7add47c3b4fedf94a46059622afe1177c260a4bb4d1",
+      "react-app/src/lunar-javascript.d.ts": "cab5ad8bbc9075389f1a5fb56caa2b19a5835aea04d17a0759dadaebb8ed6923",
+      "react-app/src/main.tsx": "a5e0472d8a653621536a848114cf20dfa03c72e8b35b0d4197c7f5887be45b0b",
+      "react-app/src/notifications.ts": "802868f8f7bbe51d7899020cbc75200a5a73be643791f553ede335c959961631",
+      "react-app/src/registerServiceWorker.ts": "e7b1b93d6131668185399dfddadd4a9b168be97fedbf10f86a32bc40027ba96a",
+      "react-app/src/reminders.ts": "97c7df7c9bee27c0083936fb9e7d954de3bdc2df43237fe5d71bb2c6bfeb7391",
+      "react-app/src/storage.ts": "4f1013abb14f149e82b259c691d2a5af16115d9912e4cc297b2140fdef21492c",
+      "react-app/src/styles.css": "95e46303df64b39ce8fdb26da1d85a1359c466b60e13980b888159ea9131b057",
+      "react-app/src/useCompactLayout.ts": "e05f122529359cb94c33d7a339cfed6d9a0521e038032f583e180aeb75457548",
+      "react-app/src/useMonthSwipe.ts": "9544c164782a2e3d36e8634390b0935a4e5a01e0474c71163cad0f4fc51019ff",
+      "react-app/src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "react-app/src/widget.ts": "feded486d19ecee84eb92c030890152e11fd73402be46dcf7e9dc4efe6e21210",
+      "react-app/src/widgetBridge.ts": "ba198fca4f30cd2e174e8d34e3cf7799249743902d5f6a8b04ad4edb2d3634d0",
+      "README.md": "2ace38a9d650f3e3eeca00f92dd7914b4f5be3266379dcb5d7c7c51e7c106e98",
+      "docs/ANDROID_RELEASE.md": "417eee21f30ce95e34bde468686dfbbbd825c92b6e00963782e55b7e63a657b5",
+      "react-app/package.json": "8419e7a56ab730dde371f4e3aefa54848d66249a1a4c131c974abb7604c3e4e4",
+      "react-app/package-lock.json": "1557d8e4f3476563caa8fd904a075e88543516e693bcb565d9adac15d1f34870",
+      "react-app/android/app/build.gradle": "e127933a61a3e5bf20e87ba029e8ffe0a80ea07fc2457ab726aa17549945469a"
+    }
+  },
+  "publication": {
+    "status": "awaiting_author_device_acceptance",
+    "branchPushed": false,
+    "tagCreated": false,
+    "releaseCreated": false,
+    "proposedTag": "v0.2.0-alpha.8-preview"
+  },
+  "phases": {
+    "g1": {
+      "gates": [
+        {
+          "command": "npm test",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run build",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:e2e",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:ui",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:calendar",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:date-picker",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:controls",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:chrome",
+          "result": "PASS"
+        }
+      ],
+      "nodeTests": {
+        "tests": 63,
+        "passed": 63,
+        "failed": 0
+      },
+      "androidPreview": "PASS",
+      "logDigests": {
+        "gates": "fe5e993048928069d9cd6a253e2677100bb8bdcb9120f21012f7ea690bd386f7",
+        "androidPreview": "b028b576674db3006424ddd8e3d73181648904a9c1548e8df84b8e01e1042501"
+      },
+      "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE"
+    },
+    "g2": {
+      "gates": [
+        {
+          "command": "npm test",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run build",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:e2e",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:ui",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:calendar",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:date-picker",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:controls",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:chrome",
+          "result": "PASS"
+        }
+      ],
+      "nodeTests": {
+        "tests": 63,
+        "passed": 63,
+        "failed": 0
+      },
+      "androidPreview": "PASS",
+      "logDigests": {
+        "gates": "152a62c7d97cd8269ad04fab33d0eca5e00a47767da0f39c146b11ad51d9c79f",
+        "androidPreview": "1b5193f21dc1966ff8e3b2fca9f5fa830f5ac7711084b495f9ceae83e297fb23"
+      },
+      "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE"
+    }
+  },
+  "androidLint": {
+    "errors": 0,
+    "warnings": 27,
+    "suppressionsAdded": false
+  },
+  "jvm": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reportTimestamp": "2026-09-30T08:57:53.273Z",
+    "executionNote": "Both android:preview commands invoked testDebugUnitTest UP-TO-DATE; counts are from the existing unchanged passing JVM XML, not a fresh execution."
+  },
+  "webAssets": {
+    "comparedFiles": 20,
+    "allByteIdentical": true,
+    "files": [
+      {
+        "path": "assets/esm-BA5rXZFV.js",
+        "sizeBytes": 707,
+        "sha256": "26cd911cd588ce4e8a50bece789db4eca259d46bdfd68e46b5dc5e66506cc8ac"
+      },
+      {
+        "path": "assets/esm-BXLm7_NF.js",
+        "sizeBytes": 674,
+        "sha256": "4b0d502a43c5f605f8ee38760d8404536df64863b2684664db85ad552bdf5e7f"
+      },
+      {
+        "path": "assets/esm-CMk15Cd7.js",
+        "sizeBytes": 453,
+        "sha256": "bb9186ae3b2c56f631cd0f211237aa167cc8b0e5b7070a8f70821ef923540bd3"
+      },
+      {
+        "path": "assets/index-CqZ2Q9UF.css",
+        "sizeBytes": 47201,
+        "sha256": "a58b6552dc6469995d2f98cf64e146e24da3bb76b35e89f5e8c0fad435ab68f4"
+      },
+      {
+        "path": "assets/index-CuYKOU-i.js",
+        "sizeBytes": 85230,
+        "sha256": "24d65b14f4c2cf314632558bf8882bd9f38feb39c6f0633056645a3dceaaeb4e"
+      },
+      {
+        "path": "assets/lunar-rFT-dEts.js",
+        "sizeBytes": 305954,
+        "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090"
+      },
+      {
+        "path": "assets/react-DxbjzT7Z.js",
+        "sizeBytes": 139936,
+        "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de"
+      },
+      {
+        "path": "assets/rolldown-runtime-Bh1tDfsg.js",
+        "sizeBytes": 567,
+        "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7"
+      },
+      {
+        "path": "assets/storage-CLLSMDTL.js",
+        "sizeBytes": 95158,
+        "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42"
+      },
+      {
+        "path": "assets/web-D15R82mp.js",
+        "sizeBytes": 4440,
+        "sha256": "6b735d91c8ac3e935ff1a188d2714a0494cc04b81f8da0fa562cfdbfc6b83f53"
+      },
+      {
+        "path": "assets/web-jLgN1LAR.js",
+        "sizeBytes": 950,
+        "sha256": "d39fda6598532e3b3aec6d57f5aa6a44e1b2e0ab3ca73fd1dbdc806694d0f516"
+      },
+      {
+        "path": "assets/web-raY-vMKQ.js",
+        "sizeBytes": 844,
+        "sha256": "f74ea329f19595cefd31d5c1c7f60df0df91a6aa65089efed3d758d026f4ee1c"
+      },
+      {
+        "path": "icon-180.png",
+        "sizeBytes": 5659,
+        "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478"
+      },
+      {
+        "path": "icon-192.png",
+        "sizeBytes": 6462,
+        "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3"
+      },
+      {
+        "path": "icon-512.png",
+        "sizeBytes": 30464,
+        "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b"
+      },
+      {
+        "path": "icon.svg",
+        "sizeBytes": 1282,
+        "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a"
+      },
+      {
+        "path": "index.html",
+        "sizeBytes": 1514,
+        "sha256": "b11a1b0655ba38c3d0193d19467cdbced2e9a075079cb97c67fbaa50fcfc1d9c"
+      },
+      {
+        "path": "ingot.png",
+        "sizeBytes": 8194,
+        "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e"
+      },
+      {
+        "path": "manifest.webmanifest",
+        "sizeBytes": 780,
+        "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc"
+      },
+      {
+        "path": "sw.js",
+        "sizeBytes": 3210,
+        "sha256": "8619773defed219bc11223692250a1f0e2e246f8b287cc28499846412907180b"
+      }
+    ]
+  },
+  "certificateMatchesPreviousPreviews": true,
+  "exactAlarmPermissionsAbsent": true,
+  "celebrationChecks": {
+    "purePredicate": {
+      "tests": 5,
+      "result": "PASS"
+    },
+    "browserSuite": "PASS",
+    "defaultDurationMs": 2600,
+    "lifetimeAssertionBoundsMs": [
+      2550,
+      3300
+    ],
+    "cases": [
+      "today/featured only",
+      "canvas removed after one shot",
+      "marker/reload dedupe",
+      "rapid/keyboard replay",
+      "reduced motion marker and mocked success/light haptics",
+      "mid-play preference cancellation",
+      ">=44px hit targets/axe/overflow at 320-1440px and 200% text",
+      "DPR/resize/all tone pixel paint",
+      "idempotent cancel/static-host restore",
+      "simulated document.hidden pause/resume",
+      "backup/widget marker exclusion",
+      "future/past not interactive"
+    ],
+    "visualReview": "Browser hero screenshot reviewed; hero-orbit remains visible and particles clip to the host.",
+    "hardwareTested": false
+  },
+  "authorDeviceAcceptance": {
+    "status": "pending_for_G",
+    "deviceModel": null,
+    "webViewProvider": null,
+    "webViewVersion": null
+  },
+  "assertionsChanged": [],
+  "agentDeviceInstallationPerformed": false,
+  "limitations": [
+    "No physical Android celebration/haptic/background/smoothness validation yet.",
+    "Native browser plugin modules and visibility are mocks/simulations, not device evidence.",
+    "No branch push, alpha.8 tag or GitHub Release until author acceptance."
+  ]
+}
