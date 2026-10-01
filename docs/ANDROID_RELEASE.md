@@ -1,5 +1,15 @@
 # 日子：Android 测试与升级验收
 
+## alpha.7 / 提醒选择修复发布 — 2026-10-01
+
+- 基于 `a3a3b75`，本轮只有一个发布准备提交：`0.2.0-alpha.7-preview`，versionCode 142，独立包名仍为 `com.cnxin.lifelog.preview`，沿用测试签名。
+- 本次更新：触屏不再残留 hover 态；提醒开关与提前天数解耦，可全部取消。未引入其它功能、权限或数据格式变更。
+- **真机验收由作者完成**：作者在本线程确认上述两项修复通过，不表述为本机安装测试，也不将其扩展为通知送达／重启或小组件后台行为已验证。
+- 验收机型：**作者尚未提供，待补充**。Android System WebView 提供方及版本：**作者尚未提供，待补充**。本次 `adb devices -l` 未发现连接设备，已有验收记录亦无可靠型号／版本信息，因此不推测填写。
+- 全部 8 项门禁及 `npm run android:preview` 是本轮发布门禁；实际结果、APK 权限／签名／大小／SHA-256、Web 文件一致性及 JVM 报告记录在 `downloads/lifelog-days-0.2.0-alpha.7-preview.apk.json`，不以作者反馈替代构建验证。
+- 交付文件：`downloads/lifelog-days-0.2.0-alpha.7-preview.apk`、同名 `.apk.sha256` 和 `.apk.json`。校验文件内使用 APK 文件名，可在 `downloads/` 中执行 `shasum -a 256 -c lifelog-days-0.2.0-alpha.7-preview.apk.sha256`。
+- 分支仍为 `codex/anniversary-lite`，标签 `v0.2.0-alpha.7-preview`；单独 GitHub pre-release。alpha.6 的 Release、正文与资产不修改、不删除。原 LifeLog 的同签名正式覆盖升级仍另行验收；安装前先备份，不卸载原版。
+
 ## alpha.6 / 阶段 F 小组件 — 2026-09-30
 
 - `0.2.0-alpha.6-preview`，versionCode 141，独立包名仍为 `com.cnxin.lifelog.preview`。阶段 F 在 alpha.5 已发布后才开始；保留提醒版，alpha.6 单独预发布，不替换旧版 LifeLog。
@@ -70,7 +80,7 @@ npm run android:preview
 - 脚本要求项目和用户缓存所在磁盘各有至少 6 GiB 可用空间。这是保守的本地检查门槛，不是官方最低要求，也不是空间一定够用的保证。
 - `android:preview` 在环境检查通过后运行 Node 单元测试、Web 生产构建、Capacitor 同步、Gradle `:app:testDebugUnitTest`、`assembleDebug` 和 `lintDebug`，再用 SDK 工具校验 APK 的包名、桌面名称、版本、合并权限和签名。校验失败不会产生新的交付副本。不自动安装到设备，不构建或发布正式版。
 - 首次 Gradle 构建需要联网下载依赖；本脚本不自动安装 SDK 或代为接受 SDK 许可。
-- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本按当前版本命名，本版为 `react-app/.artifacts/lifelog-days-0.2.0-alpha.6-preview.apk`；旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。本次另复制 APK 到可见的 `react-app/apk-test/` 供作者查找（不提交 Git）。
+- 原始输出：`react-app/android/app/build/outputs/apk/debug/app-debug.apk`。校验后的交付副本按当前版本命名，本版为 `react-app/.artifacts/lifelog-days-0.2.0-alpha.7-preview.apk`；旁边的 `.apk.json` 记录实际包名、权限、签名验证结果、大小与 SHA-256。alpha.7 将 APK、SHA-256 与扩展验证报告另放在仓库 `downloads/` 并随发布提交保留；此前的 `react-app/apk-test/` 本地副本不提交 Git。
 - Gradle 使用固定的 8.14.3 `bin` 分发包，已配置官方 SHA-256 校验，避免下载不需要的源码/文档。
 - 若手工跳过脚本在 Android Studio 构建，请先完成 Web 构建和 `npx cap sync android`，避免把旧资源打进 APK。
 
@@ -80,7 +90,7 @@ npm run android:preview
 2. 找到原版使用的签名密钥，安全地在本地配置已被 Git 忽略的 `android/keystore.properties`。不要生成新密钥冒充旧签名，不要在聊天中发送密钥或密码。
 3. 只有这些条件满足后才构建 release。现有 Gradle 在未配置签名时可生成 unsigned APK，**构建成功本身不证明已签名**。
 4. 使用 Android SDK 的 `apksigner verify --verbose --print-certs` 分别检查原版 APK 与候选 APK，验证候选签名有效，并核对原版签名证书 SHA-256；本次不涉及签名轮换。
-5. 用 `apkanalyzer manifest application-id` 和 `apkanalyzer manifest version-code` 检查候选包：正式包名不变、versionCode 高于设备上已安装版本。目前源码配置为 141；仍须读取实际安装版本确认。
+5. 用 `apkanalyzer manifest application-id` 和 `apkanalyzer manifest version-code` 检查候选包：正式包名不变、versionCode 高于设备上已安装版本。目前源码配置为 142；仍须读取实际安装版本确认。
 6. 在有备份的测试设备上执行同签名覆盖升级。签名不一致时停止，**不要通过卸载原应用来绕过**。
 
 ## 真机验收单（仍待执行）

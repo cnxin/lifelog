@@ -1,0 +1,249 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.7-preview",
+  "versionCode": 142,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4439685,
+  "sha256": "2673ac596d29111d983000f2970ad48e485b20d74ca760806858a84b054619a0",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "artifactFilename": "lifelog-days-0.2.0-alpha.7-preview.apk",
+  "verifiedAt": "2026-10-01T14:29:49.016Z",
+  "source": {
+    "branch": "codex/anniversary-lite",
+    "baseCommit": "a3a3b7573ee9f631150e371543574e0fa6a615c1",
+    "releaseTag": "v0.2.0-alpha.7-preview",
+    "provenanceNote": "Built from the a3a3b75 worktree with alpha.7 version metadata and release documentation, before its single release commit. File hashes identify the inputs without a circular commit hash in this report.",
+    "fileHashes": {
+      "README.md": "f3c0facad1b668e1c54d4757407d9b3de70e6264105dc74adbfcb989beb0afb1",
+      "docs/ANDROID_RELEASE.md": "c49a6b23d3956d8591673c71eb0291221f693c3b2467c752732e2f32e58d936e",
+      "react-app/package.json": "b70f77a8dae4915d63bf615bfdf6bbbc9a5caea539201c2085a54307b86afb1f",
+      "react-app/package-lock.json": "c2bf6652fe077e1570779e5ef92893550b1c8ab2fd440885f30271e40a771fde",
+      "react-app/android/app/build.gradle": "f13bb278dd7f41878054a79940351621336c273e69a6233483ce980e0a08bacd",
+      "react-app/src/DayEditor.tsx": "690419db10dbff7f7673873947e7269c5b7e123f49d65ddc2c6fdc984e3cb4a6",
+      "react-app/src/styles.css": "076117aed3ee123050ca1959f24fdae6aef3a14068115246e69e4a2a3223d67c",
+      "react-app/scripts/controls.cjs": "cd253b7f61b58d62637887759603835d70eb35ef5d0d2fea8b677b50851e7761",
+      "react-app/scripts/ui-polish.cjs": "1ad6a6f1f01eba7e638d9bfc9d176aedde57c2591401c95082c25e76f6727cc3",
+      "react-app/scripts/reminders-ui.cjs": "4d12f32e2d4c2846e6ca64d2e159cc63e94b3d4f94ee4fbb50905fcedabb54c7",
+      "react-app/scripts/touch-hover.cjs": "73a01c770ab20115e3821484251ccc1fbd68d29a0944b57872f55c86a6dd091d",
+      "react-app/scripts/reminders.test.cjs": "0649f5a80463c25963cf4b8a3c643e075d412b18845cd8b9fa819907902cc9f8"
+    }
+  },
+  "gates": [
+    {
+      "command": "npm test",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run build",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:e2e",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:ui",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:calendar",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:date-picker",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:controls",
+      "result": "PASS"
+    },
+    {
+      "command": "npm run test:chrome",
+      "result": "PASS"
+    }
+  ],
+  "androidPreview": {
+    "command": "npm run android:preview",
+    "result": "PASS",
+    "tasks": [
+      ":app:testDebugUnitTest",
+      ":app:assembleDebug",
+      ":app:lintDebug"
+    ]
+  },
+  "nodeTests": {
+    "tests": 58,
+    "passed": 58,
+    "failed": 0
+  },
+  "androidLint": {
+    "errors": 0,
+    "warnings": 27,
+    "suppressionsAdded": false
+  },
+  "jvm": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "resultTimestamp": "2026-09-30T08:57:53.273Z",
+    "gradleTask": "Task :app:testDebugUnitTest UP-TO-DATE",
+    "executionNote": "Gradle invoked the task; unchanged native tests were UP-TO-DATE. Counts come from the existing passing XML report, not a fresh execution."
+  },
+  "webAssets": {
+    "comparedFiles": 20,
+    "allByteIdentical": true,
+    "files": [
+      {
+        "path": "assets/esm-4kGEKW8s.js",
+        "sizeBytes": 674,
+        "sha256": "00d29debc5146ff92278f5bd28267ef6badec8a73c158e12737b9f439a4693e6"
+      },
+      {
+        "path": "assets/esm-DSojpG3r.js",
+        "sizeBytes": 453,
+        "sha256": "dcf5162f6973f284113332cdb35f8f7af615d3b9578687f9852ee32ee6fd4570"
+      },
+      {
+        "path": "assets/esm-zSEeu3dM.js",
+        "sizeBytes": 707,
+        "sha256": "08fbefd8fc02ea61319e5c5d0c52b2f5938702cf4ecbacd404950e22ead63619"
+      },
+      {
+        "path": "assets/index-BYUhJQtx.css",
+        "sizeBytes": 47070,
+        "sha256": "96afdde1ed5300df42daaee92d429a5a039f24cce0a4aeb791558eb4f94c5f18"
+      },
+      {
+        "path": "assets/index-Cr5HK1Pz.js",
+        "sizeBytes": 81305,
+        "sha256": "1b3598199c3363a4f4e041a9fcbc5e810e3aebe79c97649f556d93ce80f58489"
+      },
+      {
+        "path": "assets/lunar-rFT-dEts.js",
+        "sizeBytes": 305954,
+        "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090"
+      },
+      {
+        "path": "assets/react-DxbjzT7Z.js",
+        "sizeBytes": 139936,
+        "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de"
+      },
+      {
+        "path": "assets/rolldown-runtime-Bh1tDfsg.js",
+        "sizeBytes": 567,
+        "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7"
+      },
+      {
+        "path": "assets/storage-CLLSMDTL.js",
+        "sizeBytes": 95158,
+        "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42"
+      },
+      {
+        "path": "assets/web-1dU0fJOs.js",
+        "sizeBytes": 4440,
+        "sha256": "b9aea3d40ff7b790a2db9675616736ae5d47727ece8bde73fffc277c161c070f"
+      },
+      {
+        "path": "assets/web-BCnJ3zgu.js",
+        "sizeBytes": 950,
+        "sha256": "7f20d44f38b5d0b6c71ef2affeeb27bcf99db44c78b06bd4f62614c1fbde9890"
+      },
+      {
+        "path": "assets/web-BUjHR9JT.js",
+        "sizeBytes": 844,
+        "sha256": "592684d4d8e4f2918813cabab133e32967c3283938f6cdbc7b949d3bb025be81"
+      },
+      {
+        "path": "icon-180.png",
+        "sizeBytes": 5659,
+        "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478"
+      },
+      {
+        "path": "icon-192.png",
+        "sizeBytes": 6462,
+        "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3"
+      },
+      {
+        "path": "icon-512.png",
+        "sizeBytes": 30464,
+        "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b"
+      },
+      {
+        "path": "icon.svg",
+        "sizeBytes": 1282,
+        "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a"
+      },
+      {
+        "path": "index.html",
+        "sizeBytes": 1514,
+        "sha256": "561e6a408dd04afd5627178aee4872951cebf3f7896862ddaeb7d14cc8647c14"
+      },
+      {
+        "path": "ingot.png",
+        "sizeBytes": 8194,
+        "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e"
+      },
+      {
+        "path": "manifest.webmanifest",
+        "sizeBytes": 780,
+        "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc"
+      },
+      {
+        "path": "sw.js",
+        "sizeBytes": 3210,
+        "sha256": "04a3153e633cd737522106d4ab7c429362ccf8951c1e3ba8965d16756ed7061f"
+      }
+    ]
+  },
+  "exactAlarmPermissionsAbsent": true,
+  "certificateMatchesPreviousPreviews": true,
+  "assertionsChanged": [],
+  "authorDeviceAcceptance": {
+    "status": "confirmed_by_author",
+    "confirmedOn": "2026-10-01",
+    "testedBase": "a3a3b75",
+    "scope": [
+      "触屏不再残留 hover 态",
+      "提醒开关与提前天数解耦，可全部取消"
+    ],
+    "deviceModel": null,
+    "webViewProvider": null,
+    "webViewVersion": null,
+    "deviceInformationStatus": "作者尚未提供；adb devices -l 没有连接设备；不推测型号或 WebView 版本。",
+    "notImplied": [
+      "notification delivery/reboot/system permissions",
+      "widget background delivery",
+      "original LifeLog signed upgrade"
+    ]
+  },
+  "agentDeviceInstallationPerformed": false,
+  "validationLogDigests": {
+    "eightGates": {
+      "path": "react-app/.artifacts/alpha7-gates.log",
+      "sha256": "e9625374d2c45d1bf3a634aa4bc6bc2c19ca5056e1d3f261666bb746f2b7a9f8"
+    },
+    "androidPreview": {
+      "path": "react-app/.artifacts/alpha7-apk.log",
+      "sha256": "8dc4ffa899addf6162598c0b1164e23d05bc6268bf926311b8758fe6e79924af"
+    },
+    "jvmXml": {
+      "path": "react-app/android/app/build/test-results/testDebugUnitTest/TEST-com.cnxin.lifelog.widget.DayWidgetTest.xml",
+      "sha256": "7ce5d40e95c2f6737b6d249c49e60e49cf41fb06b76ac7c8f71917d0613f6e59"
+    },
+    "androidLintXml": {
+      "path": "react-app/android/app/build/reports/lint-results-debug.xml",
+      "sha256": "be88dac2b6e1c87d0f28e8a4ebb00b825d5ee2726e0ea4ad228e89ce82a62e78"
+    }
+  },
+  "deviceTestedMeaning": "android:preview did not install or device-test the new alpha.7 APK; author acceptance recorded below refers to the two fixes at a3a3b75."
+}

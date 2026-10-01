@@ -2,13 +2,20 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前开发版本：`0.2.0-alpha.6`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前开发版本：`0.2.0-alpha.7`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
 ## 下载 Android 测试版
 
-在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.6-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.6-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
+在 [GitHub 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.7-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.7-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
 
-[alpha.5 提醒版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.5-preview) 独立保留；alpha.6 包含 alpha.5 的提醒功能并新增小组件。已安装「日子 · 测试版」时可用递增版本更新，先导出备份；不需要卸载旧 LifeLog。
+[alpha.5 提醒版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.5-preview) 与 [alpha.6 小组件版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.6-preview) 独立保留；alpha.7 继承提醒与小组件，只修正下面两项。已安装「日子 · 测试版」时可用递增版本更新，先导出备份；不需要卸载旧 LifeLog。
+
+### alpha.7 本次更新
+
+- 触屏不再残留 hover 态。
+- 提醒开关与提前天数解耦，可全部取消。
+
+作者已于 2026-10-01 确认这两项修复真机验收通过；机型与 WebView 版本尚未提供，见 [验收记录](docs/ANDROID_RELEASE.md)。APK、SHA-256 校验文件和验证报告同时保存在 `downloads/`。
 
 **请保留旧版，先导出完整 JSON 备份，再在测试版中导入。** 此包使用 debug 签名，不作为原版正式升级包。作者已于 2026-09-30 确认阶段 A–D 真机验收通过；本机并未执行设备安装验收。
 
@@ -16,7 +23,7 @@
 
 ## 只做这些事
 
-以下功能包含在 `alpha.6` 独立测试版中。新增提醒与小组件尚待作者真机验收，A–D 的验收不代表通知或桌面宿主验收通过。
+以下功能包含在 `alpha.7` 独立测试版中。本轮作者确认的是两项提醒选择修复；通知送达、重启恢复与小组件后台行为不据此扩大为已验收，相关验收清单仍保留。
 
 - 直接创建日子：名称、日期、分类、备注、置顶。
 - 表单内展开圆角日期选择器：公历与农历同看、节日 / 节气提示、输入年份快速选月、选择今天；浏览不改值，点选日期才确认。
@@ -135,6 +142,11 @@ react-app/src/
 保留归档是为了迁移核对和回退。本次减少的是**运行时功能、活动源码与依赖**，没有声称 Git 历史或历史 APK 仓库体积已被缩减。
 
 ## CHANGELOG
+
+### 0.2.0-alpha.7 — 2026-10-01
+
+- 触屏不再残留 hover 态。
+- 提醒开关与提前天数解耦，可全部取消。
 
 ### 0.2.0-alpha.6 — 2026-09-30
 
