@@ -38,6 +38,7 @@ import { getReminderTime, REMINDER_TIME_KEY } from "./reminders";
 import ReminderBell from "./ReminderBell";
 import { buildWidgetPayload } from "./widget";
 import { WidgetBridge } from "./widgetBridge";
+import { CELEBRATED_KEY, playCelebration, shouldCelebrate, type CelebrationTone } from "./celebrate";
 
 function Icon({ category, size = 22 }: { category: Category; size?: number }) {
   const Component = icons[category];
@@ -51,6 +52,9 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const calendarButtonRef = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const cancelCelebration = useRef<(() => void) | null>(null);
+  const celebratedFallback = useRef<string | null>(null);
   useEffect(() => {
     const header = headerRef.current!;
     const update = () =>
@@ -308,6 +312,40 @@ export default function App() {
   }).length;
   const featured = ordered[0];
   const status = featured ? dayStatus(featured, today) : null;
+  useEffect(() => {
+    if (!loaded || !featured || status?.delta !== 0) return;
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const stop = () => { cancelCelebration.current?.(); cancelCelebration.current = null; };
+    const reduce = () => { if (motion.matches) stop(); };
+    motion.addEventListener("change", reduce);
+    const frame = requestAnimationFrame(() => {
+      if (!heroRef.current) return;
+      let stored = celebratedFallback.current;
+      try { stored = localStorage.getItem(CELEBRATED_KEY) ?? stored; } catch {}
+      if (!shouldCelebrate(featured, today, stored)) return;
+      const marker = `${featured.id}:${today}`;
+      celebratedFallback.current = marker;
+      try { localStorage.setItem(CELEBRATED_KEY, marker); } catch {}
+      void haptic("success");
+      if (!motion.matches) {
+        stop();
+        cancelCelebration.current = playCelebration(heroRef.current, tones[featured.category] as CelebrationTone);
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      motion.removeEventListener("change", reduce);
+      stop();
+    };
+  }, [loaded, featured?.id, featured?.category, today, status?.delta]);
+  function replayCelebration() {
+    if (!featured || status?.delta !== 0 || !heroRef.current) return;
+    void haptic("light");
+    cancelCelebration.current?.();
+    cancelCelebration.current = null;
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+      cancelCelebration.current = playCelebration(heroRef.current, tones[featured.category] as CelebrationTone);
+  }
   const date = new Date(`${today}T12:00:00`);
   return (
     <>
@@ -409,6 +447,7 @@ export default function App() {
             <>
               <section className="overview" aria-label="日子概览">
                 <div
+                  ref={heroRef}
                   className={`hero ${featured ? tones[featured.category] : "rose"}`}
                   data-populated={!!featured}
                   style={{ viewTransitionName: "hero" }}
@@ -435,7 +474,11 @@ export default function App() {
                         <h2>{featured.title}</h2>
                         <ArrowUpRight size={23} />
                       </button>
-                      <div className="hero-count">
+                      {status.delta === 0 ? (
+                        <button type="button" className="hero-count" aria-label="再放一次庆祝" onClick={replayCelebration}>
+                          <span>{status.label}</span>
+                        </button>
+                      ) : <div className="hero-count">
                         <span>{status.label}</span>
                         {status.delta !== 0 && (
                           <>
@@ -443,7 +486,7 @@ export default function App() {
                             <span>天</span>
                           </>
                         )}
-                      </div>
+                      </div>}
                       {(!compact || status.delta === 0) && (
                         <p className="hero-caption">
                           {status.delta === 0
