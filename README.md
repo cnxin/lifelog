@@ -2,19 +2,19 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前开发版本：`0.2.0-alpha.8`（待作者真机验收，尚未发布）。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前测试版本：`0.2.0-alpha.8`（作者已确认当天庆祝真机验收通过）。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
 ## 下载 Android 测试版
 
-目前 GitHub 已发布的测试版仍为 alpha.7：在 [预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.7-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.7-preview.apk`。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
+在 [alpha.8 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.8-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.8-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
 
-### alpha.8 待验收测试包
+### alpha.8 当天庆祝更新
 
 - 日子当天打开应用时，首页会有一次轻柔的庆祝动效，每天一次，可点数字重放。
 
-本地测试包、SHA-256 校验文件和验证报告放在 `downloads/lifelog-days-0.2.0-alpha.8-preview.apk` 及其同名 `.apk.sha256`／`.apk.json`；**作者真机验收通过后才推送分支、打标签和发布 Release**。当前没有 alpha.8 GitHub 下载链接，不将浏览器测试写成真机验收。
+作者已于 2026-10-04 确认阶段 G 当天庆祝真机验收通过；机型与 WebView 版本尚未提供，见 [验收记录](docs/ANDROID_RELEASE.md)。发布使用作者验收的原 APK；本地测试包、SHA-256 校验文件和验证报告放在 `downloads/lifelog-days-0.2.0-alpha.8-preview.apk` 及其同名 `.apk.sha256`／`.apk.json`，不将浏览器测试写成真机验收。
 
-[alpha.5 提醒版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.5-preview) 与 [alpha.6 小组件版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.6-preview) 独立保留；alpha.7 继承提醒与小组件，并修正触屏与提醒选择。已安装「日子 · 测试版」时可用递增版本更新，先导出备份；不需要卸载旧 LifeLog。
+[alpha.5 提醒版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.5-preview)、[alpha.6 小组件版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.6-preview) 与 [alpha.7 提醒选择修复版](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.7-preview) 独立保留，之前的 Release 不改不删；alpha.8 继承这些功能。已安装「日子 · 测试版」时可用递增版本更新，先导出备份；不需要卸载旧 LifeLog。
 
 ### alpha.7 已发布更新
 
@@ -29,7 +29,7 @@
 
 ## 只做这些事
 
-以下基础功能沿用 alpha.7，包含在 alpha.8 待验收测试包中。作者此前确认的是两项提醒选择修复；新增庆祝尚未真机验收，通知送达、重启恢复与小组件后台行为也不据此扩大为已验收，相关验收清单仍保留。
+以下基础功能沿用 alpha.7，包含在 alpha.8 测试版中。作者此前确认两项提醒选择修复，本次确认阶段 G 当天庆祝通过；通知送达、重启恢复与小组件后台行为不据此扩大为已验收，相关验收清单仍保留。
 
 - 直接创建日子：名称、日期、分类、备注、置顶。
 - 表单内展开圆角日期选择器：公历与农历同看、节日 / 节气提示、输入年份快速选月、选择今天；浏览不改值，点选日期才确认。
@@ -149,7 +149,7 @@ react-app/src/
 
 ## CHANGELOG
 
-### 0.2.0-alpha.8 — 待真机验收，未发布
+### 0.2.0-alpha.8 — 2026-10-04
 
 - 日子当天打开应用时，首页会有一次轻柔的庆祝动效，每天一次，可点数字重放。
 

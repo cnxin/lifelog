@@ -82,14 +82,16 @@
       "react-app/package.json": "8419e7a56ab730dde371f4e3aefa54848d66249a1a4c131c974abb7604c3e4e4",
       "react-app/package-lock.json": "1557d8e4f3476563caa8fd904a075e88543516e693bcb565d9adac15d1f34870",
       "react-app/android/app/build.gradle": "e127933a61a3e5bf20e87ba029e8ffe0a80ea07fc2457ab726aa17549945469a"
-    }
+    },
+    "preparationCommit": "b1b4a34b9227778170e697780e6022c9b6565672",
+    "releaseRecordNote": "Original APK build input hashes above are preserved. Only acceptance/publication documentation and this verification report change after the author-tested G2 preparation commit."
   },
   "publication": {
-    "status": "awaiting_author_device_acceptance",
-    "branchPushed": false,
-    "tagCreated": false,
-    "releaseCreated": false,
-    "proposedTag": "v0.2.0-alpha.8-preview"
+    "status": "validated_for_author_accepted_prerelease",
+    "recordStage": "before_release_record_commit_and_remote_publication",
+    "sourceBranch": "codex/anniversary-lite",
+    "tagName": "v0.2.0-alpha.8-preview",
+    "note": "This report is finalized before the acceptance-record commit, push, tag and Release are created. Remote publication and asset checks are performed separately; no pre-publication flag is presented as a later live status."
   },
   "phases": {
     "g1": {
@@ -185,6 +187,56 @@
         "androidPreview": "1b5193f21dc1966ff8e3b2fca9f5fa830f5ac7711084b495f9ceae83e297fb23"
       },
       "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE"
+    },
+    "releaseRecord": {
+      "gates": [
+        {
+          "command": "npm test",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run build",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:e2e",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:ui",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:calendar",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:date-picker",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:controls",
+          "result": "PASS"
+        },
+        {
+          "command": "npm run test:chrome",
+          "result": "PASS"
+        }
+      ],
+      "nodeTests": {
+        "tests": 63,
+        "passed": 63,
+        "failed": 0
+      },
+      "androidPreview": "PASS",
+      "logDigests": {
+        "gates": "aa04adcf1ecd907caccc300a78f29861ea60533ef175172cc6714923ba8e7da9",
+        "androidPreview": "d92b12a5bc5d9ccce07b4068bff47ef06e6032fb6100e8b14b3f223c9575eb7a"
+      },
+      "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE",
+      "startedAt": "2026-10-04T22:02:50+08:00",
+      "androidStartedAt": "2026-10-04T22:04:25+08:00",
+      "assertionsChanged": []
     }
   },
   "androidLint": {
@@ -198,7 +250,7 @@
     "errors": 0,
     "skipped": 0,
     "reportTimestamp": "2026-09-30T08:57:53.273Z",
-    "executionNote": "Both android:preview commands invoked testDebugUnitTest UP-TO-DATE; counts are from the existing unchanged passing JVM XML, not a fresh execution."
+    "executionNote": "G1, G2 and the release-record android:preview commands invoked testDebugUnitTest UP-TO-DATE; counts are from the existing unchanged passing JVM XML, not a fresh execution."
   },
   "webAssets": {
     "comparedFiles": 20,
@@ -334,19 +386,59 @@
       "future/past not interactive"
     ],
     "visualReview": "Browser hero screenshot reviewed; hero-orbit remains visible and particles clip to the host.",
-    "hardwareTested": false
+    "hardwareTested": false,
+    "hardwareTestedNote": "hardwareTested describes agent checks only (browser/mocks). The author separately confirmed physical-device stage G acceptance."
   },
   "authorDeviceAcceptance": {
-    "status": "pending_for_G",
+    "status": "author_confirmed_passed_for_G",
+    "confirmedDate": "2026-10-04",
+    "confirmedBy": "project_author",
+    "evidence": "Author confirmation in this thread: alpha.8 physical-device acceptance passed.",
+    "scope": "Stage G: anniversary-day hero celebration and replay; not a new acceptance of notification delivery, reboot recovery, widget background behavior or original-app signed upgrades.",
     "deviceModel": null,
     "webViewProvider": null,
-    "webViewVersion": null
+    "webViewVersion": null,
+    "deviceInformationStatus": "not_provided_by_author",
+    "deviceInformationLookup": "adb devices -l on 2026-10-04 showed no connected device; existing project acceptance records provide no reliable model or WebView version.",
+    "agentPerformed": false,
+    "individualDeviceMeasurementsProvided": false
   },
   "assertionsChanged": [],
   "agentDeviceInstallationPerformed": false,
   "limitations": [
-    "No physical Android celebration/haptic/background/smoothness validation yet.",
-    "Native browser plugin modules and visibility are mocks/simulations, not device evidence.",
-    "No branch push, alpha.8 tag or GitHub Release until author acceptance."
-  ]
+    "The author confirmed stage G acceptance; the agent did not install or physically test this APK.",
+    "Device model and WebView provider/version were not supplied and cannot be inferred from an unconnected device.",
+    "Native plugin, clock and visibility browser checks are mocks/simulations, not physical-device measurements.",
+    "Author acceptance does not establish notification delivery/reboot recovery, widget background behavior or original-app signed upgrade acceptance.",
+    "No per-check device measurements or performance figures were supplied by the author."
+  ],
+  "deviceTestedNote": "deviceTested describes agent-performed installation/testing only (none). Author-confirmed stage G acceptance is recorded separately in authorDeviceAcceptance.",
+  "releaseRecordVerifiedAt": "2026-10-04T14:08:53.706Z",
+  "releaseArtifactChecks": {
+    "authorTestedApkPreserved": true,
+    "acceptedApkSha256": "1b88df8506c74fd6bd4c3965ccf6281d30e26804ac360f3a91213db58a44f549",
+    "acceptedApkSizeBytes": 4441477,
+    "acceptedApkUnchanged": true,
+    "identityPermissionsAndCertificateReverified": true,
+    "acceptedApkWebFilesComparedWithReleaseBuild": 20,
+    "acceptedApkWebFilesByteIdentical": true,
+    "capacitorInjectedEmptyFilesReverified": [
+      "cordova.js",
+      "cordova_plugins.js"
+    ],
+    "checksumFileVerified": true,
+    "gateRebuildSha256": "1b88df8506c74fd6bd4c3965ccf6281d30e26804ac360f3a91213db58a44f549",
+    "gateRebuildSizeBytes": 4441477,
+    "gateRebuildByteIdenticalToAcceptedApk": true,
+    "gateRebuildUsedToReplaceAcceptedApk": false,
+    "changedOriginalBuildInputs": [
+      "README.md",
+      "docs/ANDROID_RELEASE.md"
+    ],
+    "currentDocumentationHashes": {
+      "README.md": "40b85716b0191498a598aa0529d7632b80fdec87990c7d07b5c759f2e491f6f1",
+      "docs/ANDROID_RELEASE.md": "70e457a18c5702afde5c888456ff45675a0f2f4744dc86c64a71822cfbffe713"
+    },
+    "previousReleasesSnapshotCount": 124
+  }
 }

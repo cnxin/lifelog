@@ -1,16 +1,21 @@
 # 日子：Android 测试与升级验收
 
-## alpha.8 / 阶段 G 当天庆祝（待作者真机验收）
+## alpha.8 / 阶段 G 当天庆祝发布 — 2026-10-04
 
-- 基于 alpha.7 发布提交 `d6bf6f3`，G1 feature 提交 `2f84123`，随后只有一个 G2 发布准备提交。版本 `0.2.0-alpha.8-preview`，versionCode 143，包名与测试签名不变。不新增权限，不修改数据／备份格式。
+- 基于 alpha.7 发布提交 `d6bf6f3`，G1 feature 提交 `2f84123`，G2 发布准备提交 `b1b4a34`；本次仅追加作者验收／发布记录，不改产品代码或重写上述提交。版本 `0.2.0-alpha.8-preview`，versionCode 143，包名与测试签名不变。不新增权限，不修改数据／备份格式。
 - 本次更新：日子当天打开应用时，首页会有一次轻柔的庆祝动效，每天一次，可点数字重放。只看首页 featured 的当天状态；本机 `lifelog-days:celebrated` 存 `featured.id:today`，不进 JSON 备份或 widget payload。
 - hero 内的画布默认 2600ms，90–120 个半透明粒子，前 500ms 分批出现；DPR 适配，结束／取消后移除，页面隐藏时暂停，恢复继续。原有 hero-orbit 装饰保留；当天的计数区域为可键盘操作、触控至少 44px 的重放按钮。
-- 减少动态效果时不播放粒子，但首次仍写入当天标记并调用成功震动；点击重放调用轻震动，不绕过减少动态效果。Web 无原生震动；Android 震动与性能尚未真机验证。
-- 全部 8 项门禁及 `npm run android:preview` 为 G1、G2 各自的门禁；最终实际结果记录在 `downloads/lifelog-days-0.2.0-alpha.8-preview.apk.json`。浏览器 Canvas／时钟／震动 mock 和可见性模拟不等于手机验收。
+- 减少动态效果时不播放粒子，但首次仍写入当天标记并调用成功震动；点击重放调用轻震动，不绕过减少动态效果。Web 无原生震动；本机的浏览器震动验证使用 mock，不冒充 Android 实测。
+- **真机验收由作者完成**：作者于 2026-10-04 在本线程确认 alpha.8 阶段 G 当天庆祝验收通过。本机未执行设备安装测试；不据此扩大为通知送达／重启恢复、小组件后台行为或原版同签名覆盖升级已验收，亦无逐项设备测量数据可报告。
+- 验收机型：**作者尚未提供，待补充**。Android System WebView 提供方及版本：**作者尚未提供，待补充**。本次 `adb devices -l` 无连接设备，已有验收记录也无可靠型号／版本，因此不猜填。
+- 全部 8 项门禁及 `npm run android:preview` 在 G1、G2 和本次验收记录提交前分别执行；实际结果记录在 `downloads/lifelog-days-0.2.0-alpha.8-preview.apk.json`。浏览器 Canvas／时钟／震动 mock 和可见性模拟不等于手机验收。
 - 测试包、校验值与验证报告：`downloads/lifelog-days-0.2.0-alpha.8-preview.apk`、同名 `.apk.sha256`、`.apk.json`。可在 `downloads/` 执行 `shasum -a 256 -c lifelog-days-0.2.0-alpha.8-preview.apk.sha256`。
-- **未真机验收，不推送、不打 alpha.8 标签、不创建 Release**。作者确认通过后再推送 `codex/anniversary-lite`，创建 `v0.2.0-alpha.8-preview` pre-release；alpha.7 及更早的 Release 不改不删。
+- 发布保留作者验收的原 APK，SHA-256 为 `1b88df8506c74fd6bd4c3965ccf6281d30e26804ac360f3a91213db58a44f549`；发布前重建仅用于门禁与 Web 资产一致性核对，不用新构建覆盖已验收文件。
+- 分支 `codex/anniversary-lite`，标签 `v0.2.0-alpha.8-preview`；单独 GitHub pre-release，附 APK、SHA-256 与验证报告。alpha.7 及更早的 Release 不改不删。安装前导出备份，不卸载原版。
 
-### 庆祝真机验收（由作者执行，尚未完成）
+### 庆祝真机验收清单（作者已确认阶段 G 通过）
+
+下列清单保留供复测；作者确认的是本阶段验收结论，不将缺少逐项记录的设备细节表述为本机实测结果。
 
 1. 更新测试包前导出备份；创建／置顶当天记录，再打开应用，确认仅首页这条有轻柔粒子和成功震动，约 2.6 秒后画布消失，不妨碍查看详情等操作。
 2. 同一天退出／重开，无第二次自动播放；同一天有多条记录也不逐卡庆祝。点当天计数区域可重放，快速连点不叠加多层画布，伴轻震动。
