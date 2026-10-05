@@ -1,5 +1,20 @@
 # 日子：Android 测试与升级验收
 
+## alpha.9 / 阶段 H 结构整理 — 发布准备，待作者快速回归
+
+- `0.2.0-alpha.9-preview`，versionCode 144，包名 `com.cnxin.lifelog.preview`，沿用原测试签名；不新增权限、不改数据或备份格式、不动 legacy。
+- 本次更新只有：**内部结构整理，无行为变化**。H0 `d5e804b` 固定 14 份浅色基准；H1 `aa8058e` 将 App 拆为 87 行装配层与显式 props 的组件/hooks；H2 `8eb68ad` 按原级联顺序搬运全部 557 条规则和 42 个媒体条件，保留所有不满足删除条件的规则；H3 `20732a8` 合并门禁并复用一个 Chromium。CSS 续段按原相对顺序导入，不为凑文件名顺序而改变级联。
+- **既有断言未改**。H1/H2 仅调整作者许可的源码定位：SystemBars 读取 `src/hooks/useNativeShell.ts`；安全区断言读取按 `src/styles/index.css` 的 `@import` 顺序递归拼接的完整文本，不只读 tokens。提交消息包含旧路径引用清单、路径行 diff、改动前后相同的正则 SHA-256。
+- H3 完整门禁实测 43.554 秒，原 H0 串行八项 90 秒，48.39%，达到不超过 50% 的目标；这是本机测量，不承诺其它硬件同速。现有八项全部通过，另含离线、14 份不可变基准和 CSS 只测量巡检；全部 365 个静态断言调用、29 个正则、8 处 axe.run（含选项）与 H2 字节一致。axe 每次扫描保留，只避免在同一 document 中重复加载同版本库；时钟、真实动画时长、触控阈值和截图用例均未削减。
+- H4 已执行 `npm run gates` 与 `npm run android:preview`：原有八项及新增门禁全部通过，最终总耗时 41.437 秒（原串行的 46.04%），lint 0 error / 27 warning。先前三次复测功能/axe/基准检查同样通过，但耗时约 54 秒，未通过附加性能门槛；原记录保留，不放宽门槛。> Task :app:testDebugUnitTest UP-TO-DATE；XML 8 项、0 failure/error，不将 UP-TO-DATE / 缓存写成新的执行。APK 的 20 个 dist Web 文件逐字节一致，另外两个 Capacitor 生成的 Cordova 空 stub 单独核对。
+- 本地交付：`react-app/.artifacts/lifelog-days-0.2.0-alpha.9-preview.apk`，同名 `.apk.sha256` / `.apk.json`；SHA-256：`a44bead9595ac96068911a6b381e80ba93918ebfccbc0542b825b29baf3ab343`。报告包含最终及先前三次 H4 门禁结果、APK 身份/权限/签名、lint、JVM 状态和未验证范围。
+- **alpha.9 真机验收尚未执行，由作者完成**。机型与 Android System WebView 提供方/版本待作者补充；浏览器 mock、布局、覆盖率与基准不等于真机提醒/小组件/后台或原版签名覆盖升级验收。
+- 本轮先交付本地测试 APK；作者确认下面的快速回归后，再推送分支、打 `v0.2.0-alpha.9-preview` 并独立预发布，旧 Release 不改不删。H 未发布前不开始阶段 I；本轮未开始 I / J。
+
+### 作者快速回归（alpha.9 待验收）
+
+安装前先导出备份，不卸载旧 LifeLog。快速检查：首页、新增、编辑、日历、详情、提醒、置顶、小组件刷新。任何与 alpha.8 不同的表现都算失败；记录具体步骤、机型及 WebView 版本，不以自动门禁替代此回归。
+
 ## alpha.8 / 阶段 G 当天庆祝发布 — 2026-10-04
 
 - 基于 alpha.7 发布提交 `d6bf6f3`，G1 feature 提交 `2f84123`，G2 发布准备提交 `b1b4a34`；本次仅追加作者验收／发布记录，不改产品代码或重写上述提交。版本 `0.2.0-alpha.8-preview`，versionCode 143，包名与测试签名不变。不新增权限，不修改数据／备份格式。
