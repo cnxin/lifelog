@@ -18,7 +18,9 @@
     "test:controls": "node scripts/controls.cjs",
     "test:calendar": "node scripts/calendar.cjs",
     "test:date-picker": "node scripts/date-picker.cjs",
-    "test:ui": "node scripts/ui-polish.cjs"
+    "test:ui": "node scripts/ui-polish.cjs",
+    "baseline:capture": "node scripts/baseline.cjs --capture",
+    "baseline:verify": "node scripts/baseline.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
