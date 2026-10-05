@@ -156,7 +156,7 @@ test('SystemBars owns native insets and foreground style without the legacy over
   const config = read('capacitor.config.ts');
   assert.match(config, /SystemBars:\s*\{\s*insetsHandling: "css",\s*style: "LIGHT"/);
   assert.doesNotMatch(config, /overlaysWebView|StatusBar:/);
-  const app = read('src/App.tsx');
+  const app = read('src/hooks/useNativeShell.ts');
   assert.match(app, /SystemBars\.setStyle\(\{ style: SystemBarsStyle.Light \}\)/);
   assert.doesNotMatch(app, /@capacitor\/status-bar|setBackgroundColor|setOverlaysWebView/);
   assert.equal(JSON.parse(read('package.json')).dependencies['@capacitor/status-bar'], undefined);

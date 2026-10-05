@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Cake, Heart, Hourglass, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { icons } from "./dayMeta";
 import Modal, { useModalClose } from "./Modal";
 import { haptic } from "./haptics";
 import DatePicker from "./DatePicker";
@@ -127,12 +128,7 @@ function EditorForm({
           label="分类"
           value={draft.category}
           options={categories.map((category) => {
-            const Icon =
-              category === "纪念日"
-                ? Heart
-                : category === "生日"
-                  ? Cake
-                  : Hourglass;
+            const Icon = icons[category];
             return {
               value: category,
               label: category,
