@@ -1,4 +1,5 @@
-const assert = require('node:assert/strict');
+const { installAxe } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
 const {hitTarget} = require('./hit-target.cjs');
 const KEY = 'lifelog-days:celebrated';
@@ -38,7 +39,7 @@ exports.checkCelebrationUI = async function (browser) {
         cancel:async()=>{},schedule:async()=>{},createChannel:async()=>{},
         addListener:async()=>({remove:async()=>{}})};` }));
     const audit = async label => {
-      await page.evaluate(await fs.readFile(require.resolve('axe-core'),'utf8'));
+      await installAxe(page);
       const violations=await page.evaluate(async()=>(await window.axe.run(document,
         {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));
       assert.deepEqual(violations,[],label+' axe');

@@ -1,6 +1,6 @@
 // Immutable alpha.8 evidence. Capture is explicit; verify never rewrites a baseline.
-const { chromium } = require('playwright');
-const assert = require('node:assert/strict');
+const { chromium } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { isDeepStrictEqual, inspect } = require('node:util');

@@ -1,9 +1,12 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const instrumented = new WeakSet();
 
 // Measurement only: sourceURL gives anonymous Vite style elements a CDP identity.
 // The only changed CSS bytes are a trailing comment; no declarations/rules change.
 async function instrumentBrowser(browser, directory) {
+  if (instrumented.has(browser)) return browser;
+  instrumented.add(browser);
   const pages = new Map();
   const contexts = new WeakSet();
   let sequence = 0;

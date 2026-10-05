@@ -1,4 +1,4 @@
-const { chromium } = require('playwright');
+const { chromium } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
@@ -10,21 +10,35 @@ const { seed, openState } = require('./baseline.cjs');
 const suites = ['smoke', 'ui-polish', 'calendar', 'date-picker', 'controls', 'chrome', 'baseline'];
 const normalize = selector => selector.replace(/\s+/g, ' ').replace(/\s*([>,+~])\s*/g, '$1').trim();
 async function measureTour(browser) {
+  const groups = [];
   for (const width of [360, 1024]) for (const media of [
     { reducedMotion: 'reduce', forcedColors: 'none' },
     { reducedMotion: 'reduce', forcedColors: 'active' },
     { reducedMotion: 'no-preference', forcedColors: 'none' },
-  ]) for (const state of ['home', 'search', 'sort', 'detail', 'editor-date', 'calendar', 'data']) {
-    const context = await browser.newContext({ viewport: { width, height: width === 360 ? 740 : 768 }, timezoneId: 'Asia/Shanghai', ...media });
-    try {
-      const page = await context.newPage();
-      await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+08:00'));
-      await seed(page);
-      await openState(page, state);
-      await page.waitForTimeout(media.reducedMotion === 'reduce' ? 0 : 300);
-    } finally { await context.close(); }
-  }
-  return 42;
+  ]) groups.push({ width, media });
+  let cursor = 0;
+  await Promise.all(Array.from({ length: 2 }, async () => {
+    while (cursor < groups.length) {
+      const { width, media } = groups[cursor++];
+      const context = await browser.newContext({ viewport: { width, height: width === 360 ? 740 : 768 }, timezoneId: 'Asia/Shanghai', ...media });
+      try {
+        const page = await context.newPage();
+        await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+08:00'));
+        await seed(page);
+        let firstState = true;
+        for (const state of ['home', 'search', 'sort', 'detail', 'editor-date', 'calendar', 'data']) {
+          // openState only opens/browses: no record or persistent preference
+          // changes. Reload resets all transient state over the same fixture.
+          // CDP resetOnNavigation:false retains hits across all seven states.
+          if (!firstState) await page.reload();
+          firstState = false;
+          await openState(page, state);
+          await page.waitForTimeout(media.reducedMotion === 'reduce' ? 0 : 300);
+        }
+      } finally { await context.close(); }
+    }
+  }));
+  return groups.length * 7;
 }
 
 async function aggregate(directory, source = 'src/styles/index.css') {
@@ -92,6 +106,12 @@ async function child(suite, directory) {
 exports.measureTour = measureTour;
 exports.aggregate = aggregate;
 if (require.main === module) (async () => {
+  if (process.env.GATES_MEASURE_ONLY === '1') {
+    const browser = await chromium.launch();
+    try { await measureTour(browser); } finally { await browser.close(); }
+    await aggregate(process.env.CSS_COVERAGE_DIR);
+    return;
+  }
   const index = process.argv.indexOf('--source');
   const source = index >= 0 ? process.argv[index + 1] : 'src/styles/index.css';
   const directory = path.resolve('.artifacts/css-coverage/raw');

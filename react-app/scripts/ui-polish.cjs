@@ -1,9 +1,16 @@
+const { installAxe } = require("./lib/browser.cjs");
 // Isolated fixture data: never reads or writes the user's browser profile.
-const { chromium } = require("playwright");
-const assert = require("node:assert/strict");
+const { chromium } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require("node:fs/promises");
 (async () => {
   const browser = await chromium.launch();
+  // These already use separate contexts/storage/clock/mocks. Run them beside
+  // the main layout tour; keep every existing check and real animation timer.
+  const independentChecks = Promise.allSettled([
+    require('./reminders-ui.cjs').checkReminderUI(browser),
+    require('./celebrate-ui.cjs').checkCelebrationUI(browser),
+  ]);
   const page = await browser.newPage({
     viewport: { width: 390, height: 1000 },
     timezoneId: "Asia/Shanghai",
@@ -51,7 +58,7 @@ const fs = require("node:fs/promises");
     ),
   };
   async function audit(label) {
-    await page.evaluate(await fs.readFile(require.resolve("axe-core"), "utf8"));
+    await installAxe(page);
     const violations = await page.evaluate(async () =>
       (
         await window.axe.run(document, {
@@ -404,12 +411,14 @@ const fs = require("node:fs/promises");
     assert.ok(countFits, "long hero count is not clipped at large text");
     await audit("large hero count");
     assert.deepEqual(errors, []);
-    await require('./reminders-ui.cjs').checkReminderUI(browser);
-    await require('./celebrate-ui.cjs').checkCelebrationUI(browser);
+    for (const result of await independentChecks) {
+      if (result.status === 'rejected') throw result.reason;
+    }
     console.log(
       "PASS: UI polish across empty/populated home, long titles/counts, editor, compact repeat/year fields, delete/import buttons, backup icon alignment, calendar, no results, 320–1440px, 200% text, axe.",
     );
   } finally {
+    await independentChecks;
     await browser.close();
   }
 })().catch((error) => {

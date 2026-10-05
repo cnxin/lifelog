@@ -68,9 +68,10 @@ npm run dev
 开发服务器：`http://127.0.0.1:5188`。端口占用时会明确报错，不自动切换到其他服务。
 
 ```sh
-npm test                         # 日期 / 农历 / 备份 / 迁移规则测试
-npm run build                    # TypeScript 检查和生产构建
 npx playwright install chromium  # 首次浏览器测试前安装
+npm run gates                    # Node + 构建 + 全部浏览器门禁；自动启停 5189 生产预览
+npm test                         # 仅 Node 单测
+npm run build                    # TypeScript 检查和生产构建
 npm run test:e2e                  # 另一个终端保持 npm run dev 运行（含 axe 无障碍扫描）
 # 生产离线测试：另一终端启动 npm run preview -- --host 127.0.0.1 --port 5189 --strictPort
 npm run test:offline
@@ -79,9 +80,13 @@ npm run test:controls             # 分段选项与圆角勾选框
 npm run test:calendar             # 农历月历、键盘、日历与编辑往返、布局与 axe
 npm run test:date-picker          # 选日期、年月跳转、边界、返回、保存和无障碍
 npm run test:ui                   # 全界面布局、长内容、紧凑控件、弹窗按钮与大字号回归
+npm run baseline:verify           # 对比已提交的 14 份浅色 DOM / 样式 / 几何基准
+npm run css:coverage              # 全套浏览器用例 + 多媒体状态，仅测量，不按覆盖率判失败
 ```
 
-浏览器测试使用隔离的测试上下文，不写入日常浏览器的数据。测试截图位于 `react-app/.artifacts/`（已忽略）。生产服务测试可设置 `BASE_URL`。
+`gates` 必须独占 `127.0.0.1:5189`：已有预览占用时会报错，不复用、不杀进程、不换端口。它仅启动一个 Chromium，各套用例使用独立 context，按固定顺序派发、限量并发，并按固定顺序汇总通过数和耗时；日志与报告在 `react-app/.artifacts/gates/`。主界面来自生产构建；测试专用源码导入与原生插件 mock 路径只在门禁服务提供，不打包进应用。CSS 覆盖率包含全部浏览器用例及 360 / 1024、reduced-motion、forced-colors 的补充巡检，不用于自动删规则。
+
+单项浏览器脚本仍可独立运行，使用隔离的测试上下文，不写入日常浏览器的数据；默认连接开发服务器（离线测试连接生产预览），可设置 `BASE_URL`。测试截图位于 `react-app/.artifacts/`（已忽略）。基准文件是 H0 的不可变验收依据，不要为了通过门禁重新执行 `baseline:capture`。
 
 ### Android
 
@@ -118,7 +123,9 @@ npm run android:preview          # 检查通过后：测试 → Web 构建 → �
 
 ```text
 react-app/src/
-  App.tsx            单页列表、筛选、置顶与应用状态
+  App.tsx            状态装配与弹层挂载
+  hooks/             存储、时钟、提醒、小组件、庆祝与原生生命周期
+  components/        首页、工具栏、日子卡片与空状态
   DayEditor.tsx      新增 / 编辑 / 删除
   DatePicker.tsx     表单内日期选择与年月跳转
   CalendarView.tsx   农历月历和当天记录
@@ -133,7 +140,7 @@ react-app/src/
   widget.ts          与首页共用排序的小组件快照
   widgetBridge.ts    Android 私有缓存与小组件点击桥
   main.tsx           React 入口与错误边界
-  styles.css         单份响应式样式
+  styles/index.css   按原级联顺序导入分层样式（含历史覆写续段）
 ```
 
 没有路由层、全局业务 Provider、服务端或外部字体请求。

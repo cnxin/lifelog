@@ -1,0 +1,8 @@
+{
+  "commit": "d5e804b",
+  "durationSeconds": 90,
+  "scope": "Original serial eight gates: npm test, build, e2e, ui, calendar, date-picker, controls, chrome",
+  "measuredAt": "2026-10-05T15:47:04.452Z",
+  "logSha256": "ff410749b3e6072e9bfea1934d861da6a7be785913adad284566e37adacb3358",
+  "note": "Local H0 timing reference, not a hardware-independent performance guarantee. No tests omitted or timers accelerated in H3."
+}

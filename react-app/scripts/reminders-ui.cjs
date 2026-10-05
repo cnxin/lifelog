@@ -1,4 +1,5 @@
-const assert = require('node:assert/strict');
+const { installAxe } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
 const {pickDate} = require('./date-picker-helper.cjs');
 const {hitTarget} = require('./hit-target.cjs');
@@ -21,7 +22,7 @@ exports.checkReminderUI = async function(browser) {
       addListener:async(name,cb)=>{n.listeners[name]=cb;return {remove:async()=>{if(n.listeners[name]===cb)delete n.listeners[name]}}},
     };` }));
   const audit=async label=>{
-    await page.evaluate(await fs.readFile(require.resolve('axe-core'),'utf8'));
+    await installAxe(page);
     const v=await page.evaluate(async()=>(await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})));
     assert.deepEqual(v,[],label);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),label+' page overflow');

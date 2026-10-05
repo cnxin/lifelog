@@ -1,6 +1,7 @@
+const { installAxe } = require("./lib/browser.cjs");
 const { pickDate } = require("./date-picker-helper.cjs");
-const { chromium } = require("playwright");
-const assert = require("node:assert/strict");
+const { chromium } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require("node:fs/promises");
 (async () => {
   const browser = await chromium.launch();
@@ -13,7 +14,7 @@ const fs = require("node:fs/promises");
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   const audit = async (label) => {
-    await page.evaluate(await fs.readFile(require.resolve("axe-core"), "utf8"));
+    await installAxe(page);
     const violations = await page.evaluate(async () =>
       (
         await window.axe.run(document, {

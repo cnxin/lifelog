@@ -1,5 +1,5 @@
-const { chromium } = require("playwright");
-const assert = require("node:assert/strict");
+const { chromium } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const ts = require("typescript");

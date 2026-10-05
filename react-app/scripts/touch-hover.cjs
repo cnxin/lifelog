@@ -1,4 +1,4 @@
-const assert = require('node:assert/strict');
+const { assert } = require("./lib/browser.cjs");
 
 exports.checkTouchHover = async function (browser) {
   const context = await browser.newContext({

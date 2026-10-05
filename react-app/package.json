@@ -20,7 +20,9 @@
     "test:date-picker": "node scripts/date-picker.cjs",
     "test:ui": "node scripts/ui-polish.cjs",
     "baseline:capture": "node scripts/baseline.cjs --capture",
-    "baseline:verify": "node scripts/baseline.cjs"
+    "baseline:verify": "node scripts/baseline.cjs",
+    "gates": "node scripts/gates.cjs",
+    "css:coverage": "node scripts/css-coverage.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

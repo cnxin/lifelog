@@ -1,5 +1,6 @@
-const { chromium } = require("playwright");
-const assert = require("node:assert/strict");
+const { installAxe } = require("./lib/browser.cjs");
+const { chromium } = require("./lib/browser.cjs");
+const { assert } = require("./lib/browser.cjs");
 const fs = require("node:fs/promises");
 const { pickDate } = require("./date-picker-helper.cjs");
 (async () => {
@@ -15,7 +16,7 @@ const { pickDate } = require("./date-picker-helper.cjs");
   const trigger = page.locator(".date-trigger");
   const picker = page.getByRole("region", { name: "选择日期", exact: true });
   const audit = async () => {
-    await page.evaluate(await fs.readFile(require.resolve("axe-core"), "utf8"));
+    await installAxe(page);
     const violations = await page.evaluate(async () =>
       (
         await window.axe.run(document, {
