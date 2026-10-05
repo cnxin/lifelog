@@ -1,0 +1,825 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.9-preview",
+  "versionCode": 144,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4442641,
+  "sha256": "a44bead9595ac96068911a6b381e80ba93918ebfccbc0542b825b29baf3ab343",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "validation": {
+    "sourceProductCommit": "a5402fbe827f3d228d2fdf4b311dde1fa5f71851",
+    "phase": "H author acceptance / alpha.9 publication",
+    "gates": {
+      "completedAt": "2026-10-05T18:47:08.942Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 5270,
+          "result": "PASS",
+          "testsPassed": 63
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 5114,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 14230,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 378,
+          "axeAudits": 62,
+          "axeSourceInjections": 4,
+          "durationMs": 34603,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 10822,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 63,
+          "axeAudits": 7,
+          "axeSourceInjections": 1,
+          "durationMs": 15030,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 5365,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 3454,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 2732,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 30,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8576,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 10417,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 42518,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.47242222222222224,
+      "performanceTargetMet": true
+    },
+    "androidPreview": "PASS",
+    "androidLint": {
+      "errors": 0,
+      "warnings": 27
+    },
+    "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE",
+    "jvmFreshExecution": false,
+    "acceptedApkPreserved": true,
+    "acceptedApkWebAssetsEqualDist": 20,
+    "existingAssertionsChanged": [],
+    "legacyChanged": false
+  },
+  "priorH4Validation": {
+    "phase": "H4",
+    "sourceCommit": "a5402fbe827f3d228d2fdf4b311dde1fa5f71851",
+    "sourceParent": "20732a8",
+    "gates": {
+      "completedAt": "2026-10-05T17:16:33.799Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 5129,
+          "result": "PASS",
+          "testsPassed": 63
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 5061,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 13067,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 378,
+          "axeAudits": 62,
+          "axeSourceInjections": 4,
+          "durationMs": 33602,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 9574,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 63,
+          "axeAudits": 7,
+          "axeSourceInjections": 1,
+          "durationMs": 15032,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 5465,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 3503,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 2401,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 30,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8767,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 10615,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 41437,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.4604111111111111,
+      "performanceTargetMet": true
+    },
+    "earlierH4Attempts": [
+      {
+        "file": "gates-default-first-report.json",
+        "completedAt": "2026-10-05T17:08:21.217Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 6250,
+            "result": "PASS",
+            "testsPassed": 63
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7348,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 16776,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 378,
+            "axeAudits": 62,
+            "axeSourceInjections": 4,
+            "durationMs": 40664,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 13928,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 63,
+            "axeAudits": 7,
+            "axeSourceInjections": 1,
+            "durationMs": 16771,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 7008,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 5040,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 3935,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 30,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11514,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 13350,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 54958,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.6106444444444444,
+        "performanceTargetMet": false
+      },
+      {
+        "file": "gates-workers-2-report.json",
+        "completedAt": "2026-10-05T17:10:49.657Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 2 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4953,
+            "result": "PASS",
+            "testsPassed": 63
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 5592,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 12450,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 378,
+            "axeAudits": 62,
+            "axeSourceInjections": 4,
+            "durationMs": 30496,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 5586,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 63,
+            "axeAudits": 7,
+            "axeSourceInjections": 1,
+            "durationMs": 13147,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 4761,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 3337,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 2210,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 30,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 8507,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 10969,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 54427,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.6047444444444444,
+        "performanceTargetMet": false
+      },
+      {
+        "file": "gates-workers-4-report.json",
+        "completedAt": "2026-10-05T17:12:46.082Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 4 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7262,
+            "result": "PASS",
+            "testsPassed": 63
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7475,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 20127,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 378,
+            "axeAudits": 62,
+            "axeSourceInjections": 4,
+            "durationMs": 45308,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 16657,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 63,
+            "axeAudits": 7,
+            "axeSourceInjections": 1,
+            "durationMs": 25815,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 12824,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 7285,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4815,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 30,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11551,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 13710,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 54495,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.6055,
+        "performanceTargetMet": false
+      }
+    ],
+    "androidPreview": "PASS",
+    "lint": {
+      "errors": 0,
+      "warnings": 27
+    },
+    "widgetJvm": {
+      "task": "> Task :app:testDebugUnitTest UP-TO-DATE",
+      "xmlSuite": "<testsuite name=\"com.cnxin.lifelog.widget.DayWidgetTest\" tests=\"8\" skipped=\"0\" failures=\"0\" errors=\"0\" timestamp=\"2026-09-30T08:57:53.273Z\" hostname=\"yuanshaojiedeMac-mini.local\" time=\"0.01\">",
+      "freshExecution": false,
+      "note": "Cached/up-to-date XML is not a fresh JVM execution."
+    },
+    "webAssets": {
+      "checked": 20,
+      "result": "PASS: every dist file byte-equals APK assets/public entry",
+      "generatedEmptyCapacitorStubs": [
+        "cordova.js",
+        "cordova_plugins.js"
+      ]
+    },
+    "baseline": {
+      "files": 14,
+      "changed": false,
+      "result": "PASS in final gates; H0 files never recaptured"
+    },
+    "existingAssertionsChanged": [],
+    "approvedLocatorChanges": [
+      "H1 SystemBars -> useNativeShell.ts; regex/checks unchanged",
+      "H2 CSS -> index.css ordered full recursive @import expansion; regex/checks unchanged"
+    ],
+    "legacyChanged": false,
+    "previousReleasesChanged": false,
+    "physicalDevice": {
+      "tested": false,
+      "model": null,
+      "webView": null,
+      "scope": "Author quick regression pending: home/add/edit/calendar/detail/reminders/pin/widget refresh; any difference from alpha.8 fails."
+    },
+    "release": {
+      "branch": "codex/anniversary-lite",
+      "tagCreated": false,
+      "pushed": false,
+      "published": false,
+      "phasesIAndJStarted": false
+    }
+  },
+  "h2DeletionStatistics": {
+    "deletedRules": 0,
+    "rulesBefore": 557,
+    "rulesAfter": 557,
+    "mediaQueriesBefore": 42,
+    "mediaQueriesAfter": 42,
+    "stylesLinesBefore": 3088,
+    "stylesLinesAfterIncludingIndex": 3186,
+    "stylesLinesAfterExcludingIndex": 3159,
+    "indexLines": 27,
+    "counting": "wc -l newline count",
+    "coverageOutputPath": "react-app/.artifacts/css-unused.json",
+    "h2PreservedReportPath": "react-app/.artifacts/h2/css-unused-before.json",
+    "reason": "All six 0%-coverage candidates still reference classes present in TSX and fail the complete deletion criterion; keep all rules. Additional lines are file headings/blank lines/import manifest, not fewer source lines.",
+    "coverage": {
+      "measuredAt": "2026-10-05T16:11:50.063Z",
+      "source": "src/styles.css",
+      "ruleCount": 557,
+      "pageRecords": 76,
+      "sheets": 145,
+      "suites": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "baseline",
+        "offline"
+      ],
+      "supplementalTourStates": 42,
+      "aggregationNote": "Conservative union of selectors hit in any context. Repeated selectors are retained if any occurrence was hit; unhit does not imply safe deletion.",
+      "unused": [
+        {
+          "file": "src/styles.css",
+          "line": 61,
+          "selector": ".skip-link:focus",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        },
+        {
+          "file": "src/styles.css",
+          "line": 691,
+          "selector": ".filters button:focus-visible",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        },
+        {
+          "file": "src/styles.css",
+          "line": 694,
+          "selector": ".filters button:focus-visible::after",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        },
+        {
+          "file": "src/styles.css",
+          "line": 807,
+          "selector": ".sort.choice-field",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        },
+        {
+          "file": "src/styles.css",
+          "line": 813,
+          "selector": ".sort .choice-options",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        },
+        {
+          "file": "src/styles.css",
+          "line": 818,
+          "selector": ".sort .choice-option > span",
+          "conditions": [],
+          "protectedMedia": false,
+          "coverage": 0
+        }
+      ]
+    }
+  },
+  "authorAcceptance": {
+    "confirmed": true,
+    "recordedAt": "2026-10-05T18:49:38.444Z",
+    "source": "Author confirmation in current thread",
+    "scope": [
+      "首页",
+      "新增",
+      "编辑",
+      "日历",
+      "详情",
+      "提醒",
+      "置顶",
+      "小组件刷新"
+    ],
+    "model": null,
+    "webViewProvider": null,
+    "webViewVersion": null,
+    "deviceInformation": "Author used placeholder; no connected adb device or trustworthy earlier device record. Unknown fields not invented.",
+    "performedBy": "author",
+    "performedLocally": false,
+    "excludedClaims": [
+      "exact notification delivery",
+      "reboot recovery",
+      "long-term background widget cadence",
+      "original production signing upgrade"
+    ]
+  },
+  "release": {
+    "tag": "v0.2.0-alpha.9-preview",
+    "branch": "codex/anniversary-lite",
+    "isPrerelease": true,
+    "format": "alpha.8",
+    "olderReleasesUnchanged": true
+  }
+}

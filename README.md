@@ -2,17 +2,17 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前开发测试版本：`0.2.0-alpha.9`（阶段 H 发布准备，待作者快速回归）；已发布版本仍为 `0.2.0-alpha.8`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前测试版本：`0.2.0-alpha.9`（作者已确认阶段 H 真机快速回归通过）。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
-### alpha.9 发布准备
+### alpha.9 结构整理
 
 - 内部结构整理，无行为变化。
 
-versionCode 144。H0 的 14 份浅色 DOM / 计算样式 / 点击几何基准保留不变，原有断言不改；仅按作者许可移动原生顶栏源码定位和完整 CSS 读取入口。合并门禁包含旧有八项及离线、基准和 CSS 测量，具体执行记录见 [Android 验收记录](docs/ANDROID_RELEASE.md)。本地 APK 在 `react-app/.artifacts/`；待作者快速回归确认后再独立预发布，H 未发布前不开始 I / J。
+versionCode 144。H0 的 14 份浅色 DOM / 计算样式 / 点击几何基准保留不变，原有断言不改；仅按作者许可移动原生顶栏源码定位和完整 CSS 读取入口。H2 删除 0 条规则，styles 行数 3,088 → 3,186（含导入入口），统计与测量路径见 CHANGELOG。作者确认快速回归通过，机型与 WebView 版本未提供，不猜填；具体执行与验收范围见 [Android 验收记录](docs/ANDROID_RELEASE.md)。
 
 ## 下载 Android 测试版
 
-在 [alpha.8 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.8-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.8-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。
+在 [alpha.9 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.9-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.9-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。发布使用作者验收的原 APK，旧 Release 保留不改。
 
 ### alpha.8 当天庆祝更新
 
@@ -162,7 +162,7 @@ react-app/src/
 
 ## CHANGELOG
 
-### 0.2.0-alpha.9 — 待作者真机回归与预发布
+### 0.2.0-alpha.9 — 作者真机回归通过
 
 - 内部结构整理，无行为变化。
 
