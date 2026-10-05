@@ -1,0 +1,95 @@
+/* 01-base.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-padding-top: calc(var(--header-offset, var(--header-height)) + 1.5rem);
+}
+body {
+  margin: 0;
+  line-height: 1.5;
+}
+main:focus {
+  outline: none;
+}
+.skip-link {
+  position: fixed;
+  top: calc(var(--safe-top) + 0.5rem);
+  left: max(1rem, var(--safe-left));
+  padding: 0.75rem 1rem;
+  background: white;
+  z-index: 30;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: none;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button {
+  color: inherit;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+button {
+  border: 0;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #809b74;
+  outline-offset: 3px;
+}
+button {
+  transition:
+    background-color 0.16s,
+    color 0.16s,
+    border-color 0.16s,
+    transform 0.16s ease-out;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+svg {
+  flex-shrink: 0;
+}
+button svg {
+  pointer-events: none;
+}
+.app-shell {
+  max-width: 1200px;
+  padding: 0 max(var(--gutter), var(--safe-right)) var(--safe-bottom)
+    max(var(--gutter), var(--safe-left));
+  margin: 0 auto;
+}

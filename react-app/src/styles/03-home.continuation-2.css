@@ -1,0 +1,36 @@
+/* 03-home — historical continuation; keep its index.css position..
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #636d5d;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 30px 0 25px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.footer > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.empty-hero-title {
+  margin: 22px 0 0;
+  line-height: 1.65;
+}
+.hero-add {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 11px 14px;
+  background: #fff9;
+  color: #795c4e;
+  align-self: flex-start;
+  font-size: 0.75rem;
+  min-height: 44px;
+}

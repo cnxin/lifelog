@@ -160,7 +160,7 @@ test('SystemBars owns native insets and foreground style without the legacy over
   assert.match(app, /SystemBars\.setStyle\(\{ style: SystemBarsStyle.Light \}\)/);
   assert.doesNotMatch(app, /@capacitor\/status-bar|setBackgroundColor|setOverlaysWebView/);
   assert.equal(JSON.parse(read('package.json')).dependencies['@capacitor/status-bar'], undefined);
-  const css = read('src/styles.css');
+  const css = require('./lib/styles.cjs').readStyles('src/styles/index.css');
   for (const edge of ['top', 'right', 'bottom', 'left']) {
     assert.ok(css.replace(/\s+/g, "").includes(`var(--safe-area-inset-${edge},env(safe-area-inset-${edge},0px))`));
   }

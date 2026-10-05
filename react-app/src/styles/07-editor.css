@@ -1,0 +1,280 @@
+/* 07-editor.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.editor-fields {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  display: grid;
+  gap: 17px;
+  min-width: 0;
+}
+.editor-fields label:not(.choice-option):not(.check-row) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  position: relative;
+}
+.editor-fields input:not([type="radio"]):not([type="checkbox"]),
+.editor-fields textarea {
+  width: 100%;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-background);
+  color: #354331;
+  min-height: var(--input-height);
+  padding: 0 var(--input-padding);
+  font-size: var(--input-font-size);
+}
+.editor-fields input:not([type="radio"]):not([type="checkbox"]) {
+  height: var(--input-height);
+}
+.editor-fields input::placeholder,
+.editor-fields textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+.editor-fields input:not([type="radio"]):not([type="checkbox"]):focus,
+.editor-fields textarea:focus,
+.search:focus-within {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--input-focus-shadow);
+}
+@media (forced-colors: active) {
+  .editor-fields input:not([type="radio"]):not([type="checkbox"]):focus,
+  .editor-fields textarea:focus,
+  .search:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+  }
+}
+.editor-fields input[type="date"] {
+  min-width: 0;
+  appearance: none;
+}
+.editor-fields textarea {
+  resize: vertical;
+  line-height: 1.6;
+  padding-block: 10px;
+}
+.field-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.optional {
+  color: #636d5d;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.field-help {
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--muted);
+  margin-top: -9px;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+  padding-block: 0.25rem;
+  cursor: pointer;
+}
+.check-row strong {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.check-row small {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.check-row input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  border: 1.5px solid #7b8774;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #fff;
+  cursor: pointer;
+}
+.check-row input:checked {
+  border-color: var(--green);
+  background: var(--green);
+}
+.check-row input:checked::after {
+  content: "";
+  position: absolute;
+  left: 32%;
+  top: 13%;
+  width: 30%;
+  height: 55%;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.check-row:active input:not(:disabled) {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px #465b451a;
+}
+.check-row input:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+@media (forced-colors: active) {
+  .check-row input {
+    forced-color-adjust: none;
+    background: Canvas;
+    border-color: ButtonText;
+  }
+  .check-row input:checked {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+.choice-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.choice-field legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.choice-help {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.choice-options {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #eef0e9;
+}
+.choice-option {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+.choice-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.choice-option > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  min-height: 3rem;
+  height: 100%;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+.choice-option input:checked + span {
+  color: var(--green);
+  background: #fff;
+  border-color: #c6cfc0;
+  box-shadow: 0 1px 3px #2632220a;
+}
+.choice-option input:focus-visible + span {
+  outline: 3px solid #809b74;
+  outline-offset: 2px;
+}
+.choice-option input:not(:disabled):active + span {
+  background: #e1e7db;
+}
+.choice-option input:disabled + span {
+  opacity: 0.55;
+}
+@media (forced-colors: active) {
+  .choice-option input:checked + span {
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+  }
+}
+.editor-footer {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px;
+}
+.delete-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #a36358;
+  margin-right: auto;
+  font-size: 0.75rem;
+  min-height: 44px;
+  padding: 8px;
+}
+.delete-confirm {
+  background: #fbefeb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 20px;
+  font-size: 0.75rem;
+  line-height: 1.8;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 15px;
+}
+.error-box,
+.success-box {
+  font-size: 0.75rem;
+  padding: 15px;
+  border-radius: 9px;
+  line-height: 1.8;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.error-box {
+  background: #fbebe7;
+  color: #9f4437;
+}
+.error-box button {
+  margin-left: 12px;
+}
+.success-box {
+  background: #edf2e8;
+  color: #4d693e;
+}

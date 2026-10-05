@@ -1,0 +1,69 @@
+/* 11-motion — historical continuation; keep its index.css position..
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+
+/* Named card snapshots move without a full-page crossfade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(*) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.day-card[data-highlight="true"] {
+  animation: day-highlight 1.2s ease-out;
+}
+@keyframes day-highlight {
+  0%,
+  35% {
+    border-color: #809b74;
+    box-shadow: 0 0 0 3px #809b7440;
+  }
+  100% {
+    border-color: var(--border);
+    box-shadow: 0 0 0 0 #809b7400;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .day-card[data-highlight="true"] {
+    border-color: #809b74;
+  }
+}
+
+/* Keep closing sheets non-interactive until their exit snapshot is gone. */
+.modal[data-closing="true"] {
+  pointer-events: none;
+}
+
+/* Large surfaces respond with color, not a layout-disrupting scale. */
+.card-main,
+.calendar-day,
+.calendar-event,
+.hero-link {
+  transition: background-color 120ms ease-out;
+}
+.card-main:not(:disabled):active,
+.calendar-event:not(:disabled):active {
+  background: var(--soft-pressed, #e2e4de);
+  transition-duration: 80ms;
+}
+.hero-link:not(:disabled):active {
+  background: var(--tint-pressed, #e2e4de);
+  transition-duration: 80ms;
+}
+.calendar-day:not(:disabled):active {
+  background: #e2e4de;
+  transition-duration: 80ms;
+}
+.calendar-day[data-selected="true"]:not(:disabled):active {
+  background: #425641;
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
+}

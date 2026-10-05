@@ -1,0 +1,27 @@
+/* 11-motion.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.toast {
+  position: fixed;
+  bottom: calc(var(--safe-bottom) + 1.5rem);
+  max-width: calc(100% - var(--safe-left) - var(--safe-right) - 2rem);
+  left: 50%;
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+  border-radius: 10px;
+  background: #3e503b;
+  color: #fff;
+  padding: 12px 20px;
+  z-index: 5;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 20px #0001;
+  pointer-events: none;
+}
+.toast[data-visible="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-duration: 160ms;
+}

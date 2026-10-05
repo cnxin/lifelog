@@ -1,0 +1,152 @@
+/* 02-header.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: var(--safe-top);
+  background: rgba(247, 248, 250, 0.94);
+  isolation: isolate;
+}
+@supports (backdrop-filter: blur(20px)) {
+  .site-header {
+    background: rgba(247, 248, 250, 0.86);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+  }
+}
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 0.75rem;
+  background: linear-gradient(rgba(247, 248, 250, 0.7), transparent);
+  pointer-events: none;
+}
+.header-inner {
+  max-width: 1200px;
+  min-height: var(--header-height);
+  margin: auto;
+  padding: 0.5rem max(var(--gutter), var(--safe-right)) 0.5rem
+    max(var(--gutter), var(--safe-left));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 40px;
+  flex-shrink: 0;
+}
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: #e8eddf;
+  border-radius: 0.9rem;
+  color: #465b45;
+}
+.brand-label {
+  display: grid;
+  gap: 0;
+}
+.brand-cn {
+  font-size: 1.375rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.brand-caption {
+  color: var(--muted);
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  /* Match the CJK title's visible left bearing, not merely its line box. */
+  padding-inline-start: 0.1875rem;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.header-backup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  background: transparent;
+  border-radius: 1rem;
+  font-size: 0.8125rem;
+}
+.header-backup > span {
+  display: none;
+}
+.header-add,
+.header-backup,
+.brand-calendar {
+  position: relative;
+}
+.header-add::before,
+.header-backup::before,
+.brand-calendar::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .header-backup:hover {
+    background: #e9ece5;
+  }
+}
+.header-add.primary {
+  min-height: 40px;
+  border-radius: 1rem;
+  padding: 0 14px;
+  font-size: 0.875rem;
+}
+button:not(:disabled):not(.card-main):not(.calendar-day):not(
+    .calendar-event
+  ):not(.hero-link):active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+.local-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.local-indicator i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8a9d79;
+}
+.icon-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: transparent;
+  color: #62695f;
+}
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    background: #e9ece5;
+  }
+}

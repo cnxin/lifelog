@@ -1,0 +1,49 @@
+/* 04-cards.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.days-section {
+  margin-top: 44px;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.section-heading h2 {
+  font-size: 1.1875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  letter-spacing: 0.5px;
+}
+.section-heading h2 > span {
+  display: inline-grid;
+  place-items: center;
+  background: #e9ece5;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #6f7b60;
+}
+.section-heading p {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.primary,
+.secondary,
+.danger {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}

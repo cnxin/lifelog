@@ -1,0 +1,102 @@
+/* 06-modal.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.modal {
+  width: min(
+    490px,
+    calc(100% - max(16px, var(--safe-left)) - max(16px, var(--safe-right)))
+  );
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem);
+  margin: auto;
+  inset: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  overscroll-behavior: contain;
+  scroll-padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fcfdfb;
+  color: inherit;
+  padding: 27px;
+  box-shadow: 0 24px 90px #1f2d2433;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal:not([open]) {
+  display: none;
+}
+.modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scroll-padding: 8px 1rem 1rem;
+}
+.editor-modal .modal-body {
+  scroll-padding-bottom: 4.5rem;
+}
+.modal-heading {
+  flex-shrink: 0;
+}
+.modal {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+.modal[open] {
+  opacity: 1;
+  transform: none;
+}
+@supports (transition-behavior: allow-discrete) {
+  .modal {
+    transition:
+      opacity 0.2s ease-out,
+      transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+      overlay 0.24s allow-discrete,
+      display 0.24s allow-discrete;
+  }
+  .modal::backdrop {
+    transition:
+      background-color 0.24s,
+      opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+      overlay 0.24s allow-discrete,
+      display 0.24s allow-discrete;
+  }
+}
+.modal::backdrop {
+  background: transparent;
+  backdrop-filter: blur(4px);
+}
+.modal[open]::backdrop {
+  background: #202c2459;
+}
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  .modal[open]::backdrop {
+    background: transparent;
+  }
+}
+.modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 24px;
+}
+.modal-heading > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modal-heading > button {
+  flex-shrink: 0;
+}
+.modal-heading h2 {
+  font-size: 1.3125rem;
+  letter-spacing: 0.5px;
+  font-weight: 550;
+  margin-top: 8px;
+}
+.modal .eyebrow {
+  font-size: 0.75rem;
+}

@@ -1,0 +1,119 @@
+/* 04-cards — historical continuation; keep its index.css position..
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.day-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+.day-card {
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.16s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .day-card:hover {
+    border-color: #bdc7b3;
+  }
+}
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 0;
+}
+.category-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: var(--tint);
+  color: var(--ink);
+  border-radius: 12px;
+}
+.card-category {
+  font-size: 0.75rem;
+  color: #636d5d;
+}
+.pin-button {
+  margin-left: auto;
+  background: transparent;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  color: #8b9384;
+  display: grid;
+  place-items: center;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pin-button:hover {
+    background: #f1f3ee;
+  }
+}
+.pin-button.is-pinned {
+  color: #6c7958;
+  background: #f1f3ec;
+}
+.is-pinned svg {
+  fill: #dce4d3;
+}
+.card-main {
+  display: block;
+  text-align: left;
+  padding: 17px 20px 0;
+  background: transparent;
+  width: 100%;
+}
+.card-main h3 {
+  font-size: 0.9375rem;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+}
+.card-date {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.375rem;
+  font-size: 0.75rem;
+  color: #636d5d;
+  margin-top: 7px;
+}
+.card-count {
+  min-height: 86px;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 20px 0;
+  color: #636d5d;
+  font-size: 0.75rem;
+}
+.card-count > strong {
+  font-size: 2.3125rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -1px;
+  color: #47533f;
+  font-variant-numeric: tabular-nums;
+}
+.card-bottom {
+  border-top: 1px solid #f0f1ed;
+  padding: 13px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: #636d5d;
+  min-height: 44px;
+}
+.card-bottom > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

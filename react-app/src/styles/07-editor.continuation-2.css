@@ -1,0 +1,297 @@
+/* 07-editor — historical continuation; keep its index.css position..
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+
+/* The editor date picker expands in place; no native popup or nested dialog. */
+.date-field {
+  min-width: 0;
+  scroll-margin-top: 8px;
+}
+.date-field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.date-field-open .date-field-label {
+  margin-bottom: 4px;
+}
+.date-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #fff;
+  color: var(--green);
+}
+.date-trigger[aria-expanded="true"] {
+  border-color: var(--green);
+  background: #f7f9f4;
+  min-height: 52px;
+  padding-block: 4px;
+}
+.date-trigger[aria-expanded="true"] .date-trigger-copy {
+  gap: 0;
+}
+.date-trigger > svg {
+  flex-shrink: 0;
+}
+.date-trigger-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.date-trigger-copy strong {
+  font-size: 0.9375rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.date-trigger-copy small {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.date-trigger[aria-expanded="true"] .date-chevron {
+  transform: rotate(180deg);
+}
+.date-picker {
+  margin-top: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: #fff;
+}
+.date-picker-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-height: 40px;
+}
+.date-picker-toolbar .icon-button,
+.date-picker-toolbar .date-month-heading {
+  min-height: 40px;
+  position: relative;
+}
+.date-picker-toolbar .icon-button {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+}
+.date-picker-toolbar button::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+}
+.date-picker-toolbar .calendar-month-actions {
+  gap: 4px;
+}
+.date-month-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  color: var(--green);
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
+@media (hover: hover) and (pointer: fine) {
+  .date-month-heading:hover,
+  .date-collapse:hover {
+    background: #eef0e9;
+  }
+}
+.date-picker .calendar-scroll {
+  margin-top: 0;
+  padding-block: 0;
+}
+.date-picker .calendar-grid th {
+  height: 24px;
+}
+.date-picker .calendar-grid td {
+  padding-block: 0;
+}
+.date-picker .calendar-day {
+  min-height: 52px;
+  height: auto;
+  gap: 0;
+  padding: 4px 1px;
+}
+.date-picker .calendar-number {
+  font-size: 0.9375rem;
+}
+.date-picker .calendar-lunar {
+  font-size: 0.65625rem;
+}
+.date-picker-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  position: relative;
+  min-height: 44px;
+}
+.date-picker-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+.date-picker-footer > span {
+  color: var(--muted);
+  font-size: 0.6875rem;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.date-collapse {
+  min-height: 44px;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  border-radius: 0.75rem;
+}
+.date-year-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.date-year-row .date-year-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.date-year-label input {
+  width: 6rem;
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.date-picker-hint {
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--muted);
+  margin: 0.75rem 0;
+}
+.date-months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+.date-months button {
+  min-height: 44px;
+  border-radius: 0.75rem;
+  background: #f3f4ee;
+  font-size: 0.875rem;
+  color: var(--green);
+}
+.date-months button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--green);
+}
+@media (max-width: 380px) {
+  .date-picker {
+    padding: 3px 8px;
+  }
+  .date-picker-footer > span {
+    text-align: center;
+  }
+}
+@media (forced-colors: active) {
+  .date-trigger,
+  .date-picker,
+  .date-months button {
+    border: 1px solid ButtonText;
+  }
+  .date-trigger[aria-expanded="true"],
+  .date-months button[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* Secondary choices stay compact; descriptions keep the form's readable width. */
+.repeat-calendar .choice-options {
+  width: 12rem;
+  max-width: 100%;
+}
+.repeat-calendar .choice-option > span {
+  min-height: 44px;
+}
+/* Keep the year field independent of the generic stacked form-label rules. */
+.editor-fields .date-year-row label.date-year-label {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-width: 0;
+  gap: 0.5rem;
+}
+.editor-fields .date-year-row .date-year-label input {
+  width: 6rem;
+  max-width: 100%;
+  padding-inline: var(--input-padding);
+}
+.date-year-row > button,
+.calendar-event > svg,
+.hero-link > svg,
+.hero-bottom svg {
+  flex-shrink: 0;
+}
+.modal .button-row > button,
+.modal .editor-footer > button {
+  padding-inline: 12px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.delete-confirm {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 430px) {
+  .card-date > span {
+    display: inline-block;
+  }
+  .hero-count {
+    gap: 0.5rem 0.75rem;
+  }
+}
+
+/* Equal-height desktop cards align counts and footers even with long titles. */
+@media (min-width: 761px) {
+  .day-card {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-copy {
+    margin-bottom: auto;
+  }
+  .card-bottom {
+    width: 100%;
+  }
+}
+.card-top > .category-icon,
+.card-top > .pin-button,
+.card-bottom > svg {
+  flex-shrink: 0;
+}

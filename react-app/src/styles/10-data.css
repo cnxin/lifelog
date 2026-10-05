@@ -1,0 +1,95 @@
+/* 10-data.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eef2e9;
+  padding: 16px;
+  border-radius: 12px;
+  color: #526449;
+}
+.privacy-note > svg {
+  flex-shrink: 0;
+}
+.privacy-note > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.privacy-note strong {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.privacy-note p {
+  font-size: 0.75rem;
+  line-height: 1.9;
+  margin-top: 7px;
+  color: #526449;
+}
+.data-actions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+.data-actions button {
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 17px 4px;
+  border-bottom: 1px solid var(--border);
+}
+@media (hover: hover) and (pointer: fine) {
+  .data-actions button:hover {
+    background: #f1f4ec;
+  }
+}
+.data-actions button > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.data-actions button > svg {
+  flex-shrink: 0;
+  width: 20px;
+  color: #6f7d62;
+}
+.data-actions button > svg:last-child {
+  margin-left: auto;
+}
+.data-actions strong {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.data-actions small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-top: 6px;
+}
+.data-footnote {
+  font-size: 0.75rem;
+  line-height: 1.9;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 25px;
+}
+.import-preview {
+  margin-top: 20px;
+  background: #f2f4ed;
+  padding: 16px;
+  border-radius: 10px;
+}
+.import-preview h3 {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.import-preview p {
+  font-size: 0.75rem;
+  line-height: 1.9;
+  margin-top: 10px;
+  color: var(--muted);
+}

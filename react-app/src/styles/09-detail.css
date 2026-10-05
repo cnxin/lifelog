@@ -1,0 +1,43 @@
+/* 09-detail.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.detail-category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #526449;
+}
+.detail-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  margin: 20px 0;
+}
+.detail-count strong {
+  font-size: clamp(2.5rem, 12vw, 4.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.detail-dates {
+  display: grid;
+  gap: 8px;
+  color: #526449;
+  font-size: 0.875rem;
+}
+.detail-note {
+  margin: 24px 0;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--soft);
+}
+.detail-note p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+.detail-footer {
+  justify-content: space-between;
+}

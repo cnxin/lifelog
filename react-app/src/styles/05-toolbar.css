@@ -1,0 +1,177 @@
+/* 05-toolbar.
+ * Original alpha.8 cascade order; moving this block changes override precedence. */
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  flex-shrink: 0;
+  background: transparent;
+  padding: 0 4px;
+  margin-inline-start: -4px;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+.filters button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  gap: 6px;
+  /* 44px hit box, with a 36px painted capsule. Overflow must not clip hits. */
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #636d5d;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  position: relative;
+  isolation: isolate;
+  scroll-margin-inline: 4px;
+}
+.filters button::after {
+  content: "";
+  position: absolute;
+  inset: 4px 0;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid var(--chip-border, var(--border));
+  border-radius: inherit;
+  background: var(--chip-background, transparent);
+}
+.filters button:focus-visible {
+  outline: none;
+}
+.filters button:focus-visible::after {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+.filters button svg {
+  width: 14px;
+  height: 14px;
+}
+.search-toggle {
+  /* Keep the hit pseudo-element anchored even between responsive renders. */
+  position: relative;
+}
+.search-toggle::before,
+.sort-button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+.filters button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.filters button.active {
+  --chip-background: #eef0e9;
+  --chip-border: #c6cfc0;
+  color: var(--green);
+}
+@media (hover: hover) and (pointer: fine) {
+  .filters button:hover:not(.active) {
+    --chip-background: #e5e9df;
+  }
+}
+.filters.reminder-offsets {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  margin-top: 8px;
+}
+.filters.reminder-offsets button {
+  flex: 1 0 0;
+  padding-inline: 4px;
+  min-width: max(44px, calc(3em + 1ch + 8px));
+  scroll-snap-align: start;
+}
+.reminder-bell {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 4px;
+  vertical-align: middle;
+}
+.reminder-time {
+  margin-block: 20px;
+}
+.reminder-time-choice .choice-options {
+  grid-auto-flow: unset;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
+}
+.list-tools {
+  display: flex;
+  flex: 1 1 28rem;
+  flex-wrap: wrap;
+  min-width: min(100%, 28rem);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.search {
+  flex: 1 1 12rem;
+  min-width: min(100%, 12rem);
+  min-height: var(--input-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #636d5d;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  background: var(--input-background);
+  padding: 0 var(--input-padding);
+  width: auto;
+}
+.search input {
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  outline: none;
+  color: #424b3e;
+  background: transparent;
+  font-size: var(--input-font-size);
+  height: calc(var(--input-height) - 2px);
+}
+.search input::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+.search button {
+  background: transparent;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  position: relative;
+}
+.search button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+/* Sorting is a secondary, content-sized tool, not a full-width navigation bar. */
+.sort.choice-field {
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+.sort .choice-options {
+  gap: 2px;
+  padding: 3px;
+  border-radius: 14px;
+}
+.sort .choice-option > span {
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
