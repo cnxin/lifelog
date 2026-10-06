@@ -7,6 +7,7 @@ import CalendarView from "./CalendarView";
 import DataPanel from "./DataPanel";
 import useCompactLayout from "./useCompactLayout";
 import HomeHeader from "./components/HomeHeader";
+import useHomeSearch from "./hooks/useHomeSearch";
 import PageHeading from "./components/PageHeading";
 import HomeHero from "./components/HomeHero";
 import Toolbar from "./components/Toolbar";
@@ -31,6 +32,7 @@ export default function App() {
  const heroRef = useRef<HTMLDivElement>(null);
  const [filter, setFilter] = useState<"全部" | Category>("全部");
  const [query, setQuery] = useState("");
+ const search = useHomeSearch(compact, query, setQuery);
  const [sort, setSort] = useState("upcoming");
  const [sortMenuOpen, setSortMenuOpen] = useState(false);
  const [editor, setEditor] = useState<Day | null>(null);
@@ -53,7 +55,8 @@ export default function App() {
  return (<>
   <a className="skip-link" href="#main-content">跳到日子列表</a>
   <HomeHeader headerRef={headerRef} calendarButtonRef={calendarButtonRef} loaded={loaded} today={today}
-   setCalendarDate={setCalendarDate} setSettings={setSettings} add={add} />
+   setCalendarDate={setCalendarDate} setSettings={setSettings} add={add}
+   compact={compact} query={query} setQuery={setQuery} search={search} />
   <div className="app-shell">
    <main id="main-content" tabIndex={-1}>
     <PageHeading today={today} compact={compact} />
@@ -66,7 +69,7 @@ export default function App() {
       <div className="section-heading"><div><h2 id="days-title">我的日子 <span>{days.length}</span></h2>
        <p>将期待和想念，收进这一页。</p></div><span className="section-caption">每一个，都特别</span></div>
       <Toolbar compact={compact} filter={filter} setFilter={setFilter} query={query} setQuery={setQuery}
-       sort={sort} setSort={setSort} sortMenuOpen={sortMenuOpen} setSortMenuOpen={setSortMenuOpen} />
+       sort={sort} setSort={setSort} sortMenuOpen={sortMenuOpen} setSortMenuOpen={setSortMenuOpen} search={search} />
       {visible.length > 0 ? <ul className="day-grid">{visible.map(day => <DayCard key={day.id} day={day} today={today}
        highlightId={highlightId} setHighlightId={setHighlightId} togglePin={togglePin} setError={setError} setDetailId={setDetailId} />)}</ul>
        : days.length ? <EmptyResults setFilter={setFilter} setQuery={setQuery} /> : <StarterGrid add={add} />}

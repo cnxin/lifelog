@@ -224,7 +224,7 @@ const fs = require("node:fs/promises");
     );
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
-    // Every filter has equal geometry and centered icon+text, regardless of selection.
+    // Compact chips follow their content; every chip still centers icon+text.
     for (const width of [320, 390, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 1000 });
       const buttons = page
@@ -248,6 +248,7 @@ const fs = require("node:fs/promises");
             const label = range.getBoundingClientRect();
             return {
               width: box.width,
+              contentWidth: icon.width + 5 + label.width,
               height: box.height,
               offset: Math.abs(
                 (icon.left + label.right) / 2 - (box.left + box.right) / 2,
@@ -256,10 +257,12 @@ const fs = require("node:fs/promises");
           }),
         );
         for (const p of positions) {
-          assert.ok(
-            Math.abs(p.width - positions[0].width) <= 1,
-            `${width}: equal filter widths`,
-          );
+          if (width <= 760) {
+            assert.ok(p.width >= 56 && p.width <= p.contentWidth + 20,
+              `${width}: chip >=56px and <= content + 20px`);
+          } else {
+            assert.ok(Math.abs(p.width - positions[0].width) <= 1, `${width}: equal filter widths`);
+          }
           assert.equal(p.height, positions[0].height, "equal filter heights");
           assert.ok(p.offset <= 1, `${width}: icon+text centered`);
         }
@@ -280,14 +283,15 @@ const fs = require("node:fs/promises");
         await page.getByRole('button', {name: '打开搜索', exact: true}).waitFor();
         assert.equal(await select.count(), 1);
         const filter = await page.locator(".filters").boundingBox();
-        const toggle = await page.locator(".search-toggle").boundingBox();
+        const toggle = await page.locator(".header-search").boundingBox();
+        const backup = await page.locator(".header-backup").boundingBox();
         const sorting = await select.boundingBox();
-        const toggleHit = await hitTarget(page.locator('.search-toggle'));
+        const toggleHit = await hitTarget(page.locator('.header-search'));
         const sortingHit = await hitTarget(select);
         assert.ok(toggleHit.width >= 44 && toggleHit.height >= 44 && toggleHit.painted, 'search hit area >=44px, including pseudo-element');
         assert.ok(sortingHit.width >= 44 && sortingHit.height >= 44 && sortingHit.painted, 'sort hit area >=44px, including pseudo-element');
-        assert.ok(Math.abs(toggle.y - sorting.y) <= 1, "mobile actions share one row");
-        assert.ok(filter.x + filter.width <= toggle.x, "chips do not overlap actions");
+        assert.ok(Math.abs(toggle.y + toggle.height / 2 - backup.y - backup.height / 2) <= 1, "search and backup share header row");
+        assert.ok(filter.x + filter.width <= sorting.x, "chips do not overlap sorting");
         assert.ok(sorting.x + sorting.width <= width, "mobile sort fits viewport");
         await page.mouse.click(sorting.x + sorting.width / 2, sorting.y - 3);
         await page.getByRole('menu', {name: '排序方式', exact: true}).waitFor();

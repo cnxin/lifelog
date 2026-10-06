@@ -583,7 +583,7 @@
         "transform": "none"
       }
     ],
-    ".search-toggle": [],
+    ".header-search": [],
     ".search": [
       {
         "color": "rgb(154, 163, 148)",

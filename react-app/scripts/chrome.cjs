@@ -183,7 +183,7 @@ const fs = require("node:fs/promises");
             return parseFloat(css.height) + parseFloat(css.borderTopWidth) + parseFloat(css.borderBottomWidth);
           })(),
           chipIcon: box('.filters button svg'),
-          sort: box('.sort-button'), search: innerWidth <= 760 ? box('.search-toggle') : null};
+          sort: box('.sort-button'), search: innerWidth <= 760 ? box('.header-search') : null};
       });
       assert.equal(geometry.icon.width, 40);
       assert.equal(geometry.icon.height, 40);
@@ -203,7 +203,7 @@ const fs = require("node:fs/promises");
       assert.equal(geometry.backup.height, 40);
       assert.equal(geometry.chipVisualHeight, 36, 'painted capsule remains 36px high');
       assert.equal(geometry.chip.font, '13px');
-      assert.equal(geometry.chip.padding, '12px');
+      assert.equal(geometry.chip.padding, width <= 760 ? '10px' : '12px');
       assert.equal(geometry.chipIcon.width, 14);
       assert.equal(geometry.sort.height, 36);
       if (width <= 760) {

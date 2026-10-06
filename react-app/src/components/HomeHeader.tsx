@@ -1,5 +1,7 @@
 import type { RefObject } from "react";
-import { CalendarDays, Settings2, Plus } from "lucide-react";
+import { CalendarDays, Settings2, Plus, Search } from "lucide-react";
+import SearchField from "./SearchField";
+import type useHomeSearch from "../hooks/useHomeSearch";
 export default function HomeHeader({
   headerRef,
   calendarButtonRef,
@@ -8,6 +10,10 @@ export default function HomeHeader({
   setCalendarDate,
   setSettings,
   add,
+  compact,
+  query,
+  setQuery,
+  search,
 }: {
   headerRef: RefObject<HTMLElement>;
   calendarButtonRef: RefObject<HTMLButtonElement>;
@@ -16,9 +22,13 @@ export default function HomeHeader({
   setCalendarDate: (date: string) => void;
   setSettings: (open: boolean) => void;
   add: () => void;
+  compact: boolean;
+  query: string;
+  setQuery: (query: string) => void;
+  search: ReturnType<typeof useHomeSearch>;
 }) {
   return (
-    <header ref={headerRef} className="site-header">
+    <header ref={headerRef} className="site-header" data-search-open={compact ? search.open : undefined}>
       <div className="header-inner">
         <div className="brand">
           <button
@@ -43,6 +53,11 @@ export default function HomeHeader({
             <i />
             本地记录，安心珍藏
           </span>
+          {compact && <button ref={search.buttonRef} type="button" className="header-search icon-button"
+            aria-label="打开搜索" aria-expanded={search.open} aria-controls="days-search"
+            disabled={!loaded} onClick={search.toggle}>
+            <Search size={18} aria-hidden="true" />
+          </button>}
           <button
             className="header-backup"
             aria-label="数据与备份"
@@ -64,6 +79,11 @@ export default function HomeHeader({
           </button>
         </div>
       </div>
+      {compact && (search.open || search.exiting) && <div className="toolbar-search"
+        aria-hidden={search.open ? undefined : true}
+        ref={row => row?.toggleAttribute("inert", !search.open)}>
+        <SearchField compact query={query} setQuery={setQuery} inputRef={search.inputRef} close={search.close} />
+      </div>}
     </header>
   );
 }

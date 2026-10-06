@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Search, X } from "lucide-react";
+import { useRef } from "react";
+import { CalendarDays } from "lucide-react";
 import { categories, type Category } from "../domain";
 import FilterStrip from "../FilterStrip";
 import SortMenu from "../SortMenu";
 import Icon from "./CategoryIcon";
+import SearchField from "./SearchField";
+import type useHomeSearch from "../hooks/useHomeSearch";
 export default function Toolbar({
   compact,
   filter,
@@ -14,6 +16,7 @@ export default function Toolbar({
   setSort,
   sortMenuOpen,
   setSortMenuOpen,
+  search,
 }: {
   compact: boolean;
   filter: "全部" | Category;
@@ -24,26 +27,9 @@ export default function Toolbar({
   setSort: (sort: string) => void;
   sortMenuOpen: boolean;
   setSortMenuOpen: (open: boolean) => void;
+  search: ReturnType<typeof useHomeSearch>;
 }) {
-  const searchInput = useRef<HTMLInputElement>(null);
-  const searchButton = useRef<HTMLButtonElement>(null);
   const sortButtonRef = useRef<HTMLButtonElement>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchExiting, setSearchExiting] = useState(false);
-  const exitTimer = useRef<ReturnType<typeof setTimeout>>();
-  const mobileSearchOpen = compact && (searchOpen || query.length > 0);
-  useEffect(() => () => clearTimeout(exitTimer.current), []);
-  function closeSearch() {
-    setQuery("");
-    if (!compact) return;
-    clearTimeout(exitTimer.current);
-    // Keep only the inert closing row for the 160ms exit, never a hidden input.
-    const animate = !matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setSearchExiting(animate);
-    if (animate) exitTimer.current = setTimeout(() => setSearchExiting(false), 160);
-    setSearchOpen(false);
-    requestAnimationFrame(() => searchButton.current?.focus());
-  }
 
   const filters = (
     <FilterStrip>
@@ -64,61 +50,10 @@ export default function Toolbar({
       ))}
     </FilterStrip>
   );
-  const search = (
-    <div className="search" id="days-search">
-      <Search size={16} aria-hidden="true" />
-      <input
-        ref={searchInput}
-        autoFocus={compact}
-        type="search"
-        enterKeyHint="search"
-        autoComplete="off"
-        aria-label="搜索日子"
-        placeholder="搜索日子…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(event) => {
-          if (compact && event.key === "Escape") {
-            event.preventDefault();
-            closeSearch();
-          }
-        }}
-      />
-      {(query || compact) && (
-        <button
-          aria-label={query ? "清除搜索" : "收起搜索"}
-          onClick={closeSearch}
-        >
-          <X size={15} />
-        </button>
-      )}
-    </div>
-  );
   const tools = (
     <div className="list-tools">
-      {compact && (
-        <button
-          ref={searchButton}
-          type="button"
-          className="search-toggle icon-button"
-          aria-label="打开搜索"
-          aria-expanded={mobileSearchOpen}
-          aria-controls={mobileSearchOpen ? "days-search" : undefined}
-          onClick={() => {
-            if (mobileSearchOpen) {
-              closeSearch();
-              return;
-            }
-            clearTimeout(exitTimer.current);
-            setSearchExiting(false);
-            setSearchOpen(true);
-            requestAnimationFrame(() => searchInput.current?.focus());
-          }}
-        >
-          <Search size={18} aria-hidden="true" />
-        </button>
-      )}
-      {!compact && search}
+      {!compact && <SearchField compact={false} query={query} setQuery={setQuery}
+        inputRef={search.inputRef} close={search.close} />}
       <SortMenu
         value={sort}
         onChange={setSort}
@@ -129,18 +64,9 @@ export default function Toolbar({
     </div>
   );
   return (
-    <div className="toolbar" data-search-open={mobileSearchOpen}>
+    <div className="toolbar" data-search-open={search.open}>
       {compact ? (
         <>
-          {(mobileSearchOpen || searchExiting) && (
-            <div
-              className="toolbar-search"
-              aria-hidden={mobileSearchOpen ? undefined : true}
-              ref={(row) => row?.toggleAttribute("inert", !mobileSearchOpen)}
-            >
-              {search}
-            </div>
-          )}
           <div className="toolbar-row">
             {filters}
             {tools}

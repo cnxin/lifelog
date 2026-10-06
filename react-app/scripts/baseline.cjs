@@ -11,7 +11,7 @@ const selectors = [
   '.app-shell', 'main', '.page-heading', '.heading-date', '.subtitle', '.overview',
   '.hero', '.hero-kicker', '.hero-link', '.hero-count', '.hero-caption', '.hero-bottom',
   '.overview-side', '.summary-card', '.summary-title', '.little-note', '.days-section',
-  '.section-heading', '.toolbar', '.filters', '.filters button', '.search-toggle',
+  '.section-heading', '.toolbar', '.filters', '.filters button', '.header-search',
   '.search', '.search input', '.sort-button', '.sort-menu', '[role="menuitemradio"]',
   '.day-grid', '.day-card', '.card-main', '.card-category', '.card-count', '.card-date',
   '.pin-button', '.modal', '.modal-heading', '.modal-body', '.modal-heading button',
@@ -60,7 +60,7 @@ async function seed(page) {
 async function openState(page, state) {
   const button = name => page.getByRole('button', { name, exact: true });
   if (state === 'search') {
-    const toggle = page.locator('.search-toggle');
+    const toggle = page.locator('.header-search');
     if (await toggle.isVisible()) await toggle.click();
     else await page.getByLabel('搜索日子').focus();
   }

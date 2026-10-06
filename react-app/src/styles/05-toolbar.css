@@ -53,11 +53,11 @@
   width: 14px;
   height: 14px;
 }
-.search-toggle {
+.header-search {
   /* Keep the hit pseudo-element anchored even between responsive renders. */
   position: relative;
 }
-.search-toggle::before,
+.header-search::before,
 .sort-button::before {
   content: "";
   position: absolute;
