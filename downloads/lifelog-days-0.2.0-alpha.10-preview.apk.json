@@ -541,25 +541,23 @@
     "postRefreshDiff": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n"
   },
   "authorAcceptance": {
-    "status": "pending",
+    "status": "passed by author in this thread on 2026-10-06; not a local device test",
     "model": null,
     "androidVersion": null,
     "webViewProvider": null,
     "webViewVersion": null
   },
   "notVerified": [
-    "Android installation/keyboard/touch/launcher layout/day rollover of phase I",
-    "author phase-I device checklist",
+    "Local Android installation/device testing; author confirmed phase-I acceptance without per-device measurements",
+    "Author device model/Android/WebView provider and version not supplied; adb has no connected devices",
     "notification punctuality/reboot recovery/long-term background widget cadence",
     "original production signing / same-signature upgrade"
   ],
   "publication": {
-    "status": "not pushed/tagged/released; author acceptance required",
+    "status": "author accepted; publishing v0.2.0-alpha.10-preview with original accepted APK",
     "priorReleaseChanges": "none",
     "nextPhaseJStarted": false,
-    "blockers": [
-      "Author phase-I device acceptance pending"
-    ]
+    "blockers": []
   },
   "sourceReleaseCommit": "ab934d2",
   "apkDistAssets": [
@@ -1309,5 +1307,145 @@
       "note": "UP-TO-DATE tasks are not fresh execution; no phone test. APK unchanged."
     },
     "priorFailingRunsRetained": true
+  },
+  "publicationValidation": {
+    "gates": {
+      "completedAt": "2026-10-06T08:15:52.152Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 9729,
+          "result": "PASS",
+          "testsPassed": 79
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8491,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 19334,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 45949,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 17690,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 21963,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 11073,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 6699,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 4394,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 30,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 11127,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 12513,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 63909,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.7101,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "exitCode": 0,
+    "androidPreview": {
+      "exitCode": 0,
+      "lint": "0 errors / 27 warnings; analysis UP-TO-DATE",
+      "jvmTask": "testDebugUnitTest UP-TO-DATE, not fresh execution"
+    },
+    "acceptedApkUnchanged": true,
+    "webAssetsByteIdentical": 20,
+    "deviceTestedLocally": false,
+    "authorAcceptanceDate": "2026-10-06",
+    "baselineCommit": "3c89d2b",
+    "priorReleasesModified": false
   }
 }
