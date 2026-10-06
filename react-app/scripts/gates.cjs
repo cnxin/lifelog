@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '..');
 const port = 5189;
 const base = `http://127.0.0.1:${port}`;
 const directory = path.join(root, '.artifacts/gates');
-const suites = ['smoke', 'ui-polish', 'calendar', 'date-picker', 'controls', 'chrome', 'offline', 'baseline', 'css-coverage'];
+const suites = ['smoke', 'ui-polish', 'calendar', 'date-picker', 'controls', 'chrome', 'offline', 'baseline', 'dark', 'css-coverage'];
 const reference = require('./gates-reference.json');
 
 // H3's half-time goal measured that refactor, not future feature acceptance.
