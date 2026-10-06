@@ -1,6 +1,6 @@
 # 日子：Android 测试与升级验收
 
-## alpha.12 / 阶段 K — 本地发布准备，待作者真机验收
+## alpha.12 / 阶段 K — 作者真机验收通过，发布 K7 测试包
 
 - `0.2.0-alpha.12-preview`，versionCode **147**，独立包名 `com.cnxin.lifelog.preview`，沿用测试签名；不改 legacy，不用于原正式包覆盖升级。基于 tap-highlight 修复 `14c49b8`，K1 `14c929d`，K2 `3ba1458`，K3 `91e8c6b`，K4 在 K3 后直接追加搜索修复，不重排、不 rebase，版本号与 versionCode 不变；作者验收前不推送、不打 tag、不发 Release，之前的 Release 不改不删。
 - 当前权限清单：`INTERNET`、`VIBRATE`、`POST_NOTIFICATIONS`、`RECEIVE_BOOT_COMPLETED`、插件自身 `WAKE_LOCK`、**`SCHEDULE_EXACT_ALARM`**、本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`。不申请 `USE_EXACT_ALARM`、`READ_CALENDAR` 或 `WRITE_CALENDAR`。下方 alpha.5 / alpha.6 的非精确权限清单是历史 APK 记录，不适用于本版。
@@ -21,7 +21,13 @@
 - K7 尺寸如实记录：常规 16px 根字号下，复用的「收起」为 **40×44px**，与现有日期面板一致；沒有新增补偿样式或改小原 44px 门禁断言，不能把它声称为默认 ≥44×44。原时间面板触控断言在既有大字号场景执行；默认字号尺寸另留浅 / 深色真实几何和截图。`npm run android:preview` 通过，Gradle 24s / 252 tasks / 43 executed / 209 up-to-date；先清理单测输出并关闭缓存，本轮 JVM 实际执行 15/15，lint 0 errors / 29 warnings，20 份 dist 资源与 APK 逐字节一致，包名 / 权限 / 版本 / 原测试证书校验通过。APK SHA-256：`bc0b05fea1b30c162e8d83d7043b344cc547f4ba12b24d160498c2df2ea81f0b`。这些都是本机自动验证和浏览器模拟，不是真机结论。
 - **K3、K4、K6 APK 均已作废，连同校验 / 报告撤出交付目录，不再交付。** 原字节仅保存在本地 `.artifacts/phase-k/k4/invalidated-k3/`、`.artifacts/phase-k/k6/invalidated-k4/`、`.artifacts/phase-k/k7/invalidated-k6/` 作证据；K5 APK 仅内部验证。最终候选为 `downloads/lifelog-days-0.2.0-alpha.12-preview-k7-<sha>.apk`（sha 为 K7 commit 短 SHA），附同名 `.apk.sha256` / `.apk.json`。版本号 / versionCode 147 不变，不重排、不 rebase；作者验收前不推送、不打 tag、不发 Release。**作者尚未确认阶段 K 真机验收；机型、Android 版本、WebView 提供方 / 版本均待作者提供，不猜填。** 本机没有执行设备安装验收，不能把浏览器模拟或 Robolectric 当作真机测试。
 
-### 作者真机验收单（K，待执行）
+### 作者真机验收与发布记录
+
+- 作者在本线程确认 **alpha.12（K7）真机验收通过**，不是本机执行的设备测试。验收机型、Android 版本、Android System WebView 提供方 / 版本：**作者尚未提供，待补充**。消息中的设备信息仍是占位符，既有记录无法可靠确定，不猜填。
+- 发布验收记录仅追加文档，不改 K7 产品代码或已验收 APK。发布候选固定为 `141611e` 的 K7 原 APK；推送 `codex/anniversary-lite`，tag `v0.2.0-alpha.12-preview`，pre-release 沿用 alpha.11 格式，附原 APK、SHA-256 与验证报告。alpha.11 及此前的 Release / 正文 / 资产不改不删。
+- 上方「待验收」及报告里的 `deviceTested:false` / `authorAcceptance:false` 是构建时的本机状态；作者后续验收由本小节单独记录，不改写原报告、不伪造自动真机测试。没有逐项设备测量可扩展为送达保证或后台长期周期结论。
+
+### 作者真机验收单（K，作者已确认通过）
 
 1. 新增 / 编辑设置 `10:37` 等非五分钟时间；缺省继承、全局改时间、用全局时间、空提前天数保存、旧 / 新 JSON 导入导出都正常。
 2. Android 12+ 未允许精确提醒时，冷启动 / 自动重排不打开设置；提醒区明确说明，只有点「去开启」才进入系统设置。拒绝后仍排非精确；授权并返回后重排为精确，实际送达需记录通知权限 / 省电条件。

@@ -1,0 +1,700 @@
+{
+  "phase": "K7",
+  "completedAt": "2026-10-06T17:11:47.908Z",
+  "branch": "codex/anniversary-lite",
+  "parent": "24c42d2e8d111c8d1a8ff30dc5a437f290fb461f",
+  "commit": "141611e16a1f5804a8f488543f79ea488cecdd44",
+  "tree": "c85f53e1980ba6c05126f5bbe60d368b9e792aa0",
+  "version": "0.2.0-alpha.12",
+  "versionCode": 147,
+  "artifact": "lifelog-days-0.2.0-alpha.12-preview-k7-141611e.apk",
+  "sha256": "bc0b05fea1b30c162e8d83d7043b344cc547f4ba12b24d160498c2df2ea81f0b",
+  "apk": {
+    "applicationId": "com.cnxin.lifelog.preview",
+    "label": "日子 · 测试版",
+    "versionName": "0.2.0-alpha.12-preview",
+    "versionCode": 147,
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.SCHEDULE_EXACT_ALARM",
+      "android.permission.VIBRATE",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.WAKE_LOCK",
+      "android.permission.POST_NOTIFICATIONS",
+      "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "sizeBytes": 4492979,
+    "sha256": "bc0b05fea1b30c162e8d83d7043b344cc547f4ba12b24d160498c2df2ea81f0b",
+    "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+    "deviceTested": false
+  },
+  "implementation": [
+    "Direct date-picker frame reuse; unchanged shared footer rules and numeric values; no new footer CSS.",
+    "Editor footer: calendar-today global reset, hint span, date-collapse close. Global-equal time disables reset with standard opacity .55.",
+    "DataPanel same TimePicker, visible footer only close; empty aria-hidden span is a flex spacer.",
+    "Time-wheel now marks entire panel; grid renamed time-wheel-columns, values unchanged; trigger markup and events unchanged.",
+    "Removed three obsolete time-specific CSS rules."
+  ],
+  "gates": {
+    "completedAt": "2026-10-06T16:55:11.646Z",
+    "port": 5189,
+    "chromiumProcessesLaunched": 1,
+    "startOrder": [
+      "smoke",
+      "ui-polish",
+      "calendar",
+      "date-picker",
+      "controls",
+      "chrome",
+      "offline",
+      "baseline",
+      "dark",
+      "css-coverage"
+    ],
+    "scheduling": "FIFO start order; at most 1 suites, isolated contexts; summary in fixed suite order.",
+    "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+    "results": [
+      {
+        "name": "node-unit",
+        "exitCode": 0,
+        "assertionsPassed": 0,
+        "axeAudits": 0,
+        "axeSourceInjections": 0,
+        "durationMs": 7179,
+        "result": "PASS",
+        "testsPassed": 102
+      },
+      {
+        "name": "build",
+        "exitCode": 0,
+        "assertionsPassed": 0,
+        "axeAudits": 0,
+        "axeSourceInjections": 0,
+        "durationMs": 6015,
+        "result": "PASS"
+      },
+      {
+        "name": "smoke",
+        "exitCode": 0,
+        "assertionsPassed": 48,
+        "axeAudits": 6,
+        "axeSourceInjections": 3,
+        "durationMs": 10963,
+        "result": "PASS"
+      },
+      {
+        "name": "ui-polish",
+        "exitCode": 0,
+        "assertionsPassed": 597,
+        "axeAudits": 93,
+        "axeSourceInjections": 6,
+        "durationMs": 28852,
+        "result": "PASS"
+      },
+      {
+        "name": "calendar",
+        "exitCode": 0,
+        "assertionsPassed": 57,
+        "axeAudits": 5,
+        "axeSourceInjections": 1,
+        "durationMs": 5418,
+        "result": "PASS"
+      },
+      {
+        "name": "date-picker",
+        "exitCode": 0,
+        "assertionsPassed": 93,
+        "axeAudits": 8,
+        "axeSourceInjections": 2,
+        "durationMs": 13272,
+        "result": "PASS"
+      },
+      {
+        "name": "controls",
+        "exitCode": 0,
+        "assertionsPassed": 585,
+        "axeAudits": 11,
+        "axeSourceInjections": 4,
+        "durationMs": 7796,
+        "result": "PASS"
+      },
+      {
+        "name": "chrome",
+        "exitCode": 0,
+        "assertionsPassed": 359,
+        "axeAudits": 5,
+        "axeSourceInjections": 3,
+        "durationMs": 5984,
+        "result": "PASS"
+      },
+      {
+        "name": "offline",
+        "exitCode": 0,
+        "assertionsPassed": 7,
+        "axeAudits": 0,
+        "axeSourceInjections": 0,
+        "durationMs": 2341,
+        "result": "PASS"
+      },
+      {
+        "name": "baseline",
+        "exitCode": 0,
+        "assertionsPassed": 58,
+        "axeAudits": 0,
+        "axeSourceInjections": 0,
+        "durationMs": 9754,
+        "result": "PASS"
+      },
+      {
+        "name": "dark",
+        "exitCode": 0,
+        "assertionsPassed": 411,
+        "axeAudits": 44,
+        "axeSourceInjections": 19,
+        "durationMs": 38646,
+        "result": "PASS"
+      },
+      {
+        "name": "css-coverage",
+        "exitCode": 0,
+        "assertionsPassed": 2,
+        "axeAudits": 0,
+        "axeSourceInjections": 0,
+        "durationMs": 9430,
+        "result": "PASS"
+      }
+    ],
+    "durationMs": 140134,
+    "referenceSeconds": 90,
+    "ratioToReference": 1.5570444444444445,
+    "timingPolicy": "informational",
+    "timingWarningThresholdSeconds": 180,
+    "timingWarning": false
+  },
+  "nativeValidation": {
+    "jvm": {
+      "actuallyExecuted": true,
+      "total": 15,
+      "suites": [
+        {
+          "file": "TEST-com.cnxin.lifelog.CalendarInsertIntentTest.xml",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "file": "TEST-com.cnxin.lifelog.widget.DayWidgetTest.xml",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "file": "TEST-com.getcapacitor.myapp.ExampleUnitTest.xml",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 29
+    },
+    "distAssets": {
+      "allBytesMatch": true,
+      "count": 20,
+      "files": [
+        {
+          "file": "dist/assets/esm-BXHfze4A.js",
+          "bytes": 707,
+          "sha256": "d40d44b94c8794c526ba83fa39c90e1519027256f15109ff48d4e5e25a2d270e"
+        },
+        {
+          "file": "dist/assets/esm-Bo_POAPS.js",
+          "bytes": 453,
+          "sha256": "c9e66ead0bb190fca1656e75bb852e457e3b5f3f759fe919bf71f4bf1a0aa974"
+        },
+        {
+          "file": "dist/assets/esm-DKcLeDMP.js",
+          "bytes": 674,
+          "sha256": "ca711c7f0b95e4f26004f2983eb86ea3a72669d1acf74c4b8841f125cd55e0c7"
+        },
+        {
+          "file": "dist/assets/index-C-DVmjpQ.css",
+          "bytes": 60998,
+          "sha256": "0ea158e8be816fd7d2ea00f19abf39c7631bb941ca5514c3674215a1a369a1ad"
+        },
+        {
+          "file": "dist/assets/index-QavTOymn.js",
+          "bytes": 102161,
+          "sha256": "9470e33adfcf4ecfa3cbf1404a28c7ee57106096b001497fef207bd4750c997a"
+        },
+        {
+          "file": "dist/assets/lunar-rFT-dEts.js",
+          "bytes": 305954,
+          "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090"
+        },
+        {
+          "file": "dist/assets/react-DxbjzT7Z.js",
+          "bytes": 139936,
+          "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de"
+        },
+        {
+          "file": "dist/assets/rolldown-runtime-Bh1tDfsg.js",
+          "bytes": 567,
+          "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7"
+        },
+        {
+          "file": "dist/assets/storage-CLLSMDTL.js",
+          "bytes": 95158,
+          "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42"
+        },
+        {
+          "file": "dist/assets/web-BdrxIDLE.js",
+          "bytes": 950,
+          "sha256": "50cc4eea97095195cb8e6186ad45c670d1743cab96d1b408eecb302ecc3cc412"
+        },
+        {
+          "file": "dist/assets/web-DcXuqovb.js",
+          "bytes": 4440,
+          "sha256": "7bd2f485399e58f202351bc38974b2678cf7037a644b77fca51f968e0c1bf145"
+        },
+        {
+          "file": "dist/assets/web-Du0Gjx96.js",
+          "bytes": 844,
+          "sha256": "c1cf2c96ca440a557df1791f74d2bb6f7dc75186ee9c9fbbbcf10ba6e5f15f08"
+        },
+        {
+          "file": "dist/icon-180.png",
+          "bytes": 5659,
+          "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478"
+        },
+        {
+          "file": "dist/icon-192.png",
+          "bytes": 6462,
+          "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3"
+        },
+        {
+          "file": "dist/icon-512.png",
+          "bytes": 30464,
+          "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b"
+        },
+        {
+          "file": "dist/icon.svg",
+          "bytes": 1282,
+          "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a"
+        },
+        {
+          "file": "dist/index.html",
+          "bytes": 1639,
+          "sha256": "5f87a1318754a3ffde728a50984c0bfb86b7b13eb6411b870b1a227f94360871"
+        },
+        {
+          "file": "dist/ingot.png",
+          "bytes": 8194,
+          "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e"
+        },
+        {
+          "file": "dist/manifest.webmanifest",
+          "bytes": 780,
+          "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc"
+        },
+        {
+          "file": "dist/sw.js",
+          "bytes": 3210,
+          "sha256": "d044c392562006ba88eeec5947493e830d62420e94dd7ae9045187ef9e124c27"
+        }
+      ]
+    },
+    "gateAndAndroidAssetNamesIdentical": true,
+    "previewSigningCertificateUnchanged": true
+  },
+  "baseline": {
+    "beforeHashes": {
+      "light/1024x768-calendar.json": "c9100ccef390fcedea88f2f4ab2e1c59477765fa9ff698f1602e31805f301326",
+      "light/1024x768-data.json": "e7885d393aa250fb82be0ec6cb0c9eb7beb1afbfaf9086f27f3db478671510fa",
+      "light/1024x768-detail.json": "2601af10d201bfe1544b01a67491b4ffd7eb9a492b74b49083242a5bcb9af646",
+      "light/1024x768-editor-date.json": "3831bfdb47c9f07ddcaa9bc69b7d7887345b479c3bbe695d3464f068cdc63e53",
+      "light/1024x768-home.json": "efd9a2f0d5b55449639a80e41cf2e6dfa615026e0aa67e30ab87cea9db1f2cb9",
+      "light/1024x768-search.json": "ae5f213ed0d37471e13e5e9c66d8ba30edaa6c3a4bcf39b44f17c8cbea9dac9c",
+      "light/1024x768-sort.json": "5924744a9b969a66a094938d8f784d52411e48af8ae00a3c054a36156b5332cd",
+      "light/360x740-calendar.json": "7bceba73bd318ad6341dc589bc2503a435732ecf163c5ef0b55ed029d556ee1e",
+      "light/360x740-data.json": "77ee2fe1eea3319b7068e02e7af94cac3fc1214d91c0e79d43ce2ccbed392fd7",
+      "light/360x740-detail.json": "7d5aaef10b658ff54fb09a2d36315876ecf396718744c486facad42c714e4d6e",
+      "light/360x740-editor-date.json": "f9582082c207d16611d7f2b34bac7cbb11da3e10d111888ed5bd05566311e342",
+      "light/360x740-home.json": "49d34d9c23820d35ca3e99095d744296216947d0c53a978f964f3cc546f3624d",
+      "light/360x740-search.json": "fff0c239511028b2dc2fdb8b7189ed4738b7c66aebf55d56f41eeaa6b7a59890",
+      "light/360x740-sort.json": "92aa3d6efa3bc4cb98e7d4ce5f0186af3adef79922e12ac9a006fa6efc657e23",
+      "dark/1024x768-calendar.json": "286e4957ce07068f8dfc365229942d8dd6fa235c30eac7999c5358de290235fd",
+      "dark/1024x768-data.json": "bf0ce930907f165bb091d6362b69ee6821cf9c3488ea4ab4d93476f593c97c80",
+      "dark/1024x768-detail.json": "f5de0a52cfc1e60197496a58691578025ce66e62d2a22877def387673f66e55b",
+      "dark/1024x768-editor-date.json": "70b0a0ebc1e16d8e5900221dbdacc1075c3f3064693268a75531363b8a6a5beb",
+      "dark/1024x768-home.json": "ed89419c7a11dca1a70eab6248636ebd7e92258ecd50575f5e9bc031dffb770f",
+      "dark/1024x768-search.json": "1504a059ba412cdfe21f5d1563cc83835bcda37f68cf74715d4bc0b611a0ec6f",
+      "dark/1024x768-sort.json": "d7ec0cd1b4e2a5801031a3c5f1c03ce89abf7e9b6a3b35be4f72a5b3b177cdc0",
+      "dark/360x740-calendar.json": "5642787cba77db549e22fa978e89fee3ee160e8ec410941bd2a294b6ce345b0e",
+      "dark/360x740-data.json": "1755774d13270636df4f8a3f2f8abeb753544072e6d17b305a404990403d0650",
+      "dark/360x740-detail.json": "50d6fe5db391c8015048add14ff8ebfae93273c7b28f4673b737e366080a558f",
+      "dark/360x740-editor-date.json": "c1062e53eca9d4299d49cff59148eba36842c23cb145a498b1965a17e2a7575d",
+      "dark/360x740-home.json": "e037ca8598f92c5419f300e4cc5a9005244cf526aa86a92078918c220baba5ca",
+      "dark/360x740-search.json": "4bcaf6d38cc94e9cdf5800f1796fffeff31422e636d638ba23a6e7a8e31e29e7",
+      "dark/360x740-sort.json": "2e5d55baca27d1dec8fb9291837f0cb780a9b90113e8fb8c46bb3d491fb5d95e"
+    },
+    "preCaptureDiff": {
+      "light": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+      "dark": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n"
+    },
+    "refresh": {
+      "capture": true,
+      "unchangedCount": 28,
+      "before": {
+        "light/1024x768-calendar.json": "c9100ccef390fcedea88f2f4ab2e1c59477765fa9ff698f1602e31805f301326",
+        "light/1024x768-data.json": "e7885d393aa250fb82be0ec6cb0c9eb7beb1afbfaf9086f27f3db478671510fa",
+        "light/1024x768-detail.json": "2601af10d201bfe1544b01a67491b4ffd7eb9a492b74b49083242a5bcb9af646",
+        "light/1024x768-editor-date.json": "3831bfdb47c9f07ddcaa9bc69b7d7887345b479c3bbe695d3464f068cdc63e53",
+        "light/1024x768-home.json": "efd9a2f0d5b55449639a80e41cf2e6dfa615026e0aa67e30ab87cea9db1f2cb9",
+        "light/1024x768-search.json": "ae5f213ed0d37471e13e5e9c66d8ba30edaa6c3a4bcf39b44f17c8cbea9dac9c",
+        "light/1024x768-sort.json": "5924744a9b969a66a094938d8f784d52411e48af8ae00a3c054a36156b5332cd",
+        "light/360x740-calendar.json": "7bceba73bd318ad6341dc589bc2503a435732ecf163c5ef0b55ed029d556ee1e",
+        "light/360x740-data.json": "77ee2fe1eea3319b7068e02e7af94cac3fc1214d91c0e79d43ce2ccbed392fd7",
+        "light/360x740-detail.json": "7d5aaef10b658ff54fb09a2d36315876ecf396718744c486facad42c714e4d6e",
+        "light/360x740-editor-date.json": "f9582082c207d16611d7f2b34bac7cbb11da3e10d111888ed5bd05566311e342",
+        "light/360x740-home.json": "49d34d9c23820d35ca3e99095d744296216947d0c53a978f964f3cc546f3624d",
+        "light/360x740-search.json": "fff0c239511028b2dc2fdb8b7189ed4738b7c66aebf55d56f41eeaa6b7a59890",
+        "light/360x740-sort.json": "92aa3d6efa3bc4cb98e7d4ce5f0186af3adef79922e12ac9a006fa6efc657e23",
+        "dark/1024x768-calendar.json": "286e4957ce07068f8dfc365229942d8dd6fa235c30eac7999c5358de290235fd",
+        "dark/1024x768-data.json": "bf0ce930907f165bb091d6362b69ee6821cf9c3488ea4ab4d93476f593c97c80",
+        "dark/1024x768-detail.json": "f5de0a52cfc1e60197496a58691578025ce66e62d2a22877def387673f66e55b",
+        "dark/1024x768-editor-date.json": "70b0a0ebc1e16d8e5900221dbdacc1075c3f3064693268a75531363b8a6a5beb",
+        "dark/1024x768-home.json": "ed89419c7a11dca1a70eab6248636ebd7e92258ecd50575f5e9bc031dffb770f",
+        "dark/1024x768-search.json": "1504a059ba412cdfe21f5d1563cc83835bcda37f68cf74715d4bc0b611a0ec6f",
+        "dark/1024x768-sort.json": "d7ec0cd1b4e2a5801031a3c5f1c03ce89abf7e9b6a3b35be4f72a5b3b177cdc0",
+        "dark/360x740-calendar.json": "5642787cba77db549e22fa978e89fee3ee160e8ec410941bd2a294b6ce345b0e",
+        "dark/360x740-data.json": "1755774d13270636df4f8a3f2f8abeb753544072e6d17b305a404990403d0650",
+        "dark/360x740-detail.json": "50d6fe5db391c8015048add14ff8ebfae93273c7b28f4673b737e366080a558f",
+        "dark/360x740-editor-date.json": "c1062e53eca9d4299d49cff59148eba36842c23cb145a498b1965a17e2a7575d",
+        "dark/360x740-home.json": "e037ca8598f92c5419f300e4cc5a9005244cf526aa86a92078918c220baba5ca",
+        "dark/360x740-search.json": "4bcaf6d38cc94e9cdf5800f1796fffeff31422e636d638ba23a6e7a8e31e29e7",
+        "dark/360x740-sort.json": "2e5d55baca27d1dec8fb9291837f0cb780a9b90113e8fb8c46bb3d491fb5d95e"
+      },
+      "after": {
+        "light/1024x768-calendar.json": "c9100ccef390fcedea88f2f4ab2e1c59477765fa9ff698f1602e31805f301326",
+        "light/1024x768-data.json": "e7885d393aa250fb82be0ec6cb0c9eb7beb1afbfaf9086f27f3db478671510fa",
+        "light/1024x768-detail.json": "2601af10d201bfe1544b01a67491b4ffd7eb9a492b74b49083242a5bcb9af646",
+        "light/1024x768-editor-date.json": "3831bfdb47c9f07ddcaa9bc69b7d7887345b479c3bbe695d3464f068cdc63e53",
+        "light/1024x768-home.json": "efd9a2f0d5b55449639a80e41cf2e6dfa615026e0aa67e30ab87cea9db1f2cb9",
+        "light/1024x768-search.json": "ae5f213ed0d37471e13e5e9c66d8ba30edaa6c3a4bcf39b44f17c8cbea9dac9c",
+        "light/1024x768-sort.json": "5924744a9b969a66a094938d8f784d52411e48af8ae00a3c054a36156b5332cd",
+        "light/360x740-calendar.json": "7bceba73bd318ad6341dc589bc2503a435732ecf163c5ef0b55ed029d556ee1e",
+        "light/360x740-data.json": "77ee2fe1eea3319b7068e02e7af94cac3fc1214d91c0e79d43ce2ccbed392fd7",
+        "light/360x740-detail.json": "7d5aaef10b658ff54fb09a2d36315876ecf396718744c486facad42c714e4d6e",
+        "light/360x740-editor-date.json": "f9582082c207d16611d7f2b34bac7cbb11da3e10d111888ed5bd05566311e342",
+        "light/360x740-home.json": "49d34d9c23820d35ca3e99095d744296216947d0c53a978f964f3cc546f3624d",
+        "light/360x740-search.json": "fff0c239511028b2dc2fdb8b7189ed4738b7c66aebf55d56f41eeaa6b7a59890",
+        "light/360x740-sort.json": "92aa3d6efa3bc4cb98e7d4ce5f0186af3adef79922e12ac9a006fa6efc657e23",
+        "dark/1024x768-calendar.json": "286e4957ce07068f8dfc365229942d8dd6fa235c30eac7999c5358de290235fd",
+        "dark/1024x768-data.json": "bf0ce930907f165bb091d6362b69ee6821cf9c3488ea4ab4d93476f593c97c80",
+        "dark/1024x768-detail.json": "f5de0a52cfc1e60197496a58691578025ce66e62d2a22877def387673f66e55b",
+        "dark/1024x768-editor-date.json": "70b0a0ebc1e16d8e5900221dbdacc1075c3f3064693268a75531363b8a6a5beb",
+        "dark/1024x768-home.json": "ed89419c7a11dca1a70eab6248636ebd7e92258ecd50575f5e9bc031dffb770f",
+        "dark/1024x768-search.json": "1504a059ba412cdfe21f5d1563cc83835bcda37f68cf74715d4bc0b611a0ec6f",
+        "dark/1024x768-sort.json": "d7ec0cd1b4e2a5801031a3c5f1c03ce89abf7e9b6a3b35be4f72a5b3b177cdc0",
+        "dark/360x740-calendar.json": "5642787cba77db549e22fa978e89fee3ee160e8ec410941bd2a294b6ce345b0e",
+        "dark/360x740-data.json": "1755774d13270636df4f8a3f2f8abeb753544072e6d17b305a404990403d0650",
+        "dark/360x740-detail.json": "50d6fe5db391c8015048add14ff8ebfae93273c7b28f4673b737e366080a558f",
+        "dark/360x740-editor-date.json": "c1062e53eca9d4299d49cff59148eba36842c23cb145a498b1965a17e2a7575d",
+        "dark/360x740-home.json": "e037ca8598f92c5419f300e4cc5a9005244cf526aa86a92078918c220baba5ca",
+        "dark/360x740-search.json": "4bcaf6d38cc94e9cdf5800f1796fffeff31422e636d638ba23a6e7a8e31e29e7",
+        "dark/360x740-sort.json": "2e5d55baca27d1dec8fb9291837f0cb780a9b90113e8fb8c46bb3d491fb5d95e"
+      }
+    },
+    "verify": "\n> lifelog-react-app@0.2.0-alpha.12 baseline:verify\n> node scripts/baseline.cjs\n\nPASS: baseline verify 14 light states, 60 selectors × 12 properties + DOM + clickable geometry.\nPASS: baseline verify 14 dark states, 60 selectors × 12 properties + DOM + clickable geometry.\n",
+    "finalDiff": {
+      "light": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+      "dark": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n"
+    },
+    "comparatorChanged": false,
+    "normalizationChanged": false,
+    "exclusionMarkersAdded": false
+  },
+  "protectedCode": {
+    "src/DatePicker.tsx": {
+      "unchanged": true,
+      "sha256": "1c3c56a69ad8766077847c002ae4514cbc25f3c99b1d0d14fda3ee5e4e448d26"
+    },
+    "src/DataPanel.tsx": {
+      "unchanged": true,
+      "sha256": "1314c1362827045011994c79dbd8f6c81e688715016f93e30c25cff7e6f0dd4e"
+    },
+    "src/styles/07-editor.continuation-2.css": {
+      "unchanged": true,
+      "sha256": "3e990bbd0c9dcecdca9bb4ef16dc269e81b8baf78cb9dceb313fe8b85c41a926"
+    },
+    "src/styles/08-calendar.css": {
+      "unchanged": true,
+      "sha256": "d9e8b4d7e56fa25d4f7dba1be5b853955d3d21efa6c0a057edcf8c5155b82ae1"
+    },
+    "scripts/baseline.cjs": {
+      "unchanged": true,
+      "sha256": "39b88bbac9d3598208879c2e30b87ef40f8ccf9c766f330e5cd9f5dc5b381cab"
+    },
+    "scripts/baseline-diff.cjs": {
+      "unchanged": true,
+      "sha256": "60aab51703b5ad21981fbfa639bbc2729e88828028114142958f306346512318"
+    },
+    "scripts/gates.cjs": {
+      "unchanged": true,
+      "sha256": "6891d7e4770ba303376a3b9283c09af01697dd1ae035a2fc7aa71984997f12d2"
+    },
+    "scripts/lib/browser.cjs": {
+      "unchanged": true,
+      "sha256": "5cfe24b86efe912f2d865fc1e61bb182493fb181e094ae85ad81b65387bf787c"
+    },
+    "package.json": {
+      "unchanged": true,
+      "sha256": "ce5b8b45d56d631e4d436723a20ffda134edd9fbc90bcac38b56e92b4647aa0f"
+    },
+    "android/app/build.gradle": {
+      "unchanged": true,
+      "sha256": "b11c28862bdda58e503d53477b94cd2f72e83a326f9c224f7158573524a7aac4"
+    },
+    "time-trigger": {
+      "markupAndHandlersUnchanged": true
+    }
+  },
+  "compiledNormalFontComparison": [
+    {
+      "scheme": "light",
+      "viewport": {
+        "width": 360,
+        "height": 740
+      },
+      "reference": {
+        "frame": {
+          "border": "1px solid rgb(232, 234, 229)",
+          "border-radius": "20px",
+          "padding": "3px 8px",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "close": {
+          "background-color": "rgb(239, 239, 239)",
+          "color": "rgb(99, 109, 93)",
+          "font-size": "12px",
+          "padding": "8px",
+          "border-radius": "12px",
+          "min-height": "44px"
+        }
+      },
+      "actual": {
+        "rem": "16px",
+        "frame": {
+          "border": "1px solid rgb(232, 234, 229)",
+          "border-radius": "20px",
+          "padding": "3px 8px",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "close": {
+          "background-color": "rgb(239, 239, 239)",
+          "color": "rgb(99, 109, 93)",
+          "font-size": "12px",
+          "padding": "8px",
+          "border-radius": "12px",
+          "min-height": "44px"
+        },
+        "closeRect": {
+          "x": 282,
+          "y": 507.59375,
+          "width": 40,
+          "height": 44,
+          "top": 507.59375,
+          "right": 322,
+          "bottom": 551.59375,
+          "left": 282
+        },
+        "hint": "滑动选择 · 精确到分钟",
+        "globalDisabled": true,
+        "globalOpacity": "0.55"
+      },
+      "global": {
+        "text": "收起",
+        "buttons": 1,
+        "closeRect": {
+          "x": 286,
+          "y": 446.484375,
+          "width": 40,
+          "height": 44,
+          "top": 446.484375,
+          "right": 326,
+          "bottom": 490.484375,
+          "left": 286
+        }
+      },
+      "usesCompiledDist": true,
+      "nativeMockOnly": true,
+      "deviceTested": false
+    },
+    {
+      "scheme": "dark",
+      "viewport": {
+        "width": 360,
+        "height": 740
+      },
+      "reference": {
+        "frame": {
+          "border": "1px solid rgb(44, 50, 52)",
+          "border-radius": "20px",
+          "padding": "3px 8px",
+          "background-color": "rgb(31, 36, 38)"
+        },
+        "close": {
+          "background-color": "rgb(31, 36, 38)",
+          "color": "rgb(154, 163, 148)",
+          "font-size": "12px",
+          "padding": "8px",
+          "border-radius": "12px",
+          "min-height": "44px"
+        }
+      },
+      "actual": {
+        "rem": "16px",
+        "frame": {
+          "border": "1px solid rgb(44, 50, 52)",
+          "border-radius": "20px",
+          "padding": "3px 8px",
+          "background-color": "rgb(31, 36, 38)"
+        },
+        "close": {
+          "background-color": "rgb(31, 36, 38)",
+          "color": "rgb(154, 163, 148)",
+          "font-size": "12px",
+          "padding": "8px",
+          "border-radius": "12px",
+          "min-height": "44px"
+        },
+        "closeRect": {
+          "x": 282,
+          "y": 507.59375,
+          "width": 40,
+          "height": 44,
+          "top": 507.59375,
+          "right": 322,
+          "bottom": 551.59375,
+          "left": 282
+        },
+        "hint": "滑动选择 · 精确到分钟",
+        "globalDisabled": true,
+        "globalOpacity": "0.55"
+      },
+      "global": {
+        "text": "收起",
+        "buttons": 1,
+        "closeRect": {
+          "x": 286,
+          "y": 446.484375,
+          "width": 40,
+          "height": 44,
+          "top": 446.484375,
+          "right": 326,
+          "bottom": 490.484375,
+          "left": 286
+        }
+      },
+      "usesCompiledDist": true,
+      "nativeMockOnly": true,
+      "deviceTested": false
+    }
+  ],
+  "normalFontCloseSize": {
+    "width": 40,
+    "height": 44,
+    "matchesDatePicker": true,
+    "newCompensationStyles": false,
+    "disclosure": "Direct shared-date styles per K7, NOT claiming normal-font close >=44x44. Original >=44 assertions unchanged; existing native fixture runs its touch checks at enlarged font. Normal font compiled geometry recorded separately."
+  },
+  "assertionChanges": {
+    "existingAssertionsModified": 0,
+    "existingAssertionsRemoved": 0,
+    "added": [
+      "Time panel shared frame/footer classes and editor/global structure/text/right alignment.",
+      "Frame 3px 8px padding, 1.25rem radius, 1px border, footer min-height44, .75rem muted labels.",
+      "Global equality: inherited and explicit-equal disabled .55; disabled click does not close; custom value enables.",
+      "Two additional DataPanel structure helper calls."
+    ],
+    "scope": "K5 time-panel structure checks only"
+  },
+  "failuresAndRetries": [
+    {
+      "attempt": 1,
+      "command": "GATES_WORKERS=1 npm run gates",
+      "result": "FAIL",
+      "durationMs": 121113,
+      "reason": "Only UI/dark failed a newly-added hard-coded20px radius check in existing enlarged-font fixture (actual40px). Corrected own new checks to use root rem and shared minimum, no old assertion/product value changes.",
+      "evidence": "react-app/.artifacts/phase-k/k7/gates-attempt1/"
+    },
+    {
+      "attempt": 2,
+      "command": "GATES_WORKERS=1 npm run gates",
+      "result": "PASS",
+      "evidence": "react-app/.artifacts/phase-k/k7/gates-attempt2/"
+    },
+    {
+      "command": "npm run dev",
+      "result": "FAIL",
+      "reason": "5188 already occupied. Did not kill or reassign. Early read-only source probe on existing listener is not a gate; final comparison uses own compiled preview5189."
+    }
+  ],
+  "commands": {
+    "gates": "GATES_WORKERS=1 npm run gates",
+    "android": "source lifelog-android/env.sh; (cd android && sh ./gradlew :app:cleanTestDebugUnitTest --no-daemon); GRADLE_OPTS=-Dorg.gradle.caching=false npm run android:preview",
+    "androidBuild": {
+      "seconds": 24,
+      "tasks": 252,
+      "executed": 43,
+      "upToDate": 209,
+      "jvmActuallyExecuted": true
+    },
+    "baseline": "BASE_URL=http://127.0.0.1:5189 npm run baseline:{diff,capture} -- --scheme {light,dark}; npm run baseline:verify"
+  },
+  "superseded": {
+    "K6": {
+      "withdrawnFromDownloads": true,
+      "sha256": "b1b29bbe72ab77e7cc4acde939c9f7116f8c9f7763ebb79adea7cc147c0eea90",
+      "path": "react-app/.artifacts/phase-k/k7/invalidated-k6/"
+    },
+    "K3": {
+      "deliverable": false,
+      "path": "react-app/.artifacts/phase-k/k4/invalidated-k3/"
+    },
+    "K4": {
+      "deliverable": false,
+      "path": "react-app/.artifacts/phase-k/k6/invalidated-k4/"
+    },
+    "K5": {
+      "deliverable": false,
+      "purpose": "Internal verification only"
+    }
+  },
+  "device": {
+    "adb": "List of devices attached\n\n",
+    "model": null,
+    "androidVersion": null,
+    "webViewVersion": null,
+    "actuallyTested": false,
+    "authorAcceptance": false
+  },
+  "unverified": [
+    "Real WebView editor/global footer, text scale, touch, disabled state and TalkBack/focus.",
+    "Wheel inertia, scrollend fallback, nested sheet/haptics, actual system keyboard and safe areas.",
+    "Stage K notification delivery/settings return, system calendar apps and install/upgrade."
+  ],
+  "publication": {
+    "pushed": false,
+    "tagged": false,
+    "released": false,
+    "previousReleasesModified": false
+  },
+  "evidenceDirectory": "react-app/.artifacts/phase-k/k7/"
+}
