@@ -3,6 +3,7 @@ const { assert } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
 const {pickDate} = require('./date-picker-helper.cjs');
 const {hitTarget} = require('./hit-target.cjs');
+const {setWheel} = require('./wheel-helper.cjs');
 exports.checkReminderUI = async function(browser) {
   const page = await browser.newPage({viewport:{width:390,height:740},reducedMotion:'reduce',timezoneId:'Asia/Shanghai'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -72,7 +73,7 @@ exports.checkReminderUI = async function(browser) {
       await audit('native reminder time '+width);
     }
     await page.locator('.reminder-time .time-trigger').click();
-    await page.getByRole('button',{name:'20时',exact:true}).click();
+    await setWheel(page,'小时',20);
     await page.getByRole('button',{name:'收起',exact:true}).click();
     await page.waitForFunction(()=>window.__notif.pending.length===2);
     assert.equal(await page.evaluate(()=>localStorage.getItem('lifelog-days:reminder-time')),'20:00');
@@ -145,8 +146,9 @@ exports.checkReminderUI = async function(browser) {
     await toggle.check();
     await page.locator('.reminder-field .time-trigger').click();
     assert.equal(await page.locator('input[type="time"]').count(),0,'no native time dialog');
-    assert.equal(await page.getByRole('group',{name:'小时',exact:true}).getByRole('button').count(),24);
-    assert.equal(await page.getByRole('group',{name:'分钟',exact:true}).getByRole('button').count(),12);
+    assert.equal(await page.getByRole('spinbutton',{name:'小时',exact:true}).locator('.wheel-option').count(),24);
+    assert.equal(await page.getByRole('spinbutton',{name:'分钟',exact:true}).locator('.wheel-option').count(),60);
+    await require('./wheel-picker-checks.cjs').checkWheelInteractions(page);
     for (const scheme of ['light','dark']) {
       await page.emulateMedia({colorScheme:scheme});
       for (const width of [320,430,1440]) {
@@ -160,9 +162,8 @@ exports.checkReminderUI = async function(browser) {
     }
     await page.emulateMedia({colorScheme:'light'});
     await page.setViewportSize({width:390,height:740});
-    await page.getByRole('button',{name:'10时',exact:true}).click();
-    await page.getByRole('button',{name:'35分',exact:true}).click();
-    await page.getByLabel('精确到分钟',{exact:true}).fill('37');
+    await setWheel(page,'小时',10);
+    await setWheel(page,'分钟',37);
     await page.getByRole('button',{name:'收起',exact:true}).click();
     assert.equal(await page.locator('#reminder-help').textContent(),'会在 10:37 提醒');
     await page.getByRole('button',{name:'记下这个日子',exact:true}).click();
@@ -193,8 +194,8 @@ exports.checkReminderUI = async function(browser) {
     await page.getByRole('button',{name:'数据与备份',exact:true}).click();
     await page.getByText('未单独设置的提醒使用此时间',{exact:true}).waitFor();
     await page.locator('.reminder-time .time-trigger').click();
-    await page.getByRole('button',{name:'08时',exact:true}).click();
-    await page.getByLabel('精确到分钟',{exact:true}).fill('14');
+    await setWheel(page,'小时',8);
+    await setWheel(page,'分钟',14);
     await page.getByRole('button',{name:'收起',exact:true}).click();
     assert.equal(await page.evaluate(()=>localStorage.getItem('lifelog-days:reminder-time')),'08:14');
     await page.waitForFunction(()=>window.__notif.pending.some(n=>n.title==='分钟提醒'&&new Date(n.schedule.at).getMinutes()===14));

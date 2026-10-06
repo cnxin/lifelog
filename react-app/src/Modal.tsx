@@ -93,6 +93,7 @@ function useSheetDrag(
       if (!mobile.matches || latestBusy.current || !dialog.open ||
           dialog.dataset.closing || gesture || !event.isPrimary || event.button !== 0) return;
       const target = event.target as Element;
+      if (target.closest(".wheel")) return;
       const heading = !!target.closest(".modal-heading");
       if (!heading && (!body.contains(target) || body.scrollTop !== 0)) return;
       const transform = getComputedStyle(dialog).transform;

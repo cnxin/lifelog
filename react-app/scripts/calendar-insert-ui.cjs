@@ -1,6 +1,7 @@
 const { assert, installAxe } = require('./lib/browser.cjs');
 const { hitTarget } = require('./hit-target.cjs');
 const fs = require('node:fs/promises');
+const {setWheel} = require('./wheel-helper.cjs');
 exports.checkCalendarInsertUI = async function(browser) {
   const days=[
     {id:'calendar-solar',title:'公历日历测试',date:'2020-05-20',category:'纪念日',repeat:'yearly',calendar:'solar',note:'系统日历备注',pinned:false,reminders:[]},
@@ -78,13 +79,14 @@ exports.checkCalendarInsertUI = async function(browser) {
     await page.getByRole('button',{name:'编辑',exact:true}).click();
     await page.getByRole('checkbox',{name:'提醒我',exact:true}).check();
     await page.locator('.reminder-field .time-trigger').click();
-    await page.getByRole('button',{name:'23时',exact:true}).click();
+    await setWheel(page,'小时',23);
     await page.getByRole('button',{name:'收起',exact:true}).click();
     await page.locator('.reminder-field .time-trigger').click();
-    await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='23时');
-    assert.ok(await page.getByRole('button',{name:'23时',exact:true}).evaluate(el=>{
-      const r=el.getBoundingClientRect(),p=el.closest('.time-hours').getBoundingClientRect();return r.top>=p.top&&r.bottom<=p.bottom;
-    }),'the selected 23-hour button and keyboard focus are not clipped');
+    await page.waitForFunction(()=>document.activeElement?.getAttribute('role')==='spinbutton'&&document.activeElement?.getAttribute('aria-label')==='小时');
+    assert.equal(await page.getByRole('spinbutton',{name:'小时',exact:true}).getAttribute('aria-valuenow'),'23');
+    assert.ok(await page.getByRole('spinbutton',{name:'小时',exact:true}).evaluate(el=>{
+      const r=el.querySelector('[data-selected="true"]').getBoundingClientRect(),p=el.getBoundingClientRect();return r.top>=p.top&&r.bottom<=p.bottom;
+    }),'the selected 23-hour wheel item and keyboard focus are not clipped');
     for(const scheme of ['light','dark']) {
       await page.emulateMedia({colorScheme:scheme});await audit('native last-hour time panel '+scheme);
       await page.screenshot({path:`.artifacts/phase-k/visuals/editor-time-${scheme}.png`});
