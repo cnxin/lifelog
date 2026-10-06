@@ -14,6 +14,10 @@
 
 ### 作者真机验收单（L，待执行）
 
+阶段末本机最终验证（独立基准提交）：浅 / 深色各 14 个状态 capture 替换唯一基准；verify 14+14 通过，刷新后 diff 均 **0/14**，比较器和归一化未改。完整 `npm run gates` **PASS、退出码 0，138.32s**，Node **111/111**、UI **792**、dark **411**，所有套件通过。Android preview **PASS、退出码 0**，Gradle 12s / 252 tasks（36 executed / 216 up-to-date）；先清单测输出，本轮 JVM **15/15 实际执行**，lint **0 errors / 29 warnings**（app lint analysis / report 为 UP-TO-DATE，未伪称本轮重新分析；L3 已真实执行）。独立 Chromium 的真实 IndexedDB 升级检查也通过：Dexie 1→2（原生版本号 10→20），days 字段 / 原索引不变，trash 新建为空；不是 Android WebView 真机结论。
+
+最终本地 APK 为 `downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,457,129 bytes**；SHA-256：`d538552c5da044570b9c0463fe978d5727b0eab617931509d224e7e7cb73a672`。最终重建与 L3 原候选 APK 逐字节相同，20 个 Web 文件与 dist 一致、测试证书 SHA-256 与 alpha.12 相同。附同名 `.apk.sha256` / `.apk.json`，报告保留阶段失败轮次和 capture 前完整 diff，不冒充首次通过。**alpha.13 尚未推送、打 tag 或发布，等待作者真机验收；机型 / Android / WebView 信息仍待提供。**
+
 1. 先导出 alpha.12 备份，再直接覆盖安装独立测试包 alpha.13：旧日子数量、标题 / 备注、重复历法、置顶、提醒提前天数和单独提醒时间不变；首次升级最近删除为空。
 2. 详情直接删除，五秒内点撤销：原记录回到正确位置并高亮；五秒后不可再点 toast，但数据与备份可恢复。浅 / 深色、常规 / reduced-motion、软键盘与大字号都复测。
 3. 编辑器确认文案说明可找回；连续删除四条仅留下最近三条。恢复保留全部字段；导入与删除条目相同 ID 后再恢复，不覆盖现有值、删除副本仍在；清空需二次确认，取消不清空。
