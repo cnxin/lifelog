@@ -73,6 +73,7 @@ exports.checkReminderUI = async function(browser) {
       await audit('native reminder time '+width);
     }
     await page.locator('.reminder-time .time-trigger').click();
+    await require('./wheel-picker-checks.cjs').checkTimePanelStructure(page, false);
     await setWheel(page,'小时',20);
     await page.getByRole('button',{name:'收起',exact:true}).click();
     await page.waitForFunction(()=>window.__notif.pending.length===2);
@@ -194,6 +195,7 @@ exports.checkReminderUI = async function(browser) {
     await page.getByRole('button',{name:'数据与备份',exact:true}).click();
     await page.getByText('未单独设置的提醒使用此时间',{exact:true}).waitFor();
     await page.locator('.reminder-time .time-trigger').click();
+    await require('./wheel-picker-checks.cjs').checkTimePanelStructure(page, false);
     await setWheel(page,'小时',8);
     await setWheel(page,'分钟',14);
     await page.getByRole('button',{name:'收起',exact:true}).click();

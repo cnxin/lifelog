@@ -19,9 +19,8 @@
 .time-trigger span { flex: 1; }
 .time-trigger strong { font-weight: 500; font-variant-numeric: tabular-nums; }
 .time-trigger[aria-expanded="true"] { border-color: var(--input-focus-border); }
-.time-picker { margin-top: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
-.time-wheel { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
-.time-wheel > div { min-width: 0; }
+.time-wheel-columns { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.time-wheel-columns > div { min-width: 0; }
 .time-wheel-label { display: block; text-align: center; font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; }
 .time-wheel-colon { font-size: 1.25rem; color: var(--green); padding-top: 24px; }
 .wheel { position: relative; height: 220px; min-width: 44px; touch-action: pan-y; font-variant-numeric: tabular-nums; border-radius: 10px; }
@@ -32,8 +31,6 @@
 .wheel-spacer { height: 88px; }
 .wheel-option { height: 44px; display: grid; place-items: center; scroll-snap-align: center; font-size: 1rem; color: var(--muted); }
 .wheel-option[data-selected="true"] { font-size: 1.25rem; color: var(--green); }
-.time-picker-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 8px; border-top: 1px solid var(--border); }
-.time-picker-footer button { min-height: 44px; }
 .exact-alarm-notice { display: block; width: 100%; min-height: 44px; padding: 8px 0; text-align: left; font-size: 0.75rem; line-height: 1.7; background: transparent; color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
 @media (forced-colors: active) { .wheel-selection { outline: 1px solid Highlight; } .wheel-scroll { mask-image: none; } }
 .editor-fields label:not(.choice-option):not(.check-row) {

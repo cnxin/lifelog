@@ -7,7 +7,7 @@ export default function TimeWheel({ value, onChange, disabled = false }: {
   value: string; onChange: (value: string) => void; disabled?: boolean;
 }) {
   const [hour, minute] = value.split(":");
-  return <div className="time-wheel" role="group" aria-label="提醒时间">
+  return <div className="time-wheel-columns" role="group" aria-label="提醒时间">
     <div><span className="time-wheel-label">时</span><WheelPicker options={hours} value={hour}
       ariaLabel="小时" disabled={disabled} onChange={next => onChange(`${next}:${minute}`)} /></div>
     <span className="time-wheel-colon" aria-hidden="true">:</span>

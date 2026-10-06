@@ -266,7 +266,7 @@ function EditorForm({
               </div>
               <TimePicker value={effectiveTime} onChange={reminderTime => patch({ reminderTime })}
                 open={timeOpen} onOpenChange={setTimeOpen} disabled={busy}
-                onUseGlobal={() => patch({ reminderTime: undefined })} />
+                globalTime={globalTime} onUseGlobal={() => patch({ reminderTime: undefined })} />
               <p id="reminder-help" className="field-help" role="status">
                 {draft.reminders.length > 0
                   ? `会在 ${effectiveTime} 提醒`

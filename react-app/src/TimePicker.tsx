@@ -3,12 +3,13 @@ import { ChevronDown, Clock } from "lucide-react";
 import TimeWheel from "./TimeWheel";
 
 /** Inline, local-time picker. No native time dialog and no second modal. */
-export default function TimePicker({ value, onChange, open, onOpenChange, onUseGlobal, disabled = false }: {
+export default function TimePicker({ value, onChange, open, onOpenChange, onUseGlobal, globalTime, disabled = false }: {
   value: string;
   onChange: (time: string) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUseGlobal?: () => void;
+  globalTime?: string;
   disabled?: boolean;
 }) {
   const id = useId();
@@ -48,11 +49,12 @@ export default function TimePicker({ value, onChange, open, onOpenChange, onUseG
       <span>提醒时间 <strong>{value}</strong></span>
       <ChevronDown size={18} aria-hidden="true" />
     </button>
-    {open && <div className="time-picker" id={id} ref={panel} role="region" aria-label="选择提醒时间">
+    {open && <div className="time-picker time-wheel date-picker" id={id} ref={panel} role="region" aria-label="选择提醒时间">
       <TimeWheel value={value} onChange={onChange} disabled={disabled} />
-      <div className="time-picker-footer">
-        {onUseGlobal && <button type="button" className="text-button" disabled={disabled} onClick={() => { onUseGlobal(); close(); }}>用全局时间</button>}
-        <button type="button" className="text-button" disabled={disabled} onClick={close}>收起</button>
+      <div className="date-picker-footer">
+        {onUseGlobal && <button type="button" className="calendar-today" disabled={disabled || value === globalTime} onClick={() => { onUseGlobal(); close(); }}>用全局时间</button>}
+        <span aria-hidden={onUseGlobal ? undefined : true}>{onUseGlobal ? "滑动选择 · 精确到分钟" : ""}</span>
+        <button type="button" className="date-collapse" disabled={disabled} onClick={close}>收起</button>
       </div>
     </div>}
   </div>;
