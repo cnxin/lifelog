@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { db } from "../storage";
 import type { Day } from "../domain";
 import { commitWithTransition } from "../listTransition";
+import type { NoticeAction } from "./useNotices";
 export default function useDays(
-  onChanged: (message: string, afterClose: boolean) => void,
+  onChanged: (message: string, afterClose: boolean, action?: NoticeAction) => void,
 ) {
   const [days, setDays] = useState<Day[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -42,12 +43,12 @@ export default function useDays(
     return () => channel.close();
   }, [load]);
 
-  async function changed(message: string, afterClose = false) {
+  async function changed(message: string, afterClose = false, action?: NoticeAction) {
     await reload();
     const channel = new BroadcastChannel("lifelog-days");
     channel.postMessage("updated");
     channel.close();
-    onChanged(message, afterClose);
+    onChanged(message, afterClose, action);
   }
 
   return { days, loaded, error, setError, reload, load, changed };

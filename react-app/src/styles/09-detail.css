@@ -7,6 +7,20 @@
   gap: 8px;
   color: var(--section-text);
 }
+.delete-link {
+  display: block;
+  min-height: 44px;
+  margin: 12px auto 0;
+  padding: 0 12px;
+  color: var(--danger);
+  background: transparent;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+.delete-link:not(:disabled):active {
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
 .detail-count {
   position: relative;
   display: flex;

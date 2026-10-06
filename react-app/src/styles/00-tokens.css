@@ -48,6 +48,7 @@
   --control-text: #4b5946;
   --control-hover: #e0e5d9;
   --danger-button: #9c443a;
+  --danger: var(--danger-button);
   --focus-border: #809b74;
   --sage-icon-bg: #e8eddf;
   --header-icon-hover: #e9ece5;

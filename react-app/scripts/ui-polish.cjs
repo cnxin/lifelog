@@ -12,6 +12,7 @@ const fs = require("node:fs/promises");
     require('./celebrate-ui.cjs').checkCelebrationUI(browser),
     require('./years-ui.cjs').checkYearsUI(browser),
     require('./calendar-insert-ui.cjs').checkCalendarInsertUI(browser),
+    require('./trash-ui.cjs').checkTrashUI(browser),
   ]);
   const page = await browser.newPage({
     viewport: { width: 390, height: 1000 },

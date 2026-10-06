@@ -17,12 +17,14 @@ export default function DayDetail({
   onClose,
   onEdit,
   onTogglePin,
+  onDelete,
 }: {
   day: Day;
   today: string;
   onClose: () => void;
   onEdit: (day: Day) => void;
   onTogglePin: (day: Day) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const status = dayStatus(day, today);
   const years = yearsLabel(day, status);
@@ -51,6 +53,14 @@ export default function DayDetail({
     } finally {
       setBusy(false);
     }
+  }
+  async function remove() {
+    void haptic("medium");
+    setBusy(true);
+    setError("");
+    try { await onDelete(day.id); }
+    catch { setError("删除失败，请重试。"); }
+    finally { setBusy(false); }
   }
   return (
     <Modal
@@ -130,6 +140,7 @@ export default function DayDetail({
         </div>
         {hasNativeCalendar() && day.repeat === "yearly" && day.calendar === "lunar" &&
           <p className="calendar-insert-help">农历日子不会在系统日历中自动按农历重复，每年需重新加入。</p>}
+        <button type="button" className="delete-link" disabled={busy} onClick={() => void remove()}>删除这个日子</button>
         {hasNativeCalendar() && notice && <div className="toast" role="status" data-visible={noticeVisible}>{notice.message}</div>}
       </div>
     </Modal>

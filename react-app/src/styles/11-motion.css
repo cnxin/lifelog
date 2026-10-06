@@ -19,9 +19,23 @@
   font-size: 0.75rem;
   box-shadow: 0 4px 20px var(--shadow-toast);
   pointer-events: none;
+  overflow-wrap: anywhere;
 }
 .toast[data-visible="true"] {
   opacity: 1;
   transform: translate(-50%, 0);
   transition-duration: 160ms;
 }
+.toast:has(button) { display: flex; align-items: center; gap: 12px; padding-block: 6px; }
+.toast[data-visible="true"]:has(button) { pointer-events: auto; }
+.toast button {
+  flex-shrink: 0;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.toast button:not(:disabled):active { background: color-mix(in srgb, currentColor 12%, transparent); }

@@ -13,16 +13,19 @@ import { readLegacyDays, mergeDays } from "./storage";
 import TimePicker from "./TimePicker";
 import { hasNativeNotifications } from "./notifications";
 import { getReminderTime, setReminderTime } from "./reminders";
+import RecentTrash from "./RecentTrash";
 
 type Pending = ReturnType<typeof parseBackup>;
 export default function DataPanel({
   days,
   onClose,
   onImported,
+  onRestore,
 }: {
   days: Day[];
   onClose: () => void;
   onImported: () => Promise<void>;
+  onRestore: (id: string) => Promise<"restored" | "exists" | "missing">;
 }) {
   const file = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -173,6 +176,7 @@ export default function DataPanel({
           {message}
         </p>
       )}
+      <RecentTrash days={days} busy={busy} run={run} onRestore={onRestore} />
       <p className="data-footnote">
         LifeLog · 日子 / 轻量版
         <br />

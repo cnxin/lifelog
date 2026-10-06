@@ -24,6 +24,7 @@ import useReminderSync from "./hooks/useReminderSync";
 import useNativeShell from "./hooks/useNativeShell";
 import useCelebration from "./hooks/useCelebration";
 import useEditorActions from "./hooks/useEditorActions";
+import Toast from "./Toast";
 
 export default function App() {
  const compact = useCompactLayout();
@@ -50,7 +51,7 @@ export default function App() {
  const setNativeSyncTick = useReminderSync({ days, loaded, today, load, setError, setDetailId, prepareWidgetUpdate });
  useNativeShell({ headerRef, sortMenuOpen, setSortMenuOpen, load, setToday, setNativeSyncTick, setWidgetLaunchTick });
  const replayCelebration = useCelebration(loaded, featured, today, status, heroRef);
- const { add, togglePin, save, remove } = useEditorActions({ today, filter, query, calendarDate, detailId,
+ const { add, togglePin, save, remove, restore } = useEditorActions({ today, filter, query, calendarDate, detailId,
   setEditor, setFilter, setQuery, setFocusId, changed });
  return (<>
   <a className="skip-link" href="#main-content">跳到日子列表</a>
@@ -77,14 +78,22 @@ export default function App() {
     </>}
     <footer className="footer"><span><Heart size={13} />为在意的日子，留一个位置。</span><span>简单记录 · 本地保存</span></footer>
    </main>
-   <div className="toast" role="status" data-visible={noticeVisible}>{notice?.message}</div>
+   <Toast notice={notice} visible={noticeVisible} />
    {calendarDate && <CalendarView days={days} today={today} selectedDate={calendarDate} onSelect={setCalendarDate}
     onClose={() => { setCalendarDate(null); requestAnimationFrame(() => calendarButtonRef.current?.focus()); }}
     onAdd={date => add("纪念日", date)} onOpen={day => setDetailId(day.id)} />}
-   {detail && <DayDetail day={detail} today={today} onClose={() => setDetailId(null)} onEdit={setEditor} onTogglePin={togglePin} />}
+   {detail && <DayDetail day={detail} today={today} onClose={() => setDetailId(null)} onEdit={setEditor} onTogglePin={togglePin}
+    onDelete={async id => {
+     await remove(id, false);
+     setDetailId(null);
+     requestAnimationFrame(() => {
+      if (!document.querySelector('dialog[open]'))
+       (document.querySelector<HTMLElement>(".day-card .card-main") ?? document.querySelector<HTMLElement>(".header-add"))?.focus({ preventScroll: true });
+     });
+    }} />}
    {editor && <DayEditor key={editor.id} day={editor} existing={days.some(day => day.id === editor.id)}
     onClose={() => { setEditor(null); editorClosed(); }} onSave={save} onDelete={() => remove(editor.id)} />}
-   {settings && <DataPanel days={days} onClose={() => setSettings(false)} onImported={() => changed("日子已更新")} />}
+   {settings && <DataPanel days={days} onClose={() => setSettings(false)} onImported={() => changed("日子已更新")} onRestore={restore} />}
   </div>
  </>);
 }

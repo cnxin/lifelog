@@ -93,3 +93,16 @@
   margin-top: 10px;
   color: var(--muted);
 }
+.recent-trash {
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.recent-trash h3 { font-size: 0.875rem; font-weight: 600; }
+.recent-trash > .field-help { margin-top: 10px; }
+.recent-trash ul { list-style: none; padding: 0; margin: 8px 0 0; }
+.recent-trash li { display: flex; align-items: center; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--border); }
+.recent-trash li > div { flex: 1; min-width: 0; }
+.recent-trash strong { display: block; font-size: 0.875rem; font-weight: 500; overflow-wrap: anywhere; }
+.recent-trash small { display: block; margin-top: 4px; font-size: 0.75rem; color: var(--muted); }
+.recent-trash li > button { flex-shrink: 0; min-width: 44px; min-height: 44px; padding-inline: 12px; }

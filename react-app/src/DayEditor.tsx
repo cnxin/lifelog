@@ -290,7 +290,7 @@ function EditorForm({
       )}
       {confirmDelete ? (
         <div className="delete-confirm">
-          <p>确定删除「{day.title}」？删除后不能撤销。</p>
+          <p>确定删除「{day.title}」？删除后可在「数据与备份」的最近删除里找回</p>
           <div className="button-row">
             <button
               type="button"

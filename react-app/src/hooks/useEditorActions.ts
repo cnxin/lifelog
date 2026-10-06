@@ -1,6 +1,7 @@
 import type { Day, Category } from "../domain";
-import { db, saveDay } from "../storage";
+import { db, saveDay, deleteDay, restoreDay } from "../storage";
 import { haptic } from "../haptics";
+import type { NoticeAction } from "./useNotices";
 export default function useEditorActions({
   today,
   filter,
@@ -22,7 +23,7 @@ export default function useEditorActions({
   setFilter: (filter: "全部" | Category) => void;
   setQuery: (query: string) => void;
   setFocusId: (id: string) => void;
-  changed: (message: string, afterClose?: boolean) => Promise<void>;
+  changed: (message: string, afterClose?: boolean, action?: NoticeAction) => Promise<void>;
 }) {
   function add(category: Category = "纪念日", selectedDate = today) {
     setEditor({
@@ -58,9 +59,26 @@ export default function useEditorActions({
     // Calendar-origin edits return to the agenda, not the home list.
     if (!calendarDate && !detailId) setFocusId(day.id);
   }
-  async function remove(id: string) {
-    await db.days.delete(id);
-    await changed("已删除这个日子", true);
+  async function restore(id: string) {
+    const result = await restoreDay(id);
+    if (result === "restored") {
+      const day = await db.days.get(id);
+      if (day && filter !== "全部" && filter !== day.category) setFilter("全部");
+      if (day && !`${day.title} ${day.note}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+        setQuery("");
+    }
+    await changed(result === "restored" ? "已恢复" : result === "exists"
+      ? "列表已有相同日子，未覆盖；删除记录仍保留" : "这个日子已不在最近删除中");
+    if (result === "restored") setFocusId(id);
+    return result;
   }
-  return { add, togglePin, save, remove };
+  async function remove(id: string, afterClose = true) {
+    const entry = await deleteDay(id);
+    if (!entry) throw new Error("这个日子已被删除。");
+    await changed(`已删除「${entry.title}」`, afterClose, { label: "撤销", run: async () => {
+      try { await restore(id); }
+      catch { await changed("恢复失败，请在最近删除中重试。"); }
+    } });
+  }
+  return { add, togglePin, save, remove, restore };
 }
