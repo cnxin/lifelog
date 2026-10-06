@@ -11,6 +11,7 @@ const fs = require("node:fs/promises");
     require('./reminders-ui.cjs').checkReminderUI(browser),
     require('./celebrate-ui.cjs').checkCelebrationUI(browser),
     require('./years-ui.cjs').checkYearsUI(browser),
+    require('./calendar-insert-ui.cjs').checkCalendarInsertUI(browser),
   ]);
   const page = await browser.newPage({
     viewport: { width: 390, height: 1000 },

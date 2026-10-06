@@ -55,3 +55,10 @@
 .detail-footer {
   justify-content: space-between;
 }
+.detail-footer-native { flex-wrap: wrap; }
+.detail-footer-native .calendar-insert { flex-basis: 100%; min-height: 48px; }
+.calendar-insert-help { margin-top: 8px; color: var(--muted); font-size: 0.75rem; line-height: 1.7; }
+@media (min-width: 761px) {
+  .detail-footer-native { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .detail-footer-native .calendar-insert { flex-basis: auto; }
+}

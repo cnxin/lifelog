@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Pin, Pencil } from "lucide-react";
+import { Pin, Pencil, CalendarPlus } from "lucide-react";
 import Modal from "./Modal";
 import { dayStatus, lunarLabel, type Day } from "./domain";
 import { formatDate, icons, tones, yearsLabel } from "./dayMeta";
 import ReminderBell from "./ReminderBell";
 import { hasNativeNotifications } from "./notifications";
 import { getReminderTime } from "./reminders";
+import { buildCalendarIntentPayload } from "./calendarIntent";
+import { CalendarBridge, hasNativeCalendar } from "./calendarBridge";
+import { haptic } from "./haptics";
+import useNotices from "./hooks/useNotices";
 
 export default function DayDetail({
   day,
@@ -25,6 +29,18 @@ export default function DayDetail({
   const Icon = icons[day.category];
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { notice, noticeVisible, onChanged } = useNotices();
+  async function insertCalendar() {
+    setBusy(true);
+    setError("");
+    void haptic("light");
+    try {
+      const result = await CalendarBridge.insert(buildCalendarIntentPayload(day, today));
+      if (!result.ok) onChanged("此设备没有可用的日历应用", false);
+    } catch {
+      setError("无法打开系统日历，请稍后重试。");
+    } finally { setBusy(false); }
+  }
   async function pin() {
     setBusy(true);
     setError("");
@@ -90,7 +106,7 @@ export default function DayDetail({
             {error}
           </p>
         )}
-        <div className="editor-footer detail-footer">
+        <div className={`editor-footer detail-footer${hasNativeCalendar() ? " detail-footer-native" : ""}`}>
           <button
             type="button"
             className="secondary"
@@ -109,7 +125,12 @@ export default function DayDetail({
             <Pencil size={17} aria-hidden="true" />
             编辑
           </button>
+          {hasNativeCalendar() && <button type="button" className="secondary calendar-insert" disabled={busy}
+            onClick={() => void insertCalendar()}><CalendarPlus size={17} aria-hidden="true" />加入日历</button>}
         </div>
+        {hasNativeCalendar() && day.repeat === "yearly" && day.calendar === "lunar" &&
+          <p className="calendar-insert-help">农历日子不会在系统日历中自动按农历重复，每年需重新加入。</p>}
+        {hasNativeCalendar() && notice && <div className="toast" role="status" data-visible={noticeVisible}>{notice.message}</div>}
       </div>
     </Modal>
   );

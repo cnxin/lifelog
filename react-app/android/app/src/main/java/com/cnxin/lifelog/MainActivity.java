@@ -24,6 +24,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(NativeBackupFilePlugin.class);
         registerPlugin(WidgetBridgePlugin.class);
+        registerPlugin(CalendarBridgePlugin.class);
         // BridgeActivity routes the cold initial intent through our override.
         // Do not consume/remove its extra twice before JavaScript can read it.
         super.onCreate(savedInstanceState);

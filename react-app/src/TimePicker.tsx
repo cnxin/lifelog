@@ -29,7 +29,16 @@ export default function TimePicker({ value, onChange, open, onOpenChange, onUseG
     }
     wasOpen.current = true;
     const frame = requestAnimationFrame(() => {
-      panel.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
+      const selected = panel.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+      selected?.focus({ preventScroll: true });
+      // Keep 20–23 visible on narrow screens without scrolling the whole sheet.
+      const hours = selected?.closest<HTMLElement>(".time-hours");
+      if (hours && selected) {
+        const top = selected.getBoundingClientRect().top - hours.getBoundingClientRect().top;
+        if (top < 0) hours.scrollTop += top;
+        else if (top + selected.offsetHeight > hours.clientHeight)
+          hours.scrollTop += top + selected.offsetHeight - hours.clientHeight;
+      }
       // Scroll only the sheet body, never the document or dialog itself.
       const body = field.current?.closest<HTMLElement>(".modal-body");
       if (body && field.current) body.scrollTo({
