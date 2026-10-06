@@ -8,9 +8,10 @@ import {
   Flower2,
 } from "lucide-react";
 import { dayStatus, lunarLabel, type Day } from "../domain";
-import { tones, formatDate, yearsLabel } from "../dayMeta";
+import { tones, formatDate, yearsLabel, elapsedLabel } from "../dayMeta";
 export default function HomeHero({
   compact,
+  today,
   featured,
   status,
   heroRef,
@@ -21,6 +22,7 @@ export default function HomeHero({
   replayCelebration,
 }: {
   compact: boolean;
+  today: string;
   featured: Day | undefined;
   status: ReturnType<typeof dayStatus> | null;
   heroRef: RefObject<HTMLDivElement>;
@@ -31,6 +33,7 @@ export default function HomeHero({
   replayCelebration: () => void;
 }) {
   const years = featured && status ? yearsLabel(featured, status) : "";
+  const elapsed = featured && status && featured.date < today ? elapsedLabel(featured, status) : null;
   return (
     <section className="overview" aria-label="日子概览">
       <div
@@ -96,8 +99,8 @@ export default function HomeHero({
                   ? ` · ${lunarLabel(featured.date)}`
                   : ""}
               </span>
-              <span className={years ? "hero-years" : undefined}>
-                {years || (featured.repeat === "yearly"
+              <span className={elapsed ? "hero-elapsed" : years ? "hero-years" : undefined} title={elapsed && years ? years : undefined}>
+                {elapsed || years || (featured.repeat === "yearly"
                   ? "每年都值得纪念"
                   : "每一天，都算数")}
               </span>

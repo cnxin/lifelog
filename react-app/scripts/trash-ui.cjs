@@ -54,10 +54,23 @@ exports.checkTrashUI = async function(browser) {
       await page.getByRole('button', { name: '编辑', exact: true }).click();
       await page.getByRole('button', { name: '删除', exact: true }).click();
       assert.ok(await page.getByText('删除后可在「数据与备份」的最近删除里找回', { exact: false }).isVisible());
+      // Measure from the actual toast commit, not a later exponential locator
+      // poll after the sheet exit. Keep the real 4.5s/5.15s checks unchanged.
+      await page.evaluate(() => {
+        window.__undoShownAt = null;
+        const toast = document.querySelector('.app-shell > .toast');
+        const observer = new MutationObserver(() => {
+          if (toast.dataset.visible === 'true' && toast.querySelector('button') && toast.textContent.startsWith('已删除')) {
+            window.__undoShownAt = performance.now(); observer.disconnect();
+          }
+        });
+        observer.observe(toast, { childList: true, subtree: true, attributes: true, characterData: true });
+      });
       await page.getByRole('button', { name: '确认删除', exact: true }).click();
       await page.locator('.editor-modal').waitFor({ state: 'hidden' });
       await page.waitForFunction(() => document.querySelector('.app-shell > .toast').dataset.visible === 'true' && document.querySelector('.app-shell > .toast button'));
-      await page.waitForTimeout(4500);
+      await page.waitForFunction(() => window.__undoShownAt !== null);
+      await page.waitForTimeout(await page.evaluate(() => Math.max(0, 4500 - (performance.now() - window.__undoShownAt))));
       assert.equal(await toast.getAttribute('data-visible'), 'true', 'undo remains for 5s even reduced-motion');
       await page.waitForTimeout(650);
       assert.equal(await toast.getAttribute('data-visible'), 'false', 'undo expires after 5s');

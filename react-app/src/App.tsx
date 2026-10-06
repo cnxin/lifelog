@@ -64,7 +64,7 @@ export default function App() {
     {error && <div className="error-box" role="alert">{error}<button className="secondary" onClick={() => void load()}>重试</button></div>}
     {!loaded && !error && <p role="status" className="loading">正在打开你的日子…</p>}
     {loaded && <>
-     <HomeHero compact={compact} featured={featured} status={status} heroRef={heroRef} total={days.length}
+     <HomeHero compact={compact} today={today} featured={featured} status={status} heroRef={heroRef} total={days.length}
       upcoming={upcoming} add={add} setDetailId={setDetailId} replayCelebration={replayCelebration} />
      <section className="days-section" aria-labelledby="days-title">
       <div className="section-heading"><div><h2 id="days-title">我的日子 <span>{days.length}</span></h2>

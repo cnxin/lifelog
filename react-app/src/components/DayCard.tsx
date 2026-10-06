@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Pin, ChevronRight } from "lucide-react";
 import { dayStatus, lunarLabel, type Day } from "../domain";
-import { tones, formatDate, yearsLabel } from "../dayMeta";
+import { tones, formatDate, yearsLabel, elapsedLabel } from "../dayMeta";
 import { dayTransitionName } from "../listTransition";
 import ReminderBell from "../ReminderBell";
 import Icon from "./CategoryIcon";
@@ -24,6 +24,7 @@ export default function DayCard({
 }) {
   const item = dayStatus(day, today);
   const years = yearsLabel(day, item);
+  const elapsed = day.date < today ? elapsedLabel(day, item) : null;
   return (
     <li
       className={`day-card ${tones[day.category]}`}
@@ -90,6 +91,7 @@ export default function DayCard({
               : day.note ||
                 (item.delta < 0 ? "一起走过的时光" : "好好期待这一天")}
           </span>
+          {elapsed && <span className="card-elapsed" title={elapsed}>{elapsed}</span>}
           <ChevronRight size={16} />
         </div>
       </button>

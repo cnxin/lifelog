@@ -193,7 +193,7 @@ button.hero-count {
 .hero-bottom.has-years {
   flex-wrap: wrap;
 }
-.hero .hero-bottom > .hero-years {
+.hero .hero-bottom > :is(.hero-years, .hero-elapsed) {
   display: block;
   min-width: 0;
   margin-inline-start: auto;

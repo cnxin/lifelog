@@ -17,3 +17,9 @@ export function yearsLabel(day: Day, status: ReturnType<typeof dayStatus>): stri
     return delta === 0 ? `${years} 周年` : `即将 ${years} 周年`;
   return `第 ${years} 次`;
 }
+
+export function elapsedLabel(day: Day, status: ReturnType<typeof dayStatus>): string | null {
+  if (day.repeat !== "yearly" || (status.elapsed === 0 && status.delta > 0)) return null;
+  const prefix = day.category === "生日" ? "已陪伴" : day.category === "纪念日" ? "一起走过" : "已过去";
+  return `${prefix} ${status.elapsed} 天`;
+}

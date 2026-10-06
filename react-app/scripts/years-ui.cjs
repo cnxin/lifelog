@@ -11,15 +11,15 @@ exports.checkYearsUI = async function (browser) {
     page.on('pageerror', error => errors.push(error.message));
     await page.clock.setFixedTime(new Date('2026-10-05T12:00:00+08:00'));
     await seed(page);
-    const hero = page.locator('.hero-years');
-    assert.equal(await hero.textContent(), '即将 7 周年');
+    const hero = page.locator('.hero-elapsed');
+    assert.equal(await hero.textContent(), '一起走过 2329 天');
     for (const [width, size] of [[320,100],[360,100],[1024,100],[320,200]]) {
       await page.setViewportSize({ width, height: 900 });
       const font = await page.addStyleTag({ content: `:root{font-size:${size}% !important}` });
       const card = page.locator('.day-card').first();
       const label = card.locator('.years-label');
       assert.equal(await label.textContent(), '即将 7 周年');
-      assert.ok(await hero.isVisible(), 'hero years remain visible on compact layouts');
+      assert.ok(await hero.isVisible(), 'hero elapsed label remains visible on compact layouts');
       const geometry = await label.evaluate(el => {
         const rect=el.getBoundingClientRect(),card=el.closest('.day-card').getBoundingClientRect();
         return { rect:rect.toJSON(),card:card.toJSON(),fits:rect.left>=card.left&&rect.right<=card.right,

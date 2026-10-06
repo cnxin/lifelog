@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Pin, Pencil, CalendarPlus } from "lucide-react";
 import Modal from "./Modal";
 import { dayStatus, lunarLabel, type Day } from "./domain";
-import { formatDate, icons, tones, yearsLabel } from "./dayMeta";
+import { formatDate, icons, tones, yearsLabel, elapsedLabel } from "./dayMeta";
 import ReminderBell from "./ReminderBell";
 import { hasNativeNotifications } from "./notifications";
 import { getReminderTime } from "./reminders";
@@ -28,6 +28,7 @@ export default function DayDetail({
 }) {
   const status = dayStatus(day, today);
   const years = yearsLabel(day, status);
+  const elapsed = day.date < today ? elapsedLabel(day, status) : null;
   const Icon = icons[day.category];
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -85,6 +86,7 @@ export default function DayDetail({
             </>
           )}
           {years && <p className="detail-years">{years}</p>}
+          {elapsed && <p className="detail-elapsed">{elapsed.split(String(status.elapsed))[0]}<strong>{status.elapsed}</strong> 天</p>}
         </div>
         <div className="detail-dates">
           <p>公历 · {formatDate(day.date)}</p>
