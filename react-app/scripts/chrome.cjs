@@ -75,7 +75,11 @@ const fs = require("node:fs/promises");
     assert.ok(await search.evaluate(el => el === document.activeElement), "expanded search receives focus");
     await search.fill("平凡");
     await page.keyboard.press("Escape");
-    assert.equal(await search.inputValue(), "平凡", "nonempty query stays expanded");
+    await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "打开搜索");
+    assert.equal(await page.getByRole("searchbox", { name: "搜索日子" }).count(), 0, "Escape clears nonempty query and collapses mobile search");
+    await page.getByRole("button", { name: "打开搜索", exact: true }).click();
+    assert.equal(await search.inputValue(), "", "Escape cleared the query");
+    await search.fill("平凡");
     await page.getByRole("button", { name: "清除搜索", exact: true }).click();
     await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "打开搜索");
     assert.equal(await page.getByRole("searchbox", { name: "搜索日子" }).count(), 0, "clear collapses mobile search");
@@ -320,6 +324,7 @@ const fs = require("node:fs/promises");
     await page.keyboard.up("Space");
     await page.keyboard.press("Escape");
     assert.deepEqual(errors, []);
+    await require('./toolbar-search-checks.cjs')(browser);
     console.log(
       "PASS: sticky header, safe-area simulation, landscape/short viewport, large text, touch targets, focus, modal scroll lock, contrast and reduced motion. Android device verification remains separate.",
     );
