@@ -1,5 +1,25 @@
 # 日子：Android 测试与升级验收
 
+## alpha.13 / 阶段 L — 本地测试准备，待作者真机验收
+
+- 版本 `0.2.0-alpha.13-preview`，versionCode **148**，独立包名 `com.cnxin.lifelog.preview`，沿用原测试签名。基于 alpha.12 发布提交 `6665c0a`；顺序 L1 `04e7a97` → L2 `ed0071b` → L4 `1d8f212` → L3，随后独立 `chore(baseline)` 刷新。**不推送 alpha.13、不打 tag、不发 Release**，等作者验收；alpha.12 及此前的 Release 不改不删，不回滚、不 rebase、不改 legacy。
+- **LifeLogDays 的 IndexedDB 从 Dexie v1 升级到 v2**：旧档打开即自动升级，原 `days` 表及其记录不动，仅新增空的 `trash: "id, deletedAt"` 表。不是升级旧版 `LifeLogDatabase`；旧版迁移仍只读。删除在事务内移动记录并只留最近三条；恢复保留全部 Day 字段（含 reminders / reminderTime），同 ID 已存在时返回 exists，不覆盖现有记录，冲突删除副本也仍保留。
+- 详情「删除这个日子」和编辑器删除都进入同一回收站；toast 五秒撤销（reduced-motion 也五秒），超时后仍可从「数据与备份」最近删除恢复。恢复走原 A5 view transition 和卡片高亮；清空须二次确认。删除 / 恢复均经过 changed()，通知重排与 widget 更新沿用既有路径，庆祝标记不清除。导出不含 trash；导入 / readLegacyDays 不写 trash，备份格式仍为 1。
+- 年度重复、原始日期严格早于今天才显示已陪伴 / 一起走过 / 已过去的天数，取 dayStatus.elapsed；纯函数支持起始当天 0，界面当日起始记录按严格条件暂不显示此行。不重复 / 未来原始日期不显示。卡片底栏保持单行，右侧过长省略，chevron 最右；详情在周年行之后，数字 600。hero 右侧改为 elapsed 文案，原周年信息仍在卡片 / 详情 / widget，并保留于 hero title；widget payload 新增 elapsedLabel，2×2 原生布局暂不显示。
+- L1 Node / 浏览器门禁与 Android 构建通过；L2 / L4 中途的完整 gates 因仍对 alpha.12 唯一基准比较而退出 1，授权 DOM 差异逐项附 commit message，没有提前 capture 或修改比较器 / 归一化 / 排除规则。阶段末只替换唯一的浅 / 深色基准，完整最终结果随下载报告提供。axe、焦点、触控、几何、动画时长等既有阈值不放宽。
+- L4 五秒测试曾从 sheet 定位器轮询结束后才计时，晚于 toast 出现，实际检查时已过五秒；真实 trace 显示 toast 约 5010ms 后正常隐藏。只改计时夹具为记录 toast DOM commit 起点，仍用真实 4500ms / 5150ms 检查点，产品仍 5000ms、断言表达式不变。**计数更正：L4 commit message 的「37 条」为笔误；实际证明文件为 23 条断言行逐字相同**，见 `react-app/.artifacts/phase-l/l4/trash-assertion-proof.txt`。
+- 构建曾被既有 6 GiB 磁盘预检拦下，未把未执行的 Gradle / lint 写成通过；只清理可重建的 Gradle transforms 缓存后复跑，不改门槛，不动源码、签名、下载包或历史证据。
+- L3 当前发布准备验证：完整 gates 96.88s，Node 111、UI 792、其余功能套件 / offline / 生产构建通过，整体退出 1 仅因尚未刷新的 baseline / dark 比较；浅 / 深 diff 各 14/14，与 L4 报告逐字一致，L3 无新增 UI 差异。`android:preview` 通过，Gradle 14s / 252 tasks（53 executed / 199 up-to-date），清单测输出并关闭缓存，本轮 JVM 15/15 实际执行，lint 0 errors / 29 warnings。20 个生产 Web 文件与 APK 字节相同；后续独立基准提交将复跑全部门禁与 Android 构建，最终结果另记，不能把本轮整体写成 PASS。
+- 本机自动测试与 native mock 不是设备测试。alpha.13 作者验收尚未完成；机型、Android 与 WebView 提供方 / 版本未知，不猜填。权限与 alpha.12 一致；精确提醒与日历互操作的实际行为不因本次存储 / UI 变更自动扩大为已验收。
+
+### 作者真机验收单（L，待执行）
+
+1. 先导出 alpha.12 备份，再直接覆盖安装独立测试包 alpha.13：旧日子数量、标题 / 备注、重复历法、置顶、提醒提前天数和单独提醒时间不变；首次升级最近删除为空。
+2. 详情直接删除，五秒内点撤销：原记录回到正确位置并高亮；五秒后不可再点 toast，但数据与备份可恢复。浅 / 深色、常规 / reduced-motion、软键盘与大字号都复测。
+3. 编辑器确认文案说明可找回；连续删除四条仅留下最近三条。恢复保留全部字段；导入与删除条目相同 ID 后再恢复，不覆盖现有值、删除副本仍在；清空需二次确认，取消不清空。
+4. JSON 导出不包含回收站，旧备份仍可合并；删除或恢复含提醒记录，核对系统通知实际取消 / 重排及 launcher 更新，庆祝标记不被重置。
+5. 公历 / 农历年度重复、三种分类、过去 / 当天 / 未来原始日期均核对 elapsed 文案和下一次日期；360 宽底栏单行、右侧省略、详情数字和行间距正常。2×2 小组件不额外显示 elapsed 行。
+
 ## alpha.12 / 阶段 K — 作者真机验收通过，发布 K7 测试包
 
 - `0.2.0-alpha.12-preview`，versionCode **147**，独立包名 `com.cnxin.lifelog.preview`，沿用测试签名；不改 legacy，不用于原正式包覆盖升级。基于 tap-highlight 修复 `14c49b8`，K1 `14c929d`，K2 `3ba1458`，K3 `91e8c6b`，K4 在 K3 后直接追加搜索修复，不重排、不 rebase，版本号与 versionCode 不变；作者验收前不推送、不打 tag、不发 Release，之前的 Release 不改不删。
