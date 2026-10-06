@@ -32,11 +32,9 @@ textarea,
 select {
   font: inherit;
 }
-button,
-a,
-input,
-select,
-textarea {
+*,
+*::before,
+*::after {
   -webkit-tap-highlight-color: transparent;
 }
 button {
@@ -59,7 +57,7 @@ button {
 }
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
+input:where(:not([type="checkbox"])):focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--focus-border);

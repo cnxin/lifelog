@@ -84,7 +84,15 @@
   gap: 1rem;
   min-height: 3rem;
   padding-block: 0.25rem;
+  border-radius: 12px;
+  margin-inline: -8px;
+  padding-inline: 8px;
+  transition: background-color 0.16s;
   cursor: pointer;
+}
+.check-row:active {
+  background: var(--check-press-ring);
+  background: color-mix(in srgb, var(--green) 8%, transparent);
 }
 .check-row strong {
   font-size: 0.75rem;
@@ -129,6 +137,13 @@
   border-color: var(--green);
   box-shadow: 0 0 0 3px var(--check-press-ring);
 }
+.check-row input:focus-visible {
+  outline: none;
+  box-shadow: var(--input-focus-shadow);
+  /* Like C4, keep a solid inner ring: even a 35% halo alone is below 3:1. */
+  box-shadow: 0 0 0 2px var(--input-focus-ring),
+    0 0 0 3px color-mix(in srgb, var(--green) 35%, transparent);
+}
 .check-row input:disabled {
   opacity: 0.55;
   cursor: wait;
@@ -143,6 +158,11 @@
     border-color: Highlight;
     background: Highlight;
     color: HighlightText;
+  }
+  .check-row input:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+    box-shadow: none;
   }
 }
 .choice-field {
