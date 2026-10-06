@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lifelog_background">#15191a</color>
+    <color name="widget_day_text">#e6e9e3</color>
+    <color name="widget_day_count">#9fb894</color>
+    <color name="widget_day_rose">#3a2a2b</color>
+    <color name="widget_day_amber">#352f22</color>
+    <color name="widget_day_sage">#27352b</color>
+</resources>

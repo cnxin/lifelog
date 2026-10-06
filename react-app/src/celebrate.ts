@@ -8,14 +8,13 @@ export function shouldCelebrate(featured: Day | null | undefined, today: string,
     stored !== `${featured.id}:${today}`;
 }
 
-const colors: Record<CelebrationTone, string> = { rose: "#a26a58", amber: "#997535", sage: "#617650" };
 function mix(hex: string, target: number, amount: number): string {
   const rgb = hex.slice(1).match(/../g)!.map(value => parseInt(value, 16));
   return `rgb(${rgb.map(value => Math.round(value + (target - value) * amount)).join(",")})`;
 }
 type Particle = {
   x: number; speed: number; drift: number; size: number; phase: number;
-  sway: number; angle: number; spin: number; born: number; shape: number; color: string;
+  sway: number; angle: number; spin: number; born: number; shape: number; colorIndex: number;
 };
 
 /** A bounded, host-local one-shot paint effect; no layout reads in the rAF loop. */
@@ -54,7 +53,16 @@ export function playCelebration(host: HTMLElement, tone: CelebrationTone, opts?:
   const observer = new ResizeObserver(resize);
   observer.observe(host);
   window.addEventListener("resize", resize);
-  const palette = [colors[tone], mix(colors[tone], 255, .2), mix(colors[tone], 0, .15)];
+  const appearance = matchMedia("(prefers-color-scheme: dark)");
+  let palette: string[] = [];
+  const updatePalette = () => {
+    const tokens = getComputedStyle(document.documentElement);
+    const color = tokens.getPropertyValue(`--${tone}-fg`).trim();
+    palette = [color, mix(color, 255, .2), mix(color, 0, .15),
+      tokens.getPropertyValue("--confetti-cream").trim()];
+  };
+  updatePalette();
+  appearance.addEventListener("change", updatePalette);
   const total = 90 + Math.floor(Math.random() * 31);
   const spawnDuration = Math.min(500, duration);
   const particles: Particle[] = [];
@@ -65,6 +73,7 @@ export function playCelebration(host: HTMLElement, tone: CelebrationTone, opts?:
     cancelAnimationFrame(frame);
     document.removeEventListener("visibilitychange", visibility);
     motion.removeEventListener("change", reduce);
+    appearance.removeEventListener("change", updatePalette);
     window.removeEventListener("resize", resize);
     observer.disconnect();
     canvas.remove();
@@ -86,7 +95,7 @@ export function playCelebration(host: HTMLElement, tone: CelebrationTone, opts?:
         size: 4 + Math.random() * 5, phase: Math.random() * Math.PI * 2, sway: 6 + Math.random() * 8,
         angle: Math.random() * Math.PI * 2, spin: (Math.random() * 2 - 1) * 2.4,
         born: index / total * spawnDuration, shape: index % 3,
-        color: color < .1 ? "#fff9ec" : palette[Math.min(2, Math.floor((color - .1) / .9 * 3))],
+        colorIndex: color < .1 ? 3 : Math.min(2, Math.floor((color - .1) / .9 * 3)),
       });
     }
     context!.clearRect(0, 0, width, height);
@@ -101,7 +110,7 @@ export function playCelebration(host: HTMLElement, tone: CelebrationTone, opts?:
       context!.translate(x, y);
       context!.rotate(particle.angle + particle.spin * age);
       context!.globalAlpha = .62 * fade * Math.min(1, (duration - elapsed) / 200);
-      context!.fillStyle = particle.color;
+      context!.fillStyle = palette[particle.colorIndex];
       if (particle.shape === 1) {
         context!.beginPath();
         context!.arc(0, 0, particle.size / 2, 0, Math.PI * 2);

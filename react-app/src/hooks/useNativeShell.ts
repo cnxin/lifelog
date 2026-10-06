@@ -81,8 +81,19 @@ export default function useNativeShell({
         else void App.minimizeApp();
       }),
     );
-    void SystemBars.setStyle({ style: SystemBarsStyle.Light }).catch(() => {});
+    const appearance = matchMedia("(prefers-color-scheme: dark)");
+    const updateBars = () => {
+      if (appearance.matches)
+        void SystemBars.setStyle({ style: SystemBarsStyle.Dark }).catch(() => {});
+      else
+        void SystemBars.setStyle({ style: SystemBarsStyle.Light }).catch(() => {});
+      // The installed core exposes no background API. It reads the qualified
+      // native window background; the edge-to-edge WebView uses the same --bg.
+    };
+    updateBars();
+    appearance.addEventListener("change", updateBars);
     return () => {
+      appearance.removeEventListener("change", updateBars);
       void listener.then((handle) => handle.remove());
     };
   }, []);

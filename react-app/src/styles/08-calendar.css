@@ -125,7 +125,7 @@
   color: var(--muted);
 }
 .calendar-lunar[data-special="true"] {
-  color: var(--rose-deep);
+  color: var(--calendar-festival);
 }
 .calendar-day[data-selected="true"] .calendar-lunar {
   color: var(--on-green);
@@ -206,7 +206,7 @@
   margin-block: 0.5rem 0.75rem;
 }
 .calendar-date-details .calendar-festivals {
-  color: var(--rose-deep);
+  color: var(--calendar-festival);
   margin-top: 0.25rem;
 }
 .calendar-events {

@@ -26,6 +26,7 @@
   --rose-bg: #f5e8e3;
   --rose-fg: #a26a58;
   --rose-deep: #975b49;
+  --calendar-festival: var(--rose-deep);
   --amber-bg: #f6eedb;
   --amber-fg: #997535;
   --amber-deep: #806327;
@@ -166,6 +167,7 @@
     --rose-bg: #3a2a2b;
     --rose-fg: #f0b9a8;
     --rose-deep: #f0b9a8;
+    --calendar-festival: var(--accent);
     --amber-bg: #352f22;
     --amber-fg: #e8c779;
     --amber-deep: #e8c779;
