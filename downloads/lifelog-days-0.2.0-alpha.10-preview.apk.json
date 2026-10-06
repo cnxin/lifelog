@@ -1,0 +1,536 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.10-preview",
+  "versionCode": 145,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4444937,
+  "sha256": "e7e1d90e1297da2f5b57553d85cc28795407f5cce8d1206d20a8cf7056d4b268",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "phase": "I1 → I2 → I3, alpha.10 author testing, not a published Release",
+  "sourceParentBeforeReleaseCommit": "472b4e8ecde375eb41e76cd798786776f5c8c0aa",
+  "branch": "codex/anniversary-lite",
+  "generatedAt": "2026-10-06T05:29:36.618Z",
+  "implementationCommits": {
+    "I1": "b365a6a",
+    "I2": "472b4e8"
+  },
+  "gatesBeforeBaselineRefresh": {
+    "i1": {
+      "completedAt": "2026-10-06T05:12:44.048Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 7201,
+          "result": "PASS",
+          "testsPassed": 72
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6419,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 17203,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 37696,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 14512,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 63,
+          "axeAudits": 7,
+          "axeSourceInjections": 1,
+          "durationMs": 15830,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 6179,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 3757,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3525,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 1,
+          "assertionsPassed": 3,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 1631,
+          "result": "FAIL"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 10236,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 48827,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.5425222222222222,
+      "performanceTargetMet": false
+    },
+    "i2": {
+      "completedAt": "2026-10-06T05:24:16.646Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 2 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8781,
+          "result": "PASS",
+          "testsPassed": 77
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6084,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 17205,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 38484,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 7316,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 16373,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 6273,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 4506,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 2717,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 1,
+          "assertionsPassed": 3,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 1637,
+          "result": "FAIL"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 9876,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 64155,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.7128333333333333,
+      "performanceTargetMet": false
+    },
+    "i3": {
+      "completedAt": "2026-10-06T05:27:59.775Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 11945,
+          "result": "PASS",
+          "testsPassed": 77
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8053,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 23853,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 54768,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 20913,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 26831,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 14507,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 10654,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 4512,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 1,
+          "assertionsPassed": 3,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 2676,
+          "result": "FAIL"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 9710,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 71126,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.7902888888888889,
+      "performanceTargetMet": false
+    }
+  },
+  "originalEightChecks": [
+    {
+      "name": "node-unit",
+      "exitCode": 0,
+      "assertionsPassed": 0,
+      "axeAudits": 0,
+      "axeSourceInjections": 0,
+      "durationMs": 11945,
+      "result": "PASS",
+      "testsPassed": 77
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "assertionsPassed": 0,
+      "axeAudits": 0,
+      "axeSourceInjections": 0,
+      "durationMs": 8053,
+      "result": "PASS"
+    },
+    {
+      "name": "smoke",
+      "exitCode": 0,
+      "assertionsPassed": 48,
+      "axeAudits": 6,
+      "axeSourceInjections": 3,
+      "durationMs": 23853,
+      "result": "PASS"
+    },
+    {
+      "name": "ui-polish",
+      "exitCode": 0,
+      "assertionsPassed": 399,
+      "axeAudits": 66,
+      "axeSourceInjections": 5,
+      "durationMs": 54768,
+      "result": "PASS"
+    },
+    {
+      "name": "calendar",
+      "exitCode": 0,
+      "assertionsPassed": 57,
+      "axeAudits": 5,
+      "axeSourceInjections": 1,
+      "durationMs": 20913,
+      "result": "PASS"
+    },
+    {
+      "name": "date-picker",
+      "exitCode": 0,
+      "assertionsPassed": 93,
+      "axeAudits": 8,
+      "axeSourceInjections": 2,
+      "durationMs": 26831,
+      "result": "PASS"
+    },
+    {
+      "name": "controls",
+      "exitCode": 0,
+      "assertionsPassed": 447,
+      "axeAudits": 5,
+      "axeSourceInjections": 2,
+      "durationMs": 14507,
+      "result": "PASS"
+    },
+    {
+      "name": "chrome",
+      "exitCode": 0,
+      "assertionsPassed": 242,
+      "axeAudits": 3,
+      "axeSourceInjections": 1,
+      "durationMs": 10654,
+      "result": "PASS"
+    }
+  ],
+  "androidPreview": {
+    "result": "PASS",
+    "command": "npm run android:preview",
+    "lint": {
+      "errors": 0,
+      "fatal": 0,
+      "warnings": 27
+    },
+    "jvmTask": [
+      "> Task :app:testDebugUnitTest UP-TO-DATE"
+    ],
+    "junit": [
+      {
+        "file": "TEST-com.cnxin.lifelog.widget.DayWidgetTest.xml",
+        "summary": "<testsuite name=\"com.cnxin.lifelog.widget.DayWidgetTest\" tests=\"9\" skipped=\"0\" failures=\"0\" errors=\"0\" timestamp=\"2026-10-05T19:13:30.775Z\" hostname=\"yuanshaojiedeMac-mini.local\" time=\"0.028\">"
+      },
+      {
+        "file": "TEST-com.getcapacitor.myapp.ExampleUnitTest.xml",
+        "summary": "<testsuite name=\"com.getcapacitor.myapp.ExampleUnitTest\" tests=\"1\" skipped=\"0\" failures=\"0\" errors=\"0\" timestamp=\"2026-10-05T19:13:30.804Z\" hostname=\"yuanshaojiedeMac-mini.local\" time=\"0.0\">"
+      }
+    ],
+    "actualWidgetTestExecution": "I1 separate Gradle invocation actually executed 9 widget tests + 1 example, 0 failures/errors. Later UP-TO-DATE tasks are not fresh execution."
+  },
+  "assertionChanges": [
+    "I1: non-repeating dayStatus complete-object expectation adds years:null only. No other old assertions changed."
+  ],
+  "testFlowChanges": [
+    "I2: Gregorian helper and year-chooser UI audit explicitly select Gregorian after a lunar record defaults lunar. Assertions/axe/options/touch thresholds/timers unchanged."
+  ],
+  "baseline": {
+    "policy": "One baseline set. Verify against previous phase until I3; capture/replace in a separate chore(baseline): refresh after I commit. J light mode must match this refreshed set.",
+    "status": "PENDING separate phase-end capture commit; pre-refresh verify FAIL is expected and not recorded as PASS.",
+    "permittedScopes": [
+      "I1 card-date badges, hero-bottom, detail-years; widget field tested separately",
+      "I2 incremental date toolbar and lunar grid only; cumulative diff retains reviewed I1 changes"
+    ],
+    "normalizationHash": "5f218bc8a5fc2c28682909b55d1aaa332ecf1a9be1c700744371dbb60c79c893",
+    "comparatorHash": "7a7b36d842517df0eaac4df44662ad617f59e6d78c5cd1a96834db080ddd7553",
+    "fullPreRefreshDiff": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -318,6 +318,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -374,6 +375,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 360x740-search\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -335,6 +335,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -391,6 +392,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 360x740-sort\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -330,6 +330,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -386,6 +387,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 360x740-detail\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`, `p.detail-years`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -318,6 +318,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -374,6 +375,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -474,6 +476,7 @@\n <span>还有</span>\n <strong>227</strong>\n <span>天</span>\n+<p class=\"detail-years\">即将 7 周年</p>\n </div>\n <div class=\"detail-dates\">\n <p>公历 · 2020.05.20</p>\n```\n\n## 360x740-editor-date\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`, `p.detail-years`, `fieldset.choice-field.date-calendar-mode`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -318,6 +318,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -374,6 +375,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -474,6 +476,7 @@\n <span>还有</span>\n <strong>227</strong>\n <span>天</span>\n+<p class=\"detail-years\">即将 7 周年</p>\n </div>\n <div class=\"detail-dates\">\n <p>公历 · 2020.05.20</p>\n@@ -615,6 +618,23 @@\n </button>\n <div class=\"date-picker\" id=\"react-id-4-panel\" role=\"region\" aria-label=\"选择日期\">\n <div class=\"date-picker-toolbar\">\n+<fieldset class=\"choice-field date-calendar-mode\">\n+<legend class=\"sr-only\">日期录入历法</legend>\n+<div class=\"choice-options\">\n+<label class=\"choice-option\">\n+<input type=\"radio\" name=\"react-id-4-calendar-mode\" value=\"solar\" checked=\"\">\n+<span>\n+<span>公历</span>\n+</span>\n+</label>\n+<label class=\"choice-option\">\n+<input type=\"radio\" name=\"react-id-4-calendar-mode\" value=\"lunar\">\n+<span>\n+<span>农历</span>\n+</span>\n+</label>\n+</div>\n+</fieldset>\n <button type=\"button\" class=\"date-month-heading\" aria-label=\"切换年月\" aria-expanded=\"false\">\n <span aria-live=\"polite\">2020年 5月</span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-down\" aria-hidden=\"true\">\n```\n### Computed styles by selector\n#### `.editor-fields input`\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] background-color: null → \"rgba(0, 0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] border-color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] font-size: null → \"16px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] font-weight: null → \"400\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] line-height: null → \"24px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] padding: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] margin: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] border-radius: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] box-shadow: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] opacity: null → \"0\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] transform: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] background-color: null → \"rgba(0, 0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] border-color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] font-size: null → \"16px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] font-weight: null → \"400\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] line-height: null → \"24px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] padding: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] margin: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] border-radius: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] box-shadow: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] opacity: null → \"0\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] transform: null → \"none\"\n### Clickable geometry by element\n- BUTTON.date-month-heading #1 [\"BUTTON\",null,\"date-month-heading\",\"\",\"button\",null,\"切换年月\",null,null]\n  - before: {\"x\":34,\"y\":234.5,\"width\":120.6875,\"height\":40,\"top\":234.5,\"right\":154.6875,\"bottom\":274.5,\"left\":34}\n  - after: {\"x\":127.140625,\"y\":234.5,\"width\":103.71875,\"height\":40,\"top\":234.5,\"right\":230.859375,\"bottom\":274.5,\"left\":127.140625}\n- INPUT #1 [\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"]\n  - before: null\n  - after: {\"x\":32,\"y\":232.5,\"width\":46,\"height\":44,\"top\":232.5,\"right\":78,\"bottom\":276.5,\"left\":32}\n- INPUT #1 [\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"]\n  - before: null\n  - after: {\"x\":72,\"y\":232.5,\"width\":46,\"height\":44,\"top\":232.5,\"right\":118,\"bottom\":276.5,\"left\":72}\n\n## 360x740-calendar\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -318,6 +318,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -374,6 +375,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 360x740-data\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -101,7 +101,7 @@\n <strong>227</strong>\n <span>天</span>\n </div>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -125,7 +125,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -318,6 +318,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -374,6 +375,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 1024x768-home\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 1024x768-search\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 1024x768-sort\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -332,6 +332,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -388,6 +389,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 1024x768-detail\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`, `p.detail-years`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -476,6 +478,7 @@\n <span>还有</span>\n <strong>227</strong>\n <span>天</span>\n+<p class=\"detail-years\">即将 7 周年</p>\n </div>\n <div class=\"detail-dates\">\n <p>公历 · 2020.05.20</p>\n```\n\n## 1024x768-editor-date\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`, `p.detail-years`, `fieldset.choice-field.date-calendar-mode`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -476,6 +478,7 @@\n <span>还有</span>\n <strong>227</strong>\n <span>天</span>\n+<p class=\"detail-years\">即将 7 周年</p>\n </div>\n <div class=\"detail-dates\">\n <p>公历 · 2020.05.20</p>\n@@ -617,6 +620,23 @@\n </button>\n <div class=\"date-picker\" id=\"react-id-4-panel\" role=\"region\" aria-label=\"选择日期\">\n <div class=\"date-picker-toolbar\">\n+<fieldset class=\"choice-field date-calendar-mode\">\n+<legend class=\"sr-only\">日期录入历法</legend>\n+<div class=\"choice-options\">\n+<label class=\"choice-option\">\n+<input type=\"radio\" name=\"react-id-4-calendar-mode\" value=\"solar\" checked=\"\">\n+<span>\n+<span>公历</span>\n+</span>\n+</label>\n+<label class=\"choice-option\">\n+<input type=\"radio\" name=\"react-id-4-calendar-mode\" value=\"lunar\">\n+<span>\n+<span>农历</span>\n+</span>\n+</label>\n+</div>\n+</fieldset>\n <button type=\"button\" class=\"date-month-heading\" aria-label=\"切换年月\" aria-expanded=\"false\">\n <span aria-live=\"polite\">2020年 5月</span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-down\" aria-hidden=\"true\">\n```\n### Computed styles by selector\n#### `.editor-fields input`\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] background-color: null → \"rgba(0, 0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] border-color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] font-size: null → \"16px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] font-weight: null → \"400\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] line-height: null → \"24px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] padding: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] margin: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] border-radius: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] box-shadow: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] opacity: null → \"0\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"] #1] transform: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] background-color: null → \"rgba(0, 0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] border-color: null → \"rgb(0, 0, 0)\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] font-size: null → \"16px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] font-weight: null → \"400\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] line-height: null → \"24px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] padding: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] margin: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] border-radius: null → \"0px\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] box-shadow: null → \"none\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] opacity: null → \"0\"\n- [[\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"] #1] transform: null → \"none\"\n### Clickable geometry by element\n- BUTTON.date-month-heading #1 [\"BUTTON\",null,\"date-month-heading\",\"\",\"button\",null,\"切换年月\",null,null]\n  - before: {\"x\":308,\"y\":229.5,\"width\":120.6875,\"height\":40,\"top\":229.5,\"right\":428.6875,\"bottom\":269.5,\"left\":308}\n  - after: {\"x\":459.140625,\"y\":229.5,\"width\":103.71875,\"height\":40,\"top\":229.5,\"right\":562.859375,\"bottom\":269.5,\"left\":459.140625}\n- INPUT #1 [\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"solar\"]\n  - before: null\n  - after: {\"x\":306,\"y\":227.5,\"width\":46,\"height\":44,\"top\":227.5,\"right\":352,\"bottom\":271.5,\"left\":306}\n- INPUT #1 [\"INPUT\",null,\"\",\"\",\"radio\",\"react-id-4-calendar-mode\",null,null,\"lunar\"]\n  - before: null\n  - after: {\"x\":346,\"y\":227.5,\"width\":46,\"height\":44,\"top\":227.5,\"right\":392,\"bottom\":271.5,\"left\":346}\n\n## 1024x768-calendar\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\n## 1024x768-data\nDOM selectors: `div.hero-bottom.has-years`, `div.hero-bottom > span`, `span.hero-years`, `span.years-label`\n### DOM (3 context lines per hunk)\n```diff\n@@ -102,7 +102,7 @@\n <span>天</span>\n </div>\n <p class=\"hero-caption\">一起走过的路，都值得记得。</p>\n-<div class=\"hero-bottom\">\n+<div class=\"hero-bottom has-years\">\n <span>\n <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-calendar-days\" aria-hidden=\"true\">\n <path d=\"M8 2v4\">\n@@ -126,7 +126,7 @@\n <path d=\"M16 18h.01\">\n </path>\n </svg>2020.05.20</span>\n-<span>每年都值得纪念</span>\n+<span class=\"hero-years\">即将 7 周年</span>\n </div>\n </div>\n <aside class=\"overview-side\">\n@@ -320,6 +320,7 @@\n <p class=\"card-date\">\n <span>2020.05.20</span>\n <span>每年重复</span>\n+<span class=\"years-label\">即将 7 周年</span>\n </p>\n </div>\n <div class=\"card-count\">\n@@ -376,6 +377,7 @@\n <p class=\"card-date\">\n <span>1970.09.30</span>\n <span>农历九月初一</span>\n+<span class=\"years-label\">即将 56 岁</span>\n </p>\n </div>\n <div class=\"card-count\">\n```\n\nChanged snapshots: 14/14.\n",
+    "originalFilesCopiedElsewhere": false,
+    "comparisonOrNormalizationChanged": false,
+    "exclusionMarkersAdded": false
+  },
+  "authorAcceptance": {
+    "status": "pending",
+    "model": null,
+    "androidVersion": null,
+    "webViewProvider": null,
+    "webViewVersion": null
+  },
+  "notVerified": [
+    "Android installation/keyboard/touch/launcher layout/day rollover of phase I",
+    "author phase-I device checklist",
+    "notification punctuality/reboot recovery/long-term background widget cadence",
+    "original production signing / same-signature upgrade"
+  ],
+  "publication": {
+    "status": "not pushed/tagged/released; author acceptance required",
+    "priorReleaseChanges": "none",
+    "nextPhaseJStarted": false
+  }
+}
