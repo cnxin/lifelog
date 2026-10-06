@@ -18,7 +18,7 @@
   "phase": "J / alpha.11 author acceptance candidate",
   "branch": "codex/anniversary-lite",
   "sourceParentBeforeReleaseCommit": "7761e9a15dcd06d7db551c2d9bae4bc18d240bda",
-  "sourceReleaseCommit": "The J4 commit containing this APK and report; not yet pushed or tagged.",
+  "sourceReleaseCommit": "c2caaad3676ac9d5c61ad385a2ddc9e5c86e162e",
   "generatedAt": "2026-10-06T09:34:54.701Z",
   "implementationCommits": {
     "J1": "a9a922c",
@@ -894,7 +894,8 @@
       "Real device first frame / no-white-flash",
       "Real system-bar and WebView live uiMode behavior",
       "Cold launch on specific OEM / Android / WebView"
-    ]
+    ],
+    "notVerifiedScope": "Not independently verified by this agent. Author confirms phase-J overall acceptance; no individual startup-frame capture or hardware/version log supplied."
   },
   "darkValidation": {
     "assertionsPassed": 310,
@@ -2337,27 +2338,725 @@
     "note": "Earlier draft success/APKs are not the final delivery; final identity/SHA/gates above are authoritative."
   },
   "authorAcceptance": {
-    "status": "pending author phase-J device acceptance",
-    "authorAccepted": false,
+    "status": "author-confirmed phase-J device acceptance passed",
+    "authorAccepted": true,
+    "confirmedAtLocalDate": "2026-10-06",
+    "source": "Author message in this thread: alpha.11 真机验收通过",
+    "scope": "Phase J overall acceptance. No separate per-device/per-check measurement logs were supplied.",
     "deviceModel": null,
     "androidVersion": null,
     "webViewProvider": null,
     "webViewVersion": null,
-    "localDeviceTested": false,
-    "adbEvidence": "List of devices attached",
-    "note": "No connected device; do not infer a model/WebView from browser or SDK versions."
+    "missingDeviceInfoReason": "The author message still contains a placeholder; no reliable existing record identifies the device/WebView. Not guessed.",
+    "localDeviceTested": false
   },
   "notVerified": [
-    "Author phase-J phone acceptance",
-    "First cold-start frame on device",
-    "Native bar icon/edge-to-edge on device",
-    "Background recovery and launcher night widget refresh",
-    "Reminder delivery/reboot/exact timing",
+    "Independent agent phone tests (author separately confirmed phase-J acceptance)",
+    "Exact device model / Android / WebView provider/version",
+    "Reminder punctual delivery/reboot restoration",
+    "Long-running background widget schedule",
     "Original production signed in-place upgrade"
   ],
   "publication": {
-    "status": "not pushed / not tagged / no alpha.11 GitHub Release",
-    "policy": "Wait for author phase-J device acceptance; previous releases remain untouched."
+    "status": "author-approved alpha.11 pre-release publication",
+    "tag": "v0.2.0-alpha.11-preview",
+    "url": "https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.11-preview",
+    "branch": "codex/anniversary-lite",
+    "prerelease": true,
+    "usesOriginalAuthorAcceptedApk": true,
+    "originalApkSha256": "f9c8615afa50c154c4fc2ee57b15f48d5b8ce03152ef1b35d802f71cac172300",
+    "releaseBodyFormat": "alpha.10",
+    "previousReleasesSnapshotCount": 127,
+    "existingReleaseEditsRequested": false,
+    "postPublicationAuditPath": "react-app/.artifacts/alpha11-release/release-audit.json"
   },
-  "localEvidenceRoot": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app"
+  "localEvidenceRoot": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app",
+  "publicationRecordCommit": "The docs(release) commit containing this updated report.",
+  "latestGateValidation": {
+    "command": "npm run gates",
+    "exitCode": 0,
+    "report": {
+      "completedAt": "2026-10-06T09:49:50.649Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 21711,
+          "result": "PASS",
+          "testsPassed": 91
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 18831,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 28110,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 49903,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 25773,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 17403,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 6539,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 5128,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 4210,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 20920,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 310,
+          "axeAudits": 37,
+          "axeSourceInjections": 19,
+          "durationMs": 47478,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 15297,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 113237,
+      "referenceSeconds": 90,
+      "ratioToReference": 1.2581888888888888,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    }
+  },
+  "publicationValidation": {
+    "completedAt": "2026-10-06T09:54:40.733Z",
+    "gatesExitCode": 0,
+    "androidPreviewExitCode": 0,
+    "androidBuildSummary": "BUILD SUCCESSFUL in 35s\n249 actionable tasks: 19 executed, 16 from cache, 214 up-to-date",
+    "androidTaskExecution": [
+      "> Task :capacitor-local-notifications:preBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:preBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE",
+      "> Task :app:preBuild UP-TO-DATE",
+      "> Task :capacitor-app:preBuild UP-TO-DATE",
+      "> Task :capacitor-android:preBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE",
+      "> Task :app:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-android:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-app:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-android:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :app:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-app:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :app:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-app:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-haptics:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-android:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugResValues UP-TO-DATE",
+      "> Task :app:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-haptics:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-android:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-android:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-app:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata",
+      "> Task :app:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-haptics:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-android:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-app:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :app:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :app:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:processDebugNavigationResources FROM-CACHE",
+      "> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugResValues FROM-CACHE",
+      "> Task :capacitor-local-notifications:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-app:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugResources FROM-CACHE",
+      "> Task :capacitor-android:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-haptics:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-local-notifications:checkKotlinGradlePluginConfigurationErrors SKIPPED",
+      "> Task :capacitor-android:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-app:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:packageDebugResources FROM-CACHE",
+      "> Task :capacitor-local-notifications:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractDeepLinksDebug FROM-CACHE",
+      "> Task :capacitor-app:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-haptics:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-local-notifications:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-haptics:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-haptics:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-app:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:processDebugManifest FROM-CACHE",
+      "> Task :capacitor-haptics:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-app:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-local-notifications:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-haptics:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-app:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugLibraryResources FROM-CACHE",
+      "> Task :capacitor-local-notifications:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-local-notifications:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:parseDebugLocalResources FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugRFile FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:javaPreCompileDebug FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugJavaWithJavac NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibRuntimeToJarDebug",
+      "> Task :capacitor-cordova-android-plugins:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibCompileToJarDebug",
+      "> Task :capacitor-app:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-local-notifications:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-app:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-haptics:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-local-notifications:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-app:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-haptics:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-local-notifications:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-app:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :app:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-local-notifications:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-app:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-haptics:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-android:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-android:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-android:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-android:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-android:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-app:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :app:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugShaders",
+      "> Task :capacitor-haptics:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :app:compileDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugAssets",
+      "> Task :capacitor-android:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :app:mapDebugSourceSetPaths UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibRuntimeToDirDebug",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugJniLibFolders",
+      "> Task :capacitor-android:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-app:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-android:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:copyDebugJniLibsProjectOnly",
+      "> Task :capacitor-app:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-haptics:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-android:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-android:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-app:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-haptics:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-android:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-app:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-app:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-app:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-app:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :app:mergeDebugResources UP-TO-DATE",
+      "> Task :app:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-android:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-android:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-android:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-android:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:copyDebugJniLibsProjectAndLocalJars",
+      "> Task :capacitor-android:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-android:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugKotlin UP-TO-DATE",
+      "> Task :capacitor-android:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugJavaWithJavac NO-SOURCE",
+      "> Task :capacitor-local-notifications:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugJavaRes UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:checkDebugAarMetadata",
+      "> Task :capacitor-local-notifications:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :app:processDebugMainManifest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractDebugAnnotations FROM-CACHE",
+      "> Task :app:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :app:processDebugManifestForPackage UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-local-notifications:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-local-notifications:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-android:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:createFullJarDebug",
+      "> Task :capacitor-app:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-local-notifications:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:writeDebugLintModelMetadata",
+      "> Task :capacitor-local-notifications:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractProguardFiles",
+      "> Task :capacitor-local-notifications:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-haptics:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-android:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-app:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-haptics:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugJavaResource",
+      "> Task :capacitor-haptics:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugLintModel",
+      "> Task :capacitor-local-notifications:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:syncDebugLibJars FROM-CACHE",
+      "> Task :capacitor-local-notifications:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-app:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :app:processDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :app:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:bundleDebugLocalLintAar",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebug FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :app:compileDebugUnitTestJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestResValues FROM-CACHE",
+      "> Task :app:processDebugJavaRes NO-SOURCE",
+      "> Task :app:processDebugUnitTestJavaRes NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestLintModel",
+      "> Task :capacitor-cordova-android-plugins:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :app:testDebugUnitTest UP-TO-DATE",
+      "> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE",
+      "> Task :app:mergeDebugShaders UP-TO-DATE",
+      "> Task :app:compileDebugShaders NO-SOURCE",
+      "> Task :app:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugUnitTestLintModel",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugAndroidTest FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugUnitTest FROM-CACHE",
+      "> Task :app:mergeDebugAssets UP-TO-DATE",
+      "> Task :app:compressDebugAssets UP-TO-DATE",
+      "> Task :app:desugarDebugFileDependencies UP-TO-DATE",
+      "> Task :app:dexBuilderDebug UP-TO-DATE",
+      "> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE",
+      "> Task :app:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :app:checkDebugDuplicateClasses UP-TO-DATE",
+      "> Task :app:mergeExtDexDebug UP-TO-DATE",
+      "> Task :app:mergeLibDexDebug UP-TO-DATE",
+      "> Task :app:mergeProjectDexDebug UP-TO-DATE",
+      "> Task :app:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :app:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :app:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :app:validateSigningDebug UP-TO-DATE",
+      "> Task :app:writeDebugAppMetadata UP-TO-DATE",
+      "> Task :app:writeDebugSigningConfigVersions UP-TO-DATE",
+      "> Task :app:packageDebug UP-TO-DATE",
+      "> Task :app:createDebugApkListingFileRedirect UP-TO-DATE",
+      "> Task :app:assembleDebug UP-TO-DATE",
+      "> Task :app:preDebugAndroidTestBuild SKIPPED",
+      "> Task :app:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :app:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :app:extractProguardFiles UP-TO-DATE",
+      "> Task :app:generateDebugLintReportModel UP-TO-DATE",
+      "> Task :app:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :app:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :app:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :app:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :app:lintReportDebug UP-TO-DATE",
+      "> Task :app:lintDebug"
+    ],
+    "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE",
+    "jvmExecutedInThisRun": false,
+    "cachedResultsAreNotFreshExecution": true,
+    "lintErrors": 0,
+    "lintWarnings": 28,
+    "lintIssues": [
+      {
+        "id": "AndroidGradlePluginVersion",
+        "severity": "Warning"
+      },
+      {
+        "id": "GradleDependency",
+        "severity": "Warning"
+      },
+      {
+        "id": "NewerVersionAvailable",
+        "severity": "Warning"
+      },
+      {
+        "id": "ObsoleteSdkInt",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "UnusedResources",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLauncherShape",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLauncherShape",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLauncherShape",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLauncherShape",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLauncherShape",
+        "severity": "Warning"
+      },
+      {
+        "id": "MonochromeLauncherIcon",
+        "severity": "Warning"
+      },
+      {
+        "id": "MonochromeLauncherIcon",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDipSize",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicatesConfig",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconLocation",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicates",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicates",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicates",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicates",
+        "severity": "Warning"
+      },
+      {
+        "id": "IconDuplicates",
+        "severity": "Warning"
+      }
+    ],
+    "acceptedApkUntouched": true,
+    "rebuiltApkSha256": "f9c8615afa50c154c4fc2ee57b15f48d5b8ce03152ef1b35d802f71cac172300",
+    "rebuiltApkMatchesAccepted": true,
+    "acceptedApkAssetsCompared": 20,
+    "acceptedApkAssetsAllByteIdentical": true,
+    "assets": [
+      {
+        "path": "assets/esm-CLBWQyMA.js",
+        "sha256": "c278d90d93ba7a4a92487a4532daea9a37a1546c1e240b688d9c9865698f2ca6",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/esm-CnKZiSTE.js",
+        "sha256": "70e9eafeb6b00d18f3cfa83048eea21e5cb3b34d6a59c7f0239908fe750dd84d",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/esm-Dgp4G71r.js",
+        "sha256": "f62a3727dedb199e7cadc1e0e4fcbae188d38b6a5fd6e9627111ee68353b8f4c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/index-9QEm3-Fi.css",
+        "sha256": "cac40bfa1a7fd3c200773e46830accf19ccf3d42387207bd6f7fe993968e576c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/index-Dron9Xxu.js",
+        "sha256": "efd1e4e330932e97bb9d7801c0fc52e260b851503a2be30c2184f1f236568936",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/lunar-rFT-dEts.js",
+        "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/react-DxbjzT7Z.js",
+        "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/rolldown-runtime-Bh1tDfsg.js",
+        "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/storage-CLLSMDTL.js",
+        "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-BIMvkabU.js",
+        "sha256": "382b3fbbc02f0fa87587bfa223feedeefb83957ad0b889e708620cc9bd20ed5c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-BMDReoj-.js",
+        "sha256": "163f529812190880850acc99614213a7d73531ea09980aaa290667fa49497e75",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-D2uI6Jpv.js",
+        "sha256": "89fd1025eb59e1debc76c6799050a18b444ea1d3a03d1e638611fa4190c4bd71",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-180.png",
+        "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-192.png",
+        "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-512.png",
+        "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon.svg",
+        "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a",
+        "byteIdentical": true
+      },
+      {
+        "path": "index.html",
+        "sha256": "d55859992b94ae92738aa3ae6a94aacb0c35e9f5edb3356ea92616ecf3b065eb",
+        "byteIdentical": true
+      },
+      {
+        "path": "ingot.png",
+        "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e",
+        "byteIdentical": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc",
+        "byteIdentical": true
+      },
+      {
+        "path": "sw.js",
+        "sha256": "ff1f02dd17cc4ca671074609b11188c1213fe52470440112bafed784e3a87075",
+        "byteIdentical": true
+      }
+    ],
+    "signerMatchesAccepted": true,
+    "sourceAndAssertionsChanged": false,
+    "baselinesChanged": false,
+    "gateLog": "react-app/.artifacts/alpha11-release/gates.log",
+    "androidLog": "react-app/.artifacts/alpha11-release/android.log"
+  }
 }

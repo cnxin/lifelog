@@ -2,15 +2,15 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前测试版本：`0.2.0-alpha.11`（阶段 J，供作者真机验收，尚未发布 alpha.11 Release）。已发布版本为 `0.2.0-alpha.10`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前测试版本：`0.2.0-alpha.11`（阶段 J，作者真机验收通过，已发布 pre-release）。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
 
 ### alpha.11 深色模式
 
 - 跟随系统深色模式。
 
-versionCode 146。不加应用内手动切换；首页、sheet、日历、详情、排序菜单、庆祝粒子与 Android 小组件提供深色配色。浅色零差异以 `3c89d2b` 刷新后的 14 份基准为准，不改浅色基准或比较器；另有 14 份深色基准。测试 APK、SHA-256 与验证报告在 `downloads/`，等作者完成阶段 J 真机验收后再推送与发布 alpha.11。
+versionCode 146。不加应用内手动切换；首页、sheet、日历、详情、排序菜单、庆祝粒子与 Android 小组件提供深色配色。浅色零差异以 `3c89d2b` 刷新后的 14 份基准为准，不改浅色基准或比较器；另有 14 份深色基准。作者已于 2026-10-06 确认阶段 J 真机验收通过，机型 / Android / WebView 版本尚未提供，不猜填；验收记录见 `docs/ANDROID_RELEASE.md`。
 
-J4 已按作者授权仅将原生父主题正则由 Light 调整为 DayNight；浅 / 深色窗口与 WebView 启动底色均跟随系统并匹配 `--bg`。全部门禁与 Android 构建通过，lint 0 error / 28 warnings；首帧无闪白等真机行为仍待复测，不以源码或浏览器检查代替设备验收。最终测试包为 `downloads/lifelog-days-0.2.0-alpha.11-preview.apk`，附同名 `.apk.sha256` / `.apk.json`；不把旧草稿 APK 当作最终交付。
+J4 已按作者授权仅将原生父主题正则由 Light 调整为 DayNight；浅 / 深色窗口与 WebView 启动底色均跟随系统并匹配 `--bg`。全部门禁与 Android 构建通过，lint 0 error / 28 warnings；作者确认的真机验收与本机源码 / 浏览器检查分别记录，不把后者当作设备测试。发布使用作者验收的原 APK，不用发布前重建替换；附同名 `.apk.sha256` / `.apk.json`。
 
 ### alpha.10 周年数字与农历录入
 
@@ -27,7 +27,7 @@ versionCode 144。阶段 H 曾以 H0 的 14 份浅色 DOM / 计算样式 / 点�
 
 ## 下载 Android 测试版
 
-alpha.11 目前仅供作者真机验收：[测试 APK](downloads/lifelog-days-0.2.0-alpha.11-preview.apk)、[SHA-256](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.sha256)、[验证报告](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.json)。这不是已发布的 GitHub Release；阶段 J 真机验收通过后再发布。
+在 [alpha.11 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.11-preview) 的 Assets 中下载 APK、SHA-256 与验证报告；仓库也保留 [测试 APK](downloads/lifelog-days-0.2.0-alpha.11-preview.apk)、[SHA-256](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.sha256)、[验证报告](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.json)。发布使用作者验收的原文件，alpha.10 及更早 Release 不改不删。
 
 在 [alpha.10 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.10-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.10-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。发布使用作者验收的原 APK，alpha.9 及更早 Release 保留不改。
 
