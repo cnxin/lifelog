@@ -17,12 +17,12 @@
 @keyframes day-highlight {
   0%,
   35% {
-    border-color: #809b74;
-    box-shadow: 0 0 0 3px #809b7440;
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 3px var(--saved-ring);
   }
   100% {
     border-color: var(--border);
-    box-shadow: 0 0 0 0 #809b7400;
+    box-shadow: 0 0 0 0 var(--saved-ring-clear);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -32,7 +32,7 @@
     animation: none !important;
   }
   .day-card[data-highlight="true"] {
-    border-color: #809b74;
+    border-color: var(--focus-border);
   }
 }
 
@@ -50,19 +50,19 @@
 }
 .card-main:not(:disabled):active,
 .calendar-event:not(:disabled):active {
-  background: var(--soft-pressed, #e2e4de);
+  background: var(--soft-pressed, var(--neutral-pressed));
   transition-duration: 80ms;
 }
 .hero-link:not(:disabled):active {
-  background: var(--tint-pressed, #e2e4de);
+  background: var(--tint-pressed, var(--neutral-pressed));
   transition-duration: 80ms;
 }
 .calendar-day:not(:disabled):active {
-  background: #e2e4de;
+  background: var(--neutral-pressed);
   transition-duration: 80ms;
 }
 .calendar-day[data-selected="true"]:not(:disabled):active {
-  background: #425641;
+  background: var(--calendar-selected-pressed);
 }
 .search input::-webkit-search-cancel-button {
   display: none;

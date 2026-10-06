@@ -5,10 +5,10 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #eef2e9;
+  background: var(--privacy-bg);
   padding: 16px;
   border-radius: 12px;
-  color: #526449;
+  color: var(--section-text);
 }
 .privacy-note > svg {
   flex-shrink: 0;
@@ -25,7 +25,7 @@
   font-size: 0.75rem;
   line-height: 1.9;
   margin-top: 7px;
-  color: #526449;
+  color: var(--section-text);
 }
 .data-actions {
   display: flex;
@@ -43,7 +43,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .data-actions button:hover {
-    background: #f1f4ec;
+    background: var(--data-hover);
   }
 }
 .data-actions button > span {
@@ -54,7 +54,7 @@
 .data-actions button > svg {
   flex-shrink: 0;
   width: 20px;
-  color: #6f7d62;
+  color: var(--data-icon);
 }
 .data-actions button > svg:last-child {
   margin-left: auto;
@@ -79,7 +79,7 @@
 }
 .import-preview {
   margin-top: 20px;
-  background: #f2f4ed;
+  background: var(--import-bg);
   padding: 16px;
   border-radius: 10px;
 }

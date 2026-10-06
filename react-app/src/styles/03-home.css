@@ -8,7 +8,7 @@
   margin: 2.5rem 0 1.75rem;
 }
 .eyebrow {
-  color: #636d5d;
+  color: var(--muted);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 2.4px;
@@ -30,7 +30,7 @@
   font-size: 0.75rem;
 }
 .page-heading h1 > span {
-  color: #b1bea2;
+  color: var(--heading-decoration);
 }
 .subtitle {
   font-size: 0.875rem;
@@ -58,25 +58,25 @@
   gap: 22px;
 }
 .rose {
-  --tint: #f5e8e3;
-  --tint-pressed: #e6dad5;
-  --ink: #a26a58;
-  --soft: #fcf5f1;
-  --soft-pressed: #ede6e3;
+  --tint: var(--rose-bg);
+  --tint-pressed: var(--rose-pressed);
+  --ink: var(--rose-fg);
+  --soft: var(--rose-soft);
+  --soft-pressed: var(--rose-soft-pressed);
 }
 .amber {
-  --tint: #f6eedb;
-  --tint-pressed: #e7e0ce;
-  --ink: #997535;
-  --soft: #fdf9f0;
-  --soft-pressed: #eeeae2;
+  --tint: var(--amber-bg);
+  --tint-pressed: var(--amber-pressed);
+  --ink: var(--amber-fg);
+  --soft: var(--amber-soft);
+  --soft-pressed: var(--amber-soft-pressed);
 }
 .sage {
-  --tint: #e6ecdf;
-  --tint-pressed: #d8ded2;
-  --ink: #617650;
-  --soft: #f3f7ef;
-  --soft-pressed: #e4e8e1;
+  --tint: var(--sage-bg);
+  --tint-pressed: var(--sage-pressed);
+  --ink: var(--sage-fg);
+  --soft: var(--sage-soft);
+  --soft-pressed: var(--sage-soft-pressed);
 }
 .hero {
   background: var(--tint);
@@ -97,18 +97,18 @@
   align-items: center;
   gap: 8px;
   font-size: 0.75rem;
-  color: #725e56;
+  color: var(--hero-kicker);
   letter-spacing: 1px;
 }
 .hero-dot {
   width: 5px;
   height: 5px;
-  background: #b28575;
+  background: var(--hero-dot);
   border-radius: 50%;
 }
 .hero-tag {
   margin-left: auto;
-  border: 1px solid #b38e7d40;
+  border: 1px solid var(--hero-link-border);
   border-radius: 5px;
   padding: 4px 9px;
   font-size: 0.75rem;
@@ -132,14 +132,14 @@
   overflow-wrap: anywhere;
 }
 .hero-link > svg {
-  color: #967967;
+  color: var(--hero-chevron);
 }
 .hero-count {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 15px;
-  color: #69594e;
+  color: var(--hero-count-label);
 }
 .hero-count > span {
   font-size: 0.875rem;
@@ -160,12 +160,12 @@ button.hero-count {
   font-weight: 500;
   letter-spacing: -3px;
   font-variant-numeric: tabular-nums;
-  color: #514c40;
+  color: var(--hero-count-number);
 }
 .hero-caption {
   font-size: 0.75rem;
   line-height: 1.9;
-  color: #715e54;
+  color: var(--hero-caption);
   max-width: 86%;
   margin-top: 11px;
   white-space: pre-line;
@@ -179,11 +179,11 @@ button.hero-count {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid #b48f801f;
+  border-top: 1px solid var(--hero-divider);
   padding-top: 17px;
   margin-top: auto;
   font-size: 0.75rem;
-  color: #705e53;
+  color: var(--hero-footer);
 }
 .hero-bottom > span:first-child {
   display: flex;
@@ -206,7 +206,7 @@ button.hero-count {
   top: 26px;
   width: 330px;
   height: 330px;
-  border: 1px solid #fff5;
+  border: 1px solid var(--hero-orbit-border);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -217,7 +217,7 @@ button.hero-count {
   content: "";
   position: absolute;
   inset: 30px;
-  border: 1px solid #fff6;
+  border: 1px solid var(--hero-orbit-inner-border);
   border-radius: 50%;
 }
 .hero-orbit:after {
@@ -226,9 +226,9 @@ button.hero-count {
 .hero-orbit > svg {
   width: 110px;
   height: 110px;
-  stroke: #c2988033;
+  stroke: var(--hero-orbit-stroke);
   stroke-width: 0.7;
-  fill: #fdf9f12b;
+  fill: var(--hero-orbit-fill);
 }
 .overview-side {
   display: flex;
@@ -242,15 +242,15 @@ button.hero-count {
   gap: 12px;
   border-radius: 15px;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   min-height: 93px;
 }
 .summary-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #f0f1ea;
-  color: #7c896c;
+  background: var(--summary-icon-bg);
+  color: var(--summary-icon);
   display: grid;
   place-items: center;
 }
@@ -260,7 +260,7 @@ button.hero-count {
 }
 .summary-title > span {
   display: block;
-  color: #636d5d;
+  color: var(--muted);
   font-size: 0.75rem;
   margin-top: 7px;
 }
@@ -284,12 +284,12 @@ button.hero-count {
   flex: 1;
   min-height: 108px;
   border-radius: 15px;
-  background: #edf0e8;
+  background: var(--little-note-bg);
   padding: 19px 22px;
   display: flex;
   align-items: center;
   gap: 14px;
-  color: #59694b;
+  color: var(--little-note-text);
 }
 .little-note p {
   line-height: 1.85;
@@ -302,5 +302,5 @@ button.hero-count {
   right: 16px;
   letter-spacing: 1.8px;
   font-size: 0.75rem;
-  color: #59694b;
+  color: var(--little-note-text);
 }

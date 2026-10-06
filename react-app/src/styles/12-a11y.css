@@ -342,7 +342,7 @@
 /* Keep functional surfaces legible when the user reduces transparency. */
 @media (prefers-reduced-transparency: reduce) {
   .site-header {
-    background: #f7f8fa;
+    background: var(--bg);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -355,9 +355,9 @@
 }
 @media (prefers-contrast: more) {
   .site-header {
-    background: #f7f8fa;
+    background: var(--bg);
     backdrop-filter: none;
-    border-bottom: 1px solid #465b45;
+    border-bottom: 1px solid var(--green);
   }
   .site-header::after {
     display: none;
@@ -365,14 +365,14 @@
   .day-card,
   .summary-card,
   .search {
-    border: 1px solid #636d5d;
+    border: 1px solid var(--muted);
   }
   .filters button {
-    --chip-border: #636d5d;
-    color: #303530;
+    --chip-border: var(--muted);
+    color: var(--text);
   }
   .filters button.active {
-    --chip-border: #465b45;
+    --chip-border: var(--green);
   }
 }
 @media (prefers-reduced-motion: reduce) {

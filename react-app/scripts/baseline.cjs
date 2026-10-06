@@ -181,7 +181,13 @@ exports.states = states;
 exports.viewports = viewports;
 if (require.main === module) (async () => {
   const browser = await chromium.launch();
-  try { await runBaseline(browser, { capture: process.argv.includes('--capture'),
-    scheme: process.argv.includes('--scheme') ? process.argv[process.argv.indexOf('--scheme') + 1] : 'light' }); }
+  const capture = process.argv.includes('--capture');
+  const explicitScheme = process.argv.includes('--scheme')
+    ? process.argv[process.argv.indexOf('--scheme') + 1] : null;
+  const schemes = explicitScheme ? [explicitScheme] : ['light'];
+  if (!capture && !explicitScheme && await fs.stat('.artifacts/baseline/dark').then(() => true, () => false)) schemes.push('dark');
+  try {
+    for (const scheme of schemes) await runBaseline(browser, { capture, scheme });
+  }
   finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

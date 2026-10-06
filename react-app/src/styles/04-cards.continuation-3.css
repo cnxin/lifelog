@@ -7,8 +7,8 @@
   gap: 17px;
 }
 .starter-card {
-  background: #fff;
-  border: 1px dashed #d8ddd0;
+  background: var(--surface);
+  border: 1px dashed var(--neutral-border);
   border-radius: 15px;
   display: flex;
   flex-direction: column;
@@ -37,17 +37,17 @@
   position: absolute;
   right: 22px;
   top: 31px;
-  color: #9ba58f;
+  color: var(--starter-icon);
 }
 .no-results {
   padding: 55px 20px;
   text-align: center;
   color: var(--muted);
-  border: 1px dashed #d7decf;
+  border: 1px dashed var(--sheet-handle);
   border-radius: 15px;
 }
 .no-results > svg {
-  color: #9ba58f;
+  color: var(--starter-icon);
   margin-bottom: 15px;
 }
 .no-results h3 {

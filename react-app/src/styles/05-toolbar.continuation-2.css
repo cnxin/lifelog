@@ -15,7 +15,7 @@
   min-height: 36px;
   position: relative;
   padding: 0 12px;
-  background: #eef0e9;
+  background: var(--control-selected);
   color: var(--green);
   border-radius: 10px;
   font-size: 0.8125rem;
@@ -27,10 +27,10 @@
   width: 216px;
   max-width: calc(100vw - 32px);
   padding: 6px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 8px 30px #1f2d2422;
+  box-shadow: 0 8px 30px var(--shadow);
   animation: sort-menu-enter 120ms ease-out;
 }
 .sort-menu [role="menuitemradio"] {
@@ -46,11 +46,11 @@
   font-size: 0.875rem;
 }
 .sort-menu [aria-checked="true"] {
-  background: #eef0e9;
+  background: var(--control-selected);
 }
 @media (hover: hover) and (pointer: fine) {
   .sort-menu [role="menuitemradio"]:hover {
-    background: #eef0e9;
+    background: var(--control-selected);
   }
 }
 .sort-check {

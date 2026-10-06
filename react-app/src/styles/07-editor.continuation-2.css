@@ -25,12 +25,12 @@
   padding: 0.875rem 1rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--green);
 }
 .date-trigger[aria-expanded="true"] {
   border-color: var(--green);
-  background: #f7f9f4;
+  background: var(--date-expanded-bg);
   min-height: 52px;
   padding-block: 4px;
 }
@@ -64,7 +64,7 @@
   padding: 3px 8px;
   border: 1px solid var(--border);
   border-radius: 1.25rem;
-  background: #fff;
+  background: var(--surface);
 }
 .date-picker-toolbar {
   display: flex;
@@ -131,7 +131,7 @@
   inset: -4px;
 }
 .lunar-months button[aria-pressed="true"], .lunar-grid td[aria-selected="true"] .lunar-day {
-  color: #fff;
+  color: var(--on-green);
   background: var(--green);
   border-color: var(--green);
 }
@@ -146,7 +146,7 @@
 }
 .lunar-day {
   width: 100%;
-  background: #fff;
+  background: var(--surface);
 }
 @media (forced-colors: active) {
   .lunar-months button[aria-pressed="true"], .lunar-grid td[aria-selected="true"] .lunar-day {
@@ -185,7 +185,7 @@
 @media (hover: hover) and (pointer: fine) {
   .date-month-heading:hover,
   .date-collapse:hover {
-    background: #eef0e9;
+    background: var(--control-selected);
   }
 }
 .date-picker .calendar-scroll {
@@ -277,12 +277,12 @@
 .date-months button {
   min-height: 44px;
   border-radius: 0.75rem;
-  background: #f3f4ee;
+  background: var(--year-control-bg);
   font-size: 0.875rem;
   color: var(--green);
 }
 .date-months button[aria-pressed="true"] {
-  color: #fff;
+  color: var(--on-green);
   background: var(--green);
 }
 @media (max-width: 380px) {

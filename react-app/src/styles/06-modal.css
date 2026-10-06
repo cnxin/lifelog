@@ -13,10 +13,10 @@
   scroll-padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 20px;
-  background: #fcfdfb;
+  background: var(--surface-2);
   color: inherit;
   padding: 27px;
-  box-shadow: 0 24px 90px #1f2d2433;
+  box-shadow: 0 24px 90px var(--shadow-modal);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -66,7 +66,7 @@
   backdrop-filter: blur(4px);
 }
 .modal[open]::backdrop {
-  background: #202c2459;
+  background: var(--backdrop);
 }
 @starting-style {
   .modal[open] {

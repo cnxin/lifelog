@@ -2,26 +2,26 @@
  * Original alpha.8 cascade order; moving this block changes override precedence. */
 
 .primary {
-  color: white;
+  color: var(--on-green);
   background: var(--green);
 }
 @media (hover: hover) and (pointer: fine) {
   .primary:hover {
-    background: #344a34;
+    background: var(--green-hover);
   }
 }
 .secondary {
-  background: #eef0e9;
-  color: #4b5946;
+  background: var(--control-selected);
+  color: var(--control-text);
 }
 @media (hover: hover) and (pointer: fine) {
   .secondary:hover {
-    background: #e0e5d9;
+    background: var(--control-hover);
   }
 }
 .danger {
-  background: #9c443a;
-  color: #fff;
+  background: var(--danger-button);
+  color: var(--on-green);
 }
 .toolbar {
   display: flex;

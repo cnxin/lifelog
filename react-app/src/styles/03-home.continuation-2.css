@@ -5,7 +5,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #636d5d;
+  color: var(--muted);
   font-size: 0.75rem;
   letter-spacing: 0.5px;
   padding: 30px 0 25px;
@@ -28,8 +28,8 @@
   gap: 8px;
   border-radius: 8px;
   padding: 11px 14px;
-  background: #fff9;
-  color: #795c4e;
+  background: var(--note-glass);
+  color: var(--heading-date);
   align-self: flex-start;
   font-size: 0.75rem;
   min-height: 44px;

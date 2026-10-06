@@ -23,7 +23,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--input-radius);
   background: var(--input-background);
-  color: #354331;
+  color: var(--input-text);
   min-height: var(--input-height);
   padding: 0 var(--input-padding);
   font-size: var(--input-font-size);
@@ -67,7 +67,7 @@
   gap: 0.5rem;
 }
 .optional {
-  color: #636d5d;
+  color: var(--muted);
   font-size: 0.75rem;
   font-weight: 400;
 }
@@ -104,10 +104,10 @@
   width: 1.5rem;
   height: 1.5rem;
   margin: 0;
-  border: 1.5px solid #7b8774;
+  border: 1.5px solid var(--check-border);
   border-radius: 0.5rem;
-  background: #fff;
-  color: #fff;
+  background: var(--surface);
+  color: var(--on-green);
   cursor: pointer;
 }
 .check-row input:checked {
@@ -127,7 +127,7 @@
 }
 .check-row:active input:not(:disabled) {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px #465b451a;
+  box-shadow: 0 0 0 3px var(--check-press-ring);
 }
 .check-row input:disabled {
   opacity: 0.55;
@@ -171,7 +171,7 @@
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #eef0e9;
+  background: var(--control-selected);
 }
 .choice-option {
   position: relative;
@@ -204,16 +204,16 @@
 }
 .choice-option input:checked + span {
   color: var(--green);
-  background: #fff;
-  border-color: #c6cfc0;
-  box-shadow: 0 1px 3px #2632220a;
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 3px var(--shadow-choice);
 }
 .choice-option input:focus-visible + span {
-  outline: 3px solid #809b74;
+  outline: 3px solid var(--focus-border);
   outline-offset: 2px;
 }
 .choice-option input:not(:disabled):active + span {
-  background: #e1e7db;
+  background: var(--choice-pressed);
 }
 .choice-option input:disabled + span {
   opacity: 0.55;
@@ -237,14 +237,14 @@
   align-items: center;
   gap: 6px;
   background: transparent;
-  color: #a36358;
+  color: var(--danger-text);
   margin-right: auto;
   font-size: 0.75rem;
   min-height: 44px;
   padding: 8px;
 }
 .delete-confirm {
-  background: #fbefeb;
+  background: var(--delete-bg);
   border-radius: 10px;
   padding: 16px;
   margin-top: 20px;
@@ -268,13 +268,13 @@
   overflow-wrap: anywhere;
 }
 .error-box {
-  background: #fbebe7;
-  color: #9f4437;
+  background: var(--error-bg);
+  color: var(--error-text);
 }
 .error-box button {
   margin-left: 12px;
 }
 .success-box {
-  background: #edf2e8;
-  color: #4d693e;
+  background: var(--success-bg);
+  color: var(--success-text);
 }

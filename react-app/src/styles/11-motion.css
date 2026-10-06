@@ -12,12 +12,12 @@
     opacity 200ms ease-out,
     transform 200ms ease-out;
   border-radius: 10px;
-  background: #3e503b;
-  color: #fff;
+  background: var(--toast-bg);
+  color: var(--on-green);
   padding: 12px 20px;
   z-index: 5;
   font-size: 0.75rem;
-  box-shadow: 0 4px 20px #0001;
+  box-shadow: 0 4px 20px var(--shadow-toast);
   pointer-events: none;
 }
 .toast[data-visible="true"] {

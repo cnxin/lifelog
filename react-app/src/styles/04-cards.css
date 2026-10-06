@@ -21,12 +21,12 @@
 .section-heading h2 > span {
   display: inline-grid;
   place-items: center;
-  background: #e9ece5;
+  background: var(--header-icon-hover);
   padding: 2px 7px;
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 400;
-  color: #6f7b60;
+  color: var(--starter-hover);
 }
 .section-heading p {
   font-size: 0.75rem;

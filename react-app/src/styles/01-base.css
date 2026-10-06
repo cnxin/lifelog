@@ -19,7 +19,7 @@ main:focus {
   top: calc(var(--safe-top) + 0.5rem);
   left: max(1rem, var(--safe-left));
   padding: 0.75rem 1rem;
-  background: white;
+  background: var(--surface);
   z-index: 30;
   transform: translateY(-200%);
 }
@@ -55,13 +55,14 @@ a {
 }
 button {
   border: 0;
+  background: var(--button-face);
 }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #809b74;
+  outline: 3px solid var(--focus-border);
   outline-offset: 3px;
 }
 button {
