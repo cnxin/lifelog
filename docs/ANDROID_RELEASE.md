@@ -1,5 +1,29 @@
 # 日子：Android 测试与升级验收
 
+## alpha.11 / 阶段 J 深色模式 — 待作者真机验收
+
+- `0.2.0-alpha.11-preview`，versionCode 146，独立包名 `com.cnxin.lifelog.preview`，沿用测试签名。不新增权限，不改数据 / 备份格式，不改 legacy；只跟随系统深色模式，不加手动切换。
+- alpha.10 已由作者验收并以 `v0.2.0-alpha.10-preview` 发布，发布提交 `f7ed9de`；发布后才开始 J1 → J4。此前 126 个 Release 的完整 API 记录逐一比对未变，旧正文 / 资产不改不删。alpha.10 机型与 WebView 版本仍未知，不把占位符填成推测信息。
+- J1 `a9a922c`：原 styles 189 处色值 / 113 种写法（white 与 #fff 等价，112 个唯一值）全部集中为 tokens，浅色原值保留，深色完整覆盖。补显式 ButtonFace，使深色日期标题 / 收起按钮没有原生灰底低对比问题；浅色计算值与原 UA 一致。两条媒体 theme-color，manifest 保持浅色。
+- J2 `5338bd5`：原生栏初始与系统主题 change 调用 Dark / Light；当前安装的 Capacitor core 8.3.1 的类型与 Java 实现无背景设置 API，所以遵守「如 API 存在」条件，不调用不存在的接口、不引入旧 status-bar 插件。`values-night/styles.xml` 的 windowBackground 与 Web `--bg` 都为 `#15191a`，提供原生兼容底色；实际栏图标 / 热切换仍待作者真机核对。庆祝读取当前 tone / 米白 tokens，主题切换时更新已有粒子；日历特殊文字走亮 accent。小组件布局 / drawable 仅改为同名 color 资源，浅色值原样保留，night 低饱和底 + 亮字，不改 provider / 调度。
+- J3 `7761e9a`：新增完整深色门禁。14 个状态逐页 axe（含 color-contrast）、动态切到浅色 / 切回深色与原基准精确比较；另测农历闰月 / 年份面板、三组实际编译 hero 庆祝粒子，以及原提醒 / reduced-motion 检查的额外深色轮次。J3 最终新增深色 306 条断言、37 次真实 axe 调用通过，16 张截图在 `react-app/.artifacts/dark/`（14 个规定状态 + 2 张农历面板）。已人工查看移动首页 / 日历截图；不把截图检查当作设备测试。
+- **浅色基准以 `3c89d2b` 为准，14 份文件字节不变；新增的 14 份深色基准在 J1 建立后不再改动。比较器、归一化、44px 触控、axe 与真实动画时长均未放宽**，无 data-* 排除标记。已有断言仅调整作者明确授权的原生父主题正则，其余不变；每个提交附完整 baseline-diff，浅色 / 深色最终均为 0/14。
+- J4 补齐普通农历小字的亮 accent，并将两套运行时主题改为 `Theme.AppCompat.DayNight.NoActionBar`；AppCompat 1.7.1 实际 AAR 中其浅色别名是原 `Light.NoActionBar`，night 别名为 `NoActionBar`。作者授权仅把 `scripts/android.test.cjs` 第 169 行的父主题正则从 Light 改为 DayNight，并入 J4；固定 Light 会与系统深色 / WebView 原生主题冲突，浅色窗口背景等其它原断言保留。
+- **启动窗口底色**：`values/styles.xml` 与 `values-night/styles.xml` 都显式定义 `android:windowBackground`，分别解析为 `#f7f8fa` / `#15191a`，与两套 CSS `--bg` 相同。两套 launch theme 的 `android:background`、`android:windowBackground` 与 `windowSplashScreenBackground` 共用同名颜色资源，避免启动阶段继续使用浅色 splash 背景；已检查 APK 编译资源中的默认 / night 色值与窗口引用。
+- **WebView 启动底色**：当前 Capacitor 配置未指定 `backgroundColor`，安装的原生 Bridge 只在此值非空时设置背景。`MainActivity.load()` 在 WebView 已创建、Bridge 加载网页 URL 之前，按系统 `uiMode` 解析 `R.color.lifelog_background`，同时设置窗口与 WebView 底色；`onConfigurationChanged` 在资源配置更新后重新设置。保留原 `uiMode` 声明、插件注册及小组件冷启动 intent 的一次消费，不使用固定浅色 config、不调用不存在的 SystemBars 背景 API。启动首帧是否完全无闪白、系统栏与后台恢复表现仍需作者真机复测，源码 / 编译资源检查不能替代设备录像或观察。
+- J1 / J2 / J3 / J4 的 `gates` 与 `android:preview` 均实际通过。J4 最终 `gates` exit 0、90.101 秒：Node 91/91，原有浏览器门禁、离线、浅 / 深基准、深色 310 条断言（37 次真实 axe 调用）与 CSS 测量通过。最终 Android 构建成功，lint 0 error / 28 warnings；`:app:testDebugUnitTest` 本轮实际执行，10/10 通过，其它任务的 executed / FROM-CACHE / UP-TO-DATE 状态记录在验证报告，不把缓存结果写成重新执行。APK / SHA-256 / 验证报告已放 `downloads/`，同名 `.apk.json` 记录实际结果。
+- 失败轮次原样保留，不改写成通过：J2 unsupported API 草稿触发旧源码 guard，移除不支持的调用；随后一次旧 retained-hover 模拟失败，未改代码 / 断言重跑通过；J3 新采样曾混入历史旧主题帧，改为新主色确已绘制后采样，不改产品 / 时钟或旧断言。J4 授权前 `gates` exit 1、93.124 秒，Node 88/89，唯一失败是旧 Light 父主题正则，最终 Android 构建当时未运行；早先草稿的通过不等于最终通过。日志与失败报告路径均附入最终 `.apk.json`。
+- 构建与 lint / JVM 的实际执行及 UP-TO-DATE 区别、APK 身份 / 权限 / 签名 / Web 资产核对、SHA-256 与各轮门禁结果见同名 `.apk.json` / `.apk.sha256`。本阶段不承诺通知准点送达、重启恢复、后台小组件周期或原正式签名覆盖升级。
+- **alpha.11 作者真机验收尚未执行**；机型、Android 版本、WebView 提供方与版本待作者提供，本机无连接设备，不猜填。APK、SHA-256 与验证报告交付到 `downloads/` 后，等待作者验收；不推送阶段 J、不打 alpha.11 tag / 发 Release，不修改旧 Release。
+
+### 作者真机验收清单（J，尚待完成）
+
+1. 系统切深色 → 应用立即变色，状态栏图标变浅；sheet、日历、详情、排序菜单没有遗漏白块，输入 / 焦点 / 分类仍可辨认。
+2. 当天首页庆祝与点数字重放：三类粒子与当前深色 tone 一致；切主题时仍可读，reduced-motion 时不播放。
+3. 深色桌面小组件底色与文字可读，核对系统 / 启动器切换主题后的刷新，置顶 / 点击进入详情仍正常。
+4. 切回浅色 → 与 alpha.10 一致；同时快速回归保存、农历录入、提醒 / 置顶、备份与返回键。反馈时请提供机型 / Android / WebView 提供方与版本。
+5. 系统已设为深色时冷启动，观察系统启动窗口 → 空白 WebView → 首屏是否全程没有白色闪帧；浅色冷启动与系统主题热切换 / 后台恢复也需复测。
+
 ## alpha.10 / 阶段 I 周年数字与农历录入 — 作者真机验收通过，2026-10-06
 
 - `0.2.0-alpha.10-preview`，versionCode 145，包名 `com.cnxin.lifelog.preview`，沿用测试签名。不新增权限，不改备份 / 存储格式，不动 legacy，不改变日历页。

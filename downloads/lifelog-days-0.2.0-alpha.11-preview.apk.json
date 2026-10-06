@@ -1,0 +1,2363 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.11-preview",
+  "versionCode": 146,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4778316,
+  "sha256": "f9c8615afa50c154c4fc2ee57b15f48d5b8ce03152ef1b35d802f71cac172300",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "phase": "J / alpha.11 author acceptance candidate",
+  "branch": "codex/anniversary-lite",
+  "sourceParentBeforeReleaseCommit": "7761e9a15dcd06d7db551c2d9bae4bc18d240bda",
+  "sourceReleaseCommit": "The J4 commit containing this APK and report; not yet pushed or tagged.",
+  "generatedAt": "2026-10-06T09:34:54.701Z",
+  "implementationCommits": {
+    "J1": "a9a922c",
+    "J2": "5338bd5",
+    "J3": "7761e9a",
+    "J4": "same commit as this report"
+  },
+  "gates": {
+    "command": "npm run gates",
+    "exitCode": 0,
+    "report": {
+      "completedAt": "2026-10-06T09:25:54.378Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 12094,
+          "result": "PASS",
+          "testsPassed": 91
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8916,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 20078,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 42260,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 18237,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 17647,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 6751,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 4478,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3447,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 19335,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 310,
+          "axeAudits": 37,
+          "axeSourceInjections": 19,
+          "durationMs": 43295,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 15042,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 90101,
+      "referenceSeconds": 90,
+      "ratioToReference": 1.0011222222222222,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "allOriginalEightChecksIncluded": true,
+    "evidence": "react-app/.artifacts/j4/gates-authorized-startup.log"
+  },
+  "androidPreview": {
+    "command": "npm run android:preview",
+    "exitCode": 0,
+    "gradleSummary": "BUILD SUCCESSFUL in 26s\n249 actionable tasks: 40 executed, 16 from cache, 193 up-to-date",
+    "taskExecution": [
+      "> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:preBuild UP-TO-DATE",
+      "> Task :app:preBuild UP-TO-DATE",
+      "> Task :capacitor-app:preBuild UP-TO-DATE",
+      "> Task :capacitor-android:preBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preBuild UP-TO-DATE",
+      "> Task :capacitor-app:preDebugBuild UP-TO-DATE",
+      "> Task :app:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-android:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:preDebugBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-app:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :app:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-android:writeDebugAarMetadata UP-TO-DATE",
+      "> Task :app:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-app:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-android:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-haptics:processDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugResValues UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugResources UP-TO-DATE",
+      "> Task :capacitor-haptics:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:writeDebugAarMetadata",
+      "> Task :capacitor-android:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-app:packageDebugResources UP-TO-DATE",
+      "> Task :capacitor-android:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-app:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :capacitor-android:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-haptics:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-app:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugManifest UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugLibraryResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:processDebugNavigationResources FROM-CACHE",
+      "> Task :app:generateDebugResources",
+      "> Task :capacitor-cordova-android-plugins:generateDebugResValues FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugResources FROM-CACHE",
+      "> Task :capacitor-app:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-local-notifications:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-haptics:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-android:parseDebugLocalResources UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-local-notifications:checkKotlinGradlePluginConfigurationErrors SKIPPED",
+      "> Task :capacitor-haptics:generateDebugRFile UP-TO-DATE",
+      "> Task :capacitor-app:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:packageDebugResources FROM-CACHE",
+      "> Task :capacitor-local-notifications:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-android:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:javaPreCompileDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractDeepLinksDebug FROM-CACHE",
+      "> Task :capacitor-local-notifications:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-app:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-haptics:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-app:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-haptics:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-app:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-haptics:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:processDebugManifest FROM-CACHE",
+      "> Task :capacitor-haptics:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugLibraryResources FROM-CACHE",
+      "> Task :capacitor-haptics:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-haptics:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-app:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:parseDebugLocalResources FROM-CACHE",
+      "> Task :capacitor-haptics:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugRFile FROM-CACHE",
+      "> Task :capacitor-local-notifications:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-local-notifications:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:javaPreCompileDebug FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugJavaWithJavac NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibCompileToJarDebug",
+      "> Task :capacitor-app:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-local-notifications:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-local-notifications:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-haptics:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-app:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-local-notifications:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibRuntimeToJarDebug",
+      "> Task :capacitor-haptics:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-app:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-app:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-android:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-haptics:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :app:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-app:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-android:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-android:processDebugJavaRes NO-SOURCE",
+      "> Task :capacitor-android:mergeDebugShaders UP-TO-DATE",
+      "> Task :capacitor-android:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-android:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-app:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:compileDebugJavaWithJavac UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugShaders",
+      "> Task :capacitor-app:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:compileDebugShaders NO-SOURCE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAssets UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugAssets",
+      "> Task :app:processDebugNavigationResources",
+      "> Task :app:compileDebugNavigationResources UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:bundleLibRuntimeToDirDebug",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugJniLibFolders",
+      "> Task :capacitor-android:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-android:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :capacitor-android:copyDebugJniLibsProjectOnly UP-TO-DATE",
+      "> Task :app:mapDebugSourceSetPaths",
+      "> Task :capacitor-cordova-android-plugins:copyDebugJniLibsProjectOnly",
+      "> Task :capacitor-app:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-haptics:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:checkDebugAarMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-app:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:copyDebugJniLibsProjectAndLocalJars UP-TO-DATE",
+      "> Task :capacitor-app:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-app:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-haptics:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-android:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-app:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-haptics:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-android:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-app:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-app:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-haptics:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-app:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-app:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-android:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-android:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-android:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-android:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-android:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :capacitor-android:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-android:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:copyDebugJniLibsProjectAndLocalJars",
+      "> Task :capacitor-android:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-local-notifications:compileDebugKotlin UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:checkDebugAarMetadata",
+      "> Task :capacitor-local-notifications:compileDebugJavaWithJavac NO-SOURCE",
+      "> Task :capacitor-local-notifications:bundleLibCompileToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:bundleLibRuntimeToJarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:processDebugJavaRes UP-TO-DATE",
+      "> Task :capacitor-local-notifications:bundleLibRuntimeToDirDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:extractDebugAnnotations UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractDebugAnnotations FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:extractDeepLinksForAarDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugGeneratedProguardFiles UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugConsumerProguardFiles UP-TO-DATE",
+      "> Task :capacitor-local-notifications:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:prepareDebugArtProfile UP-TO-DATE",
+      "> Task :capacitor-local-notifications:syncDebugLibJars UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:prepareLintJarForPublish UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:bundleDebugLocalLintAar UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:createFullJarDebug UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:writeDebugLintModelMetadata UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-android:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:createFullJarDebug",
+      "> Task :capacitor-local-notifications:extractProguardFiles UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:writeDebugLintModelMetadata",
+      "> Task :capacitor-local-notifications:generateDebugLintModel UP-TO-DATE",
+      "> Task :capacitor-haptics:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-app:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:extractProguardFiles",
+      "> Task :capacitor-android:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-android:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebug UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :capacitor-haptics:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-app:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:mergeDebugJavaResource",
+      "> Task :capacitor-app:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-haptics:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-android:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugAndroidTestLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-app:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-haptics:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-android:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-local-notifications:generateDebugUnitTestLintModel UP-TO-DATE",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugLintModel",
+      "> Task :capacitor-local-notifications:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:syncDebugLibJars FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:bundleDebugLocalLintAar",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebug FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:preDebugAndroidTestBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestResValues FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugAndroidTestLintModel",
+      "> Task :capacitor-cordova-android-plugins:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :capacitor-cordova-android-plugins:generateDebugUnitTestLintModel",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugAndroidTest FROM-CACHE",
+      "> Task :capacitor-cordova-android-plugins:lintAnalyzeDebugUnitTest FROM-CACHE",
+      "> Task :app:packageDebugResources",
+      "> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE",
+      "> Task :app:extractDeepLinksDebug UP-TO-DATE",
+      "> Task :app:parseDebugLocalResources",
+      "> Task :app:processDebugMainManifest UP-TO-DATE",
+      "> Task :app:processDebugManifest UP-TO-DATE",
+      "> Task :app:processDebugManifestForPackage UP-TO-DATE",
+      "> Task :app:preDebugUnitTestBuild UP-TO-DATE",
+      "> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE",
+      "> Task :app:processDebugJavaRes NO-SOURCE",
+      "> Task :app:processDebugUnitTestJavaRes NO-SOURCE",
+      "> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE",
+      "> Task :app:mergeDebugShaders UP-TO-DATE",
+      "> Task :app:compileDebugShaders NO-SOURCE",
+      "> Task :app:generateDebugAssets UP-TO-DATE",
+      "> Task :app:mergeDebugAssets UP-TO-DATE",
+      "> Task :app:compressDebugAssets UP-TO-DATE",
+      "> Task :app:desugarDebugFileDependencies UP-TO-DATE",
+      "> Task :app:mergeDebugJavaResource UP-TO-DATE",
+      "> Task :app:checkDebugDuplicateClasses UP-TO-DATE",
+      "> Task :app:mergeDebugResources",
+      "> Task :app:mergeExtDexDebug UP-TO-DATE",
+      "> Task :app:mergeLibDexDebug UP-TO-DATE",
+      "> Task :app:mergeDebugJniLibFolders UP-TO-DATE",
+      "> Task :app:mergeDebugNativeLibs NO-SOURCE",
+      "> Task :app:stripDebugDebugSymbols NO-SOURCE",
+      "> Task :app:validateSigningDebug UP-TO-DATE",
+      "> Task :app:writeDebugAppMetadata UP-TO-DATE",
+      "> Task :app:writeDebugSigningConfigVersions UP-TO-DATE",
+      "> Task :app:preDebugAndroidTestBuild SKIPPED",
+      "> Task :app:generateDebugAndroidTestResValues UP-TO-DATE",
+      "> Task :app:extractProguardFiles UP-TO-DATE",
+      "> Task :app:processDebugResources",
+      "> Task :app:compileDebugJavaWithJavac",
+      "> Task :app:bundleDebugClassesToCompileJar",
+      "> Task :app:bundleDebugClassesToRuntimeJar",
+      "> Task :app:dexBuilderDebug",
+      "> Task :app:compileDebugUnitTestJavaWithJavac UP-TO-DATE",
+      "> Task :app:testDebugUnitTest",
+      "> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE",
+      "> Task :app:generateDebugAndroidTestLintModel",
+      "> Task :app:generateDebugLintReportModel",
+      "> Task :app:generateDebugUnitTestLintModel",
+      "> Task :app:mergeProjectDexDebug",
+      "> Task :app:packageDebug",
+      "> Task :app:createDebugApkListingFileRedirect UP-TO-DATE",
+      "> Task :app:assembleDebug",
+      "> Task :app:lintAnalyzeDebugAndroidTest",
+      "> Task :app:lintAnalyzeDebugUnitTest",
+      "> Task :app:lintAnalyzeDebug",
+      "> Task :app:lintReportDebug",
+      "> Task :app:lintDebug"
+    ],
+    "note": "Only unqualified task lines denote executed work; UP-TO-DATE and FROM-CACHE are not fresh execution. Java resource compilation, JVM unit tests and app lint analysis executed in this final run.",
+    "unitTests": {
+      "task": "> Task :app:testDebugUnitTest",
+      "executedInThisRun": true,
+      "testsPassed": 10,
+      "suites": [
+        {
+          "file": "TEST-com.cnxin.lifelog.widget.DayWidgetTest.xml",
+          "name": "com.cnxin.lifelog.widget.DayWidgetTest",
+          "tests": 9,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0,
+          "timestamp": "2026-10-06T09:26:35.500Z",
+          "hostname": "yuanshaojiedeMac-mini.local",
+          "time": "0.02"
+        },
+        {
+          "file": "TEST-com.getcapacitor.myapp.ExampleUnitTest.xml",
+          "name": "com.getcapacitor.myapp.ExampleUnitTest",
+          "tests": 1,
+          "skipped": 0,
+          "failures": 0,
+          "errors": 0,
+          "timestamp": "2026-10-06T09:26:35.522Z",
+          "hostname": "yuanshaojiedeMac-mini.local",
+          "time": "0.0"
+        }
+      ],
+      "coverageBoundary": "Widget/domain JVM tests and template unit test; not an Android UI / startup frame test."
+    },
+    "lint": {
+      "errors": 0,
+      "warnings": 28,
+      "issues": [
+        {
+          "id": "AndroidGradlePluginVersion",
+          "severity": "Warning",
+          "message": "A newer version of Gradle than 8.14.3 is available: 8.14.5",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/gradle/wrapper/gradle-wrapper.properties"
+        },
+        {
+          "id": "GradleDependency",
+          "severity": "Warning",
+          "message": "A newer version of androidx.appcompat:appcompat than 1.7.1 is available: 1.8.0",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/build.gradle"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of org.json:json than 20240303 is available: 20260814",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/build.gradle"
+        },
+        {
+          "id": "ObsoleteSdkInt",
+          "severity": "Warning",
+          "message": "This folder configuration (`v24`) is unnecessary; `minSdkVersion` is 24. Merge all the resources in this folder into `drawable`.",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable-v24"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.layout.activity_main` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/layout/activity_main.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.xml.config` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/xml/config.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.xml.file_paths` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/xml/file_paths.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.ic_launcher_background` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable/ic_launcher_background.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.ic_launcher_foreground` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.splash` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable/splash.png"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.string.package_name` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/values/strings.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.string.custom_url_scheme` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/values/strings.xml"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.style.AppTheme_NoActionBar` appears to be unused",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/values/styles.xml"
+        },
+        {
+          "id": "IconLauncherShape",
+          "severity": "Warning",
+          "message": "Launcher icon used as round icon did not have a circular shape",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconLauncherShape",
+          "severity": "Warning",
+          "message": "Launcher icon used as round icon did not have a circular shape",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconLauncherShape",
+          "severity": "Warning",
+          "message": "Launcher icon used as round icon did not have a circular shape",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconLauncherShape",
+          "severity": "Warning",
+          "message": "Launcher icon used as round icon did not have a circular shape",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconLauncherShape",
+          "severity": "Warning",
+          "message": "Launcher icon used as round icon did not have a circular shape",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "MonochromeLauncherIcon",
+          "severity": "Warning",
+          "message": "The application adaptive icon is missing a monochrome tag",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml"
+        },
+        {
+          "id": "MonochromeLauncherIcon",
+          "severity": "Warning",
+          "message": "The application adaptive roundIcon is missing a monochrome tag",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+        },
+        {
+          "id": "IconDipSize",
+          "severity": "Warning",
+          "message": "The image `splash.png` varies significantly in its density-independent (dip) size across the various density versions: drawable-land-hdpi/splash.png: 533x320 dp (800x480 px), drawable-land-mdpi/splash.png: 480x320 dp (480x320 px), drawable-land-xhdpi/splash.png: 640x360 dp (1280x720 px), drawable-land-xxhdpi/splash.png: 533x320 dp (1600x960 px), drawable-land-xxxhdpi/splash.png: 480x320 dp (1920x1280 px)",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable-land-xxxhdpi/splash.png"
+        },
+        {
+          "id": "IconDuplicatesConfig",
+          "severity": "Warning",
+          "message": "The `splash.png` icon has identical contents in the following configuration folders: drawable-land-mdpi, drawable",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable/splash.png"
+        },
+        {
+          "id": "IconLocation",
+          "severity": "Warning",
+          "message": "Found bitmap drawable `res/drawable/splash.png` in densityless folder",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/drawable/splash.png"
+        },
+        {
+          "id": "IconDuplicates",
+          "severity": "Warning",
+          "message": "The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconDuplicates",
+          "severity": "Warning",
+          "message": "The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconDuplicates",
+          "severity": "Warning",
+          "message": "The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconDuplicates",
+          "severity": "Warning",
+          "message": "The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png"
+        },
+        {
+          "id": "IconDuplicates",
+          "severity": "Warning",
+          "message": "The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png",
+          "location": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png"
+        }
+      ],
+      "xmlPath": "react-app/android/app/build/reports/lint-results-debug.xml"
+    },
+    "evidence": "react-app/.artifacts/j4/android-authorized-startup.log"
+  },
+  "assertionIntegrity": {
+    "approvedOldAssertionChangeOnly": true,
+    "approvedPatch": "diff --git a/react-app/scripts/android.test.cjs b/react-app/scripts/android.test.cjs\nindex b9b0e5e..2ebc954 100644\n--- a/react-app/scripts/android.test.cjs\n+++ b/react-app/scripts/android.test.cjs\n@@ -166,6 +166,6 @@ test('SystemBars owns native insets and foreground style without the legacy over\n   }\n   assert.match(read('index.html'), /viewport-fit=cover/);\n   const theme = read('android/app/src/main/res/values/styles.xml');\n-  assert.match(theme, /Theme.AppCompat.Light.NoActionBar/);\n+  assert.match(theme, /Theme.AppCompat.DayNight.NoActionBar/);\n   assert.match(theme, /android:windowBackground\">#f7f8fa/);\n });\n",
+    "addedChecksOnly": [
+      "native runtime DayNight parent",
+      "window/launch CSS --bg parity",
+      "WebView before-load/configuration lifecycle",
+      "four actual dark calendar lunar color assertions"
+    ],
+    "existingDarkAndNativeAssertionsByteUnchangedAfterRemovingAdditions": true,
+    "comparatorAndSnapshotNormalizationByteUnchangedFromI3": true,
+    "functions": {
+      "snapshot": "5f218bc8a5fc2c28682909b55d1aaa332ecf1a9be1c700744371dbb60c79c893",
+      "differences": "7a7b36d842517df0eaac4df44662ad617f59e6d78c5cd1a96834db080ddd7553"
+    }
+  },
+  "baseline": {
+    "byteProof": {
+      "light": {
+        "reference": "3c89d2b",
+        "count": 14,
+        "files": [
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-calendar.json",
+            "sha256": "c1d5fd02a0c3185d8674e549ad6ed4ba226c1660c8374641b3822541bbced1ea",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-data.json",
+            "sha256": "9b135670a6297fe0acb988cd0a6b1d99bf070e310ecce6ac08ab72a63204c10d",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-detail.json",
+            "sha256": "9cb70caa6b6f99ba7c4cf7f67a747c713958ef4dd704d25c3f35c4284b47468b",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-editor-date.json",
+            "sha256": "6f9b24cf944c9b232c12a068ecb9788b58d924f31be976db7a47a5d5e374e7f1",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-home.json",
+            "sha256": "5b2a8f6c8a75a383120a84ac5234c853750084c33af03aeb1b7c50be937676ba",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-search.json",
+            "sha256": "8ddb92dbdd29a55969f5f0cfc83fac20420dd0a96f68ba09354d7d9c96946e8d",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/1024x768-sort.json",
+            "sha256": "4a89468f63465f5c1b639e369dd5897edb5f3acd5ea8b4648c55cfef36f0e5fa",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-calendar.json",
+            "sha256": "ed5992aede83d34bb27151c888f7abb4da0fd6fa75a9d5a5f0788bb04899f065",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-data.json",
+            "sha256": "2a68e14dd9769a4d74035676fcbba3a333cb367051b3d2ef71b409623764b9b6",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-detail.json",
+            "sha256": "e62a3431af2c8acadff4d989fb9c836b61dafc32ab4c2c1975ad76c0a892bfba",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-editor-date.json",
+            "sha256": "a09ae3a3a67652abb644b3380e435b02799c912317cc01778db52511a33adc7d",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-home.json",
+            "sha256": "96c0fd7dfb1fbebf004b7429956430f64fa5b8282ec6454735e17ea0d8d059e8",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-search.json",
+            "sha256": "9b961692555d4d487610924deb7a08877809f837653e792c1b4898ca9b29f734",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/light/360x740-sort.json",
+            "sha256": "b4bb673ad3e2498c34857c84b59fc6e6aec1f96f93a7ddbd405a09a7ec5da373",
+            "byteIdentical": true
+          }
+        ]
+      },
+      "dark": {
+        "reference": "a9a922c",
+        "count": 14,
+        "files": [
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-calendar.json",
+            "sha256": "466c5271f1351b533d37ac692d52c0d1b0740558f3bf74bebd5c9c30145e0b2f",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-data.json",
+            "sha256": "068964a83a62fc35c367baf33b3908f1159c682aaf3819116ab1eb871397f11e",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-detail.json",
+            "sha256": "217023ee48617e9e4f2bc19db414a52d03f2b7ba0f9dc0fb73f8fd7e372362ed",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-editor-date.json",
+            "sha256": "dc6780d0b6d9865c6d54365ac87108c451e171f9e5884b8ab0e1ee2189e5c625",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-home.json",
+            "sha256": "54555ff173413dffe3e8bdb1212ac602b48fedf6d389f77ea7f4cf72424a6a60",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-search.json",
+            "sha256": "1a5f139de641a05398e2c84889198b0a81c2b8822026abf0ab359571fe4085fa",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/1024x768-sort.json",
+            "sha256": "749cb52d7bdb21b2bc7fc94a65c825b9c5268cea33f8ec798c511949851f7ed8",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-calendar.json",
+            "sha256": "134e0dd8a466001a7da242e3b0fd1df25a43642376399bdaec78a7760309dc21",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-data.json",
+            "sha256": "1b4ed3531da175929b7f3bf9f2bb653258321a8bee229136dd8bcb36e2c93560",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-detail.json",
+            "sha256": "f931466817e78422638032762875220fb89e8b44fbced019264fbe3bd7d856bc",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-editor-date.json",
+            "sha256": "985edc778b378f9a5a3e0e481bc201b4882195b1edb39316a4a11fd6de0fc73b",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-home.json",
+            "sha256": "ba9a36d2ca8c6c309b3e353a948656e5909ad46549f485027331e79934ad5d48",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-search.json",
+            "sha256": "5f4eeea3e871c855eece4502de854b23f10566217fcaf839e9b326edfdd550cf",
+            "byteIdentical": true
+          },
+          {
+            "path": "react-app/.artifacts/baseline/dark/360x740-sort.json",
+            "sha256": "a32d88e1ffac5086d84627a9015354fe659118e2a1298148b5b3aa4349584252",
+            "byteIdentical": true
+          }
+        ]
+      }
+    },
+    "lightDiff": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "darkDiff": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "refreshedInJ": false,
+    "comparisonAndNormalizationChanged": false,
+    "exclusionMarkersAdded": false
+  },
+  "nativeStartupBackground": {
+    "light": "#f7f8fa",
+    "dark": "#15191a",
+    "matchesCssBg": true,
+    "bothRuntimeAndLaunchThemesDefinedInValuesAndValuesNight": true,
+    "launchAttrs": [
+      "android:background",
+      "android:windowBackground",
+      "windowSplashScreenBackground"
+    ],
+    "webView": "MainActivity.load() resolves R.color.lifelog_background and applies it to the window/WebView before super.load() creates Bridge and loads the URL; onConfigurationChanged reapplies after system resources update.",
+    "config": "No fixed backgroundColor; installed Capacitor only sets the WebView background when its config value is non-null. No unsupported SystemBars background API.",
+    "compiledResourceEvidence": {
+      "colors": "color/lifelog_background\n      () #fff7f8fa\n      (night) #ff15191a",
+      "runtimeTheme": "style/AppTheme.NoActionBar\n      () (style) size=8 parent=style/Theme.AppCompat.DayNight.NoActionBar (0x7f0e0106)\n        0x01010054=#fff7f8fa\n        0x010100d4=@null\n        0x01010450=true\n        0x01010451=#fff7f8fa\n        0x01010452=@0x0106000d\n        0x010104e0=true\n        windowActionBar(0x7f030123)=false\n        windowNoTitle(0x7f03012c)=true\n      (night) (style) size=8 parent=style/Theme.AppCompat.DayNight.NoActionBar (0x7f0e0106)\n        0x01010054=@color/lifelog_background\n        0x010100d4=@null\n        0x01010450=true\n        0x01010451=@color/lifelog_background\n        0x01010452=@0x0106000d\n        0x010104e0=false\n        windowActionBar(0x7f030123)=false\n        windowNoTitle(0x7f03012c)=true",
+      "launchTheme": "style/AppTheme.NoActionBarLaunch\n      () (style) size=3 parent=style/Theme.SplashScreen (0x7f0e0114)\n        0x01010054=@color/lifelog_background\n        0x010100d4=@color/lifelog_background\n        windowSplashScreenBackground(0x7f03012f)=@color/lifelog_background",
+      "themeAliases": "style/Theme.AppCompat.DayNight.NoActionBar\n      () (style) size=0 parent=style/Theme.AppCompat.Light.NoActionBar (0x7f0e0112)\n      (night) (style) size=0 parent=style/Theme.AppCompat.NoActionBar (0x7f0e0113)"
+    },
+    "verified": [
+      "Node source/resource contracts",
+      "Java compilation",
+      "APK compiled resource values and theme references"
+    ],
+    "notVerified": [
+      "Real device first frame / no-white-flash",
+      "Real system-bar and WebView live uiMode behavior",
+      "Cold launch on specific OEM / Android / WebView"
+    ]
+  },
+  "darkValidation": {
+    "assertionsPassed": 310,
+    "actualAxeInvocations": 37,
+    "explicitPageAndPanelAudits": [
+      {
+        "label": "360x740-home",
+        "violations": []
+      },
+      {
+        "label": "360x740-search",
+        "violations": []
+      },
+      {
+        "label": "360x740-sort",
+        "violations": []
+      },
+      {
+        "label": "360x740-detail",
+        "violations": []
+      },
+      {
+        "label": "360x740-editor-date",
+        "violations": []
+      },
+      {
+        "label": "360x740-calendar",
+        "violations": []
+      },
+      {
+        "label": "360x740-data",
+        "violations": []
+      },
+      {
+        "label": "1024x768-home",
+        "violations": []
+      },
+      {
+        "label": "1024x768-search",
+        "violations": []
+      },
+      {
+        "label": "1024x768-sort",
+        "violations": []
+      },
+      {
+        "label": "1024x768-detail",
+        "violations": []
+      },
+      {
+        "label": "1024x768-editor-date",
+        "violations": []
+      },
+      {
+        "label": "1024x768-calendar",
+        "violations": []
+      },
+      {
+        "label": "1024x768-data",
+        "violations": []
+      },
+      {
+        "label": "360 lunar leap-month editor",
+        "violations": []
+      },
+      {
+        "label": "360 month/year editor",
+        "violations": []
+      },
+      {
+        "label": "1024 lunar leap-month editor",
+        "violations": []
+      },
+      {
+        "label": "1024 month/year editor",
+        "violations": []
+      }
+    ],
+    "screenshots": [
+      "react-app/.artifacts/dark/1024-lunar.png",
+      "react-app/.artifacts/dark/1024x768-calendar.png",
+      "react-app/.artifacts/dark/1024x768-data.png",
+      "react-app/.artifacts/dark/1024x768-detail.png",
+      "react-app/.artifacts/dark/1024x768-editor-date.png",
+      "react-app/.artifacts/dark/1024x768-home.png",
+      "react-app/.artifacts/dark/1024x768-search.png",
+      "react-app/.artifacts/dark/1024x768-sort.png",
+      "react-app/.artifacts/dark/360-lunar.png",
+      "react-app/.artifacts/dark/360x740-calendar.png",
+      "react-app/.artifacts/dark/360x740-data.png",
+      "react-app/.artifacts/dark/360x740-detail.png",
+      "react-app/.artifacts/dark/360x740-editor-date.png",
+      "react-app/.artifacts/dark/360x740-home.png",
+      "react-app/.artifacts/dark/360x740-search.png",
+      "react-app/.artifacts/dark/360x740-sort.png"
+    ],
+    "visuallyInspectedThisFinalRun": [
+      "360x740-calendar.png",
+      "360x740-editor-date.png"
+    ],
+    "noDeviceAcceptanceImplied": true
+  },
+  "apkDistAssets": {
+    "filesCompared": 20,
+    "allByteIdentical": true,
+    "assets": [
+      {
+        "path": "assets/esm-CLBWQyMA.js",
+        "sizeBytes": 707,
+        "sha256": "c278d90d93ba7a4a92487a4532daea9a37a1546c1e240b688d9c9865698f2ca6",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/esm-CnKZiSTE.js",
+        "sizeBytes": 453,
+        "sha256": "70e9eafeb6b00d18f3cfa83048eea21e5cb3b34d6a59c7f0239908fe750dd84d",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/esm-Dgp4G71r.js",
+        "sizeBytes": 674,
+        "sha256": "f62a3727dedb199e7cadc1e0e4fcbae188d38b6a5fd6e9627111ee68353b8f4c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/index-9QEm3-Fi.css",
+        "sizeBytes": 57388,
+        "sha256": "cac40bfa1a7fd3c200773e46830accf19ccf3d42387207bd6f7fe993968e576c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/index-Dron9Xxu.js",
+        "sizeBytes": 92851,
+        "sha256": "efd1e4e330932e97bb9d7801c0fc52e260b851503a2be30c2184f1f236568936",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/lunar-rFT-dEts.js",
+        "sizeBytes": 305954,
+        "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/react-DxbjzT7Z.js",
+        "sizeBytes": 139936,
+        "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/rolldown-runtime-Bh1tDfsg.js",
+        "sizeBytes": 567,
+        "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/storage-CLLSMDTL.js",
+        "sizeBytes": 95158,
+        "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-BIMvkabU.js",
+        "sizeBytes": 844,
+        "sha256": "382b3fbbc02f0fa87587bfa223feedeefb83957ad0b889e708620cc9bd20ed5c",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-BMDReoj-.js",
+        "sizeBytes": 950,
+        "sha256": "163f529812190880850acc99614213a7d73531ea09980aaa290667fa49497e75",
+        "byteIdentical": true
+      },
+      {
+        "path": "assets/web-D2uI6Jpv.js",
+        "sizeBytes": 4440,
+        "sha256": "89fd1025eb59e1debc76c6799050a18b444ea1d3a03d1e638611fa4190c4bd71",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-180.png",
+        "sizeBytes": 5659,
+        "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-192.png",
+        "sizeBytes": 6462,
+        "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon-512.png",
+        "sizeBytes": 30464,
+        "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b",
+        "byteIdentical": true
+      },
+      {
+        "path": "icon.svg",
+        "sizeBytes": 1282,
+        "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a",
+        "byteIdentical": true
+      },
+      {
+        "path": "index.html",
+        "sizeBytes": 1639,
+        "sha256": "d55859992b94ae92738aa3ae6a94aacb0c35e9f5edb3356ea92616ecf3b065eb",
+        "byteIdentical": true
+      },
+      {
+        "path": "ingot.png",
+        "sizeBytes": 8194,
+        "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e",
+        "byteIdentical": true
+      },
+      {
+        "path": "manifest.webmanifest",
+        "sizeBytes": 780,
+        "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc",
+        "byteIdentical": true
+      },
+      {
+        "path": "sw.js",
+        "sizeBytes": 3210,
+        "sha256": "ff1f02dd17cc4ca671074609b11188c1213fe52470440112bafed784e3a87075",
+        "byteIdentical": true
+      }
+    ]
+  },
+  "signerContinuity": {
+    "comparedWith": "lifelog-days-0.2.0-alpha.10-preview.apk",
+    "certificateSha256": "421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52",
+    "matchesAuthorAcceptedAlpha10": true,
+    "originalAlpha10ApkSha256Unchanged": "e7e1d90e1297da2f5b57553d85cc28795407f5cce8d1206d20a8cf7056d4b268"
+  },
+  "phaseGateHistory": {
+    "j1": {
+      "completedAt": "2026-10-06T08:26:33.160Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8768,
+          "result": "PASS",
+          "testsPassed": 83
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 7120,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 16375,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 40019,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 13486,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 19589,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 9270,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 4958,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3896,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 18335,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 14731,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 59720,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.6635555555555556,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "j2": {
+      "completedAt": "2026-10-06T08:37:38.825Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 8943,
+          "result": "PASS",
+          "testsPassed": 88
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 7464,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 17569,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 45373,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 16751,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 20791,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 9584,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 7418,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 4273,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 18535,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 15374,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 65189,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.7243222222222222,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "j3": {
+      "completedAt": "2026-10-06T08:47:24.219Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 11550,
+          "result": "PASS",
+          "testsPassed": 88
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6250,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 20113,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 43388,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 17527,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 18955,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 8210,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 4695,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3584,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 15620,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 306,
+          "axeAudits": 37,
+          "axeSourceInjections": 19,
+          "durationMs": 41239,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 12617,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 85575,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.9508333333333333,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    }
+  },
+  "preservedFailedAttempts": {
+    "J2unsupportedApi": {
+      "report": {
+        "completedAt": "2026-10-06T08:32:06.696Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 1,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 25772,
+            "result": "FAIL",
+            "testsPassed": 86
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 20072,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 38783,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 399,
+            "axeAudits": 66,
+            "axeSourceInjections": 5,
+            "durationMs": 71419,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 36406,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 28497,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 15787,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 12108,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7441,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 29653,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 21324,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 120137,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.3348555555555555,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "explanation": "Unsupported optional API draft removed; existing source guard unchanged.",
+      "evidence": "react-app/.artifacts/j2/node-unit-attempt1.log"
+    },
+    "J2retainedHover": {
+      "report": {
+        "completedAt": "2026-10-06T08:34:44.726Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 14219,
+            "result": "PASS",
+            "testsPassed": 88
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9286,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 25906,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 399,
+            "axeAudits": 66,
+            "axeSourceInjections": 5,
+            "durationMs": 54252,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 22467,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 25157,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 1,
+            "assertionsPassed": 442,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 10680,
+            "result": "FAIL"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 10900,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4572,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 20540,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 15142,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 79030,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.8781111111111111,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "explanation": "Existing retained-hover synthetic test failed once; unchanged code/assertions passed on rerun.",
+      "evidence": "react-app/.artifacts/j2/controls-attempt2.log"
+    },
+    "J3newTelemetry": {
+      "report": {
+        "completedAt": "2026-10-06T08:42:04.846Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 15264,
+            "result": "PASS",
+            "testsPassed": 88
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 5469,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 23935,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 399,
+            "axeAudits": 66,
+            "axeSourceInjections": 5,
+            "durationMs": 47795,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 21048,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 20990,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 9052,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 6688,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4465,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 16508,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 1,
+            "assertionsPassed": 127,
+            "axeAudits": 18,
+            "axeSourceInjections": 16,
+            "durationMs": 23407,
+            "result": "FAIL"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 12126,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 74382,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.8264666666666667,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "explanation": "New telemetry sampling mixed historical palette frames; new test waits for actual new primary paint. Product timings/old assertions unchanged.",
+      "evidence": "react-app/.artifacts/j3/dark-attempt1.log"
+    },
+    "J4beforeRegexAuthorization": {
+      "report": {
+        "completedAt": "2026-10-06T09:01:46.096Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 1,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11512,
+            "result": "FAIL",
+            "testsPassed": 88
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7475,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 19533,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 399,
+            "axeAudits": 66,
+            "axeSourceInjections": 5,
+            "durationMs": 44447,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 16910,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 20839,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 9693,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 6178,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4075,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 21519,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 0,
+            "assertionsPassed": 310,
+            "axeAudits": 37,
+            "axeSourceInjections": 19,
+            "durationMs": 44583,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 15551,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 93124,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.0347111111111111,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "explanation": "Only old Light native-parent regex failed. Android was not run for that failed readiness state. This old assertion was then explicitly authorized to change to DayNight.",
+      "evidence": "react-app/.artifacts/j4/unit-native-readiness-failed.log"
+    }
+  },
+  "earlierJ4Drafts": {
+    "beforeLunarReadiness": {
+      "completedAt": "2026-10-06T08:54:24.278Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 12273,
+          "result": "PASS",
+          "testsPassed": 88
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6519,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 20074,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 44256,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 17958,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 20028,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 9072,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 5677,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3631,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 20128,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 306,
+          "axeAudits": 37,
+          "axeSourceInjections": 19,
+          "durationMs": 44231,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 15288,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 90914,
+      "referenceSeconds": 90,
+      "ratioToReference": 1.0101555555555555,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "beforeNativeReadiness": {
+      "completedAt": "2026-10-06T08:57:22.492Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 10982,
+          "result": "PASS",
+          "testsPassed": 88
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6250,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 18690,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 399,
+          "axeAudits": 66,
+          "axeSourceInjections": 5,
+          "durationMs": 42341,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 16476,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 18485,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 447,
+          "axeAudits": 5,
+          "axeSourceInjections": 2,
+          "durationMs": 8114,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 242,
+          "axeAudits": 3,
+          "axeSourceInjections": 1,
+          "durationMs": 4553,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 3009,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 16132,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 310,
+          "axeAudits": 37,
+          "axeSourceInjections": 19,
+          "durationMs": 41189,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 12227,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 83985,
+      "referenceSeconds": 90,
+      "ratioToReference": 0.9331666666666667,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": false
+    },
+    "note": "Earlier draft success/APKs are not the final delivery; final identity/SHA/gates above are authoritative."
+  },
+  "authorAcceptance": {
+    "status": "pending author phase-J device acceptance",
+    "authorAccepted": false,
+    "deviceModel": null,
+    "androidVersion": null,
+    "webViewProvider": null,
+    "webViewVersion": null,
+    "localDeviceTested": false,
+    "adbEvidence": "List of devices attached",
+    "note": "No connected device; do not infer a model/WebView from browser or SDK versions."
+  },
+  "notVerified": [
+    "Author phase-J phone acceptance",
+    "First cold-start frame on device",
+    "Native bar icon/edge-to-edge on device",
+    "Background recovery and launcher night widget refresh",
+    "Reminder delivery/reboot/exact timing",
+    "Original production signed in-place upgrade"
+  ],
+  "publication": {
+    "status": "not pushed / not tagged / no alpha.11 GitHub Release",
+    "policy": "Wait for author phase-J device acceptance; previous releases remain untouched."
+  },
+  "localEvidenceRoot": "/Users/ysjugg/Documents/ChatGPT/小工具/lifelog/react-app"
+}

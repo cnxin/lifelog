@@ -55,6 +55,49 @@ test('the installed core has no background setter, so the night resource is the 
   assert.doesNotMatch(plugin, /setBackgroundColor/);
   assert.match(fs.readFileSync('node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java', 'utf8'), /getThemeColor\(getContext\(\), android.R.attr.windowBackground\)/);
 });
+test('native runtime theme follows system night mode without forcing WebView into a Light theme', () => {
+  for (const qualifier of ['values', 'values-night']) {
+    const styles = fs.readFileSync(`android/app/src/main/res/${qualifier}/styles.xml`, 'utf8');
+    assert.match(styles, /name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar"/);
+  }
+});
+test('runtime and launch window backgrounds resolve to the light/dark CSS background', () => {
+  const tokens = fs.readFileSync('src/styles/00-tokens.css', 'utf8');
+  const darkStart = tokens.indexOf('@media (prefers-color-scheme: dark)');
+  const backgrounds = [tokens.slice(0, darkStart), tokens.slice(darkStart)]
+    .map(text => text.match(/--bg:\s*(#[\da-f]+);/i)[1].toLowerCase());
+  assert.deepEqual(backgrounds, ['#f7f8fa', '#15191a']);
+  for (const [index, qualifier] of ['values', 'values-night'].entries()) {
+    const colors = fs.readFileSync(`android/app/src/main/res/${qualifier}/colors.xml`, 'utf8');
+    const background = colors.match(/<color name="lifelog_background">(#[\da-f]+)<\/color>/i)[1].toLowerCase();
+    assert.equal(background, backgrounds[index], `${qualifier} matches --bg`);
+    const styles = fs.readFileSync(`android/app/src/main/res/${qualifier}/styles.xml`, 'utf8');
+    for (const name of ['AppTheme.NoActionBar', 'AppTheme.NoActionBarLaunch']) {
+      const style = styles.split(`<style name="${name}"`)[1].split('</style>')[0];
+      const value = style.match(/<item name="android:windowBackground">([^<]+)<\/item>/)[1];
+      assert.equal(value === '@color/lifelog_background' ? background : value, backgrounds[index], `${qualifier}/${name}`);
+      if (name.endsWith('Launch')) {
+        assert.match(style, /name="windowSplashScreenBackground">@color\/lifelog_background/);
+        assert.match(style, /name="android:background">@color\/lifelog_background/);
+      }
+    }
+  }
+});
+test('native WebView gets the system-qualified background before loading and after uiMode changes', () => {
+  const activity = fs.readFileSync('android/app/src/main/java/com/cnxin/lifelog/MainActivity.java', 'utf8');
+  assert.match(activity, /protected void load\(\)\s*\{[\s\S]*?applySystemThemeBackground\(\);\s*super\.load\(\);/);
+  assert.match(activity, /void onConfigurationChanged\(Configuration newConfig\)\s*\{\s*super\.onConfigurationChanged\(newConfig\);\s*applySystemThemeBackground\(\);/);
+  assert.match(activity, /int color = getColor\(R\.color\.lifelog_background\);/);
+  assert.match(activity, /getWindow\(\)\.setBackgroundDrawable\(new ColorDrawable\(color\)\);/);
+  assert.match(activity, /WebView webView = findViewById\(com\.getcapacitor\.android\.R\.id\.webview\);/);
+  assert.match(activity, /if \(webView != null\) webView\.setBackgroundColor\(color\);/);
+  const manifest = fs.readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
+  assert.match(manifest, /android:configChanges="[^"]*\buiMode\b/);
+  const bridge = fs.readFileSync('node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/BridgeActivity.java', 'utf8');
+  assert.ok(bridge.indexOf('setContentView(R.layout.capacitor_bridge_layout_main)') < bridge.indexOf('this.load();'));
+  const config = fs.readFileSync('capacitor.config.ts', 'utf8');
+  assert.doesNotMatch(config, /backgroundColor:/, 'no fixed config color overrides the theme-qualified WebView background');
+});
 test('unsupported native API rejection does not break theme changes or cleanup', async () => {
   await withShell({ reject: true }, async ({ styles, change }) => {
     change(true); await new Promise(resolve => setImmediate(resolve)); assert.deepEqual(styles, ['LIGHT', 'DARK']);

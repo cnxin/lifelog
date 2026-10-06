@@ -28,6 +28,15 @@ async function stateTour(browser) {
       const name = `${viewport.width}x${viewport.height}-${state}`;
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor), 'rgb(21, 25, 26)');
       await audit(page, name);
+      if (state === 'calendar') {
+        const lunarColors = await page.locator('.calendar-day:not([data-selected="true"]) .calendar-lunar').evaluateAll(elements => {
+          const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+          const rgb = accent.slice(1).match(/../g).map(c => parseInt(c, 16));
+          return { expected: `rgb(${rgb.join(', ')})`, colors: elements.map(el => getComputedStyle(el).color) };
+        });
+        assert.ok(lunarColors.colors.length > 0, 'dark calendar lunar labels present');
+        assert.ok(lunarColors.colors.every(color => color === lunarColors.expected), 'ordinary and festival lunar labels use the bright accent');
+      }
       // Flush the first compositor capture before saving masked/scrolling chips.
       // This changes no product state, comparison or existing animation timer.
       await page.screenshot({ fullPage: true });

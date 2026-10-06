@@ -2,14 +2,22 @@
 
 把重要的日子，放在心上。一个**本地优先、无需账号的纪念日 / 生日 / 倒数日工具**。
 
-当前测试版本：`0.2.0-alpha.10`（阶段 I，供作者真机验收，尚未发布 alpha.10 Release）。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+当前测试版本：`0.2.0-alpha.11`（阶段 J，供作者真机验收，尚未发布 alpha.11 Release）。已发布版本为 `0.2.0-alpha.10`。这是对旧版 LifeLog 的产品收敛，不是旧版全功能应用的小改版；Android 提供独立测试 APK，不是旧版覆盖升级包。
+
+### alpha.11 深色模式
+
+- 跟随系统深色模式。
+
+versionCode 146。不加应用内手动切换；首页、sheet、日历、详情、排序菜单、庆祝粒子与 Android 小组件提供深色配色。浅色零差异以 `3c89d2b` 刷新后的 14 份基准为准，不改浅色基准或比较器；另有 14 份深色基准。测试 APK、SHA-256 与验证报告在 `downloads/`，等作者完成阶段 J 真机验收后再推送与发布 alpha.11。
+
+J4 已按作者授权仅将原生父主题正则由 Light 调整为 DayNight；浅 / 深色窗口与 WebView 启动底色均跟随系统并匹配 `--bg`。全部门禁与 Android 构建通过，lint 0 error / 28 warnings；首帧无闪白等真机行为仍待复测，不以源码或浏览器检查代替设备验收。最终测试包为 `downloads/lifelog-days-0.2.0-alpha.11-preview.apk`，附同名 `.apk.sha256` / `.apk.json`；不把旧草稿 APK 当作最终交付。
 
 ### alpha.10 周年数字与农历录入
 
 - 可直接按农历选日期，包括闰月；选日后自动设为农历年度重复，每年重复仍可手动取消。
 - 每年重复的生日和纪念日显示岁数 / 周年，首页、卡片、详情与 Android 小组件共用文案。
 
-versionCode 145。测试 APK、SHA-256 与验证报告放在 `downloads/`；真机验收由作者完成后才推送与发布 alpha.10，不开始阶段 J。基准在阶段末尾用独立提交刷新，比较器和归一化不变。
+versionCode 145。作者已于 2026-10-06 确认阶段 I 真机验收通过，alpha.10 已独立发布，APK、SHA-256 与验证报告在 `downloads/`。机型与 WebView 版本未提供，不猜填。基准在阶段末尾用独立提交刷新，比较器和归一化不变。
 
 ### alpha.9 结构整理
 
@@ -19,9 +27,9 @@ versionCode 144。阶段 H 曾以 H0 的 14 份浅色 DOM / 计算样式 / 点�
 
 ## 下载 Android 测试版
 
-alpha.10 目前仅供作者真机验收：[测试 APK](downloads/lifelog-days-0.2.0-alpha.10-preview.apk)、[SHA-256](downloads/lifelog-days-0.2.0-alpha.10-preview.apk.sha256)、[验证报告](downloads/lifelog-days-0.2.0-alpha.10-preview.apk.json)。这不是已发布的 GitHub Release；验收通过后再发布。
+alpha.11 目前仅供作者真机验收：[测试 APK](downloads/lifelog-days-0.2.0-alpha.11-preview.apk)、[SHA-256](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.sha256)、[验证报告](downloads/lifelog-days-0.2.0-alpha.11-preview.apk.json)。这不是已发布的 GitHub Release；阶段 J 真机验收通过后再发布。
 
-在 [alpha.9 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.9-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.9-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。发布使用作者验收的原 APK，旧 Release 保留不改。
+在 [alpha.10 预发布页面](https://github.com/cnxin/lifelog/releases/tag/v0.2.0-alpha.10-preview) 的 Assets 中下载 `lifelog-days-0.2.0-alpha.10-preview.apk`，同时提供 SHA-256 校验文件与验证报告。Android 7.0 及以上可安装；测试版使用独立包名，与旧 LifeLog 并存。发布使用作者验收的原 APK，alpha.9 及更早 Release 保留不改。
 
 ### alpha.8 当天庆祝更新
 
@@ -44,7 +52,9 @@ alpha.10 目前仅供作者真机验收：[测试 APK](downloads/lifelog-days-0.
 
 ## 只做这些事
 
-以下基础功能沿用 alpha.7 / alpha.8，包含在 alpha.10 测试版中。作者此前确认两项提醒选择修复与阶段 G 当天庆祝通过；通知送达、重启恢复与小组件后台行为不据此扩大为已验收，相关验收清单仍保留。
+当前测试版跟随系统深色模式，不加应用内手动切换。
+
+以下基础功能沿用 alpha.7 / alpha.8，包含在 alpha.11 测试版中。作者此前确认两项提醒选择修复与阶段 G 当天庆祝通过；通知送达、重启恢复与小组件后台行为不据此扩大为已验收，相关验收清单仍保留。
 
 - 直接创建日子：名称、日期、分类、备注、置顶。
 - 表单内展开圆角日期选择器：公历与农历同看、节日 / 节气提示、输入年份快速选月、选择今天；浏览不改值，点选日期才确认。
@@ -96,13 +106,14 @@ npm run test:controls             # 分段选项与圆角勾选框
 npm run test:calendar             # 农历月历、键盘、日历与编辑往返、布局与 axe
 npm run test:date-picker          # 选日期、年月跳转、边界、返回、保存和无障碍
 npm run test:ui                   # 全界面布局、长内容、紧凑控件、弹窗按钮与大字号回归
-npm run baseline:verify           # 对比已提交的 14 份浅色 DOM / 样式 / 几何基准
+npm run baseline:verify           # 验证 14 份浅色 + 14 份深色 DOM / 样式 / 几何基准
 npm run baseline:diff             # 只读差异清单，写入 .artifacts/baseline-diff.md
 npm run baseline:capture          # 仅功能阶段末尾审查差异后替换当前一套基准
+npm run baseline:capture -- --scheme dark # J1 新建深色基准；J 不改浅色基准
 npm run css:coverage              # 全套浏览器用例 + 多媒体状态，仅测量，不按覆盖率判失败
 ```
 
-`gates` 必须独占 `127.0.0.1:5189`：已有预览占用时会报错，不复用、不杀进程、不换端口。它仅启动一个 Chromium，各套用例使用独立 context，按固定顺序派发、限量并发，并按固定顺序汇总通过数和耗时；日志与报告在 `react-app/.artifacts/gates/`。主界面来自生产构建；测试专用源码导入与原生插件 mock 路径只在门禁服务提供，不打包进应用。CSS 覆盖率包含全部浏览器用例及 360 / 1024、reduced-motion、forced-colors 的补充巡检，不用于自动删规则。
+`gates` 必须独占 `127.0.0.1:5189`：已有预览占用时会报错，不复用、不杀进程、不换端口。它仅启动一个 Chromium，各套用例使用独立 context，按固定顺序派发、限量并发，并按固定顺序汇总通过数和耗时；日志与报告在 `react-app/.artifacts/gates/`。主界面来自生产构建；测试专用源码导入与原生插件 mock 路径只在门禁服务提供，不打包进应用。新增深色 axe / 实时主题切换 / 农历录入 / 庆祝和提醒验证，截图在 `react-app/.artifacts/dark/`；原浅色门禁原样保留。CSS 覆盖率包含全部浏览器用例及 360 / 1024、reduced-motion、forced-colors 的补充巡检，不用于自动删规则。
 
 耗时只报告、不判定：H3 的「不超过原耗时 50%」只用于当时结构整理的目标，不是后续功能阶段的失败阈值。总耗时、各套耗时及历史参考比率继续记录；总耗时超过 180 秒只输出 warning，不改变退出码。真实用例失败仍使门禁失败，原单套用例 180 秒防卡死超时保护不变。
 

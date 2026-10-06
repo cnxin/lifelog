@@ -166,6 +166,6 @@ test('SystemBars owns native insets and foreground style without the legacy over
   }
   assert.match(read('index.html'), /viewport-fit=cover/);
   const theme = read('android/app/src/main/res/values/styles.xml');
-  assert.match(theme, /Theme.AppCompat.Light.NoActionBar/);
+  assert.match(theme, /Theme.AppCompat.DayNight.NoActionBar/);
   assert.match(theme, /android:windowBackground">#f7f8fa/);
 });

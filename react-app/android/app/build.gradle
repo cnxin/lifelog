@@ -14,8 +14,8 @@ android {
         applicationId "com.cnxin.lifelog"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 145
-        versionName "0.2.0-alpha.10"
+        versionCode 146
+        versionName "0.2.0-alpha.11"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
