@@ -508,6 +508,13 @@
         "> Task :app:lintDebug"
       ],
       "note": "JVM and analysis are UP-TO-DATE in this build, not claimed as fresh execution. Existing XML reports retained."
+    },
+    "latestDocumentationCheck": {
+      "result": "PASS",
+      "jvmTask": [
+        "> Task :app:testDebugUnitTest UP-TO-DATE"
+      ],
+      "lint": "0 errors / 27 warnings; UP-TO-DATE analysis, no new device or JVM execution claimed"
     }
   },
   "assertionChanges": [
@@ -1011,6 +1018,130 @@
         "referenceSeconds": 90,
         "ratioToReference": 0.5675333333333333,
         "performanceTargetMet": false
+      },
+      {
+        "completedAt": "2026-10-06T05:41:18.298Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9325,
+            "result": "PASS",
+            "testsPassed": 77
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 6553,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 16412,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 399,
+            "axeAudits": 66,
+            "axeSourceInjections": 5,
+            "durationMs": 39451,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 14249,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 17691,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 447,
+            "axeAudits": 5,
+            "axeSourceInjections": 2,
+            "durationMs": 6780,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 4215,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 3036,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 30,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9874,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11859,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 51541,
+        "referenceSeconds": 90,
+        "ratioToReference": 0.5726777777777777,
+        "performanceTargetMet": false
       }
     ],
     "allFunctionalAssertionsPassed": true,
@@ -1019,11 +1150,14 @@
     "measuredSeconds": [
       46.269,
       46.899,
-      51.078
+      51.078,
+      51.541
     ],
     "thresholdSeconds": 45,
     "thresholdChanged": false,
     "assertionOrTimerChanges": false,
-    "concurrency": "Original configurable workers: default3, repeat4, final default3. Not a timing/assertion bypass."
+    "concurrency": "Original configurable workers: default3, repeat4, final default3. Not a timing/assertion bypass.",
+    "recordCorrection": "Documentation now uses actual JSON millisecond values; earlier commit message transcription 46.270/46.898/51.083 corrected to 46.269/46.899/51.078 without rewriting history.",
+    "latestResult": "All functional assertions PASS; exit1 solely 45s historical timing target, unchanged."
   }
 }
