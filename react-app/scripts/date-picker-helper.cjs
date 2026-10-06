@@ -3,6 +3,7 @@ exports.pickDate = async (page, date) => {
   const [year, month] = date.split("-");
   await page.getByRole("button", { name: /^日期 / }).click();
   const picker = page.locator(".date-picker");
+  await picker.getByRole('radio', { name:'公历', exact:true }).check();
   await picker.getByRole("button", { name: "切换年月", exact: true }).click();
   await picker.getByLabel("年份", { exact: true }).fill(year);
   await picker

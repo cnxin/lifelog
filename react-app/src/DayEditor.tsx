@@ -139,7 +139,9 @@ function EditorForm({
         />
         <DatePicker
           value={draft.date}
-          onChange={(date) => patch({ date })}
+          calendar={draft.calendar}
+          onChange={(date, calendar) => patch(calendar === "lunar"
+            ? { date, calendar: "lunar", repeat: "yearly" } : { date })}
           open={dateOpen}
           onOpenChange={setDateOpen}
         />

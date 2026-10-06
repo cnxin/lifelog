@@ -38,33 +38,41 @@ function domSelectors({before,after}) {
   visit(left,right);return [...changed];
 }
 
-function geometryDiff(expected, actual) {
+function elementMetadata({ html, selectors }) {
+  const body=new DOMParser().parseFromString(html,'text/html').body;
+  const key=el=>JSON.stringify([el.tagName,el.getAttribute('role'),el.className,el.id,
+    ...['type','name','aria-label','aria-labelledby','value'].map(a=>el.getAttribute(a))]);
+  return {styles:Object.fromEntries(selectors.map(s=>[s,[...body.querySelectorAll(s)].map(key)])),
+    clickable:[...body.querySelectorAll('button, a[href], input, textarea, select, [role="button"], [role="menuitemradio"], [role="radio"], [tabindex="0"]')].map(key)};
+}
+
+function geometryDiff(expected, actual, beforeKeys, afterKeys) {
   // Pair by exact element metadata plus occurrence, not global array index:
   // adding a toolbar button must not manufacture changes to every later button.
-  const group = items => {
+  const group = (items, keys) => {
     const result = new Map();
-    for (const item of items) {
-      const key = JSON.stringify([item.tag, item.role, item.className, item.label]);
+    for (const [i,item] of items.entries()) {
+      const key = keys?.[i] || JSON.stringify([item.tag, item.role, item.className, item.label]);
       if (!result.has(key)) result.set(key, []);
       result.get(key).push(item.rect);
     }
     return result;
   };
-  const before = group(expected), after = group(actual), lines = [];
+  const before = group(expected,beforeKeys), after = group(actual,afterKeys), lines = [];
   for (const key of new Set([...before.keys(), ...after.keys()])) {
     const [tag, role, className, label] = JSON.parse(key);
     const old = before.get(key) || [], next = after.get(key) || [];
     for (let i = 0; i < Math.max(old.length, next.length); i++) {
       if (isDeepStrictEqual(old[i], next[i])) continue;
       lines.push(`- ${tag}${className ? '.' + className.split(' ').join('.') : ''}` +
-        `${role ? ' [role="' + role + '"]' : ''} #${i + 1} ${JSON.stringify(label)}\n` +
+        `${role ? ' [role="' + role + '"]' : ''} #${i + 1} ${beforeKeys ? key : JSON.stringify(label)}\n` +
         `  - before: ${JSON.stringify(old[i] ?? null)}\n  - after: ${JSON.stringify(next[i] ?? null)}`);
     }
   }
   return lines;
 }
 
-async function renderDiff(expected, actual, directory) {
+async function renderDiff(expected, actual, directory, metadata) {
   const lines = [];
   if (expected.html !== actual.html) {
     // Formatting is for the report only; exact HTML comparison remains unchanged.
@@ -80,17 +88,27 @@ async function renderDiff(expected, actual, directory) {
   const styleLines = [];
   for (const selector of new Set([...Object.keys(expected.styles), ...Object.keys(actual.styles)])) {
     const old = expected.styles[selector] || [], next = actual.styles[selector] || [];
+    if (isDeepStrictEqual(old,next)) continue;
     const changes = [];
-    for (let i=0; i<Math.max(old.length,next.length); i++) {
-      for (const property of new Set([...Object.keys(old[i] || {}), ...Object.keys(next[i] || {})])) {
-        if (old[i]?.[property] !== next[i]?.[property])
-          changes.push(`- [${i + 1}] ${property}: ${JSON.stringify(old[i]?.[property] ?? null)} → ${JSON.stringify(next[i]?.[property] ?? null)}`);
+    const map=(items,keys)=>{
+      const counts=new Map();
+      return new Map(items.map((item,i)=>{
+        const key=keys?.[i] || `index ${i+1}`, count=(counts.get(key)||0)+1;
+        counts.set(key,count);return [key+` #${count}`,item];
+      }));
+    };
+    const left=map(old,metadata?.before.styles[selector]), right=map(next,metadata?.after.styles[selector]);
+    for (const key of new Set([...left.keys(),...right.keys()])) {
+      const a=left.get(key),b=right.get(key);
+      for (const property of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+        if (a?.[property] !== b?.[property])
+          changes.push(`- [${metadata ? key : key.match(/index (\d+)/)[1]}] ${property}: ${JSON.stringify(a?.[property] ?? null)} → ${JSON.stringify(b?.[property] ?? null)}`);
       }
     }
     if (changes.length) styleLines.push(`#### \`${selector}\``, ...changes);
   }
   if (styleLines.length) lines.push('### Computed styles by selector', ...styleLines);
-  const geometry = geometryDiff(expected.clickable, actual.clickable);
+  const geometry = geometryDiff(expected.clickable, actual.clickable,metadata?.before.clickable,metadata?.after.clickable);
   if (geometry.length) lines.push('### Clickable geometry by element', ...geometry);
   if (!lines.length) lines.push('No differences.');
   return lines.join('\n');
@@ -117,8 +135,10 @@ async function runDiff(browser, { scheme='light', output='.artifacts/baseline-di
         const expected=JSON.parse(await fs.readFile(path.join('.artifacts/baseline',scheme,name+'.json'),'utf8'));
         if (differences(expected,actual).length) changed++;
         const dom=expected.html===actual.html ? [] : await page.evaluate(domSelectors,{before:expected.html,after:actual.html});
+        const metadata={before:await page.evaluate(elementMetadata,{html:expected.html,selectors:Object.keys(expected.styles)}),
+          after:await page.evaluate(elementMetadata,{html:actual.html,selectors:Object.keys(actual.styles)})};
         report.push(`## ${name}`, ...(dom.length ? ['DOM selectors: '+dom.map(s=>'`'+s+'`').join(', ')] : []),
-          await renderDiff(expected,actual,temporary), '');
+          await renderDiff(expected,actual,temporary,metadata), '');
       } finally { await context.close(); }
     }
     report.push(`Changed snapshots: ${changed}/${viewports.length * states.length}.`, '');

@@ -5,6 +5,8 @@ const fs = require("node:fs/promises");
 const { pickDate } = require("./date-picker-helper.cjs");
 (async () => {
   const browser = await chromium.launch();
+  const lunarCheck = require('./lunar-entry-ui.cjs').checkLunarEntryUI(browser).then(
+    () => null, error => error);
   const context = await browser.newContext({
     viewport: { width: 390, height: 1000 },
     timezoneId: "Asia/Shanghai",
@@ -250,6 +252,8 @@ const { pickDate } = require("./date-picker-helper.cjs");
       }
     }
     assert.deepEqual(errors, []);
+    const lunarError = await lunarCheck;
+    if (lunarError) throw lunarError;
     console.log(
       "Date picker passed: selection, lunar labels, keyboard, bounds, cancellation, persistence, responsive layout, large type, forced colors, axe.",
     );

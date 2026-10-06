@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import DateYearRow from "./DateYearRow";
 
 export default function MonthPicker({
   month,
@@ -16,38 +16,7 @@ export default function MonthPicker({
   const validYear = /^\d{4}$/.test(yearText) && year >= 1901 && year <= 2099;
   return (
     <div className="date-month-panel" id={id}>
-      <div className="date-year-row">
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="上一年"
-          disabled={!validYear || year <= 1901}
-          onClick={() => setYearText(String(year - 1))}
-        >
-          <ChevronLeft size={18} aria-hidden="true" />
-        </button>
-        <label className="date-year-label">
-          年份
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={4}
-            value={yearText}
-            aria-invalid={!validYear}
-            aria-describedby={`${labelId}-help`}
-            onChange={(event) => setYearText(event.target.value)}
-          />
-        </label>
-        <button
-          type="button"
-          className="icon-button"
-          aria-label="下一年"
-          disabled={!validYear || year >= 2099}
-          onClick={() => setYearText(String(year + 1))}
-        >
-          <ChevronRight size={18} aria-hidden="true" />
-        </button>
-      </div>
+      <DateYearRow value={yearText} onChange={setYearText} helpId={`${labelId}-help`} />
       <p className="date-picker-hint" id={`${labelId}-help`}>
         {validYear
           ? "可直接输入年份，再选择月份"

@@ -21,4 +21,12 @@ declare module "lunar-javascript" {
     getMonthInChinese(): string;
     getDayInChinese(): string;
   }
+  export class LunarYear {
+    static fromYear(year: number): LunarYear;
+    getLeapMonth(): number;
+  }
+  export class LunarMonth {
+    static fromYm(year: number, month: number): LunarMonth | null;
+    getDayCount(): number;
+  }
 }

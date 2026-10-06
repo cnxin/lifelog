@@ -74,6 +74,85 @@
   gap: 0.25rem;
   min-height: 40px;
 }
+.date-calendar-mode.choice-field {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.date-calendar-mode .choice-options {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  padding: 0;
+  border-radius: 10px;
+}
+.date-calendar-mode .choice-option > span {
+  min-height: 38px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+.date-calendar-mode .choice-option {
+  min-width: 40px;
+}
+.date-calendar-mode .choice-option input {
+  inset: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+}
+.date-picker-toolbar .date-month-heading {
+  padding-inline: 4px;
+  gap: 4px;
+  font-size: 0.875rem;
+}
+.lunar-entry .date-picker-hint {
+  margin: 4px 0;
+}
+.lunar-months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.lunar-months button, .lunar-day {
+  position: relative;
+  min-width: 0;
+  min-height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--green);
+  background: var(--soft);
+  font-size: 0.75rem;
+}
+.lunar-months button::before, .lunar-day::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+.lunar-months button[aria-pressed="true"], .lunar-grid td[aria-selected="true"] .lunar-day {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+}
+.lunar-grid {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+.lunar-grid td {
+  padding: 0;
+}
+.lunar-day {
+  width: 100%;
+  background: #fff;
+}
+@media (forced-colors: active) {
+  .lunar-months button[aria-pressed="true"], .lunar-grid td[aria-selected="true"] .lunar-day {
+    outline: 2px solid Highlight;
+  }
+}
 .date-picker-toolbar .icon-button,
 .date-picker-toolbar .date-month-heading {
   min-height: 40px;

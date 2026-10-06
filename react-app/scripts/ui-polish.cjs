@@ -328,6 +328,9 @@ const fs = require("node:fs/promises");
       assert.ok(geometry.close >= 44, "close button is never squeezed");
       if (width === 390 || width === 1440) await shot(label + "-editor");
       await page.locator(".date-trigger").click();
+      // I2 defaults lunar records to lunar entry; this unchanged audit
+      // intentionally exercises the existing Gregorian year/month chooser.
+      await page.locator('.date-picker').getByRole('radio', {name:'公历', exact:true}).check();
       await page.getByRole("button", { name: "切换年月", exact: true }).click();
       const year = page.getByLabel("年份", { exact: true });
       assert.ok(

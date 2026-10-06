@@ -10,6 +10,7 @@ export default function SegmentedControl<T extends string>({
   description,
   className = "",
   hideLabel = false,
+  name,
 }: {
   label: string;
   value: T;
@@ -18,6 +19,7 @@ export default function SegmentedControl<T extends string>({
   description?: string;
   className?: string;
   hideLabel?: boolean;
+  name?: string;
 }) {
   const id = useId();
   return (
@@ -28,7 +30,7 @@ export default function SegmentedControl<T extends string>({
           <label className="choice-option" key={option.value}>
             <input
               type="radio"
-              name={id}
+              name={name ?? id}
               value={option.value}
               checked={value === option.value}
               aria-describedby={description ? `${id}-help` : undefined}

@@ -16,6 +16,8 @@ import { haptic } from "./haptics";
 import MonthGrid, { calendarKeyboardHelp, dateLabel } from "./MonthGrid";
 import MonthPicker from "./MonthPicker";
 import useMonthSwipe from "./useMonthSwipe";
+import SegmentedControl from "./SegmentedControl";
+import LunarGrid from "./LunarGrid";
 
 function scrollDateField(field: HTMLDivElement) {
   const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -53,11 +55,13 @@ export default function DatePicker({
   onChange,
   open,
   onOpenChange,
+  calendar,
 }: {
   value: string;
-  onChange: (date: string) => void;
+  onChange: (date: string, calendar?: "lunar") => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  calendar: "solar" | "lunar";
 }) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -67,8 +71,9 @@ export default function DatePicker({
   const wasOpen = useRef(false);
   const [cursor, setCursor] = useState(value);
   const [chooseMonth, setChooseMonth] = useState(false);
+  const [mode, setMode] = useState<"solar" | "lunar">(calendar);
   const month = cursor.slice(0, 7);
-  const previousLayout = useRef({ month, chooseMonth });
+  const previousLayout = useRef({ month, chooseMonth, mode });
   const info = calendarDateInfo(value);
   const today = todayKey();
   const swipe = useMonthSwipe((direction) =>
@@ -78,7 +83,7 @@ export default function DatePicker({
     const keyboardNavigation = focusDay.current && wasOpen.current;
     if (open && focusDay.current && !chooseMonth) {
       panel.current
-        ?.querySelector<HTMLButtonElement>('.calendar-day[tabindex="0"]')
+        ?.querySelector<HTMLButtonElement>(mode === "lunar" ? '.lunar-day[tabindex="0"]' : '.calendar-day[tabindex="0"]')
         ?.focus({ preventScroll: !wasOpen.current });
       focusDay.current = false;
     }
@@ -86,14 +91,14 @@ export default function DatePicker({
     // focus scrolling. Re-align the whole field after that layout change;
     // keyboard day navigation still gets its own focused-day scrolling.
     const layoutChanged = previousLayout.current.month !== month ||
-      previousLayout.current.chooseMonth !== chooseMonth;
+      previousLayout.current.chooseMonth !== chooseMonth || previousLayout.current.mode !== mode;
     if (open && field.current &&
       (!wasOpen.current || (layoutChanged && !keyboardNavigation)))
       scrollDateField(field.current);
     if (!open && wasOpen.current) trigger.current?.focus();
     wasOpen.current = open;
-    previousLayout.current = { month, chooseMonth };
-  }, [open, cursor, chooseMonth]);
+    previousLayout.current = { month, chooseMonth, mode };
+  }, [open, cursor, chooseMonth, mode]);
   function move(date: string, focus = false) {
     const bounded =
       date < MIN_CALENDAR_DATE
@@ -108,7 +113,7 @@ export default function DatePicker({
   }
   function select(date: string) {
     void haptic("light");
-    onChange(date);
+    onChange(date, mode === "lunar" ? "lunar" : undefined);
     onOpenChange(false);
   }
   return (
@@ -129,6 +134,7 @@ export default function DatePicker({
           if (!open) {
             setCursor(value);
             setChooseMonth(false);
+            setMode(calendar);
             swipe.clearSlide();
             focusDay.current = true;
           }
@@ -153,6 +159,11 @@ export default function DatePicker({
           aria-label="选择日期"
         >
           <div className="date-picker-toolbar">
+            <SegmentedControl label="日期录入历法" hideLabel className="date-calendar-mode"
+              name={id + "-calendar-mode"} value={mode}
+              options={[{ value: "solar", label: "公历" }, { value: "lunar", label: "农历" }]}
+              onChange={next => { setMode(next); setChooseMonth(false); swipe.clearSlide(); }} />
+            {mode === "solar" && <>
             <button
               type="button"
               className="date-month-heading"
@@ -190,8 +201,9 @@ export default function DatePicker({
                 </>
               )}
             </div>
+            </>}
           </div>
-          {chooseMonth ? (
+          {mode === "lunar" ? <LunarGrid selected={value} onSelect={select} id={id + "-lunar"} /> : chooseMonth ? (
             <MonthPicker
               month={month}
               id={id + "-months"}
@@ -228,7 +240,7 @@ export default function DatePicker({
             >
               今天
             </button>
-            <span>公历选日期 · 农历作参考</span>
+            <span>{mode === "lunar" ? "按农历选日期 · 保存为对应公历" : "公历选日期 · 农历作参考"}</span>
             <button
               type="button"
               className="date-collapse"
