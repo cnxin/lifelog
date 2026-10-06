@@ -1,0 +1,775 @@
+{
+  "applicationId": "com.cnxin.lifelog.preview",
+  "label": "日子 · 测试版",
+  "versionName": "0.2.0-alpha.12-preview",
+  "versionCode": 147,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.SCHEDULE_EXACT_ALARM",
+    "android.permission.VIBRATE",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.WAKE_LOCK",
+    "android.permission.POST_NOTIFICATIONS",
+    "com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "sizeBytes": 4453837,
+  "sha256": "6aab106c4d4d87324c93fc69a638c73eea70a5c3598a65746f2660aaade7dd1c",
+  "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
+  "deviceTested": false,
+  "completedAt": "2026-10-06T12:10:36.615Z",
+  "phase": "K / alpha.12 release preparation",
+  "publication": {
+    "pushed": false,
+    "tagged": false,
+    "released": false,
+    "authorDeviceAcceptance": false,
+    "priorReleasesUntouched": true
+  },
+  "source": {
+    "branch": "codex/anniversary-lite",
+    "tapHighlightCommit": "14c49b8",
+    "featureCommits": [
+      "14c929d",
+      "3ba1458"
+    ],
+    "baseCommitBeforeReleasePreparation": "3ba145873c22e8d7a233444d59dd4850137034a8",
+    "releasePreparation": "This report, APK, version147 and documentation are included together in the K3 commit."
+  },
+  "capabilities": [
+    "Universal touch tap-highlight suppression (14c49b8).",
+    "Optional strict per-day HH:mm; absent inherits global time, JSON v1 preserved.",
+    "One schedule call with checked permission deciding isExactNotification; no automatic settings prompt.",
+    "Native ACTION_INSERT calendar editor only; no READ/WRITE_CALENDAR, no reminderMinutes extra, no automatic insertion on return."
+  ],
+  "assertionChanges": {
+    "K1": [
+      "Manifest accepts SCHEDULE_EXACT_ALARM; USE_EXACT_ALARM removal/rejection retained.",
+      "APK permission whitelist adds only SCHEDULE_EXACT_ALARM.",
+      "Exact scheduling flags match checkExactNotificationSetting: granted=true, denied=false.",
+      "Plan/global normalization accepts any strict HH:mm; reminder UI and inline time interactions/actual-time Bell labels updated within authorized scope."
+    ],
+    "K2": "No old assertions changed; new Node/JVM/native-Web UI coverage only.",
+    "K3": "No assertions changed."
+  },
+  "phases": [
+    {
+      "id": "K1",
+      "commit": "14c929d",
+      "gates": {
+        "completedAt": "2026-10-06T11:29:48.777Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 3 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 15891,
+            "result": "PASS",
+            "testsPassed": 95
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 15068,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 24847,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 438,
+            "axeAudits": 72,
+            "axeSourceInjections": 5,
+            "durationMs": 54462,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 21988,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 27933,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 585,
+            "axeAudits": 11,
+            "axeSourceInjections": 4,
+            "durationMs": 22007,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 9017,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 4167,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 28654,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 0,
+            "assertionsPassed": 349,
+            "axeAudits": 43,
+            "axeSourceInjections": 19,
+            "durationMs": 59371,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 20489,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 131039,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.455988888888889,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "android": "k1/android-final.log",
+      "androidLog": ".artifacts/phase-k/k1/android-final.log",
+      "androidTaskSummary": "249 actionable tasks: 24 executed, 16 from cache, 209 up-to-date",
+      "jvmTask": "> Task :app:testDebugUnitTest UP-TO-DATE"
+    },
+    {
+      "id": "K2",
+      "commit": "3ba1458",
+      "gates": {
+        "completedAt": "2026-10-06T11:56:32.878Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 1 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9925,
+            "result": "PASS",
+            "testsPassed": 99
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9596,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 13287,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 534,
+            "axeAudits": 92,
+            "axeSourceInjections": 6,
+            "durationMs": 34509,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 5893,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 14847,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 585,
+            "axeAudits": 11,
+            "axeSourceInjections": 4,
+            "durationMs": 8947,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 3508,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 2856,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11341,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 0,
+            "assertionsPassed": 349,
+            "axeAudits": 43,
+            "axeSourceInjections": 19,
+            "durationMs": 42217,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 18966,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 169530,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.8836666666666666,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "android": "k2/android-final.log",
+      "androidLog": ".artifacts/phase-k/k2/android-final.log",
+      "androidTaskSummary": "252 actionable tasks: 27 executed, 16 from cache, 209 up-to-date",
+      "jvmTask": "> Task :app:testDebugUnitTest"
+    },
+    {
+      "id": "K3",
+      "commit": null,
+      "gates": {
+        "completedAt": "2026-10-06T12:05:56.380Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 1 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 8840,
+            "result": "PASS",
+            "testsPassed": 99
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7356,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 12557,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 534,
+            "axeAudits": 92,
+            "axeSourceInjections": 6,
+            "durationMs": 30037,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 5776,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 14614,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 585,
+            "axeAudits": 11,
+            "axeSourceInjections": 4,
+            "durationMs": 9814,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 242,
+            "axeAudits": 3,
+            "axeSourceInjections": 1,
+            "durationMs": 3975,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 3048,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 11218,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 0,
+            "assertionsPassed": 349,
+            "axeAudits": 43,
+            "axeSourceInjections": 19,
+            "durationMs": 42784,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 9863,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 152789,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.6976555555555555,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      },
+      "android": "k3/android.log",
+      "androidLog": ".artifacts/phase-k/k3/android.log",
+      "androidTaskSummary": "252 actionable tasks: 37 executed, 16 from cache, 199 up-to-date",
+      "jvmTask": "> Task :app:testDebugUnitTest"
+    }
+  ],
+  "baseline": {
+    "snapshots": 28,
+    "changed": [],
+    "byteIdentical": true,
+    "before": {
+      "light/1024x768-calendar.json": "c1d5fd02a0c3185d8674e549ad6ed4ba226c1660c8374641b3822541bbced1ea",
+      "light/1024x768-data.json": "9b135670a6297fe0acb988cd0a6b1d99bf070e310ecce6ac08ab72a63204c10d",
+      "light/1024x768-detail.json": "9cb70caa6b6f99ba7c4cf7f67a747c713958ef4dd704d25c3f35c4284b47468b",
+      "light/1024x768-editor-date.json": "6f9b24cf944c9b232c12a068ecb9788b58d924f31be976db7a47a5d5e374e7f1",
+      "light/1024x768-home.json": "5b2a8f6c8a75a383120a84ac5234c853750084c33af03aeb1b7c50be937676ba",
+      "light/1024x768-search.json": "8ddb92dbdd29a55969f5f0cfc83fac20420dd0a96f68ba09354d7d9c96946e8d",
+      "light/1024x768-sort.json": "4a89468f63465f5c1b639e369dd5897edb5f3acd5ea8b4648c55cfef36f0e5fa",
+      "light/360x740-calendar.json": "ed5992aede83d34bb27151c888f7abb4da0fd6fa75a9d5a5f0788bb04899f065",
+      "light/360x740-data.json": "2a68e14dd9769a4d74035676fcbba3a333cb367051b3d2ef71b409623764b9b6",
+      "light/360x740-detail.json": "e62a3431af2c8acadff4d989fb9c836b61dafc32ab4c2c1975ad76c0a892bfba",
+      "light/360x740-editor-date.json": "a09ae3a3a67652abb644b3380e435b02799c912317cc01778db52511a33adc7d",
+      "light/360x740-home.json": "96c0fd7dfb1fbebf004b7429956430f64fa5b8282ec6454735e17ea0d8d059e8",
+      "light/360x740-search.json": "9b961692555d4d487610924deb7a08877809f837653e792c1b4898ca9b29f734",
+      "light/360x740-sort.json": "b4bb673ad3e2498c34857c84b59fc6e6aec1f96f93a7ddbd405a09a7ec5da373",
+      "dark/1024x768-calendar.json": "466c5271f1351b533d37ac692d52c0d1b0740558f3bf74bebd5c9c30145e0b2f",
+      "dark/1024x768-data.json": "068964a83a62fc35c367baf33b3908f1159c682aaf3819116ab1eb871397f11e",
+      "dark/1024x768-detail.json": "217023ee48617e9e4f2bc19db414a52d03f2b7ba0f9dc0fb73f8fd7e372362ed",
+      "dark/1024x768-editor-date.json": "dc6780d0b6d9865c6d54365ac87108c451e171f9e5884b8ab0e1ee2189e5c625",
+      "dark/1024x768-home.json": "54555ff173413dffe3e8bdb1212ac602b48fedf6d389f77ea7f4cf72424a6a60",
+      "dark/1024x768-search.json": "1a5f139de641a05398e2c84889198b0a81c2b8822026abf0ab359571fe4085fa",
+      "dark/1024x768-sort.json": "749cb52d7bdb21b2bc7fc94a65c825b9c5268cea33f8ec798c511949851f7ed8",
+      "dark/360x740-calendar.json": "134e0dd8a466001a7da242e3b0fd1df25a43642376399bdaec78a7760309dc21",
+      "dark/360x740-data.json": "1b4ed3531da175929b7f3bf9f2bb653258321a8bee229136dd8bcb36e2c93560",
+      "dark/360x740-detail.json": "f931466817e78422638032762875220fb89e8b44fbced019264fbe3bd7d856bc",
+      "dark/360x740-editor-date.json": "985edc778b378f9a5a3e0e481bc201b4882195b1edb39316a4a11fd6de0fc73b",
+      "dark/360x740-home.json": "ba9a36d2ca8c6c309b3e353a948656e5909ad46549f485027331e79934ad5d48",
+      "dark/360x740-search.json": "5f4eeea3e871c855eece4502de854b23f10566217fcaf839e9b326edfdd550cf",
+      "dark/360x740-sort.json": "a32d88e1ffac5086d84627a9015354fe659118e2a1298148b5b3aa4349584252"
+    },
+    "after": {
+      "light/1024x768-calendar.json": "c1d5fd02a0c3185d8674e549ad6ed4ba226c1660c8374641b3822541bbced1ea",
+      "light/1024x768-data.json": "9b135670a6297fe0acb988cd0a6b1d99bf070e310ecce6ac08ab72a63204c10d",
+      "light/1024x768-detail.json": "9cb70caa6b6f99ba7c4cf7f67a747c713958ef4dd704d25c3f35c4284b47468b",
+      "light/1024x768-editor-date.json": "6f9b24cf944c9b232c12a068ecb9788b58d924f31be976db7a47a5d5e374e7f1",
+      "light/1024x768-home.json": "5b2a8f6c8a75a383120a84ac5234c853750084c33af03aeb1b7c50be937676ba",
+      "light/1024x768-search.json": "8ddb92dbdd29a55969f5f0cfc83fac20420dd0a96f68ba09354d7d9c96946e8d",
+      "light/1024x768-sort.json": "4a89468f63465f5c1b639e369dd5897edb5f3acd5ea8b4648c55cfef36f0e5fa",
+      "light/360x740-calendar.json": "ed5992aede83d34bb27151c888f7abb4da0fd6fa75a9d5a5f0788bb04899f065",
+      "light/360x740-data.json": "2a68e14dd9769a4d74035676fcbba3a333cb367051b3d2ef71b409623764b9b6",
+      "light/360x740-detail.json": "e62a3431af2c8acadff4d989fb9c836b61dafc32ab4c2c1975ad76c0a892bfba",
+      "light/360x740-editor-date.json": "a09ae3a3a67652abb644b3380e435b02799c912317cc01778db52511a33adc7d",
+      "light/360x740-home.json": "96c0fd7dfb1fbebf004b7429956430f64fa5b8282ec6454735e17ea0d8d059e8",
+      "light/360x740-search.json": "9b961692555d4d487610924deb7a08877809f837653e792c1b4898ca9b29f734",
+      "light/360x740-sort.json": "b4bb673ad3e2498c34857c84b59fc6e6aec1f96f93a7ddbd405a09a7ec5da373",
+      "dark/1024x768-calendar.json": "466c5271f1351b533d37ac692d52c0d1b0740558f3bf74bebd5c9c30145e0b2f",
+      "dark/1024x768-data.json": "068964a83a62fc35c367baf33b3908f1159c682aaf3819116ab1eb871397f11e",
+      "dark/1024x768-detail.json": "217023ee48617e9e4f2bc19db414a52d03f2b7ba0f9dc0fb73f8fd7e372362ed",
+      "dark/1024x768-editor-date.json": "dc6780d0b6d9865c6d54365ac87108c451e171f9e5884b8ab0e1ee2189e5c625",
+      "dark/1024x768-home.json": "54555ff173413dffe3e8bdb1212ac602b48fedf6d389f77ea7f4cf72424a6a60",
+      "dark/1024x768-search.json": "1a5f139de641a05398e2c84889198b0a81c2b8822026abf0ab359571fe4085fa",
+      "dark/1024x768-sort.json": "749cb52d7bdb21b2bc7fc94a65c825b9c5268cea33f8ec798c511949851f7ed8",
+      "dark/360x740-calendar.json": "134e0dd8a466001a7da242e3b0fd1df25a43642376399bdaec78a7760309dc21",
+      "dark/360x740-data.json": "1b4ed3531da175929b7f3bf9f2bb653258321a8bee229136dd8bcb36e2c93560",
+      "dark/360x740-detail.json": "f931466817e78422638032762875220fb89e8b44fbced019264fbe3bd7d856bc",
+      "dark/360x740-editor-date.json": "985edc778b378f9a5a3e0e481bc201b4882195b1edb39316a4a11fd6de0fc73b",
+      "dark/360x740-home.json": "ba9a36d2ca8c6c309b3e353a948656e5909ad46549f485027331e79934ad5d48",
+      "dark/360x740-search.json": "5f4eeea3e871c855eece4502de854b23f10566217fcaf839e9b326edfdd550cf",
+      "dark/360x740-sort.json": "a32d88e1ffac5086d84627a9015354fe659118e2a1298148b5b3aa4349584252"
+    },
+    "comparatorAndNormalizationUnchanged": true,
+    "exclusionsAdded": false,
+    "refreshedBy": [
+      "BASE_URL=http://127.0.0.1:5189 npm run baseline:capture",
+      "BASE_URL=http://127.0.0.1:5189 npm run baseline:capture -- --scheme dark"
+    ],
+    "verification": "BASE_URL=http://127.0.0.1:5189 npm run baseline:verify: 14 light +14 dark PASS",
+    "finalDiff": {
+      "light": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+      "dark": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n"
+    }
+  },
+  "android": {
+    "command": "npm run android:preview",
+    "result": "PASS",
+    "lint": {
+      "errors": 0,
+      "warnings": 29,
+      "note": "The additional NewerVersionAvailable warning is for the pinned test-only Robolectric4.14.1; no lint suppression."
+    },
+    "jvm": {
+      "suites": [
+        {
+          "name": "com.cnxin.lifelog.CalendarInsertIntentTest",
+          "tests": 5,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "timestamp": "2026-10-06T12:07:00.279Z"
+        },
+        {
+          "name": "com.cnxin.lifelog.widget.DayWidgetTest",
+          "tests": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "timestamp": "2026-10-06T12:07:03.937Z"
+        },
+        {
+          "name": "com.getcapacitor.myapp.ExampleUnitTest",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "timestamp": "2026-10-06T12:07:03.955Z"
+        }
+      ],
+      "result": "PASS",
+      "cacheStatus": "> Task :app:testDebugUnitTest",
+      "firstK2Execution": "android-attempt2.log actually ran15/15 tests; five are Robolectric real Intent tests. Cached final results are not claimed as newly executed.",
+      "finalTaskExecuted": true,
+      "note": "K3 actually executed all 15 JVM tests, including five real Intent tests. K1/K2 final cached tasks are distinguished in phase logs."
+    },
+    "calendarQueriesVerified": true,
+    "productionAssets": {
+      "apk": ".artifacts/lifelog-days-0.2.0-alpha.12-preview.apk",
+      "matched": true,
+      "files": [
+        {
+          "file": "dist/assets/esm-BDtmZsAd.js",
+          "bytes": 453,
+          "sha256": "e8aab69952e2deb0aab186943e696b8a1ce8a650ae40254ad78090150a4e64b5"
+        },
+        {
+          "file": "dist/assets/esm-Bkaoq0CT.js",
+          "bytes": 674,
+          "sha256": "36bae8ed2a43b36a56fec6a99a0fdb2cd0730f0b799f217092ad6b36d621bf94"
+        },
+        {
+          "file": "dist/assets/esm-OVMjnWt_.js",
+          "bytes": 707,
+          "sha256": "84c4c3721bc0f9d4eb37953279aa4d9bb4aba96d3f1981233ab77583716a3d73"
+        },
+        {
+          "file": "dist/assets/index-Cd3RHNQa.css",
+          "bytes": 60538,
+          "sha256": "1ac9d18eaf9e24d4dece33df7a1fb5e005ddf310133320e737b96c2f4163cb78"
+        },
+        {
+          "file": "dist/assets/index-JvM5JPHI.js",
+          "bytes": 99546,
+          "sha256": "42aa4cdc0bc9639b51a47dc5be903b7b0d5e13b35b88fa16bce390e24d58d2fc"
+        },
+        {
+          "file": "dist/assets/lunar-rFT-dEts.js",
+          "bytes": 305954,
+          "sha256": "44324d5f8f0cf501d21334ea98b8571db35f2d1180ea30e3d1f862958fefc090"
+        },
+        {
+          "file": "dist/assets/react-DxbjzT7Z.js",
+          "bytes": 139936,
+          "sha256": "db31308077b1527a2700a98c242d136a031bf7fc7e6426d45b1b3a864794b7de"
+        },
+        {
+          "file": "dist/assets/rolldown-runtime-Bh1tDfsg.js",
+          "bytes": 567,
+          "sha256": "1b13387cb23dc39bf70e31677c21f6db5cad3377b96f286b6ee444496e5bfea7"
+        },
+        {
+          "file": "dist/assets/storage-CLLSMDTL.js",
+          "bytes": 95158,
+          "sha256": "729f08770389ee4f90c2c8c1d21b53956730a2450a8c9c8fbba6ee05ee608b42"
+        },
+        {
+          "file": "dist/assets/web-CQGKLIfv.js",
+          "bytes": 844,
+          "sha256": "1403c2d084423871ed43f2c99df6a7892e2f31b4fe3d179e0f63688a5f8e2055"
+        },
+        {
+          "file": "dist/assets/web-CcXrNsev.js",
+          "bytes": 4440,
+          "sha256": "30b7798ddb78905e172c3e38d8e701fc2c606acc7f13439af5fc01340da6abdc"
+        },
+        {
+          "file": "dist/assets/web-Ds-anP4l.js",
+          "bytes": 950,
+          "sha256": "ac666cc6554d31bf9873f7dd148ac73e6431cdd899258dce53ec06fb40430383"
+        },
+        {
+          "file": "dist/icon-180.png",
+          "bytes": 5659,
+          "sha256": "c07a7d6c0dbf614df58f0d0eb8e214491c4ebe2b423427094559b83386a78478"
+        },
+        {
+          "file": "dist/icon-192.png",
+          "bytes": 6462,
+          "sha256": "80e2227cabad2152c2d440c796aa2aefd05155369ded7ba783fb19e49254aad3"
+        },
+        {
+          "file": "dist/icon-512.png",
+          "bytes": 30464,
+          "sha256": "1a7e4055d4e9c7e976b075e10e4bd43110f317439c7a3930bdda10dfd8d18a9b"
+        },
+        {
+          "file": "dist/icon.svg",
+          "bytes": 1282,
+          "sha256": "34cf2d2bfb1722c373b621a1e90d1a976b7cf872011a709e41bfab226cfed70a"
+        },
+        {
+          "file": "dist/index.html",
+          "bytes": 1639,
+          "sha256": "dfbca48b9d14c019fe8d1388176d6167070474a0fa260cf6aed7b0f4e9494356"
+        },
+        {
+          "file": "dist/ingot.png",
+          "bytes": 8194,
+          "sha256": "d4b8ecca80b5cd5c0575268905541856e1750fabffee705131ef91f7d475466e"
+        },
+        {
+          "file": "dist/manifest.webmanifest",
+          "bytes": 780,
+          "sha256": "a37ed7d7d6cb6f60984522bdff2ee891138903e8c336f50601e1fcc1e4054dbc"
+        },
+        {
+          "file": "dist/sw.js",
+          "bytes": 3210,
+          "sha256": "430ba77acd8a09162c78c224df3a0a0a53e7d39da6758f8a80de6bd4bf0d42d6"
+        }
+      ]
+    }
+  },
+  "failureEvidence": [
+    {
+      "file": ".artifacts/k1-unit-initial.log",
+      "summary": "Initial old four-slot expectation and broken system git shim; corrected authorized expectation and PATH, no comparator changes."
+    },
+    {
+      "file": ".artifacts/phase-k/k1/gates-final/controls.log",
+      "summary": "Unchanged retained-hover simulation failed once; full rerun passed without assertion/product adjustment for that failure."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/android-attempt1.log",
+      "summary": "Non-public CONTENT_TYPE constant draft did not compile; replaced with the standard literal MIME."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/gates-attempt1/ui-polish.log",
+      "summary": "New test helper used the hitTarget API incorrectly; corrected the helper usage."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/calendar-ui-targeted.log",
+      "summary": "Broad dev mock intercepted app haptics source; narrowed to the plugin module."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/calendar-ui-targeted2.log",
+      "summary": "Duplicate hero/card accessible name; explicitly scope the new test to day-grid."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/calendar-ui-targeted3.log",
+      "summary": "New haptic mock omitted enums; export the real expected enum values, retaining the light-haptic assertion."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/calendar-ui-final-targeted.log",
+      "summary": "New overflow helper assumed one dialog; check every stacked open dialog."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/gates-final/offline.log",
+      "summary": "Native cleanup initial-page load timeout; logs retained, no assertion change."
+    },
+    {
+      "file": ".artifacts/phase-k/k2/gates-confirm/dark.log",
+      "summary": "Dark live-switch underlying-page scroll geometry mismatch; logs retained, no assertion, comparator or baseline adjustment."
+    }
+  ],
+  "environment": {
+    "adbDevices": "List of devices attached\n\n",
+    "deviceModel": null,
+    "androidVersion": null,
+    "webViewProvider": null,
+    "webViewVersion": null,
+    "reason": "No attached ADB devices; the author has not supplied phaseK device information or acceptance."
+  },
+  "notDeviceVerified": [
+    "Minute delivery under granted/denied exact permission and battery/idle modes.",
+    "Android12+ settings UI and actual grant/deny; actual pre12 OS behavior.",
+    "Real calendar app handler discovery, saving/canceling, RRULE and local all-day timezone interpretation.",
+    "No-calendar-app device path; actual haptics, soft keyboard, WebView and sheet behavior.",
+    "Background/reboot/widget scheduling guarantees or formal original-signature upgrade."
+  ],
+  "priorAcceptedAlpha11Apk": {
+    "sha256": "f9c8615afa50c154c4fc2ee57b15f48d5b8ce03152ef1b35d802f71cac172300",
+    "unchanged": true
+  },
+  "artifactGenerationNote": "First report-generation helper invoked the broken system git shim and stopped before report/checksum creation. Re-executed with the configured fallback Git; existing new APK was byte-compared and reused, not replaced. Gates/product builds were already passing and unchanged."
+}

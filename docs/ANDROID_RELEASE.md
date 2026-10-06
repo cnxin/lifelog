@@ -1,5 +1,25 @@
 # 日子：Android 测试与升级验收
 
+## alpha.12 / 阶段 K — 本地发布准备，待作者真机验收
+
+- `0.2.0-alpha.12-preview`，versionCode **147**，独立包名 `com.cnxin.lifelog.preview`，沿用测试签名；不改 legacy，不用于原正式包覆盖升级。基于 tap-highlight 修复 `14c49b8`，K1 `14c929d`，K2 `3ba1458`，再一个发布准备提交；作者验收前不推送、不打 tag、不发 Release，之前的 Release 不改不删。
+- 当前权限清单：`INTERNET`、`VIBRATE`、`POST_NOTIFICATIONS`、`RECEIVE_BOOT_COMPLETED`、插件自身 `WAKE_LOCK`、**`SCHEDULE_EXACT_ALARM`**、本应用签名级 `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`。不申请 `USE_EXACT_ALARM`、`READ_CALENDAR` 或 `WRITE_CALENDAR`。下方 alpha.5 / alpha.6 的非精确权限清单是历史 APK 记录，不适用于本版。
+- 作者明确推翻阶段 E 的「不用精确闹钟」决定。Android 12+ 只声明 `SCHEDULE_EXACT_ALARM`，不加 `maxSdkVersion` 限制；检查使用插件的 `checkExactNotificationSetting()`，Android <12 由原生实现返回 granted。保留唯一一套 `schedule()`：获准时 `isExactNotification:true`，拒绝 / 检查失败时 false，防止当前插件自动打开授权页。编辑器显示「系统尚未允许精确提醒，当前会有几分钟误差 · 去开启」，**只有用户点击此提示才调用 `changeExactNotificationSetting()`**；冷启动 / 自动重排不打开设置。`appStateChange` 回到 active 后重新检查并 resync，原排程在授权后转为精确。`allowWhileIdle:false`、最多 64 条、年度只排下一次的既有策略不变；分钟级设置不等于送达保证，未获准、休眠 / 省电等仍可能延后。
+- 每条记录新增可选 `reminderTime`（严格 `HH:mm`），缺省继承全局时间；旧备份仍兼容，新备份包含单独设置的时间，备份 format/version 仍为 1。全局时间只留在本机。编辑器与数据面板共用内联小时 / 五分钟选项 / 精确分钟数字输入，不用原生 `input type="time"`。开关与提前天数仍解耦，允许全部取消并保存为不提醒。
+- 「加入日历」仅在 Android 详情页显示：`CalendarBridge.insert` 用 `ACTION_INSERT` + `CalendarContract.Events.CONTENT_URI` 打开系统新建事件页，不写 ContentProvider，不申请日历权限。范围限定的 `<queries>` 只声明事件插入处理器，避免包可见性使 `resolveActivity` 误报。无可用 app 时返回 `no-calendar-app` 并 toast；打开编辑器不代表保存成功，回到 LifeLog 不重复加入或自动改记录。
+- 日历事件为全天，开始 / 结束分别取当地日期零点 / 次日当地零点，跨夏令时按日递增而不是固定加 24 小时。公历年度重复用下一次日期与 `FREQ=YEARLY`；农历用下一次公历日期、不传 RRULE，描述 / 按钮下方注明每年需重新加入；不重复用原记录日期。备注附「来自 LifeLog · 日子」。**不传提醒分钟数：ACTION_INSERT 没有标准的提醒 extra，由日历 app 使用自己的默认值。** 实际日历 app 对全天 / RRULE 的解释须真机确认。
+- 门禁仅按作者授权调整 K1 的 Manifest / APK 权限与精确标志检查、提醒区 / 时间控件 / planReminders 相关断言；K2 没改任何旧断言。新增分钟 / 备份 / 拒绝不弹设置 / 授权重排、三种日历 payload、真实 Intent extras 的 JVM 与 native/Web UI 检查。Robolectric 4.14.1 仅是测试依赖，不进运行包；lint 的新版提示保留，不压制。验证日志保留失败轮次，不把重跑通过覆盖为首次通过。
+- 阶段末按 I/J 规则重新 `baseline:capture`（浅 / 深色各 14 个状态），只保留一套基准；功能区是 native-only，`baseline:diff` 必须仍为浅 / 深色零差异，比较器、归一化、44px、axe 和既有行为断言不放宽，不加 data-* 排除标记。具体命令、差异清单、capture 前后哈希和实际结果见本版验证报告。
+- 本地交付为 `downloads/lifelog-days-0.2.0-alpha.12-preview.apk`，同名 `.apk.sha256` / `.apk.json`；报告记录完整门禁、Android 构建、lint / JVM 的实际执行与缓存区别、身份 / 合并权限 / 签名、Web 资产逐字节核对与 SHA-256。**作者尚未确认阶段 K 真机验收；机型、Android 版本、WebView 提供方 / 版本均待作者提供，不猜填。** 本机没有执行设备安装验收，不能把浏览器模拟或 Robolectric 当作真机测试。
+
+### 作者真机验收单（K，待执行）
+
+1. 新增 / 编辑设置 `10:37` 等非五分钟时间；缺省继承、全局改时间、用全局时间、空提前天数保存、旧 / 新 JSON 导入导出都正常。
+2. Android 12+ 未允许精确提醒时，冷启动 / 自动重排不打开设置；提醒区明确说明，只有点「去开启」才进入系统设置。拒绝后仍排非精确；授权并返回后重排为精确，实际送达需记录通知权限 / 省电条件。
+3. 日历 app 接收标题、备注 / 来源、当地全天日期与次日结束：公历年度重复规则、农历单次 / 每年重新加入说明、过去的不重复日期均正确；取消不会显示成功加入，也不改 LifeLog 记录。
+4. 无日历 app 的设备显示明确 toast；有处理器的设备不会因包可见性误报。返回 LifeLog 不再加入一次。
+5. 回归触屏点按、提醒开关、顶部安全区、返回键 / 拖拽 sheet、深浅切换、农历录入、小组件；反馈时提供机型 / Android / WebView 提供方及具体版本。
+
 ## alpha.11 / 阶段 J 深色模式 — 作者真机验收通过，2026-10-06
 
 - `0.2.0-alpha.11-preview`，versionCode 146，独立包名 `com.cnxin.lifelog.preview`，沿用测试签名。不新增权限，不改数据 / 备份格式，不改 legacy；只跟随系统深色模式，不加手动切换。
