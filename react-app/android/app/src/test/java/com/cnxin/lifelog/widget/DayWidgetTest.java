@@ -51,4 +51,12 @@ public class DayWidgetTest {
     @Test(expected = ParseException.class) public void strictDatesRejectOverflow() throws Exception {
         DayWidgetContent.dayDifference("2026-09-30", "2026-02-30");
     }
+    @Test public void optionalYearsLabelKeepsOldSnapshotsCompatible() throws Exception {
+        assertEquals("", DayWidgetContent.fromPayload(payload("2026-10-03"), "2026-09-30").yearsLabel);
+        JSONObject json = new JSONObject(payload("2026-10-03"));
+        json.getJSONObject("featured").put("yearsLabel", "即将 6 周年");
+        assertEquals("即将 6 周年", DayWidgetContent.fromPayload(json.toString(), "2026-09-30").yearsLabel);
+        json.getJSONObject("featured").put("yearsLabel", JSONObject.NULL);
+        assertEquals("", DayWidgetContent.fromPayload(json.toString(), "2026-09-30").yearsLabel);
+    }
 }

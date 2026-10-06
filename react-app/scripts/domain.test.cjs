@@ -68,9 +68,57 @@ test("past dates show elapsed days; future dates show countdown", () => {
     count: 1,
     label: "已经",
     elapsed: 1,
+    years: null,
   });
   assert.equal(dayStatus(day(), "2024-05-19").label, "还有");
   assert.equal(dayStatus(day(), "2024-05-20").label, "就是今天");
+});
+// Lunar reference/expected dates come from the installed lunar-javascript
+// library, not a handwritten lunar calendar or Gregorian-year approximation.
+const { yearsLabel } = require("./load-ts.cjs").loadTs("src/dayMeta.ts");
+test("solar birthday years follow the next occurrence across a year boundary", () => {
+  const d = day({ date: "1990-12-31", category: "生日", repeat: "yearly" });
+  const upcoming = dayStatus(d, "2026-12-30");
+  assert.equal(upcoming.years, 36);
+  assert.equal(yearsLabel(d, upcoming), "即将 36 岁");
+  assert.equal(dayStatus(d, "2027-01-01").years, 37);
+});
+test("lunar birthday years use lunar years on both ends", () => {
+  const d = day({ date: Lunar.fromYmd(2024, 12, 1).getSolar().toYmd(),
+    category: "生日", calendar: "lunar", repeat: "yearly" });
+  const status = dayStatus(d, "2026-01-01");
+  assert.equal(status.next, Lunar.fromYmd(2025, 12, 1).getSolar().toYmd());
+  assert.equal(status.years, 1, "Gregorian 2026 minus 2024 would incorrectly return 2");
+  assert.equal(yearsLabel(d, status), "即将 1 岁");
+});
+test("today uses birthday and anniversary wording with completed years", () => {
+  for (const [category, expected] of [["生日", "6 岁生日"], ["纪念日", "6 周年"], ["倒数日", "第 6 次"]]) {
+    const d = day({ date: "2020-10-05", repeat: "yearly", category });
+    const status = dayStatus(d, "2026-10-05");
+    assert.equal(status.delta, 0);
+    assert.equal(status.years, 6);
+    assert.equal(yearsLabel(d, status), expected);
+  }
+});
+test("first occurrence in the current or a future year has no years label", () => {
+  for (const date of ["2026-10-10", "2028-10-10"]) {
+    const d = day({ date, repeat: "yearly" });
+    const status = dayStatus(d, "2026-10-05");
+    assert.equal(status.years, null);
+    assert.equal(yearsLabel(d, status), "");
+  }
+});
+test("non-repeating records never have years even when the original date is old", () => {
+  const d = day({ date: "1990-10-05" });
+  const status = dayStatus(d, "2026-10-05");
+  assert.equal(status.years, null);
+  assert.equal(yearsLabel(d, status), "");
+});
+test("upcoming anniversary and repeating countdown share the central copy helper", () => {
+  for (const [category, expected] of [["纪念日", "即将 6 周年"], ["倒数日", "第 6 次"]]) {
+    const d = day({ date: "2020-10-10", repeat: "yearly", category });
+    assert.equal(yearsLabel(d, dayStatus(d, "2026-10-05")), expected);
+  }
 });
 test("annual rollover includes today", () => {
   const d = day({ repeat: "yearly" });

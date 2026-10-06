@@ -23,6 +23,15 @@ test('Web widget bridge is a no-op with a null launch ID',async()=>{
   const {WidgetBridge}=loadTs('src/widgetBridge.ts',{'@capacitor/core':{registerPlugin:(name,impl)=>{assert.equal(name,'WidgetBridge');implementation=impl;return impl.web()}}});
   assert.ok(implementation.web);await WidgetBridge.update({json:'{}'});assert.deepEqual(await WidgetBridge.consumeLaunchDayId(),{dayId:null});
 });
+test('widget yearsLabel is derived from the same occurrence and copy as the app',()=>{
+  const d=day({date:'2020-10-10',repeat:'yearly'});
+  const upcoming=buildWidgetPayload([d],'2026-10-05');
+  assert.equal(upcoming.featured.yearsLabel,'即将 6 周年');
+  assert.equal(upcoming.list[0].yearsLabel,upcoming.featured.yearsLabel);
+  assert.equal(buildWidgetPayload([d],'2026-10-10').featured.yearsLabel,'6 周年');
+  assert.equal(buildWidgetPayload([day()],'2026-10-05').featured.yearsLabel,'');
+  assert.equal(buildWidgetPayload([day({date:'2026-10-10',repeat:'yearly'})],'2026-10-05').featured.yearsLabel,'');
+});
 test('cold widget launch is captured by the current BridgeActivity initial-intent path only once',()=>{
   const fs=require('node:fs');
   const base=fs.readFileSync('node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/BridgeActivity.java','utf8');

@@ -53,7 +53,7 @@ async function fixtureMiddleware(vite) {
     // Keep optimizer URLs below /node_modules/, one of the fixture routes.
     cacheDir: path.join(root, 'node_modules/.vite/gate-fixtures'),
     server: { middlewareMode: true, hmr: false, watch: null },
-    optimizeDeps: { entries: [], noDiscovery: true, include: ['dexie', 'lunar-javascript', '@capacitor/core'] },
+    optimizeDeps: { entries: [], noDiscovery: true, include: ['dexie', 'lunar-javascript', '@capacitor/core', 'react', 'lucide-react'] },
   });
   const assets = await fs.readdir(path.join(root, 'dist/assets'));
   const imports = {};

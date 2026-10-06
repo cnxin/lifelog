@@ -44,6 +44,8 @@ public class DayWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_prefix, day.prefix);
         views.setTextViewText(R.id.widget_count, day.count);
         views.setTextViewText(R.id.widget_suffix, day.suffix);
+        views.setTextViewText(R.id.widget_years, day.yearsLabel);
+        views.setViewVisibility(R.id.widget_years, day.yearsLabel.isEmpty() ? View.GONE : View.VISIBLE);
         views.setTextViewText(R.id.widget_date, day.date);
         views.setViewVisibility(R.id.widget_number_row, day.empty ? View.GONE : View.VISIBLE);
         views.setViewVisibility(R.id.widget_count, day.today ? View.GONE : View.VISIBLE);
@@ -54,7 +56,8 @@ public class DayWidgetProvider extends AppWidgetProvider {
         float space = Math.max(24, width - 24 - 44 * scale);
         float countSize = Math.max(12, Math.min(32, space / (Math.max(1, day.count.length()) * .65f * scale)));
         views.setTextViewTextSize(R.id.widget_count, TypedValue.COMPLEX_UNIT_SP, countSize);
-        views.setContentDescription(R.id.widget_root, day.empty ? day.title : day.title + "，" + day.prefix + day.count + day.suffix + "，" + day.date);
+        views.setContentDescription(R.id.widget_root, day.empty ? day.title : day.title + "，" + day.prefix + day.count + day.suffix
+            + (day.yearsLabel.isEmpty() ? "" : "，" + day.yearsLabel) + "，" + day.date);
         Intent launch = new Intent(context, MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (!day.empty && !day.id.isEmpty()) launch.putExtra("day_id", day.id);

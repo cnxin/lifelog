@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Pin, ChevronRight } from "lucide-react";
 import { dayStatus, lunarLabel, type Day } from "../domain";
-import { tones, formatDate } from "../dayMeta";
+import { tones, formatDate, yearsLabel } from "../dayMeta";
 import { dayTransitionName } from "../listTransition";
 import ReminderBell from "../ReminderBell";
 import Icon from "./CategoryIcon";
@@ -23,6 +23,7 @@ export default function DayCard({
   setDetailId: (id: string) => void;
 }) {
   const item = dayStatus(day, today);
+  const years = yearsLabel(day, item);
   return (
     <li
       className={`day-card ${tones[day.category]}`}
@@ -70,6 +71,7 @@ export default function DayCard({
                 {day.calendar === "lunar" ? lunarLabel(day.date) : "每年重复"}
               </span>
             )}
+            {years && <span className="years-label">{years}</span>}
           </p>
         </div>
         <div className="card-count">

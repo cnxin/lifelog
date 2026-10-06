@@ -21,6 +21,7 @@
     "test:ui": "node scripts/ui-polish.cjs",
     "baseline:capture": "node scripts/baseline.cjs --capture",
     "baseline:verify": "node scripts/baseline.cjs",
+    "baseline:diff": "node scripts/baseline-diff.cjs",
     "gates": "node scripts/gates.cjs",
     "css:coverage": "node scripts/css-coverage.cjs"
   },

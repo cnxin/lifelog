@@ -13,16 +13,16 @@ import org.json.JSONObject;
 
 /** Calendar-only presentation logic; no Android API or lunar calculation. */
 public final class DayWidgetContent {
-    public final String id, title, category, prefix, count, suffix, date;
+    public final String id, title, category, prefix, count, suffix, date, yearsLabel;
     public final boolean empty, today;
     private DayWidgetContent(String id, String title, String category, String prefix,
-            String count, String suffix, String date, boolean empty, boolean today) {
+            String count, String suffix, String date, String yearsLabel, boolean empty, boolean today) {
         this.id = id; this.title = title; this.category = category; this.prefix = prefix;
-        this.count = count; this.suffix = suffix; this.date = date;
+        this.count = count; this.suffix = suffix; this.date = date; this.yearsLabel = yearsLabel;
         this.empty = empty; this.today = today;
     }
     private static DayWidgetContent empty() {
-        return new DayWidgetContent("", "记下第一个日子", "倒数日", "", "", "", "点击打开日子", true, false);
+        return new DayWidgetContent("", "记下第一个日子", "倒数日", "", "", "", "点击打开日子", "", true, false);
     }
     public static DayWidgetContent fromPayload(String json, String localToday) {
         if (json == null) return empty();
@@ -36,7 +36,8 @@ public final class DayWidgetContent {
             return new DayWidgetContent(day.optString("id"), day.optString("title"),
                 day.optString("category", "纪念日"), delta == 0 ? "就是今天" : delta > 0 ? "还有" : "已经",
                 delta == 0 ? "" : NumberFormat.getIntegerInstance().format(Math.abs(delta)),
-                delta == 0 ? "" : "天", next.replace('-', '.'), false, delta == 0);
+                delta == 0 ? "" : "天", next.replace('-', '.'),
+                day.opt("yearsLabel") instanceof String ? day.optString("yearsLabel") : "", false, delta == 0);
         } catch (JSONException | ParseException error) {
             return empty();
         }

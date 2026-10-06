@@ -84,6 +84,17 @@
   color: #636d5d;
   margin-top: 7px;
 }
+.card-date .years-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--green);
+  overflow-wrap: anywhere;
+}
 .card-count {
   min-height: 86px;
   display: flex;

@@ -10,6 +10,7 @@ const fs = require("node:fs/promises");
   const independentChecks = Promise.allSettled([
     require('./reminders-ui.cjs').checkReminderUI(browser),
     require('./celebrate-ui.cjs').checkCelebrationUI(browser),
+    require('./years-ui.cjs').checkYearsUI(browser),
   ]);
   const page = await browser.newPage({
     viewport: { width: 390, height: 1000 },

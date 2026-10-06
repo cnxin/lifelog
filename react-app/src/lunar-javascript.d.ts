@@ -8,6 +8,7 @@ declare module "lunar-javascript" {
   export class Lunar {
     static fromYmd(year: number, month: number, day: number): Lunar;
     getSolar(): Solar;
+    getYear(): number;
     getYearInGanZhi(): string;
     getMonthInGanZhi(): string;
     getDayInGanZhi(): string;

@@ -1,4 +1,4 @@
-// Immutable alpha.8 evidence. Capture is explicit; verify never rewrites a baseline.
+// One baseline set, refreshed explicitly at phase end; verify never rewrites it.
 const { chromium } = require("./lib/browser.cjs");
 const { assert } = require("./lib/browser.cjs");
 const fs = require('node:fs/promises');
@@ -174,6 +174,11 @@ exports.fixtures = fixtures;
 exports.openState = openState;
 exports.seed = seed;
 exports.selectors = selectors;
+// The diff reporter reuses the exact capture/normalization and comparator.
+exports.snapshot = snapshot;
+exports.differences = differences;
+exports.states = states;
+exports.viewports = viewports;
 if (require.main === module) (async () => {
   const browser = await chromium.launch();
   try { await runBaseline(browser, { capture: process.argv.includes('--capture'),

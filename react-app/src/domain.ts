@@ -94,18 +94,30 @@ export function lunarLabel(date: string): string {
 export function dayStatus(day: Day, today = todayKey()) {
   const next = nextOccurrence(day, today);
   const delta = dayDiff(today, next);
+  let years: number | null = null;
+  if (day.repeat === "yearly") {
+    const year = (date: string) => {
+      if (day.calendar === "solar") return Number(date.slice(0, 4));
+      const [y, m, d] = date.split("-").map(Number);
+      return Solar.fromYmd(y, m, d).getLunar().getYear();
+    };
+    const elapsedYears = year(next) - year(day.date);
+    if (elapsedYears > 0) years = elapsedYears;
+  }
   return {
     next,
     delta,
     count: Math.abs(delta),
     label: delta === 0 ? "就是今天" : delta > 0 ? "还有" : "已经",
     elapsed: Math.max(0, dayDiff(day.date, today)),
+    years,
   };
 }
 export function compareDays(a: Day, b: Day, today: string): number {
   if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-  const da = dayStatus(a, today).delta,
-    db = dayStatus(b, today).delta;
+  // Sorting needs only the delta, not repeated lunar age conversion.
+  const da = dayDiff(today, nextOccurrence(a, today)),
+    db = dayDiff(today, nextOccurrence(b, today));
   if (da < 0 !== db < 0) return da < 0 ? 1 : -1;
   return (
     (da >= 0 ? da - db : db - da) ||
