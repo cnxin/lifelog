@@ -56,8 +56,24 @@ test('old records/backup defaults, canonical offsets and invalid values', () => 
   assert.equal(makeBackup([day()]).version,1);
   assert.deepEqual(parseBackup(makeBackup([day()])).days,[day()]);
 });
-test('global time accepts only four slots and defaults to 09:00', () => {
+test('global time accepts valid HH:mm and defaults to 09:00', () => {
   for(const time of ['08:00','09:00','12:00','20:00']) assert.equal(normalizeReminderTime(time),time);
-  for(const time of [null,'oops','9:00','02:00']) assert.equal(normalizeReminderTime(time),'09:00');
+  for(const time of [null,'oops','9:00','24:00','12:60']) assert.equal(normalizeReminderTime(time),'09:00');
+  for(const time of ['02:00','00:00','23:59','10:37']) assert.equal(normalizeReminderTime(time),time);
   assert.equal(planReminders([day()],now,'invalid')[0].at,'2026-10-03T09:00');
+});
+test('per-record HH:mm overrides the global time, absent field inherits it',()=>{
+  const plans=planReminders([day({id:'custom',reminderTime:'10:37',reminders:[0]}),day({id:'default',reminders:[0]})],now,'08:14');
+  assert.equal(plans.find(p=>p.dayId==='custom').at,'2026-10-10T10:37');
+  assert.equal(plans.find(p=>p.dayId==='default').at,'2026-10-10T08:14');
+});
+test('optional reminderTime round trips backups and invalid HH:mm rejects the whole import',()=>{
+  const custom=day({reminderTime:'00:01'}), legacy=day({id:'old'});
+  assert.equal(Object.hasOwn(legacy,'reminderTime'),false);
+  assert.equal(parseBackup(makeBackup([custom,legacy])).days[0].reminderTime,'00:01');
+  assert.equal(Object.hasOwn(parseBackup(makeBackup([custom,legacy])).days[1],'reminderTime'),false);
+  for (const reminderTime of [null,42,'','9:00','24:00','12:60','01:1',' 09:00','09:00:00']) {
+    assert.throws(()=>day({reminderTime}));
+    assert.throws(()=>parseBackup({format:'lifelog-days',version:1,days:[legacy,{...custom,reminderTime}]}));
+  }
 });

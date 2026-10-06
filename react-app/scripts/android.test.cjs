@@ -29,8 +29,8 @@ test('Android source contract: preview isolation, stable release identity and ve
 
 test('Android source contract: INTERNET with plugin-owned VIBRATE, no old native integrations', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
-  assert.deepEqual([...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"\s*\/>/g)].map(m => m[1]), ['android.permission.INTERNET']);
-  for (const permission of ['SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM'])
+  assert.deepEqual([...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"\s*\/>/g)].map(m => m[1]), ['android.permission.INTERNET', 'android.permission.SCHEDULE_EXACT_ALARM']);
+  for (const permission of ['USE_EXACT_ALARM'])
     assert.match(manifest, new RegExp(`android.permission.${permission}" tools:node="remove"`));
   assert.match(read('node_modules/@capacitor/haptics/android/src/main/AndroidManifest.xml'), /android.permission.VIBRATE/);
   const activity = read('android/app/src/main/java/com/cnxin/lifelog/MainActivity.java');
@@ -122,10 +122,10 @@ test('APK inspection rejects removed capabilities even in sdk-specific permissio
     assert.throws(() => verifyPreviewBadging(sampleBadging + entry, '0.2.0-alpha.1', 136), /未预期权限/);
   }
 });
-test('notification permissions are accepted but exact-alarm permissions are rejected', () => {
-  for (const name of ['POST_NOTIFICATIONS', 'RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK'])
+test('notification permissions and SCHEDULE_EXACT_ALARM are accepted; USE_EXACT_ALARM remains rejected', () => {
+  for (const name of ['POST_NOTIFICATIONS', 'RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK', 'SCHEDULE_EXACT_ALARM'])
     assert.ok(verifyPreviewBadging(sampleBadging + `uses-permission: name='android.permission.${name}'\n`, '0.2.0-alpha.1', 136).permissions.includes('android.permission.' + name));
-  for (const name of ['SCHEDULE_EXACT_ALARM', 'USE_EXACT_ALARM'])
+  for (const name of ['USE_EXACT_ALARM'])
     assert.throws(() => verifyPreviewBadging(sampleBadging + `uses-permission: name='android.permission.${name}'\n`, '0.2.0-alpha.1', 136), /未预期权限/);
   const pluginManifest = read('node_modules/@capacitor/local-notifications/android/src/main/AndroidManifest.xml');
   assert.match(pluginManifest, /android.permission.POST_NOTIFICATIONS/);

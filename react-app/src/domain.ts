@@ -12,7 +12,11 @@ export type Day = {
   note: string;
   pinned: boolean;
   reminders: number[];
+  reminderTime?: string; // Local HH:mm; absent inherits the global reminder time.
 };
+export function validReminderTime(value: unknown): value is string {
+  return typeof value === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
 export const MAX_RECORDS = 10000;
 export function todayKey(now = new Date()): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -144,6 +148,7 @@ export function validateDay(v: unknown): Day {
     typeof v.note !== "string" ||
     v.note.length > 2000 ||
     (v.calendar === "lunar" && v.repeat !== "yearly") ||
+    (v.reminderTime !== undefined && !validReminderTime(v.reminderTime)) ||
     (v.reminders !== undefined && (!Array.isArray(v.reminders) ||
       Array.from(v.reminders).some(offset => ![0, 1, 3, 7].includes(offset))))
   ) {
@@ -161,6 +166,7 @@ export function validateDay(v: unknown): Day {
     note: v.note,
     pinned: v.pinned,
     reminders: [...new Set((v.reminders ?? []) as number[])].sort((a, b) => a - b),
+    ...(v.reminderTime === undefined ? {} : { reminderTime: v.reminderTime as string }),
   };
 }
 export function extractLegacy(value: unknown): {

@@ -4,6 +4,8 @@ import Modal from "./Modal";
 import { dayStatus, lunarLabel, type Day } from "./domain";
 import { formatDate, icons, tones, yearsLabel } from "./dayMeta";
 import ReminderBell from "./ReminderBell";
+import { hasNativeNotifications } from "./notifications";
+import { getReminderTime } from "./reminders";
 
 export default function DayDetail({
   day,
@@ -79,6 +81,10 @@ export default function DayDetail({
         <section className="detail-note" aria-label="备注">
           <p>{day.note || "还没有留下备注"}</p>
         </section>
+        {hasNativeNotifications() && day.reminders.length > 0 && (
+          <p className="detail-reminders">提醒 · {day.reminderTime ?? getReminderTime()} · {day.reminders.map(offset =>
+            offset === 0 ? "当天" : `提前${offset}天`).join("、")}</p>
+        )}
         {error && (
           <p role="alert" className="error-box">
             {error}

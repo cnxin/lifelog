@@ -2,10 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {loadTs} = require('./load-ts.cjs');
 function setup(native=true) {
-  const calls=[], state={display:'granted', request:'granted', pending:[{id:99}], fail:false, callback:null, removed:0, plans:[]};
+  const calls=[], state={display:'granted', exact:'denied', request:'granted', pending:[{id:99}], fail:false, callback:null, removed:0, plans:[]};
   let imports=0;
   const plugin={
     checkPermissions:async()=>{calls.push('check');return {display:state.display}},
+    checkExactNotificationSetting:async()=>{calls.push('checkExact');return {exact_alarm:state.exact}},
+    changeExactNotificationSetting:async()=>{calls.push('changeExact');return {exact_alarm:state.exact}},
     requestPermissions:async()=>{calls.push('request');state.display=state.request;return {display:state.display}},
     getPending:async()=>{calls.push('pending');return {notifications:state.pending}},
     cancel:async options=>{calls.push(['cancel',options]);state.pending=[]},
@@ -26,12 +28,31 @@ test('permission prompts only in user permission flow, denied remains denied',as
   const m=setup();m.state.display='prompt';m.state.request='denied';assert.equal(await m.api.ensurePermission(),'denied');assert.equal(await m.api.ensurePermission(),'denied');assert.equal(m.calls.filter(x=>x==='request').length,1);
   await m.api.resync([day],'09:00');assert.equal(m.calls.filter(x=>Array.isArray(x)&&x[0]==='schedule').length,0);assert.equal(m.calls.filter(x=>x==='request').length,1);assert.ok(m.calls.some(x=>Array.isArray(x)&&x[0]==='cancel'));
 });
-test('resync cancels before scheduling, creates the channel once and is explicitly inexact',async()=>{
+test('resync cancels before scheduling, creates the channel once and follows checked exact permission',async()=>{
   const m=setup();await m.api.resync([day],'09:00');await m.api.resync([day],'20:00');
   const schedules=m.calls.filter(x=>Array.isArray(x)&&x[0]==='schedule');assert.equal(schedules.length,2);
   assert.equal(m.calls.filter(x=>Array.isArray(x)&&x[0]==='channel').length,1);
-  const n=schedules[0][1].notifications[0];assert.equal(n.isExactNotification,false);assert.equal(n.schedule.allowWhileIdle,false);assert.equal(n.schedule.repeats,undefined);assert.ok(n.schedule.at instanceof Date);assert.equal(n.channelId,'days');assert.deepEqual(n.extra,{dayId:'one'});
+  const n=schedules[0][1].notifications[0];assert.equal(n.isExactNotification,m.state.exact==='granted');assert.equal(n.schedule.allowWhileIdle,false);assert.equal(n.schedule.repeats,undefined);assert.ok(n.schedule.at instanceof Date);assert.equal(n.channelId,'days');assert.deepEqual(n.extra,{dayId:'one'});
   assert.ok(m.calls.findIndex(x=>Array.isArray(x)&&x[0]==='cancel')<m.calls.findIndex(x=>Array.isArray(x)&&x[0]==='schedule'));
+});
+test('denied exact permission schedules every notification inexact without opening settings; granted resync makes all exact',async()=>{
+  const m=setup();
+  for (const exact of ['denied','granted']) {
+    m.state.exact=exact;
+    await m.api.resync([{...day,reminders:[0,1,3,7]}],'10:37');
+    const schedules=m.calls.filter(x=>Array.isArray(x)&&x[0]==='schedule');
+    assert.equal(schedules.at(-1)[1].notifications.length,4);
+    assert.ok(schedules.at(-1)[1].notifications.every(n=>n.isExactNotification===(exact==='granted')));
+    assert.equal(m.calls.filter(x=>x==='changeExact').length,0);
+  }
+  assert.equal(m.calls.filter(x=>x==='checkExact').length,2);
+});
+test('exact checks are non-prompting; only explicit editor settings flow changes settings',async()=>{
+  const m=setup();assert.equal(await m.api.ensureExactAlarm(),'denied');
+  assert.equal(m.calls.includes('changeExact'),false);
+  m.state.exact='granted';assert.equal(await m.api.openExactAlarmSettings(),'granted');
+  assert.equal(m.calls.filter(x=>x==='changeExact').length,1);
+  const web=setup(false);assert.equal(await web.api.ensureExactAlarm(),'unavailable');assert.equal(web.imports(),0);
 });
 test('concurrent resync is serialized, snapshots caller state and recovers after rejection',async()=>{
   const m=setup();const draft={...day,reminders:[0]};m.state.fail=true;const a=m.api.resync([draft],'09:00');draft.reminders.push(7);const b=m.api.resync([],'20:00');await assert.rejects(a);await b;assert.deepEqual(m.state.plans[0].days[0].reminders,[0]);assert.equal(m.state.pending.length,0);await m.api.resync([day],'12:00');assert.equal(m.state.pending.length,1);

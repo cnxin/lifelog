@@ -61,7 +61,8 @@ function verifyPreviewBadging(badging, version, versionCode) {
   const permissions = [...badging.matchAll(/^uses-permission(?:-sdk-\d+)?: name='([^']+)'/gm)].map(match => match[1]);
   const allowed = new Set(['android.permission.INTERNET', 'android.permission.VIBRATE',
     'android.permission.POST_NOTIFICATIONS', 'android.permission.RECEIVE_BOOT_COMPLETED',
-    'android.permission.WAKE_LOCK', 'com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']);
+    'android.permission.WAKE_LOCK', 'android.permission.SCHEDULE_EXACT_ALARM',
+    'com.cnxin.lifelog.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION']);
   if (id !== 'com.cnxin.lifelog.preview') throw new Error('APK 包名不是独立测试版，停止交付');
   if (name !== '日子 · 测试版') throw new Error('APK 桌面名称不能区分测试版');
   if (actualVersion !== version + '-preview' || actualCode !== versionCode) throw new Error('APK 版本与源码不符');

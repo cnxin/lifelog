@@ -10,9 +10,9 @@ import Modal from "./Modal";
 import { exportBackup } from "./backup";
 import { parseBackup, type Day } from "./domain";
 import { readLegacyDays, mergeDays } from "./storage";
-import SegmentedControl from "./SegmentedControl";
+import TimePicker from "./TimePicker";
 import { hasNativeNotifications } from "./notifications";
-import { getReminderTime, setReminderTime, REMINDER_TIMES } from "./reminders";
+import { getReminderTime, setReminderTime } from "./reminders";
 
 type Pending = ReturnType<typeof parseBackup>;
 export default function DataPanel({
@@ -30,6 +30,7 @@ export default function DataPanel({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [time, setTime] = useState(getReminderTime);
+  const [timeOpen, setTimeOpen] = useState(false);
   async function run(task: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -43,7 +44,7 @@ export default function DataPanel({
     }
   }
   return (
-    <Modal title="数据与备份" onClose={onClose} busy={busy}>
+    <Modal title="数据与备份" onClose={onClose} busy={busy} onCancel={timeOpen ? () => setTimeOpen(false) : undefined}>
       <div className="privacy-note">
         <ShieldCheck size={22} />
         <div>
@@ -54,13 +55,12 @@ export default function DataPanel({
         </div>
       </div>
       {hasNativeNotifications() && <section className="reminder-time">
-        <SegmentedControl label="提醒时间" value={time}
-          className="reminder-time-choice"
-          options={REMINDER_TIMES.map(value => ({ value, label: value }))}
+        <p className="field-help">未单独设置的提醒使用此时间</p>
+        <TimePicker value={time} open={timeOpen} onOpenChange={setTimeOpen} disabled={busy}
           onChange={value => {
             try { setReminderTime(value); setTime(value); }
             catch { setError("提醒时间保存失败，请重试。"); }
-          }} description="仅 Android 本地通知；非精确闹钟，系统休眠或省电时可能延后。" />
+          }} />
       </section>}
       <div className="data-actions">
         <button

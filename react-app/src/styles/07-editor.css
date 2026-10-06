@@ -9,6 +9,32 @@
   gap: 17px;
   min-width: 0;
 }
+/* Native reminder controls only; the Web editor's geometry stays unchanged. */
+.time-field { scroll-margin-top: 8px; margin-block: 12px; min-width: 0; }
+.time-trigger {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px;
+  padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text); font-size: 0.875rem; text-align: left;
+}
+.time-trigger span { flex: 1; }
+.time-trigger strong { font-weight: 500; font-variant-numeric: tabular-nums; }
+.time-trigger[aria-expanded="true"] { border-color: var(--input-focus-border); }
+.time-picker { margin-top: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.time-grid-label { font-size: 0.75rem; color: var(--muted); margin: 8px 0; }
+.time-grid { display: grid; grid-template-columns: repeat(6, minmax(44px, 1fr)); gap: 4px; }
+.time-hours { max-height: 192px; overflow-y: auto; overscroll-behavior: contain; }
+.time-grid button { min-height: 44px; border-radius: 10px; background: transparent; color: var(--text); font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.time-grid button[aria-pressed="true"] { background: var(--control-selected); color: var(--control-text); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.time-grid button:active { background: var(--control-hover); }
+.time-exact { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; font-size: 0.75rem; }
+.time-exact input { width: 100%; height: var(--input-height); border: 1px solid var(--input-border); border-radius: var(--input-radius); padding: 0 var(--input-padding); background: var(--input-background); color: var(--input-text); font-size: var(--input-font-size); }
+.time-exact input:focus { outline: none; border-color: var(--input-focus-border); box-shadow: var(--input-focus-shadow); }
+.time-help { margin: 6px 0 0; font-size: 0.75rem; color: var(--muted); }
+.time-picker-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 8px; border-top: 1px solid var(--border); }
+.time-picker-footer button { min-height: 44px; }
+.exact-alarm-notice { display: block; width: 100%; min-height: 44px; padding: 8px 0; text-align: left; font-size: 0.75rem; line-height: 1.7; background: transparent; color: var(--green); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 430px) { .time-grid { grid-template-columns: repeat(4, minmax(44px, 1fr)); } }
+@media (forced-colors: active) { .time-exact input:focus { outline: 2px solid Highlight; } }
 .editor-fields label:not(.choice-option):not(.check-row) {
   display: flex;
   flex-direction: column;

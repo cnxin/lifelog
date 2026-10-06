@@ -6,7 +6,7 @@ import {
   type RefObject,
 } from "react";
 import { Capacitor, SystemBars, SystemBarsStyle } from "@capacitor/core";
-import { hasNativeNotifications } from "../notifications";
+import { ensureExactAlarm, hasNativeNotifications } from "../notifications";
 import { todayKey } from "../domain";
 export default function useNativeShell({
   headerRef,
@@ -54,7 +54,7 @@ export default function useNativeShell({
       App.addListener("appStateChange", ({ isActive }) => {
         if (isActive) {
           setToday(todayKey());
-          void load().then(() => {
+          void Promise.all([load(), ensureExactAlarm()]).then(() => {
             sync();
             setWidgetLaunchTick((value) => value + 1);
           });

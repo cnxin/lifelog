@@ -30,6 +30,30 @@ export async function checkNotificationPermission(): Promise<"granted" | "denied
     return (await plugin.checkPermissions()).display === "granted" ? "granted" : "denied";
   } catch { return "unavailable"; }
 }
+export type ExactAlarmPermission = "granted" | "denied" | "unavailable";
+let exactPermission: ExactAlarmPermission | undefined;
+// Non-prompting. The native plugin reports granted below Android 12 itself.
+export async function ensureExactAlarm(): Promise<ExactAlarmPermission> {
+  let result: ExactAlarmPermission = "unavailable";
+  try {
+    const plugin = await nativePlugin();
+    if (plugin) result = (await plugin.checkExactNotificationSetting()).exact_alarm === "granted"
+      ? "granted" : "denied";
+  } catch { /* Keep settings and schedule inexact when a check fails. */ }
+  if (result !== exactPermission) {
+    exactPermission = result;
+    if (typeof window !== "undefined")
+      window.dispatchEvent(new CustomEvent("lifelog-exact-alarm-change", { detail: result }));
+  }
+  return result;
+}
+// Called only by the editor's explicit “去开启” button, never by resync.
+export async function openExactAlarmSettings(): Promise<ExactAlarmPermission> {
+  const plugin = await nativePlugin();
+  if (!plugin) return "unavailable";
+  await plugin.changeExactNotificationSetting();
+  return ensureExactAlarm();
+}
 let channelPromise: Promise<void> | undefined;
 let queue: Promise<void> = Promise.resolve();
 export function resync(days: Day[], time: string): Promise<void> {
@@ -48,9 +72,10 @@ export function resync(days: Day[], time: string): Promise<void> {
       .catch(error => { channelPromise = undefined; throw error; });
     await channelPromise;
     const plans = planReminders(snapshot, new Date(), time);
+    const exact = (await ensureExactAlarm()) === "granted";
     if (plans.length) await plugin.schedule({ notifications: plans.map(plan => ({
       id: plan.id, title: plan.title, body: plan.body, channelId: "days",
-      extra: { dayId: plan.dayId }, isExactNotification: false,
+      extra: { dayId: plan.dayId }, isExactNotification: exact,
       schedule: { at: new Date(plan.at), allowWhileIdle: false },
     })) });
   });

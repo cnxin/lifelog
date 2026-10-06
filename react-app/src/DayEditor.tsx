@@ -4,9 +4,11 @@ import { icons } from "./dayMeta";
 import Modal, { useModalClose } from "./Modal";
 import { haptic } from "./haptics";
 import DatePicker from "./DatePicker";
+import TimePicker from "./TimePicker";
 import SegmentedControl from "./SegmentedControl";
 import { categories, lunarLabel, validDate, type Day } from "./domain";
-import { checkNotificationPermission, ensurePermission, hasNativeNotifications } from "./notifications";
+import { checkNotificationPermission, ensurePermission, ensureExactAlarm, openExactAlarmSettings,
+  hasNativeNotifications, type ExactAlarmPermission } from "./notifications";
 import { getReminderTime, REMINDER_OFFSETS } from "./reminders";
 
 type EditorProps = {
@@ -18,12 +20,13 @@ type EditorProps = {
 };
 export default function DayEditor(props: EditorProps) {
   const [dateOpen, setDateOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   return (
     <Modal
       title={props.existing ? "编辑这个日子" : "记下一个日子"}
       onClose={props.onClose}
-      onCancel={dateOpen ? () => setDateOpen(false) : undefined}
+      onCancel={timeOpen ? () => setTimeOpen(false) : dateOpen ? () => setDateOpen(false) : undefined}
       busy={busy}
       className="editor-modal"
       focusDialog
@@ -31,7 +34,9 @@ export default function DayEditor(props: EditorProps) {
       <EditorForm
         {...props}
         dateOpen={dateOpen}
-        setDateOpen={setDateOpen}
+        setDateOpen={open => { setDateOpen(open); if (open) setTimeOpen(false); }}
+        timeOpen={timeOpen}
+        setTimeOpen={open => { setTimeOpen(open); if (open) setDateOpen(false); }}
         busy={busy}
         setBusy={setBusy}
       />
@@ -45,11 +50,15 @@ function EditorForm({
   onDelete,
   dateOpen,
   setDateOpen,
+  timeOpen,
+  setTimeOpen,
   busy,
   setBusy,
 }: EditorProps & {
   dateOpen: boolean;
   setDateOpen: (value: boolean) => void;
+  timeOpen: boolean;
+  setTimeOpen: (value: boolean) => void;
   busy: boolean;
   setBusy: (value: boolean) => void;
 }) {
@@ -64,6 +73,23 @@ function EditorForm({
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [permission, setPermission] = useState<"granted" | "denied" | "unavailable" | null>(null);
+  const [exactPermission, setExactPermission] = useState<ExactAlarmPermission | null>(null);
+  const [globalTime, setGlobalTime] = useState(getReminderTime);
+  const effectiveTime = draft.reminderTime ?? globalTime;
+  useEffect(() => {
+    if (!hasNativeNotifications()) return;
+    let disposed = false;
+    const exactChanged = (event: Event) => setExactPermission((event as CustomEvent<ExactAlarmPermission>).detail);
+    const timeChanged = () => setGlobalTime(getReminderTime());
+    window.addEventListener("lifelog-exact-alarm-change", exactChanged);
+    window.addEventListener("lifelog-reminder-time-change", timeChanged);
+    if (remindersEnabled) void ensureExactAlarm().then(value => { if (!disposed) setExactPermission(value); });
+    return () => {
+      disposed = true;
+      window.removeEventListener("lifelog-exact-alarm-change", exactChanged);
+      window.removeEventListener("lifelog-reminder-time-change", timeChanged);
+    };
+  }, [remindersEnabled]);
   const askedPermission = useRef(false);
   useEffect(() => {
     if (!hasNativeNotifications() || !day.reminders.length) return;
@@ -75,6 +101,7 @@ function EditorForm({
     setDraft((prev) => ({ ...prev, ...value }));
   function toggleReminders(enabled: boolean) {
     setRemindersEnabled(enabled);
+    if (!enabled) setTimeOpen(false);
     if (enabled && !draft.reminders.length) patch({ reminders: [0] });
     void haptic("light");
     if (enabled && !askedPermission.current) {
@@ -214,7 +241,7 @@ function EditorForm({
           <div className="reminder-field">
             <label className="check-row">
               <span><strong id="reminder-label">提醒我</strong>
-                <small id="reminder-time-help">时间在「数据与备份」里统一设置</small>
+                <small id="reminder-time-help">可单独设置时间，或使用全局时间</small>
               </span>
               <input type="checkbox" aria-labelledby="reminder-label"
                 aria-describedby={remindersEnabled ? "reminder-time-help reminder-help" : "reminder-time-help"}
@@ -237,11 +264,19 @@ function EditorForm({
                   </button>
                 ))}
               </div>
+              <TimePicker value={effectiveTime} onChange={reminderTime => patch({ reminderTime })}
+                open={timeOpen} onOpenChange={setTimeOpen} disabled={busy}
+                onUseGlobal={() => patch({ reminderTime: undefined })} />
               <p id="reminder-help" className="field-help" role="status">
                 {draft.reminders.length > 0
-                  ? `会在 ${getReminderTime()} 提醒`
+                  ? `会在 ${effectiveTime} 提醒`
                   : "至少选一项才会提醒，保存后按不提醒处理"}
               </p>
+              {exactPermission === "denied" && <button type="button" className="exact-alarm-notice" onClick={() => {
+                void haptic("light");
+                void openExactAlarmSettings().then(setExactPermission).catch(() => setError("无法打开系统设置，请稍后重试。"));
+              }}>系统尚未允许精确提醒，当前会有几分钟误差 · 去开启</button>}
+              {exactPermission === "unavailable" && <p className="field-help" role="status">暂时无法检查精确提醒权限，当前按非精确提醒处理</p>}
             </>)}
             {permission === "denied" && <p className="field-help" role="status">系统未允许通知，提醒会在你到系统设置里开启后生效</p>}
             {permission === "unavailable" && <p className="field-help" role="status">此设备的通知暂不可用，设置已保留，重新打开应用后会重试</p>}

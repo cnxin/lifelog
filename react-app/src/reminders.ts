@@ -1,11 +1,10 @@
-import { nextOccurrence, todayKey, type Day } from "./domain";
+import { nextOccurrence, todayKey, validReminderTime, type Day } from "./domain";
 
 export const REMINDER_OFFSETS = [0, 1, 3, 7] as const;
-export const REMINDER_TIMES = ["08:00", "09:00", "12:00", "20:00"] as const;
-export type ReminderTime = (typeof REMINDER_TIMES)[number];
+export type ReminderTime = string;
 export const REMINDER_TIME_KEY = "lifelog-days:reminder-time";
 export function normalizeReminderTime(value: unknown): ReminderTime {
-  return REMINDER_TIMES.includes(value as ReminderTime) ? value as ReminderTime : "09:00";
+  return validReminderTime(value) ? value : "09:00";
 }
 export function getReminderTime(): ReminderTime {
   try { return normalizeReminderTime(localStorage.getItem(REMINDER_TIME_KEY)); }
@@ -33,10 +32,10 @@ export function reminderId(dayId: string, offset: number): number {
 export function planReminders(days: Day[], now: Date, time: string): PlannedReminder[] {
   const plans: PlannedReminder[] = [];
   const today = todayKey(now);
-  const slot = normalizeReminderTime(time);
-  const [hour, minute] = slot.split(":").map(Number);
   for (const day of days) {
     if (!day.reminders?.length || (day.repeat === "none" && day.date < today)) continue;
+    const slot = day.reminderTime ?? normalizeReminderTime(time);
+    const [hour, minute] = slot.split(":").map(Number);
     const next = nextOccurrence(day, today);
     const [year, month, date] = next.split("-").map(Number);
     for (const offset of day.reminders) {

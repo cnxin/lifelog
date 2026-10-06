@@ -8,12 +8,14 @@ exports.checkReminderUI = async function(browser) {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{
     window.CapacitorCustomPlatform={name:'android'};
-    window.__notif={display:'prompt',request:'denied',pending:[],calls:[],listeners:{}};
+    window.__notif={display:'prompt',exact:'denied',request:'denied',pending:[],calls:[],listeners:{}};
   });
   await page.route('**/*local-notifications*',route=>route.fulfill({contentType:'text/javascript',body:`
     const n=window.__notif;
     export const LocalNotifications={
       checkPermissions:async()=>({display:n.display}),
+      checkExactNotificationSetting:async()=>{n.calls.push('checkExact');return {exact_alarm:n.exact}},
+      changeExactNotificationSetting:async()=>{n.calls.push('changeExact');n.exact='granted';return {exact_alarm:n.exact}},
       requestPermissions:async()=>{n.calls.push('request');n.display=n.request;return {display:n.display}},
       getPending:async()=>({notifications:n.pending}),
       cancel:async()=>{n.pending=[];n.calls.push('cancel')},
@@ -61,7 +63,7 @@ exports.checkReminderUI = async function(browser) {
     await page.waitForTimeout(700);
     const saved=await page.evaluate(async()=>{const {db}=await import('/src/storage.ts');return (await db.days.toArray())[0]});
     assert.deepEqual(saved.reminders,[0,1],'denied permission still saves reminder settings');
-    assert.ok(await page.locator('.day-card').getByRole('img',{name:'已设置提醒'}).isVisible());
+    assert.ok(await page.locator('.day-card').getByRole('img',{name:'已设置提醒 · 09:00',exact:true}).isVisible());
     assert.equal(await page.evaluate(()=>window.__notif.calls.filter(x=>x==='schedule').length),0,'no schedule while denied');
     await page.evaluate(()=>{window.__notif.display='granted'});
     await page.getByRole('button',{name:'数据与备份',exact:true}).click();
@@ -69,14 +71,16 @@ exports.checkReminderUI = async function(browser) {
       await page.setViewportSize({width,height:900});
       await audit('native reminder time '+width);
     }
-    await page.getByRole('radio',{name:'20:00',exact:true}).check();
+    await page.locator('.reminder-time .time-trigger').click();
+    await page.getByRole('button',{name:'20时',exact:true}).click();
+    await page.getByRole('button',{name:'收起',exact:true}).click();
     await page.waitForFunction(()=>window.__notif.pending.length===2);
     assert.equal(await page.evaluate(()=>localStorage.getItem('lifelog-days:reminder-time')),'20:00');
-    assert.ok(await page.evaluate(()=>window.__notif.pending.every(n=>!n.isExactNotification&&!n.schedule.allowWhileIdle&&!n.schedule.repeats)));
+    assert.ok(await page.evaluate(()=>window.__notif.pending.every(n=>n.isExactNotification===(window.__notif.exact==='granted')&&!n.schedule.allowWhileIdle&&!n.schedule.repeats)));
     await page.getByRole('button',{name:'关闭',exact:true}).click();
     await page.evaluate(id=>window.__notif.listeners.localNotificationActionPerformed({notification:{extra:{dayId:id}}}),saved.id);
     await page.locator('.detail-modal').waitFor();
-    assert.ok(await page.locator('.detail-modal').getByRole('img',{name:'已设置提醒'}).isVisible());
+    assert.ok(await page.locator('.detail-modal').getByRole('img',{name:'已设置提醒 · 20:00',exact:true}).isVisible());
     await page.getByRole('button',{name:'编辑',exact:true}).click();
     await toggle.uncheck();
     assert.equal(await group.count(),0,'switch off hides the offset row');
@@ -131,6 +135,70 @@ exports.checkReminderUI = async function(browser) {
     await page.locator('.editor-modal').waitFor({state:'hidden'});
     const disabledSaved=await page.evaluate(async()=>{const {db}=await import('/src/storage.ts');return (await db.days.toArray()).find(day=>day.title==='提醒关闭保存')});
     assert.deepEqual(disabledSaved.reminders,[],'saving a disabled switch discards the retained draft offsets');
+
+    // K1: inline minute-level picker, exact-alarm settings are explicit only.
+    assert.equal(await page.evaluate(()=>window.__notif.calls.filter(c=>c==='changeExact').length),0,
+      'cold startup and all background resyncs never open exact-alarm settings');
+    await page.getByRole('button',{name:'新增日子',exact:true}).click();
+    await page.getByLabel('日子名称').fill('分钟提醒');
+    await pickDate(page,'2099-06-01');
+    await toggle.check();
+    await page.locator('.reminder-field .time-trigger').click();
+    assert.equal(await page.locator('input[type="time"]').count(),0,'no native time dialog');
+    assert.equal(await page.getByRole('group',{name:'小时',exact:true}).getByRole('button').count(),24);
+    assert.equal(await page.getByRole('group',{name:'分钟',exact:true}).getByRole('button').count(),12);
+    for (const scheme of ['light','dark']) {
+      await page.emulateMedia({colorScheme:scheme});
+      for (const width of [320,430,1440]) {
+        await page.setViewportSize({width,height:740});
+        await audit('K1 inline time picker '+scheme+' '+width);
+        const sizes=await page.locator('.time-picker button').evaluateAll(els=>els.map(el=>{
+          const r=el.getBoundingClientRect();return {w:r.width,h:r.height};
+        }));
+        assert.ok(sizes.every(r=>r.w>=44&&r.h>=44),'time-picker touch targets >=44px');
+      }
+    }
+    await page.emulateMedia({colorScheme:'light'});
+    await page.setViewportSize({width:390,height:740});
+    await page.getByRole('button',{name:'10时',exact:true}).click();
+    await page.getByRole('button',{name:'35分',exact:true}).click();
+    await page.getByLabel('精确到分钟',{exact:true}).fill('37');
+    await page.getByRole('button',{name:'收起',exact:true}).click();
+    assert.equal(await page.locator('#reminder-help').textContent(),'会在 10:37 提醒');
+    await page.getByRole('button',{name:'记下这个日子',exact:true}).click();
+    await page.locator('.editor-modal').waitFor({state:'hidden'});
+    await page.waitForFunction(()=>window.__notif.pending.some(n=>n.title==='分钟提醒'));
+    assert.ok(await page.evaluate(()=>window.__notif.pending.every(n=>n.isExactNotification===false)));
+    const custom=await page.evaluate(async()=>{const {db}=await import('/src/storage.ts');return (await db.days.toArray()).find(day=>day.title==='分钟提醒')});
+    assert.equal(custom.reminderTime,'10:37');
+    const at=await page.evaluate(()=>window.__notif.pending.find(n=>n.title==='分钟提醒').schedule.at);
+    assert.equal(new Date(at).getMinutes(),37);
+    await page.locator('.day-card').filter({hasText:'分钟提醒'}).getByRole('button',{name:/查看/}).click();
+    assert.ok(await page.getByText('提醒 · 10:37 · 当天',{exact:true}).isVisible());
+    await page.getByRole('button',{name:'编辑',exact:true}).click();
+    await page.getByRole('button',{name:'系统尚未允许精确提醒，当前会有几分钟误差 · 去开启',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__notif.calls.filter(c=>c==='changeExact').length),1);
+    await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+    await page.waitForFunction(()=>window.__notif.pending.length>0&&window.__notif.pending.every(n=>n.isExactNotification===true));
+    assert.equal(await page.locator('.exact-alarm-notice').count(),0,'active recheck clears denied warning');
+    await page.locator('.reminder-field .time-trigger').click();
+    await page.getByRole('button',{name:'用全局时间',exact:true}).click();
+    assert.equal(await page.locator('#reminder-help').textContent(),'会在 20:00 提醒');
+    await page.getByRole('button',{name:'保存修改',exact:true}).click();
+    await page.locator('.editor-modal').waitFor({state:'hidden'});
+    const inherited=await page.evaluate(async id=>{const {db}=await import('/src/storage.ts');return db.days.get(id)},custom.id);
+    assert.equal(Object.hasOwn(inherited,'reminderTime'),false,'use global time removes the optional field');
+    await page.getByRole('button',{name:'关闭',exact:true}).click();
+
+    await page.getByRole('button',{name:'数据与备份',exact:true}).click();
+    await page.getByText('未单独设置的提醒使用此时间',{exact:true}).waitFor();
+    await page.locator('.reminder-time .time-trigger').click();
+    await page.getByRole('button',{name:'08时',exact:true}).click();
+    await page.getByLabel('精确到分钟',{exact:true}).fill('14');
+    await page.getByRole('button',{name:'收起',exact:true}).click();
+    assert.equal(await page.evaluate(()=>localStorage.getItem('lifelog-days:reminder-time')),'08:14');
+    await page.waitForFunction(()=>window.__notif.pending.some(n=>n.title==='分钟提醒'&&new Date(n.schedule.at).getMinutes()===14));
+    await page.getByRole('button',{name:'关闭',exact:true}).click();
     assert.deepEqual(errors,[]);
   } finally {await page.close();}
   const web=await browser.newPage();
@@ -141,6 +209,7 @@ exports.checkReminderUI = async function(browser) {
     await web.keyboard.press('Escape');await web.locator('dialog').waitFor({state:'hidden'});
     await web.getByRole('button',{name:'数据与备份',exact:true}).click();
     assert.equal(await web.getByRole('group',{name:'提醒时间'}).count(),0);
+    assert.equal(await web.locator('.time-field').count(),0,'Web has no global native reminder time picker');
     await web.getByRole('button',{name:'关闭',exact:true}).click();
     await web.locator('dialog').waitFor({state:'hidden'});
     await web.evaluate(async()=>{const {mergeDays}=await import('/src/storage.ts');await mergeDays([{id:'web-reminder',title:'Web 不展示提醒',date:'2099-06-01',category:'纪念日',repeat:'none',calendar:'solar',note:'',pinned:false,reminders:[0]}])});
