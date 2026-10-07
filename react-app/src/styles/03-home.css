@@ -125,6 +125,30 @@
   padding: 0;
   margin: 23px 0 14px;
 }
+/* Anchor the stretched target to the card, not the title button's visual box. */
+.hero > .hero-link {
+  position: static;
+}
+.hero-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+}
+/* Text stays above the target without intercepting taps meant for details. */
+.hero > :is(.hero-kicker, .hero-caption, .hero-bottom, div.hero-count) {
+  pointer-events: none;
+}
+.hero-count,
+.hero-tag {
+  position: relative;
+  z-index: 1;
+}
+.hero-orbit,
+.hero-dot {
+  pointer-events: none;
+}
 .hero h2 {
   font-size: 1.5rem;
   font-weight: 550;

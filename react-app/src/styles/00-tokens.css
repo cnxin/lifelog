@@ -63,6 +63,7 @@
   --hero-count-number: #514c40;
   --hero-caption: #715e54;
   --hero-footer: #705e53;
+  --hero-press-shade: #000;
   --little-note-text: #59694b;
   --summary-icon: #7c896c;
   --summary-icon-bg: #f0f1ea;
@@ -155,6 +156,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    --hero-press-shade: #000;
     --bg: #15191a;
     --surface: #1f2426;
     --button-face: var(--surface);

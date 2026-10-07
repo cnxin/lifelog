@@ -16,7 +16,7 @@
 
 阶段末本机最终验证（独立基准提交）：浅 / 深色各 14 个状态 capture 替换唯一基准；verify 14+14 通过，刷新后 diff 均 **0/14**，比较器和归一化未改。完整 `npm run gates` **PASS、退出码 0，138.32s**，Node **111/111**、UI **792**、dark **411**，所有套件通过。Android preview **PASS、退出码 0**，Gradle 12s / 252 tasks（36 executed / 216 up-to-date）；先清单测输出，本轮 JVM **15/15 实际执行**，lint **0 errors / 29 warnings**（app lint analysis / report 为 UP-TO-DATE，未伪称本轮重新分析；L3 已真实执行）。独立 Chromium 的真实 IndexedDB 升级检查也通过：Dexie 1→2（原生版本号 10→20），days 字段 / 原索引不变，trash 新建为空；不是 Android WebView 真机结论。
 
-阶段 L 原候选 APK 为 `downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,457,129 bytes**；SHA-256：`d538552c5da044570b9c0463fe978d5727b0eab617931509d224e7e7cb73a672`。L 阶段重建与 L3 候选逐字节相同，20 个 Web 文件与 dist 一致、测试证书 SHA-256 与 alpha.12 相同。**该候选已由下方 M1 同名 APK 覆盖，不再交付旧字节**；原验证记录保留在同名 `.apk.json` 的 `previousPhaseLVerification` 与历史提交中。alpha.13 尚未推送、打 tag 或发布。
+阶段 L 原候选 APK 为 `downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,457,129 bytes**；SHA-256：`d538552c5da044570b9c0463fe978d5727b0eab617931509d224e7e7cb73a672`。L 阶段重建与 L3 候选逐字节相同，20 个 Web 文件与 dist 一致、测试证书 SHA-256 与 alpha.12 相同。**该候选先由 M1、现由 M2 同名 APK 覆盖，不再交付旧字节**；原验证记录保留在同名 `.apk.json` 的 `previousM1Verification.previousPhaseLVerification` 与历史提交中。alpha.13 尚未推送、打 tag 或发布。
 
 ### M1 hero 底行修正（2026-10-07，本地复测候选）
 
@@ -25,10 +25,21 @@
 - 原断言未修改，仅 `test:chrome` 新增 hero 几何检查（360 / 412、浅 / 深色、24px 底部内边距、最多 32px 空白、撑高后底行锚定）。完整基准 diff 每种主题仅移动端 **7/14** 变化：`.hero` padding、`.hero-bottom` margin 与内部 `.hero-link` 坐标；DOM、hero 外的样式 / 点击几何、桌面 14 个快照均零差异。比较器 / 归一化 / 排除规则不变，功能提交前未 capture。证据：`react-app/.artifacts/phase-m/m1/`。
 - 完整门禁首轮退出 1、130.66s：本机系统 Git 的 Xcode / Rosetta 架构不匹配使一项 DOM diff 单测失败，另有预期的旧基准差异。仅修正执行环境 PATH，原单测 3/3 复跑通过；完整门禁复跑退出 1、**120.40s**，Node **111/111**、UI **792**、chrome **387**、其它功能 / 离线 / CSS 测量通过，仅 baseline / dark 因本阶段授权 hero 差异失败。失败轮次保留，不写成整体通过；阶段末将单独刷新唯一基准并复跑全部验证。
 - `android:preview` 实际通过：Gradle **21s**，252 tasks（44 executed / 208 up-to-date）；先清理 app JVM / lint 输出并关闭缓存，JVM **15/15** 与 app lint analysis / report **本轮真实执行**，lint **0 errors / 29 warnings**，未压制。APK 的 20 个 Web 文件与生产 dist 逐字节相同，包名 / 权限 / 签名校验通过，证书与原 alpha.13 相同。版本仍 **0.2.0-alpha.13 / 148**。
-- 覆盖交付：`downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,497,994 bytes**；SHA-256：`c63fbb2956e32f529ed62030ed42cf3064a7b70739df5f94cb82a2f5b4132d74`，附同名 SHA-256 与验证 JSON。**M1 作者真机复测待完成**；机型、Android 与 WebView 提供方 / 版本均由作者补充，不猜填。本机 Chromium 自动验证不是 Android 真机验收。
+- M1 原候选（现已被下方 M2 同名包覆盖，不再交付旧字节）：`downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,497,994 bytes**；SHA-256：`c63fbb2956e32f529ed62030ed42cf3064a7b70739df5f94cb82a2f5b4132d74`。原验证保存在同名 JSON 的 `previousM1Verification` 与历史提交。**M1 / M2 作者真机复测待完成**；机型、Android 与 WebView 提供方 / 版本均由作者补充，不猜填。本机 Chromium 自动验证不是 Android 真机验收。
 - M1 功能提交 `dff2d44` 后独立刷新唯一基准：capture 前的生产 diff 与功能提交附录逐字相同，浅 / 深各 **7/14** 且仅 hero 内；capture 替换原浅 / 深各 14 份，只产生 14 份移动端文件变更，桌面 14 份原字节不变。verify **14+14 PASS**，刷新后 diff 均 **0/14**；未改比较器 / 归一化、未保留旧快照副本。最终完整 `gates` **PASS、退出码 0，177.31s**：Node **111/111**、UI **792**、chrome **387**、dark **411**，全部套件通过。耗时只报告，无阈值改动。
 - 独立基准提交再次运行 `android:preview` **PASS、退出码 0**，Gradle **37s**，252 tasks（38 executed / 214 up-to-date）；清理 app 单测 / lint 输出并关闭缓存，本轮 JVM **15/15**、app lint analysis / report **实际执行**，lint **0 errors / 29 warnings**。重建 APK 与上方 M1 同名包逐字节相同，不再次替换文件；20 个生产 Web 文件仍与 APK 一致，版本、权限、测试证书不变。最终 JSON 收录首轮失败、功能验证、完整 capture 前 diff、基准哈希与最终通过结果；证据：`react-app/.artifacts/phase-m/baseline-refresh/`。这些均不构成作者真机验收。
 - 复测通过后再追加作者结论并发布最后一个预览版 `v0.2.0-alpha.13-preview`，正文沿用 alpha.12；任何旧 Release 不改不删。发布后才继续 N1 → N4，「心上」身份 / 图标 / 签名工程尚未开始。
+
+### M2 hero 整卡可点（2026-10-07，本地复测候选）
+
+- 基于 `40d709f`，一个 M2 commit，版本仍 **0.2.0-alpha.13 / 148**。保留已有的原生 `.hero-link` 按钮和 `aria-label="查看：{title}"`，只以 `::after` stretched 命中区覆盖相对定位的整卡；按钮改为 static，让伪元素相对 hero 定位，保留原 flex item 的 z-index 1，避免装饰压到标题。没有增加 hero 的点击 handler、伪按钮、嵌套 button 或 tabIndex。
+- `.hero-count` 与 `.hero-tag` 保持 relative / z-index 1；当天重放按钮在 stretched 目标之上，点它只触发原 G 阶段庆祝。非交互文字和日期不拦截整卡点击，orbit / dot 禁用 pointer events。按压整卡以当前 tone 与共享 palette 的黑色按 **96:4** 混色，过渡 **120ms**，不 scale；原 reduced-motion 全局规则仍使过渡为零，原输入 / 按钮焦点环不变。
+- 新增 `scripts/hero-ui.cjs` 接入 `test:ui`，360 / 412 / 1024 宽 × 浅 / 深 × 常规 / reduced-motion × 普通 / 当天共 **24 个场景**：真实点按右下角空白命中 featured 详情、当天数字重放不打开详情、Enter 与 Tab 顺序、伪元素真实尺寸、装饰 pointer events、4% 按压 / 120ms / 不缩放 / 无过渡、无嵌套按钮及 axe 零违规。旧断言逐行不变，仅插入新 helper 调用；没有降低阈值或改比较器 / 归一化 / 排除规则。
+- 最终浅 / 深 baseline diff 均 **0/14**，阶段末仍分别 capture 原 14 份并 verify **14+14 PASS**，28 份 canonical JSON 与 `40d709f` 逐字节相同，无基准文件变更，不额外制造 baseline commit。六个 360 / 412 / 1024 浅 / 深截图的静止 hero 像素也与 M1 相同；跨独立浏览器轮次的 header blur / toolbar raster 有最多 2/255 通道差异，原始诊断保留，不据此改比较器、归一化或掩盖 canonical 比较结果。证据：`react-app/.artifacts/phase-m/m2/`。
+- 失败轮次保留：新测试最初过早在详情进场半透明帧运行 axe，改为等待真实 opacity 1 / 位移归零后再检查，既有断言、axe 规则与产品弹窗样式未变；初稿移除标题层级导致装饰覆盖 13 个标题像素，恢复原 z-index 1 后六个 hero 截图零差异。完整门禁首轮 **159.94s、退出 1**，功能 / UI / baseline / dark 全通过，唯一失败为旧调色盘 guard 拦截组件中的黑色字面量；把 hero 专用黑色放入浅 / 深 palette，不改 guard，主题单测 **4/4** 通过。
+- 最终完整 `GATES_WORKERS=1 npm run gates` **PASS、退出码 0，177.705s**：Node **111/111**、UI **1312**、chrome **387**、dark **411**，全部套件通过；耗时只报告。`android:preview` 首次在 **5.9 GiB** 的既有 6 GiB 磁盘预检退出，未执行 Gradle。确认无活跃 Gradle 后只清理可重新生成的 8.14.3 transforms 缓存，不改门槛、不动源码 / 签名 / APK / 证据；6.4 GiB 复跑 **PASS、退出 0**，Gradle **1m50s**，252 tasks（44 executed / 208 up-to-date）。预先清理 app 单测 / lint 输出并禁用缓存，JVM **15/15** 与 app lint analysis / report 本轮实际执行，lint **0 errors / 29 warnings**，未压制。
+- 最新同名交付 APK **4,474,719 bytes**；SHA-256：`5c5565070937b85de84ec2aa9177d3068089c2c95189256bd9f0e33b944a1211`。20 个 Web 文件与最终 dist 逐字节相同；包名、权限、版本与原测试证书不变。附同名 `.apk.sha256` / `.apk.json`，保留全部失败 / 重跑 / 基准与前阶段验证记录。**这是 Chromium / JVM / 构建验证，不是 Android 真机验收**。
+- 作者复测：卡片空白 → featured 详情；把一条当天日子置顶 → 点数字只重放、点空白仍开详情；浅 / 深、键盘 / reduced-motion 与 M1 底行位置各看一次。确认通过并补机型 / Android / WebView 信息后，才记录作者结论、推送 / tag / 发布最后一个 alpha.13 pre-release，再开始 N1；目前均未执行。
 
 1. 先导出 alpha.12 备份，再直接覆盖安装独立测试包 alpha.13：旧日子数量、标题 / 备注、重复历法、置顶、提醒提前天数和单独提醒时间不变；首次升级最近删除为空。
 2. 详情直接删除，五秒内点撤销：原记录回到正确位置并高亮；五秒后不可再点 toast，但数据与备份可恢复。浅 / 深色、常规 / reduced-motion、软键盘与大字号都复测。
