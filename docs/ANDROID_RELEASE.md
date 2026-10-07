@@ -16,7 +16,17 @@
 
 阶段末本机最终验证（独立基准提交）：浅 / 深色各 14 个状态 capture 替换唯一基准；verify 14+14 通过，刷新后 diff 均 **0/14**，比较器和归一化未改。完整 `npm run gates` **PASS、退出码 0，138.32s**，Node **111/111**、UI **792**、dark **411**，所有套件通过。Android preview **PASS、退出码 0**，Gradle 12s / 252 tasks（36 executed / 216 up-to-date）；先清单测输出，本轮 JVM **15/15 实际执行**，lint **0 errors / 29 warnings**（app lint analysis / report 为 UP-TO-DATE，未伪称本轮重新分析；L3 已真实执行）。独立 Chromium 的真实 IndexedDB 升级检查也通过：Dexie 1→2（原生版本号 10→20），days 字段 / 原索引不变，trash 新建为空；不是 Android WebView 真机结论。
 
-最终本地 APK 为 `downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,457,129 bytes**；SHA-256：`d538552c5da044570b9c0463fe978d5727b0eab617931509d224e7e7cb73a672`。最终重建与 L3 原候选 APK 逐字节相同，20 个 Web 文件与 dist 一致、测试证书 SHA-256 与 alpha.12 相同。附同名 `.apk.sha256` / `.apk.json`，报告保留阶段失败轮次和 capture 前完整 diff，不冒充首次通过。**alpha.13 尚未推送、打 tag 或发布，等待作者真机验收；机型 / Android / WebView 信息仍待提供。**
+阶段 L 原候选 APK 为 `downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,457,129 bytes**；SHA-256：`d538552c5da044570b9c0463fe978d5727b0eab617931509d224e7e7cb73a672`。L 阶段重建与 L3 候选逐字节相同，20 个 Web 文件与 dist 一致、测试证书 SHA-256 与 alpha.12 相同。**该候选已由下方 M1 同名 APK 覆盖，不再交付旧字节**；原验证记录保留在同名 `.apk.json` 的 `previousPhaseLVerification` 与历史提交中。alpha.13 尚未推送、打 tag 或发布。
+
+### M1 hero 底行修正（2026-10-07，本地复测候选）
+
+- 基于 `9615612`。原 `.hero` 已是 `display:flex; flex-direction:column`，基础 `.hero-bottom` 已是 `margin-top:auto`；实际问题是后导入的 compact 规则覆盖为固定 `8px`，并把内边距覆盖为 `20px`。M1 仅将有记录的移动端卡片恢复为作者指定的 `24px` 内边距、底行 `margin-top:auto`。不新增间距、不改桌面规则、文案 / 结构、空态、主题 token 或任何动画。
+- 生产构建的 Chromium 真解析几何：360 / 412 宽、浅 / 深色、公历年度 / 农历年度 / 已过去倒数 / 当天四种记录共 16 个状态，底行底边到卡片底边均为 **24px**。普通数字状态卡片高 **200px**，数字区与分割线之间为 **0px**；当天状态因保留仪式感说明而高 **218px**，数字区至分割线为 **22px**。这些档位原有 compact `min-height:0` 已无超过 32px 的多余空白，因此不再下调 / 增加高度。人为加高 24px 时底行仍贴底，新增余量全部落在数字区与分割线之间。
+- 原断言未修改，仅 `test:chrome` 新增 hero 几何检查（360 / 412、浅 / 深色、24px 底部内边距、最多 32px 空白、撑高后底行锚定）。完整基准 diff 每种主题仅移动端 **7/14** 变化：`.hero` padding、`.hero-bottom` margin 与内部 `.hero-link` 坐标；DOM、hero 外的样式 / 点击几何、桌面 14 个快照均零差异。比较器 / 归一化 / 排除规则不变，功能提交前未 capture。证据：`react-app/.artifacts/phase-m/m1/`。
+- 完整门禁首轮退出 1、130.66s：本机系统 Git 的 Xcode / Rosetta 架构不匹配使一项 DOM diff 单测失败，另有预期的旧基准差异。仅修正执行环境 PATH，原单测 3/3 复跑通过；完整门禁复跑退出 1、**120.40s**，Node **111/111**、UI **792**、chrome **387**、其它功能 / 离线 / CSS 测量通过，仅 baseline / dark 因本阶段授权 hero 差异失败。失败轮次保留，不写成整体通过；阶段末将单独刷新唯一基准并复跑全部验证。
+- `android:preview` 实际通过：Gradle **21s**，252 tasks（44 executed / 208 up-to-date）；先清理 app JVM / lint 输出并关闭缓存，JVM **15/15** 与 app lint analysis / report **本轮真实执行**，lint **0 errors / 29 warnings**，未压制。APK 的 20 个 Web 文件与生产 dist 逐字节相同，包名 / 权限 / 签名校验通过，证书与原 alpha.13 相同。版本仍 **0.2.0-alpha.13 / 148**。
+- 覆盖交付：`downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,497,994 bytes**；SHA-256：`c63fbb2956e32f529ed62030ed42cf3064a7b70739df5f94cb82a2f5b4132d74`，附同名 SHA-256 与验证 JSON。**M1 作者真机复测待完成**；机型、Android 与 WebView 提供方 / 版本均由作者补充，不猜填。本机 Chromium 自动验证不是 Android 真机验收。
+- 复测通过后再追加作者结论并发布最后一个预览版 `v0.2.0-alpha.13-preview`，正文沿用 alpha.12；任何旧 Release 不改不删。发布后才继续 N1 → N4，「心上」身份 / 图标 / 签名工程尚未开始。
 
 1. 先导出 alpha.12 备份，再直接覆盖安装独立测试包 alpha.13：旧日子数量、标题 / 备注、重复历法、置顶、提醒提前天数和单独提醒时间不变；首次升级最近删除为空。
 2. 详情直接删除，五秒内点撤销：原记录回到正确位置并高亮；五秒后不可再点 toast，但数据与备份可恢复。浅 / 深色、常规 / reduced-motion、软键盘与大字号都复测。

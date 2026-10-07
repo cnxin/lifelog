@@ -70,6 +70,52 @@ const fs = require("node:fs/promises");
     assert.ok((await page.locator(".hero").boundingBox()).height <= 200, "populated mobile hero is compact");
     assert.equal(await page.getByRole("heading", { level: 1 }).count(), 1, "mobile h1 remains accessible");
     assert.equal(await page.locator(".overview-side").isVisible(), false, "mobile hides duplicate statistics");
+
+    // M1: measure the footer against the card, including room left by a taller card.
+    const heroGeometry = () => page.locator(".hero").evaluate(el => {
+      const card = el.getBoundingClientRect();
+      const footer = el.querySelector(".hero-bottom").getBoundingClientRect();
+      const count = el.querySelector(".hero-count").getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return {
+        height: card.height,
+        display: style.display,
+        direction: style.flexDirection,
+        paddingBottom: parseFloat(style.paddingBottom),
+        bottomGap: card.bottom - footer.bottom,
+        numberToDivider: footer.top - count.bottom,
+      };
+    });
+    for (const colorScheme of ["light", "dark"]) {
+      await page.emulateMedia({ colorScheme });
+      for (const width of [360, 412]) {
+        await page.setViewportSize({ width, height: 740 });
+        const geometry = await heroGeometry();
+        const label = `${colorScheme} hero at ${width}px`;
+        assert.equal(geometry.display, "flex", `${label}: flex layout`);
+        assert.equal(geometry.direction, "column", `${label}: vertical layout`);
+        assert.equal(geometry.paddingBottom, 24, `${label}: requested card padding`);
+        assert.ok(Math.abs(geometry.bottomGap - geometry.paddingBottom) <= .5,
+          `${label}: footer sits at the bottom padding`);
+        assert.ok(geometry.numberToDivider >= 0 && geometry.numberToDivider <= 32,
+          `${label}: no unnecessary space above the divider`);
+
+        try {
+          await page.locator(".hero").evaluate((el, height) => {
+            el.style.minHeight = `${height + 24}px`;
+          }, geometry.height);
+          const stretched = await heroGeometry();
+          assert.ok(Math.abs(stretched.bottomGap - stretched.paddingBottom) <= .5,
+            `${label}: a taller card still anchors the footer`);
+          assert.ok(Math.abs(stretched.numberToDivider - geometry.numberToDivider - 24) <= .5,
+            `${label}: extra room goes between the count and divider`);
+        } finally {
+          await page.locator(".hero").evaluate(el => el.style.removeProperty("min-height"));
+        }
+      }
+    }
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.setViewportSize({ width: 360, height: 740 });
     await page.getByRole("button", { name: "打开搜索", exact: true }).click();
     const search = page.getByRole("searchbox", { name: "搜索日子", exact: true });
     assert.ok(await search.evaluate(el => el === document.activeElement), "expanded search receives focus");

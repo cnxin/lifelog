@@ -19,7 +19,7 @@
   }
   .hero[data-populated="true"] {
     min-height: 0;
-    padding: 20px;
+    padding: 24px;
   }
   .hero[data-populated="true"] .hero-link {
     min-height: 44px;
@@ -40,7 +40,7 @@
     line-height: 1;
   }
   .hero[data-populated="true"] .hero-bottom {
-    margin-top: 8px;
+    margin-top: auto;
     padding-top: 8px;
     font-size: 0.625rem;
   }
