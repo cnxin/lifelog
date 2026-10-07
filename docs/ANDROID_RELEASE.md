@@ -26,6 +26,8 @@
 - 完整门禁首轮退出 1、130.66s：本机系统 Git 的 Xcode / Rosetta 架构不匹配使一项 DOM diff 单测失败，另有预期的旧基准差异。仅修正执行环境 PATH，原单测 3/3 复跑通过；完整门禁复跑退出 1、**120.40s**，Node **111/111**、UI **792**、chrome **387**、其它功能 / 离线 / CSS 测量通过，仅 baseline / dark 因本阶段授权 hero 差异失败。失败轮次保留，不写成整体通过；阶段末将单独刷新唯一基准并复跑全部验证。
 - `android:preview` 实际通过：Gradle **21s**，252 tasks（44 executed / 208 up-to-date）；先清理 app JVM / lint 输出并关闭缓存，JVM **15/15** 与 app lint analysis / report **本轮真实执行**，lint **0 errors / 29 warnings**，未压制。APK 的 20 个 Web 文件与生产 dist 逐字节相同，包名 / 权限 / 签名校验通过，证书与原 alpha.13 相同。版本仍 **0.2.0-alpha.13 / 148**。
 - 覆盖交付：`downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,497,994 bytes**；SHA-256：`c63fbb2956e32f529ed62030ed42cf3064a7b70739df5f94cb82a2f5b4132d74`，附同名 SHA-256 与验证 JSON。**M1 作者真机复测待完成**；机型、Android 与 WebView 提供方 / 版本均由作者补充，不猜填。本机 Chromium 自动验证不是 Android 真机验收。
+- M1 功能提交 `dff2d44` 后独立刷新唯一基准：capture 前的生产 diff 与功能提交附录逐字相同，浅 / 深各 **7/14** 且仅 hero 内；capture 替换原浅 / 深各 14 份，只产生 14 份移动端文件变更，桌面 14 份原字节不变。verify **14+14 PASS**，刷新后 diff 均 **0/14**；未改比较器 / 归一化、未保留旧快照副本。最终完整 `gates` **PASS、退出码 0，177.31s**：Node **111/111**、UI **792**、chrome **387**、dark **411**，全部套件通过。耗时只报告，无阈值改动。
+- 独立基准提交再次运行 `android:preview` **PASS、退出码 0**，Gradle **37s**，252 tasks（38 executed / 214 up-to-date）；清理 app 单测 / lint 输出并关闭缓存，本轮 JVM **15/15**、app lint analysis / report **实际执行**，lint **0 errors / 29 warnings**。重建 APK 与上方 M1 同名包逐字节相同，不再次替换文件；20 个生产 Web 文件仍与 APK 一致，版本、权限、测试证书不变。最终 JSON 收录首轮失败、功能验证、完整 capture 前 diff、基准哈希与最终通过结果；证据：`react-app/.artifacts/phase-m/baseline-refresh/`。这些均不构成作者真机验收。
 - 复测通过后再追加作者结论并发布最后一个预览版 `v0.2.0-alpha.13-preview`，正文沿用 alpha.12；任何旧 Release 不改不删。发布后才继续 N1 → N4，「心上」身份 / 图标 / 签名工程尚未开始。
 
 1. 先导出 alpha.12 备份，再直接覆盖安装独立测试包 alpha.13：旧日子数量、标题 / 备注、重复历法、置顶、提醒提前天数和单独提醒时间不变；首次升级最近删除为空。

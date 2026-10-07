@@ -1,6 +1,6 @@
 {
-  "phase": "M1 hero footer; local alpha.13 retest candidate",
-  "completedAt": "2026-10-07T06:41:22.851Z",
+  "phase": "M1 complete; independent canonical baseline refresh; local alpha.13 retest candidate",
+  "completedAt": "2026-10-07T06:49:56.838Z",
   "sourceBase": "9615612",
   "version": "0.2.0-alpha.13",
   "versionCode": 148,
@@ -23,9 +23,9 @@
     "signatureVerification": "Verifies\nVerified using v1 scheme (JAR signing): false\nVerified using v2 scheme (APK Signature Scheme v2): true\nVerified using v3 scheme (APK Signature Scheme v3): false\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\nVerified using v4 scheme (APK Signature Scheme v4): false\nVerified for SourceStamp: false\nNumber of signers: 1\nSigner #1 certificate DN: C=US, O=Android, CN=Android Debug\nSigner #1 certificate SHA-256 digest: 421f87cd5fd65111cf35b7a63e31300aa14d8a9c3e39103b9b5a28c82f11eb52\nSigner #1 certificate SHA-1 digest: da2ecfd6a6f1071120de4eafa0102d68547ea878\nSigner #1 certificate MD5 digest: 3c3f1c66b8748c794a8a69e16e8b4497\nSigner #1 key algorithm: RSA\nSigner #1 key size (bits): 2048\nSigner #1 public key SHA-256 digest: 0349d5db46bc449d0a3be142358c14d885560298f29ecb9f74cba2df86be1012\nSigner #1 public key SHA-1 digest: cb613e2b1959a0a077922ad235808d38009c16bc\nSigner #1 public key MD5 digest: bca231c5ae6fbbdb458449ce3d2d2f32",
     "deviceTested": false
   },
-  "gateOverallPass": false,
+  "gateOverallPass": true,
   "gates": {
-    "completedAt": "2026-10-07T06:38:27.616Z",
+    "completedAt": "2026-10-07T06:47:47.679Z",
     "port": 5189,
     "chromiumProcessesLaunched": 1,
     "startOrder": [
@@ -49,7 +49,7 @@
         "assertionsPassed": 0,
         "axeAudits": 0,
         "axeSourceInjections": 0,
-        "durationMs": 8710,
+        "durationMs": 8540,
         "result": "PASS",
         "testsPassed": 111
       },
@@ -59,7 +59,7 @@
         "assertionsPassed": 0,
         "axeAudits": 0,
         "axeSourceInjections": 0,
-        "durationMs": 9121,
+        "durationMs": 7706,
         "result": "PASS"
       },
       {
@@ -68,7 +68,7 @@
         "assertionsPassed": 48,
         "axeAudits": 6,
         "axeSourceInjections": 3,
-        "durationMs": 11953,
+        "durationMs": 11605,
         "result": "PASS"
       },
       {
@@ -77,7 +77,7 @@
         "assertionsPassed": 792,
         "axeAudits": 111,
         "axeSourceInjections": 12,
-        "durationMs": 47404,
+        "durationMs": 46766,
         "result": "PASS"
       },
       {
@@ -86,7 +86,7 @@
         "assertionsPassed": 57,
         "axeAudits": 5,
         "axeSourceInjections": 1,
-        "durationMs": 6075,
+        "durationMs": 5887,
         "result": "PASS"
       },
       {
@@ -95,7 +95,7 @@
         "assertionsPassed": 93,
         "axeAudits": 8,
         "axeSourceInjections": 2,
-        "durationMs": 14396,
+        "durationMs": 13333,
         "result": "PASS"
       },
       {
@@ -104,7 +104,7 @@
         "assertionsPassed": 585,
         "axeAudits": 11,
         "axeSourceInjections": 4,
-        "durationMs": 8134,
+        "durationMs": 8415,
         "result": "PASS"
       },
       {
@@ -113,7 +113,7 @@
         "assertionsPassed": 387,
         "axeAudits": 5,
         "axeSourceInjections": 3,
-        "durationMs": 6651,
+        "durationMs": 6870,
         "result": "PASS"
       },
       {
@@ -122,26 +122,26 @@
         "assertionsPassed": 7,
         "axeAudits": 0,
         "axeSourceInjections": 0,
-        "durationMs": 2541,
+        "durationMs": 2766,
         "result": "PASS"
       },
       {
         "name": "baseline",
-        "exitCode": 1,
-        "assertionsPassed": 3,
+        "exitCode": 0,
+        "assertionsPassed": 58,
         "axeAudits": 0,
         "axeSourceInjections": 0,
-        "durationMs": 972,
-        "result": "FAIL"
+        "durationMs": 12708,
+        "result": "PASS"
       },
       {
         "name": "dark",
-        "exitCode": 1,
-        "assertionsPassed": 6,
-        "axeAudits": 1,
-        "axeSourceInjections": 1,
-        "durationMs": 1454,
-        "result": "FAIL"
+        "exitCode": 0,
+        "assertionsPassed": 411,
+        "axeAudits": 44,
+        "axeSourceInjections": 19,
+        "durationMs": 42400,
+        "result": "PASS"
       },
       {
         "name": "css-coverage",
@@ -149,13 +149,13 @@
         "assertionsPassed": 2,
         "axeAudits": 0,
         "axeSourceInjections": 0,
-        "durationMs": 10010,
+        "durationMs": 16833,
         "result": "PASS"
       }
     ],
-    "durationMs": 120404,
+    "durationMs": 177311,
     "referenceSeconds": 90,
-    "ratioToReference": 1.3378222222222222,
+    "ratioToReference": 1.9701222222222223,
     "timingPolicy": "informational",
     "timingWarningThresholdSeconds": 180,
     "timingWarning": false
@@ -2183,6 +2183,193 @@
         "executed": 44,
         "upToDate": 208
       }
+    },
+    {
+      "command": "Production baseline:diff light/dark; byte-identical to M1 full list; baseline:capture light14/dark14; baseline:verify; baseline:diff light/dark",
+      "exitCode": 0
+    },
+    {
+      "command": "GATES_WORKERS=1 npm run gates (fallback Git PATH, after independent canonical refresh)",
+      "exitCode": 0,
+      "report": {
+        "completedAt": "2026-10-07T06:47:47.679Z",
+        "port": 5189,
+        "chromiumProcessesLaunched": 1,
+        "startOrder": [
+          "smoke",
+          "ui-polish",
+          "calendar",
+          "date-picker",
+          "controls",
+          "chrome",
+          "offline",
+          "baseline",
+          "dark",
+          "css-coverage"
+        ],
+        "scheduling": "FIFO start order; at most 1 suites, isolated contexts; summary in fixed suite order.",
+        "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+        "results": [
+          {
+            "name": "node-unit",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 8540,
+            "result": "PASS",
+            "testsPassed": 111
+          },
+          {
+            "name": "build",
+            "exitCode": 0,
+            "assertionsPassed": 0,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 7706,
+            "result": "PASS"
+          },
+          {
+            "name": "smoke",
+            "exitCode": 0,
+            "assertionsPassed": 48,
+            "axeAudits": 6,
+            "axeSourceInjections": 3,
+            "durationMs": 11605,
+            "result": "PASS"
+          },
+          {
+            "name": "ui-polish",
+            "exitCode": 0,
+            "assertionsPassed": 792,
+            "axeAudits": 111,
+            "axeSourceInjections": 12,
+            "durationMs": 46766,
+            "result": "PASS"
+          },
+          {
+            "name": "calendar",
+            "exitCode": 0,
+            "assertionsPassed": 57,
+            "axeAudits": 5,
+            "axeSourceInjections": 1,
+            "durationMs": 5887,
+            "result": "PASS"
+          },
+          {
+            "name": "date-picker",
+            "exitCode": 0,
+            "assertionsPassed": 93,
+            "axeAudits": 8,
+            "axeSourceInjections": 2,
+            "durationMs": 13333,
+            "result": "PASS"
+          },
+          {
+            "name": "controls",
+            "exitCode": 0,
+            "assertionsPassed": 585,
+            "axeAudits": 11,
+            "axeSourceInjections": 4,
+            "durationMs": 8415,
+            "result": "PASS"
+          },
+          {
+            "name": "chrome",
+            "exitCode": 0,
+            "assertionsPassed": 387,
+            "axeAudits": 5,
+            "axeSourceInjections": 3,
+            "durationMs": 6870,
+            "result": "PASS"
+          },
+          {
+            "name": "offline",
+            "exitCode": 0,
+            "assertionsPassed": 7,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 2766,
+            "result": "PASS"
+          },
+          {
+            "name": "baseline",
+            "exitCode": 0,
+            "assertionsPassed": 58,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 12708,
+            "result": "PASS"
+          },
+          {
+            "name": "dark",
+            "exitCode": 0,
+            "assertionsPassed": 411,
+            "axeAudits": 44,
+            "axeSourceInjections": 19,
+            "durationMs": 42400,
+            "result": "PASS"
+          },
+          {
+            "name": "css-coverage",
+            "exitCode": 0,
+            "assertionsPassed": 2,
+            "axeAudits": 0,
+            "axeSourceInjections": 0,
+            "durationMs": 16833,
+            "result": "PASS"
+          }
+        ],
+        "durationMs": 177311,
+        "referenceSeconds": 90,
+        "ratioToReference": 1.9701222222222223,
+        "timingPolicy": "informational",
+        "timingWarningThresholdSeconds": 180,
+        "timingWarning": false
+      }
+    },
+    {
+      "command": "cleanTestDebugUnitTest + cleanLintAnalyzeDebug + cleanLintReportDebug + cleanLintDebug; GRADLE_OPTS=-Dorg.gradle.caching=false npm run android:preview",
+      "exitCode": 0,
+      "gradleSeconds": 37,
+      "gradleTasks": {
+        "total": 252,
+        "executed": 38,
+        "upToDate": 214
+      },
+      "jvm": {
+        "executed": true,
+        "cacheDisabled": true,
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "suites": [
+          {
+            "file": "TEST-com.cnxin.lifelog.CalendarInsertIntentTest.xml",
+            "tests": 5,
+            "failures": 0,
+            "errors": 0
+          },
+          {
+            "file": "TEST-com.cnxin.lifelog.widget.DayWidgetTest.xml",
+            "tests": 9,
+            "failures": 0,
+            "errors": 0
+          },
+          {
+            "file": "TEST-com.getcapacitor.myapp.ExampleUnitTest.xml",
+            "tests": 1,
+            "failures": 0,
+            "errors": 0
+          }
+        ]
+      },
+      "lint": {
+        "errors": 0,
+        "warnings": 29,
+        "analysis": "executed after cleanLintAnalyzeDebug; caching disabled; not UP-TO-DATE",
+        "report": "executed after cleanLintReportDebug"
+      }
     }
   ],
   "signatureMatchesOriginalAlpha13": true,
@@ -4002,5 +4189,263 @@
       "Actual soft/hardware keyboard behavior and focus indicator readability on device",
       "Original LifeLog formal same-signature overwrite upgrade; this is an independent debug preview package"
     ]
+  },
+  "sourceCommit": "dff2d44",
+  "apkUnchangedAfterBaselineRefresh": true,
+  "baselineRefresh": {
+    "canonicalSets": 1,
+    "lightStates": 14,
+    "darkStates": 14,
+    "changedFiles": [
+      "light/360x740-calendar.json",
+      "light/360x740-data.json",
+      "light/360x740-detail.json",
+      "light/360x740-editor-date.json",
+      "light/360x740-home.json",
+      "light/360x740-search.json",
+      "light/360x740-sort.json",
+      "dark/360x740-calendar.json",
+      "dark/360x740-data.json",
+      "dark/360x740-detail.json",
+      "dark/360x740-editor-date.json",
+      "dark/360x740-home.json",
+      "dark/360x740-search.json",
+      "dark/360x740-sort.json"
+    ],
+    "noHistoricalCopies": true,
+    "comparatorModified": false,
+    "normalizationModified": false,
+    "preCaptureDiffMatchesM1": true,
+    "postCaptureLight": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "postCaptureDark": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "hashesBefore": [
+      {
+        "path": "light/1024x768-calendar.json",
+        "sha256": "0703a5506949a72fe3662b2510a063af6cf856de7300dabdfcfde5e177b6dd3e"
+      },
+      {
+        "path": "light/1024x768-data.json",
+        "sha256": "12c0e9419d1c36413cf390716a5729f6a2bbff45822769ac2391531f06ebeef1"
+      },
+      {
+        "path": "light/1024x768-detail.json",
+        "sha256": "6679a4061a67f02c534590a45646d3df8b70d0ba92b17068e5458dbe5cbe3d2f"
+      },
+      {
+        "path": "light/1024x768-editor-date.json",
+        "sha256": "fe37558ddfd966dfff07646ca97835705a5d4f2f53aba8885c4f5cf043ce2e6c"
+      },
+      {
+        "path": "light/1024x768-home.json",
+        "sha256": "ee1405608b0e58dbddf9b1ee82cf928a9424a26409d9dfcff29ccc816d91b1af"
+      },
+      {
+        "path": "light/1024x768-search.json",
+        "sha256": "4f372c3d46142d6e39213cbb5a35ee6866cc2ad06dbfccc29ff41c2332bbd95d"
+      },
+      {
+        "path": "light/1024x768-sort.json",
+        "sha256": "abc4af52d61e3c5cd870c994a5647e318cef8e13760dcc353019b6d1e845587f"
+      },
+      {
+        "path": "light/360x740-calendar.json",
+        "sha256": "b85ee4a0090c2989482ed040f68bdf43cdf4f9721ca3ac563f220897da2d3a65"
+      },
+      {
+        "path": "light/360x740-data.json",
+        "sha256": "7be8f5be352a94d5e2f3be1571d3d87e1ba13e7d93ea78156e5960854779880a"
+      },
+      {
+        "path": "light/360x740-detail.json",
+        "sha256": "acca16e5b1ff7d9841df1806dd3b8787f4ca216ea15b5b36ee4f55a2250d570d"
+      },
+      {
+        "path": "light/360x740-editor-date.json",
+        "sha256": "6c96bdd5d6fa2610fc4e6a137f52870892bc6ee38f4f8704f9fadb26dc436dd7"
+      },
+      {
+        "path": "light/360x740-home.json",
+        "sha256": "da555c925aaa3d157b19ab8e4fa599a8937c8959a953ac82d39bb9dd9d25ac42"
+      },
+      {
+        "path": "light/360x740-search.json",
+        "sha256": "d2c8a5d32229a342f8e90947b9ef6455208e0d7e5b5d162c4df4c3f75536d877"
+      },
+      {
+        "path": "light/360x740-sort.json",
+        "sha256": "534984f2deb682f26a3efaf885edcc751ff5465b39b06f9d0663ef8e2a0d9f1c"
+      },
+      {
+        "path": "dark/1024x768-calendar.json",
+        "sha256": "94e0abaec7d50cc9c5dbd9d107c83881d8d1b790a3ccf2d974f3e461114fdd7f"
+      },
+      {
+        "path": "dark/1024x768-data.json",
+        "sha256": "ecc52a018df3041ee4415769e55f94b05a9ff318dd49e1a19d2a6b653bdea248"
+      },
+      {
+        "path": "dark/1024x768-detail.json",
+        "sha256": "56bcf6e0ed91c0264316f54a3d06f840a4fd73c9f9cfe42fce14ccda23ccbe08"
+      },
+      {
+        "path": "dark/1024x768-editor-date.json",
+        "sha256": "8bec956658dccca3c4bbdf12d71c16c9c1a36dc59a7b031712754b815ca29ffc"
+      },
+      {
+        "path": "dark/1024x768-home.json",
+        "sha256": "baadd39d55b20c31c8ba5092a8748f05945363152eaff0c14b56a1d8372648d5"
+      },
+      {
+        "path": "dark/1024x768-search.json",
+        "sha256": "9a33b70ae4a1ad46b92f0c391eb14ffd28d116fc5b544949a40d5d3c17c1bad2"
+      },
+      {
+        "path": "dark/1024x768-sort.json",
+        "sha256": "2223a3ed0591c69c777bb22686b58adf27672f71344babd464cc955515d5251a"
+      },
+      {
+        "path": "dark/360x740-calendar.json",
+        "sha256": "1a0844e516e5075e8e014cbbd78fb2d80af0e83bf631d58825a5a7a77fa19469"
+      },
+      {
+        "path": "dark/360x740-data.json",
+        "sha256": "a960dcd578c8ba25a83ec662f534f876d48f505adf90111633d2809105098939"
+      },
+      {
+        "path": "dark/360x740-detail.json",
+        "sha256": "77a6dd1f8a6ac7657dce47bd217d7749a1869034820e72a862bc9ca254dd9f21"
+      },
+      {
+        "path": "dark/360x740-editor-date.json",
+        "sha256": "12afd85d38a8ca5d2ac19800a191a221650ba43f8d91896d818c1564ddb3fcdd"
+      },
+      {
+        "path": "dark/360x740-home.json",
+        "sha256": "df7b8d1a052eedee9ce39eeb97b45b3ab13449e55078f80d004b200fd2b5c205"
+      },
+      {
+        "path": "dark/360x740-search.json",
+        "sha256": "fdab6e139a79005b7f787c3ff8e0f938abefe6ae3f597a473fe340034fe6f8c0"
+      },
+      {
+        "path": "dark/360x740-sort.json",
+        "sha256": "0586d394503bd5798f79ce3a22d8649d126094f1bedc045da2202dea768dbde2"
+      }
+    ],
+    "hashesAfter": [
+      {
+        "path": "light/1024x768-calendar.json",
+        "sha256": "0703a5506949a72fe3662b2510a063af6cf856de7300dabdfcfde5e177b6dd3e"
+      },
+      {
+        "path": "light/1024x768-data.json",
+        "sha256": "12c0e9419d1c36413cf390716a5729f6a2bbff45822769ac2391531f06ebeef1"
+      },
+      {
+        "path": "light/1024x768-detail.json",
+        "sha256": "6679a4061a67f02c534590a45646d3df8b70d0ba92b17068e5458dbe5cbe3d2f"
+      },
+      {
+        "path": "light/1024x768-editor-date.json",
+        "sha256": "fe37558ddfd966dfff07646ca97835705a5d4f2f53aba8885c4f5cf043ce2e6c"
+      },
+      {
+        "path": "light/1024x768-home.json",
+        "sha256": "ee1405608b0e58dbddf9b1ee82cf928a9424a26409d9dfcff29ccc816d91b1af"
+      },
+      {
+        "path": "light/1024x768-search.json",
+        "sha256": "4f372c3d46142d6e39213cbb5a35ee6866cc2ad06dbfccc29ff41c2332bbd95d"
+      },
+      {
+        "path": "light/1024x768-sort.json",
+        "sha256": "abc4af52d61e3c5cd870c994a5647e318cef8e13760dcc353019b6d1e845587f"
+      },
+      {
+        "path": "light/360x740-calendar.json",
+        "sha256": "acf06cb3355acf6f460e42db8e6b86ede84b04f74f4f687156ac706f9002a59f"
+      },
+      {
+        "path": "light/360x740-data.json",
+        "sha256": "99de55defab659a2eae6f4c19e7be737ef130602d195bec2b1937f1845745c5e"
+      },
+      {
+        "path": "light/360x740-detail.json",
+        "sha256": "e8971991b46485a93912a51399cc5cd9cccb5db9dc17379430c98b4cb3c18c91"
+      },
+      {
+        "path": "light/360x740-editor-date.json",
+        "sha256": "d44988fc470796f65c8d55f86b166b121e05f3c39fa9833668750e64a5f89513"
+      },
+      {
+        "path": "light/360x740-home.json",
+        "sha256": "099fa5238e7051a77801c7ae0cefa59abf2503160b49b4bfa52e41d73d1c3229"
+      },
+      {
+        "path": "light/360x740-search.json",
+        "sha256": "da2a9c8f4ecd1d148e9f648075a0905586645d5e19aa8468c77bd58195ab95ab"
+      },
+      {
+        "path": "light/360x740-sort.json",
+        "sha256": "dd3021a3b24f31ab3222c880d17e584a23968893a0f46711d0615d957be209cf"
+      },
+      {
+        "path": "dark/1024x768-calendar.json",
+        "sha256": "94e0abaec7d50cc9c5dbd9d107c83881d8d1b790a3ccf2d974f3e461114fdd7f"
+      },
+      {
+        "path": "dark/1024x768-data.json",
+        "sha256": "ecc52a018df3041ee4415769e55f94b05a9ff318dd49e1a19d2a6b653bdea248"
+      },
+      {
+        "path": "dark/1024x768-detail.json",
+        "sha256": "56bcf6e0ed91c0264316f54a3d06f840a4fd73c9f9cfe42fce14ccda23ccbe08"
+      },
+      {
+        "path": "dark/1024x768-editor-date.json",
+        "sha256": "8bec956658dccca3c4bbdf12d71c16c9c1a36dc59a7b031712754b815ca29ffc"
+      },
+      {
+        "path": "dark/1024x768-home.json",
+        "sha256": "baadd39d55b20c31c8ba5092a8748f05945363152eaff0c14b56a1d8372648d5"
+      },
+      {
+        "path": "dark/1024x768-search.json",
+        "sha256": "9a33b70ae4a1ad46b92f0c391eb14ffd28d116fc5b544949a40d5d3c17c1bad2"
+      },
+      {
+        "path": "dark/1024x768-sort.json",
+        "sha256": "2223a3ed0591c69c777bb22686b58adf27672f71344babd464cc955515d5251a"
+      },
+      {
+        "path": "dark/360x740-calendar.json",
+        "sha256": "4864b8dd9926e3ff0e2abec1266eb864166e58655d885c86171e750be4054471"
+      },
+      {
+        "path": "dark/360x740-data.json",
+        "sha256": "499aa47d87701af2968e4e83c1a2c4ec0baa70e2d72bcb09a434f84ee49e66bf"
+      },
+      {
+        "path": "dark/360x740-detail.json",
+        "sha256": "e9a39416a9ee4f409bfaad847fe86a902df279770aac70db712837caaa9af358"
+      },
+      {
+        "path": "dark/360x740-editor-date.json",
+        "sha256": "fbf26db761d07c9732579147d4c8a6a67772b75b187d9bdb773e6f8b6de6c0d3"
+      },
+      {
+        "path": "dark/360x740-home.json",
+        "sha256": "0727dd5544541ecff8854a104f0931ddbf4bde4f39831f71ed91b7ee5fb68d74"
+      },
+      {
+        "path": "dark/360x740-search.json",
+        "sha256": "bb0a71a665b50ecae43acf59e665ab45a9e306918cafd3a849bf1086c0e726b6"
+      },
+      {
+        "path": "dark/360x740-sort.json",
+        "sha256": "ddb8ff671605255e062b7d9ad6243634ece9ddc4bb77b1d3936ed0172956b160"
+      }
+    ],
+    "verification": "PASS 14 light + 14 dark; final diff 0/14 each"
   }
 }

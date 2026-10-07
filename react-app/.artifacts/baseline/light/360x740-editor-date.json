@@ -281,7 +281,7 @@
         "font-size": "16px",
         "font-weight": "400",
         "line-height": "24px",
-        "padding": "20px",
+        "padding": "24px",
         "margin": "0px",
         "border-radius": "24px",
         "box-shadow": "none",
@@ -347,7 +347,7 @@
         "font-weight": "400",
         "line-height": "15px",
         "padding": "8px 0px 0px",
-        "margin": "8px 0px 0px",
+        "margin": "0px",
         "border-radius": "0px",
         "box-shadow": "none",
         "opacity": "1",
@@ -1380,14 +1380,14 @@
       "className": "hero-link",
       "label": "查看：我们在一起的日子",
       "rect": {
-        "x": 36,
-        "y": 166,
+        "x": 40,
+        "y": 170,
         "width": 189,
         "height": 44,
-        "top": 166,
-        "right": 225,
-        "bottom": 210,
-        "left": 36
+        "top": 170,
+        "right": 229,
+        "bottom": 214,
+        "left": 40
       }
     },
     {
