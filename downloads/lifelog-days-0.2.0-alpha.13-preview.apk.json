@@ -897,11 +897,13 @@
   ],
   "deviceTested": false,
   "authorAcceptance": {
-    "status": "M1+M2 author retest pending",
+    "status": "passed; explicitly confirmed by author in this thread on 2026-10-07",
+    "scope": "alpha.13 with M1 and M2",
     "model": null,
     "androidVersion": null,
     "webViewProvider": null,
-    "webViewVersion": null
+    "webViewVersion": null,
+    "deviceInformation": "not supplied by author; do not infer"
   },
   "publication": {
     "pushed": false,
@@ -5363,6 +5365,224 @@
         }
       ],
       "verification": "PASS 14 light + 14 dark; final diff 0/14 each"
+    }
+  },
+  "originalBuildAuthorAcceptance": {
+    "status": "M1+M2 author retest pending",
+    "model": null,
+    "androidVersion": null,
+    "webViewProvider": null,
+    "webViewVersion": null
+  },
+  "releasePreparation": {
+    "completedAt": "2026-10-07T08:44:06.195Z",
+    "gatesExitCode": 0,
+    "gates": {
+      "completedAt": "2026-10-07T08:35:57.167Z",
+      "port": 5189,
+      "chromiumProcessesLaunched": 1,
+      "startOrder": [
+        "smoke",
+        "ui-polish",
+        "calendar",
+        "date-picker",
+        "controls",
+        "chrome",
+        "offline",
+        "baseline",
+        "dark",
+        "css-coverage"
+      ],
+      "scheduling": "FIFO start order; at most 1 suites, isolated contexts; summary in fixed suite order.",
+      "productUi": "dist; test-only source fixture endpoints and native module URL aliases; assertions and production bytes unchanged",
+      "results": [
+        {
+          "name": "node-unit",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 9645,
+          "result": "PASS",
+          "testsPassed": 111
+        },
+        {
+          "name": "build",
+          "exitCode": 0,
+          "assertionsPassed": 0,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 17507,
+          "result": "PASS"
+        },
+        {
+          "name": "smoke",
+          "exitCode": 0,
+          "assertionsPassed": 48,
+          "axeAudits": 6,
+          "axeSourceInjections": 3,
+          "durationMs": 12795,
+          "result": "PASS"
+        },
+        {
+          "name": "ui-polish",
+          "exitCode": 0,
+          "assertionsPassed": 1312,
+          "axeAudits": 159,
+          "axeSourceInjections": 36,
+          "durationMs": 57036,
+          "result": "PASS"
+        },
+        {
+          "name": "calendar",
+          "exitCode": 0,
+          "assertionsPassed": 57,
+          "axeAudits": 5,
+          "axeSourceInjections": 1,
+          "durationMs": 12738,
+          "result": "PASS"
+        },
+        {
+          "name": "date-picker",
+          "exitCode": 0,
+          "assertionsPassed": 93,
+          "axeAudits": 8,
+          "axeSourceInjections": 2,
+          "durationMs": 18817,
+          "result": "PASS"
+        },
+        {
+          "name": "controls",
+          "exitCode": 0,
+          "assertionsPassed": 585,
+          "axeAudits": 11,
+          "axeSourceInjections": 4,
+          "durationMs": 16674,
+          "result": "PASS"
+        },
+        {
+          "name": "chrome",
+          "exitCode": 0,
+          "assertionsPassed": 387,
+          "axeAudits": 5,
+          "axeSourceInjections": 3,
+          "durationMs": 12181,
+          "result": "PASS"
+        },
+        {
+          "name": "offline",
+          "exitCode": 0,
+          "assertionsPassed": 7,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 6489,
+          "result": "PASS"
+        },
+        {
+          "name": "baseline",
+          "exitCode": 0,
+          "assertionsPassed": 58,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 20224,
+          "result": "PASS"
+        },
+        {
+          "name": "dark",
+          "exitCode": 0,
+          "assertionsPassed": 411,
+          "axeAudits": 44,
+          "axeSourceInjections": 19,
+          "durationMs": 55896,
+          "result": "PASS"
+        },
+        {
+          "name": "css-coverage",
+          "exitCode": 0,
+          "assertionsPassed": 2,
+          "axeAudits": 0,
+          "axeSourceInjections": 0,
+          "durationMs": 17289,
+          "result": "PASS"
+        }
+      ],
+      "durationMs": 251911,
+      "referenceSeconds": 90,
+      "ratioToReference": 2.799011111111111,
+      "timingPolicy": "informational",
+      "timingWarningThresholdSeconds": 180,
+      "timingWarning": true
+    },
+    "androidExitCode": 0,
+    "buildSummary": "BUILD SUCCESSFUL in 2m 38s",
+    "tasksSummary": "252 actionable tasks: 38 executed, 214 up-to-date",
+    "lint": {
+      "errors": 0,
+      "warnings": 29
+    },
+    "jvm": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "jvmTask": [
+      "> Task :app:testDebugUnitTest"
+    ],
+    "lintTasks": [
+      "> Task :app:lintAnalyzeDebugAndroidTest UP-TO-DATE",
+      "> Task :app:lintAnalyzeDebugUnitTest UP-TO-DATE",
+      "> Task :app:lintAnalyzeDebug",
+      "> Task :app:lintReportDebug",
+      "> Task :app:lintDebug"
+    ],
+    "assetsVerified": [
+      "assets/esm-BTfVav5F.js",
+      "assets/esm-Btot3Apm.js",
+      "assets/esm-Yb_9qVpF.js",
+      "assets/index-9K6RlFQa.js",
+      "assets/index-vkdFWDjN.css",
+      "assets/lunar-rFT-dEts.js",
+      "assets/react-DxbjzT7Z.js",
+      "assets/rolldown-runtime-Bh1tDfsg.js",
+      "assets/storage-CLLSMDTL.js",
+      "assets/web-Bxs6Xc0r.js",
+      "assets/web-DwhOd7r6.js",
+      "assets/web-ZvRF2jVq.js",
+      "icon-180.png",
+      "icon-192.png",
+      "icon-512.png",
+      "icon.svg",
+      "index.html",
+      "ingot.png",
+      "manifest.webmanifest",
+      "sw.js"
+    ],
+    "rebuiltSha256": "5c5565070937b85de84ec2aa9177d3068089c2c95189256bd9f0e33b944a1211",
+    "originalAcceptedApkRetained": true,
+    "baselineDiffLight": "# Baseline diff (light)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "baselineDiffDark": "# Baseline diff (dark)\n\nRead-only comparison with the current committed baseline. No capture, exclusions or normalization changes.\n\nThe unchanged comparator determines exact differences; DOM formatting only adds line breaks for this report.\n\n## 360x740-home\nNo differences.\n\n## 360x740-search\nNo differences.\n\n## 360x740-sort\nNo differences.\n\n## 360x740-detail\nNo differences.\n\n## 360x740-editor-date\nNo differences.\n\n## 360x740-calendar\nNo differences.\n\n## 360x740-data\nNo differences.\n\n## 1024x768-home\nNo differences.\n\n## 1024x768-search\nNo differences.\n\n## 1024x768-sort\nNo differences.\n\n## 1024x768-detail\nNo differences.\n\n## 1024x768-editor-date\nNo differences.\n\n## 1024x768-calendar\nNo differences.\n\n## 1024x768-data\nNo differences.\n\nChanged snapshots: 0/14.\n",
+    "attempts": [
+      {
+        "androidExitCode": 1,
+        "log": "react-app/.artifacts/phase-n/alpha13-release/android-preview.log",
+        "reason": "5.5 GiB disk preflight; Gradle not run"
+      },
+      {
+        "androidExitCode": 1,
+        "log": "react-app/.artifacts/phase-n/alpha13-release/android-preview-rerun.log",
+        "reason": "5.9 GiB disk preflight; Gradle not run"
+      },
+      {
+        "npmCacheCleanExit": "EACCES",
+        "reason": "root-owned cache entries; no sudo/chown attempted; selected task-created npx cache safely removed instead"
+      }
+    ],
+    "publicationPlan": {
+      "branch": "codex/anniversary-lite",
+      "tag": "v0.2.0-alpha.13-preview",
+      "prerelease": true,
+      "previousReleases": "untouched"
     }
   }
 }

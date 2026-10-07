@@ -1,6 +1,6 @@
 # 日子：Android 测试与升级验收
 
-## alpha.13 / 阶段 L — 本地测试准备，待作者真机验收
+## alpha.13 / 阶段 L、M1、M2 — 最后一个预览版（作者已验收）
 
 - 版本 `0.2.0-alpha.13-preview`，versionCode **148**，独立包名 `com.cnxin.lifelog.preview`，沿用原测试签名。基于 alpha.12 发布提交 `6665c0a`；顺序 L1 `04e7a97` → L2 `ed0071b` → L4 `1d8f212` → L3，随后独立 `chore(baseline)` 刷新。**不推送 alpha.13、不打 tag、不发 Release**，等作者验收；alpha.12 及此前的 Release 不改不删，不回滚、不 rebase、不改 legacy。
 - **LifeLogDays 的 IndexedDB 从 Dexie v1 升级到 v2**：旧档打开即自动升级，原 `days` 表及其记录不动，仅新增空的 `trash: "id, deletedAt"` 表。不是升级旧版 `LifeLogDatabase`；旧版迁移仍只读。删除在事务内移动记录并只留最近三条；恢复保留全部 Day 字段（含 reminders / reminderTime），同 ID 已存在时返回 exists，不覆盖现有记录，冲突删除副本也仍保留。
@@ -46,6 +46,16 @@
 3. 编辑器确认文案说明可找回；连续删除四条仅留下最近三条。恢复保留全部字段；导入与删除条目相同 ID 后再恢复，不覆盖现有值、删除副本仍在；清空需二次确认，取消不清空。
 4. JSON 导出不包含回收站，旧备份仍可合并；删除或恢复含提醒记录，核对系统通知实际取消 / 重排及 launcher 更新，庆祝标记不被重置。
 5. 公历 / 农历年度重复、三种分类、过去 / 当天 / 未来原始日期均核对 elapsed 文案和下一次日期；360 宽底栏单行、右侧省略、详情数字和行间距正常。2×2 小组件不额外显示 elapsed 行。
+
+### alpha.13 作者验收与最后一个预览版发布 — 2026-10-07
+
+- **作者在本线程明确确认 alpha.13（含 M1 / M2）真机验收通过**。这是作者的验收结论，不是本机执行的设备测试；上文「待验收 / 尚未发布」保留为各候选生成时的历史状态，以本节后续记录为准。
+- 机型、Android 版本、Android System WebView 提供方与版本：**作者尚未提供，待补充**。本轮 `adb devices -l` 未发现连接设备，已有验收记录也无可靠信息；消息中的占位符不能据此猜填。
+- 发布已验收的 M2 原 APK：`downloads/lifelog-days-0.2.0-alpha.13-preview.apk`，**4,474,719 bytes**，SHA-256 `5c5565070937b85de84ec2aa9177d3068089c2c95189256bd9f0e33b944a1211`，附原校验文件及追加作者验收 / 发布复核的验证报告。不交付已作废的 L / M1 字节；重建仅作门禁及资产核对，不偷偷替换作者验收包。
+- 按作者指令推送 `codex/anniversary-lite`，tag `v0.2.0-alpha.13-preview`，以 alpha.12 格式发布 **最后一个 GitHub pre-release**；alpha.12 及所有旧 Release 的正文与资产不改不删。随后开始独立应用「心上」阶段 N；旧 LifeLog 更新清单不因此变更。
+- 磁盘曾低于既有 6 GiB 保守预检；仅清理可重新下载的 npm 缓存和确认无 Gradle 进程后可重建的 transforms 缓存。门槛不变，不删除源码、签名、交付包或证据。本轮实际验证结果记录在同名 `.apk.json` 的 `releasePreparation`，本机自动测试不扩展为通知送达、重启恢复或原正式包升级的设备结论。
+
+- 发布提交前复核：完整门禁 **PASS、退出 0，251.911s**（耗时仅 warning，不影响退出码）；Node **111/111**、UI **1312**、dark **411**，全部套件通过。浅 / 深 baseline diff 均 **0/14**；不改断言、比较器、归一化或基准。`android:preview` 最终 **PASS、退出 0**，BUILD SUCCESSFUL in 2m 38s，252 actionable tasks: 38 executed, 214 up-to-date；JVM **15/15**、app lint analysis / report 实际执行，lint **0 errors / 29 warnings**。重建与作者验收 APK **逐字节相同**，20 个 Web 文件与 dist 相同，仍保留原 APK。首两轮磁盘预检失败、npm 缓存权限失败与清理方式原样记录，不伪称首次通过。
 
 ## alpha.12 / 阶段 K — 作者真机验收通过，发布 K7 测试包
 
